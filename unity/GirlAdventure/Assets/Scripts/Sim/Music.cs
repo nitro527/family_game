@@ -52,11 +52,17 @@ namespace GirlAdventure.Sim
             new Song
             {
                 Name = "battle", Bpm = 150,
+                // A (가단조로 몰아친다) → B (다장조로 밝게 반격하다가 E 로 긴장을 올려 A 로)
                 Lead = "A4 A4 C5 A4 E5.2 D5.2 | C5 B4 A4 B4 C5.2 E5.2 | F5 F5 E5 D5 E5.2 C5.2 | B4 A4 G#4 B4 E5.4 |" +
-                       "A5 A5 G5 F5 E5.2 D5.2 | C5 D5 E5 F5 G5.2 E5.2 | F5.2 E5.2 D5.2 B4.2 | A4.4 G#4.2 B4.2",
+                       "A5 A5 G5 F5 E5.2 D5.2 | C5 D5 E5 F5 G5.2 E5.2 | F5.2 E5.2 D5.2 B4.2 | A4.4 G#4.2 B4.2 |" +
+                       "C5 E5 G5 E5 C6.2 B5.2 | A5 G5 F5 E5 D5.2 G5.2 | E5 F5 G5 A5 G5.2 E5.2 | D5.2 E5.2 F5.4 |" +
+                       "F5 E5 D5 C5 D5.2 F5.2 | E5 D5 C5 B4 C5.2 E5.2 | D5.2 C5.2 B4.2 G#4.2 | A4.2 B4.2 C5.2 E5.2",
                 Bass = "A2 A3 A2 A3 A2 A3 A2 A3 | A2 A3 A2 A3 A2 A3 A2 A3 | F2 F3 F2 F3 F2 F3 F2 F3 | E2 E3 E2 E3 E2 E3 E2 E3 |" +
-                       "F2 F3 F2 F3 F2 F3 F2 F3 | C3 C4 C3 C4 C3 C4 C3 C4 | D3 D4 D3 D4 E2 E3 E2 E3 | E2 E3 E2 E3 E2 E3 E2 E3",
-                Drums = "khskkhshkhskkhshkhskkhshkhskkhsskhskkhshkhskkhshkhskkhshkhsksssk",
+                       "F2 F3 F2 F3 F2 F3 F2 F3 | C3 C4 C3 C4 C3 C4 C3 C4 | D3 D4 D3 D4 E2 E3 E2 E3 | E2 E3 E2 E3 E2 E3 E2 E3 |" +
+                       "C3 C4 C3 C4 C3 C4 C3 C4 | F2 F3 F2 F3 F2 F3 F2 F3 | C3 C4 C3 C4 C3 C4 C3 C4 | G2 G3 G2 G3 G2 G3 G2 G3 |" +
+                       "D3 D4 D3 D4 D3 D4 D3 D4 | A2 A3 A2 A3 A2 A3 A2 A3 | E2 E3 E2 E3 E2 E3 E2 E3 | E2 E3 E2 E3 G#2 G#3 B2 B3",
+                Drums = "khskkhshkhskkhshkhskkhshkhskkhsskhskkhshkhskkhshkhskkhshkhsksssk" +
+                        "k.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hsk.hskkssssss",
             },
             new Song
             {
@@ -70,11 +76,17 @@ namespace GirlAdventure.Sim
             new Song
             {
                 Name = "cave", Bpm = 104,
+                // A (마단조, 조심조심) → B (사장조 쪽으로 빛이 살짝 들었다가 B 로 멈칫, A 로)
                 Lead = "E5.2 G5.2 F#5.2 E5.2 | D#5.4 B4.4 | E5.2 G5.2 A5.2 B5.2 | A5.6 R.2 |" +
-                       "G5.2 F#5.2 E5.2 D5.2 | C5.4 E5.4 | D#5.2 F#5.2 A5.2 F#5.2 | E5.6 R.2",
+                       "G5.2 F#5.2 E5.2 D5.2 | C5.4 E5.4 | D#5.2 F#5.2 A5.2 F#5.2 | E5.6 R.2 |" +
+                       "B5.2 A5.2 G5.2 F#5.2 | E5.4 G5.4 | A5.2 G5.2 F#5.2 E5.2 | F#5.6 R.2 |" +
+                       "C6.2 B5.2 A5.2 G5.2 | F#5.4 A5.4 | G5.2 F#5.2 E5.2 D#5.2 | B4.6 R.2",
                 Bass = "E2 B2 E3 B2 E2 B2 E3 B2 | B1 F#2 B2 F#2 B1 F#2 B2 F#2 | E2 B2 E3 B2 E2 B2 E3 B2 | A1 E2 A2 E2 A1 E2 A2 E2 |" +
-                       "C2 G2 C3 G2 C2 G2 C3 G2 | A1 E2 A2 E2 A1 E2 A2 E2 | B1 F#2 B2 F#2 B1 F#2 B2 F#2 | E2 B2 E3 B2 E2.4",
-                Drums = "k..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..hsk.s",
+                       "C2 G2 C3 G2 C2 G2 C3 G2 | A1 E2 A2 E2 A1 E2 A2 E2 | B1 F#2 B2 F#2 B1 F#2 B2 F#2 | E2 B2 E3 B2 E2.4 |" +
+                       "G2 D3 G3 D3 G2 D3 G3 D3 | C2 G2 C3 G2 C2 G2 C3 G2 | A1 E2 A2 E2 A1 E2 A2 E2 | B1 F#2 B2 F#2 B1 F#2 B2 F#2 |" +
+                       "A1 E2 A2 E2 A1 E2 A2 E2 | D2 A2 D3 A2 D2 A2 D3 A2 | C2 G2 C3 G2 B1 F#2 B2 F#2 | B1 F#2 B2 F#2 B1.4",
+                Drums = "k..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..hsk.s" +
+                        "k..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk.shsk.s",
             },
             new Song
             {

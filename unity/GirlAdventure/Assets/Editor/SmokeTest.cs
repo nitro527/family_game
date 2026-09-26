@@ -563,7 +563,8 @@ namespace GirlAdventure.EditorTools
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                Check($"bgm {name} loops cleanly", (lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
+                bool longSong = name == "field" || name == "battle" || name == "cave";     // A-B 16마디 곡
+                Check($"bgm {name} loops cleanly", (longSong ? lead == 128 : lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;
                 bool finite = true;
