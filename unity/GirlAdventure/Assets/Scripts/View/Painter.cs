@@ -8,90 +8,9 @@ namespace GirlAdventure.View
     public static class Painter
     {
         public const int Tile = 48;
-        static readonly Color32 Ink = Raster.Hex("#1C1428");
+        internal static readonly Color32 Ink = Raster.Hex("#1C1428");
 
         // ------------------------------------------------------------------ field
-        public static Texture2D Field(WorldMap map)
-        {
-            var R = new Raster(WorldMap.W * Tile, WorldMap.H * Tile);
-            var rnd = new System.Random(99);
-            float Rn() => (float)rnd.NextDouble();
-            Color32 grassA = Raster.Hex("#62B447"), grassB = Raster.Hex("#5DAE43"), tuft = Raster.Hex("#468F31");
-
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                {
-                    float X = x * Tile, Y = y * Tile;
-                    char ch = map.At(x, y);
-                    R.Rect(X, Y, Tile, Tile, (x + y) % 2 == 1 ? grassA : grassB);
-                    for (int i = 0; i < 6; i++)
-                    {
-                        float gx = X + Rn() * 44, gy = Y + Rn() * 44;
-                        R.Rect(gx, gy, 2, 4, tuft); R.Rect(gx + 2, gy + 2, 2, 2, tuft);
-                    }
-                    switch (ch)
-                    {
-                        case ',':
-                            R.Rect(X, Y, Tile, Tile, Raster.Hex("#4F9C3A"));
-                            for (int i = 0; i < 5; i++)
-                            {
-                                float gx = X + 4 + i * 9, gy = Y + 18 + (i % 2) * 10;
-                                R.Polygon(new[] { new Vector2(gx, gy + 14), new Vector2(gx + 3, gy), new Vector2(gx + 6, gy + 14) }, Raster.Hex("#2F6E22"));
-                            }
-                            break;
-                        case 'f':
-                            Flower(R, X + 12, Y + 14, "#FFFFFF"); Flower(R, X + 32, Y + 28, "#FFD84A"); Flower(R, X + 20, Y + 36, "#FF8FB0");
-                            break;
-                        case '=':
-                        case 'G':
-                            R.Rect(X, Y, Tile, Tile, Raster.Hex("#DCC38A"));
-                            for (int i = 0; i < 7; i++) R.Rect(X + Rn() * 42, Y + Rn() * 42, 5, 3, Raster.Hex("#BFA066"));
-                            break;
-                        case 'w':
-                        case 'b':
-                            R.Rect(X, Y, Tile, Tile, Raster.Hex("#3D7FE0"));
-                            for (int i = 0; i < 3; i++) R.Rect(X + 6 + (i * 17) % 30, Y + 8 + i * 14, 14, 3, Raster.Hex("#9CC8FF"));
-                            if (ch == 'b')
-                            {
-                                R.Rect(X, Y + 8, Tile, 32, Raster.Hex("#9A6A3C"));
-                                for (int i = 0; i < 6; i++) R.Rect(X + i * 8, Y + 8, 2, 32, Raster.Hex("#6E4524"));
-                            }
-                            break;
-                        case 'T':
-                            R.Rect(X + 20, Y + 30, 9, 16, Raster.Hex("#6B4020"));
-                            R.Circle(X + 24, Y + 20, 21, Ink);
-                            R.Circle(X + 24, Y + 20, 19, Raster.Hex("#1F6A2A"));
-                            R.Circle(X + 20, Y + 16, 13, Raster.Hex("#2F8A38"));
-                            R.Circle(X + 16, Y + 11, 5, Raster.Hex("#5CB654"));
-                            break;
-                    }
-                }
-
-            // 회복 샘물
-            {
-                float X = WorldMap.Fountain.x * Tile, Y = WorldMap.Fountain.y * Tile;
-                R.Ellipse(X + 24, Y + 31, 24, 16, Ink);
-                R.Ellipse(X + 24, Y + 30, 22, 14, Raster.Hex("#9AA3B8"));
-                R.Ellipse(X + 24, Y + 29, 16, 9, Raster.Hex("#58B6FF"));
-                R.Rect(X + 21, Y + 6, 6, 22, Raster.Hex("#9AA3B8"));
-                R.Circle(X + 24, Y + 7, 7, Raster.Hex("#BFE6FF"));
-                R.Circle(X + 22, Y + 5, 2, Raster.Hex("#FFFFFF"));
-            }
-            // 표지판
-            {
-                float X = WorldMap.Sign.x * Tile, Y = WorldMap.Sign.y * Tile;
-                R.Rect(X + 21, Y + 18, 6, 26, Raster.Hex("#6B4020"));
-                R.Rect(X + 4, Y + 4, 40, 24, Raster.Hex("#6B4020"));
-                R.Rect(X + 6, Y + 6, 36, 20, Raster.Hex("#C59A5E"));
-                R.Rect(X + 11, Y + 12, 26, 2, Raster.Hex("#6B4020"));
-                R.Rect(X + 11, Y + 18, 18, 2, Raster.Hex("#6B4020"));
-            }
-            Castle(R);
-            JellyBase(R);
-            Chest(R, WorldMap.Chest.x * Tile, WorldMap.Chest.y * Tile, false);
-            return R.ToTexture();
-        }
-
         /// <summary>보물상자 (open=true 면 뚜껑이 열리고 안이 반짝인다). (x, y) 는 타일 왼쪽 위 px.</summary>
         public static void Chest(Raster R, float x, float y, bool open)
         {
@@ -126,39 +45,8 @@ namespace GirlAdventure.View
             return R.ToTexture();
         }
 
-        /// <summary>챕터 2 젤리 기지: 초록빛 요새 벽 + 젤리 문장 + 철문 (WorldMap 'C' 두 줄과 'D').</summary>
-        static void JellyBase(Raster R)
-        {
-            float X = 28 * Tile, Y = 2 * Tile, w = 7 * Tile, h = 2 * Tile;
-            Color32 wall = Raster.Hex("#5E7A5A"), seam = Raster.Hex("#445A40"), top = Raster.Hex("#7FA36F");
-            R.Rect(X - 2, Y - 20, w + 4, h + 20, Ink);
-            R.Rect(X, Y - 18, w, h + 18, wall);
-            for (int i = 0; i < 7; i++) R.Rect(X + 6 + i * 48, Y - 30, 32, 14, top);  // 성가퀴
-            for (float yy = Y; yy < Y + h; yy += 20) R.Rect(X, yy, w, 2, seam);
-            var d = BaseDoorPx();
-            // 젤리 문장
-            float cx = d.x + 24;
-            R.Ellipse(cx, Y + 16, 16, 13, Ink);
-            R.Ellipse(cx, Y + 16, 14, 11, Raster.Hex("#5FD07A"));
-            R.Circle(cx - 5, Y + 14, 2, Ink);
-            R.Circle(cx + 5, Y + 14, 2, Ink);
-            // 철문
-            R.Rect(d.x + 4, d.y + 2, 40, 46, Ink);
-            R.Rect(d.x + 6, d.y + 4, 36, 44, Raster.Hex("#6B6F80"));
-            for (int i = 0; i < 4; i++) R.Rect(d.x + 10 + i * 9, d.y + 4, 3, 44, Raster.Hex("#4A4E5E"));
-            R.Circle(d.x + 24, d.y + 28, 5, Raster.Hex("#FFD84A"));
-            R.Rect(d.x + 23, d.y + 28, 2, 6, Ink);
-        }
-
-        static Vector2 BaseDoorPx() => new Vector2(WorldMap.BaseDoor.x * Tile, WorldMap.BaseDoor.y * Tile);
-
-        static void Flower(Raster R, float x, float y, string col)
-        {
-            R.Circle(x, y, 3.2f, Raster.Hex(col));
-            R.Circle(x, y, 1.3f, Raster.Hex("#E0A020"));
-        }
-
-        static void Castle(Raster R)
+        /// <summary>킹 젤리 성 (초원 오른쪽 아래).</summary>
+        internal static void Castle(Raster R)
         {
             float X = 28 * Tile, Y = 18 * Tile, w = 7 * Tile, h = 5 * Tile;
             Color32 wall = Raster.Hex("#B9B3C9"), tower = Raster.Hex("#A8A1BB"), roof = Raster.Hex("#6A44C8"), seam = Raster.Hex("#8C86A0");
@@ -192,6 +80,61 @@ namespace GirlAdventure.View
         }
 
         // ------------------------------------------------------------------ battle
+        /// <summary>동굴 전투 배경: 어두운 동굴 천장의 종유석, 빛나는 수정, 젖은 바닥. 보스는 붉은 횃불빛.</summary>
+        public static Texture2D CaveBattleBackground(bool boss)
+        {
+            const int w = 960, h = 540;
+            var R = new Raster(w, h);
+            Color32 top = Raster.Hex("#120E1C"), mid = Raster.Hex(boss ? "#4A1E2A" : "#2A2440");
+            Color32 g0 = Raster.Hex(boss ? "#3A2230" : "#3A3348"), g1 = Raster.Hex("#1A1624");
+            int horizon = (int)(h * .6f);
+            for (int y = 0; y < h; y++)
+            {
+                Color32 c = y < horizon ? Color32.Lerp(top, mid, y / (float)horizon) : Color32.Lerp(g0, g1, (y - horizon) / (float)(h - horizon));
+                R.Rect(0, y, w, 1, c);
+            }
+            var rnd = new System.Random(boss ? 5 : 4);
+            // 먼 바위벽 실루엣
+            for (int i = 0; i < 9; i++)
+            {
+                float x = i * 120 - 20 + rnd.Next(30), top2 = horizon - 60 - rnd.Next(90);
+                R.Polygon(new[] { new Vector2(x, horizon + 4), new Vector2(x + 30, top2), new Vector2(x + 90, top2 + 20), new Vector2(x + 140, horizon + 4) },
+                          Raster.Hex(boss ? "#2A1424" : "#221C32"));
+            }
+            // 종유석
+            for (int i = 0; i < 16; i++)
+            {
+                float x = rnd.Next(w), len = 40 + rnd.Next(110), wd = 14 + rnd.Next(22);
+                R.Polygon(new[] { new Vector2(x - wd, 0), new Vector2(x + wd, 0), new Vector2(x + 2, len) },
+                          (px, py) => Color32.Lerp(Raster.Hex("#0C0A14"), Raster.Hex("#3A3050"), py / len));
+            }
+            // 빛나는 수정 (보스는 횃불)
+            for (int i = 0; i < 5; i++)
+            {
+                float x = 60 + i * 200 + rnd.Next(60), y = horizon - 10 - rnd.Next(40);
+                var glow = boss ? new Color32(255, 110, 60, 50) : (i % 2 == 0 ? new Color32(90, 230, 255, 50) : new Color32(240, 120, 255, 50));
+                R.Circle(x, y - 20, 60, glow);
+                R.Circle(x, y - 20, 30, glow);
+                if (boss)
+                {
+                    R.Rect(x - 3, y - 20, 6, 40, Raster.Hex("#4A2A14"));
+                    R.Ellipse(x, y - 30, 8, 14, Raster.Hex("#FFB040"));
+                    R.Ellipse(x, y - 26, 4, 6, Raster.Hex("#FFF4C0"));
+                }
+                else
+                {
+                    var col = i % 2 == 0 ? Raster.Hex("#6FE0FF") : Raster.Hex("#E890FF");
+                    R.Polygon(new[] { new Vector2(x - 10, y), new Vector2(x - 2, y - 46), new Vector2(x + 8, y) }, col, Raster.Hex("#1A1030"), 1.5f);
+                    R.Polygon(new[] { new Vector2(x + 2, y), new Vector2(x + 14, y - 30), new Vector2(x + 20, y) }, col, Raster.Hex("#1A1030"), 1.5f);
+                }
+            }
+            // 바닥 반사광
+            for (int i = 0; i < 6; i++) R.Ellipse(80 + i * 170, horizon + 40 + (i % 2) * 50, 90, 10, new Color32(180, 200, 255, 22));
+            R.Ellipse(560, 352, 150, 26, new Color32(0, 0, 0, 60));
+            R.Ellipse(200, 414, 120, 20, new Color32(0, 0, 0, 60));
+            return R.ToTexture();
+        }
+
         public static Texture2D BattleBackground(bool boss)
         {
             const int w = 960, h = 540;

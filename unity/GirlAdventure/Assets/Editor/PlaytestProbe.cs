@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using GirlAdventure.Sim;
 using GirlAdventure.View;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -201,11 +202,20 @@ namespace GirlAdventure.EditorTools
             Shot("fountain");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
 
-            // 실제 인카운트: 수풀을 왔다 갔다
+            // 보이는 몬스터: 필드에 돌아다니는 모습 → 앞 칸의 몬스터에게 걸어 들어가면 전투
+            Expect("mobs spawned on field", G.MobCount >= FieldMonsters.StartCount);
+            G.DebugMobs(true, false);                 // 이후 시나리오가 흔들리지 않게 멈춤
+            G.DebugTeleport(16, 10, "right");
+            yield return .6f;
+            Shot("field_mobs");
+            G.DebugMobs(true, true);
             G.DebugTeleport(8, 12, "right");
-            for (int i = 0; i < 40 && G.Current != GameRoot.Mode.Battle; i++)
-                foreach (var x in Walk(i % 2 == 0 ? KeyCode.RightArrow : KeyCode.LeftArrow, "grass", .5f, false)) yield return x;
-            Log(G.Current == GameRoot.Mode.Battle ? "random encounter OK" : "NO ENCOUNTER in 40 walks");
+            G.DebugSpawnMob(9, 12, 1);
+            yield return .3f;
+            Shot("mob_ahead");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return .4f;
+            Expect("walking into a mob starts battle", G.Current == GameRoot.Mode.Battle && G.MobCount == 0);
 
             // 일반 전투: 명령 하나씩
             if (G.Current != GameRoot.Mode.Battle) G.DebugBattle(false);
@@ -296,7 +306,7 @@ namespace GirlAdventure.EditorTools
             Shot("ending");
             ExpectBgm("ending");
 
-            // 챕터 2: 엔딩에서 Enter → 챕터 2 시작 → 잠긴 문 → 보물상자(열쇠) → 문 열기
+            // 챕터 2 (동굴): 엔딩에서 Enter → 동굴 입구 → 잠긴 문 → 보물상자(열쇠) → 문 열고 기지 안 → 젤리 장군 → 챕터 2 완료
             Keys.Press(KeyCode.Z);                     // 엔딩 직후 연타는 무시돼야 한다
             yield return .2f;
             Expect("ending ignores instant mash", G.Current == GameRoot.Mode.Ending);
@@ -305,28 +315,68 @@ namespace GirlAdventure.EditorTools
             yield return 1.2f;
             Shot("ch2_intro");
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
-            Expect("chapter 2 started", G.P.Chapter == 2 && G.Current == GameRoot.Mode.Field);
-            G.DebugTeleport(31, 4, "up");
+            Expect("chapter 2 in cave", G.P.Chapter == 2 && G.Current == GameRoot.Mode.Field && G.MapKind == MapKind.Cave);
+            ExpectBgm("cave");
+            Expect("cave has mobs", G.MobCount >= FieldMonsters.StartCount);
+            G.DebugMobs(true, false);
+            yield return .5f;
+            Shot("cave_start");
+            G.DebugTeleport(16, 11, "down");
+            yield return .5f;
+            Shot("cave_pool");
+            G.DebugTeleport(12, 5, "up");
+            yield return .5f;
+            Shot("cave_crystals");
+
+            // 동굴 전투 (배경 확인)
+            G.DebugMobs(true, true);
+            G.DebugTeleport(15, 19, "right");
+            G.DebugSpawnMob(16, 19, 1);
+            yield return .2f;
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return (Func<bool>)(() => G.CommandOpen);
+            Shot("cave_battle");
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+
+            G.DebugTeleport(28, 9, "up");
             yield return .3f;
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
             yield return 1.3f;
             Shot("door_locked");
             Expect("door locked without key", G.MessageText.Contains("잠겨"));
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
-            G.DebugTeleport(4, 19, "left");
+            G.DebugTeleport(4, 8, "left");
             yield return .3f;
             Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
             yield return 1.4f;
             Shot("chest_open");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             Expect("got key from chest", G.P.HasItem("key"));
-            G.DebugTeleport(31, 4, "up");
+            G.DebugTeleport(28, 9, "up");
             yield return .3f;
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
             yield return 1.3f;
             Shot("door_open");
             Expect("door opens with key", G.MessageText.Contains("열렸다"));
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .5f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return .4f;
+            Expect("walked through the open gate", G.P.Y <= 6);
+            Shot("inside_base");
+
+            G.DebugTeleport(28, 4, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            Shot("boss2_command");
+            G.DebugSetEnemyHp(25);                     // 흐름만 확인 (난이도는 SmokeTest 밸런스로)
+            foreach (var x in FightUntilOver(true)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return 1f;
+            Shot("ch2_clear");
+            Expect("chapter 2 cleared", G.P.Boss2Down && G.Current == GameRoot.Mode.Ending);
+            ExpectBgm("ending");
         }
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>

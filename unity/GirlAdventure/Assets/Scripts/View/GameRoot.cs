@@ -77,6 +77,7 @@ namespace GirlAdventure.View
             }
             TickPops();
             TickTouchPad();
+            if (vignette != null && Current != Mode.Field) vignette.enabled = false;
         }
 
         /// <summary>확인 입력 (Enter/Space/Z). 같은 프레임에 한 번만 소비된다.</summary>
@@ -106,7 +107,7 @@ namespace GirlAdventure.View
             var s = SaveStore.Peek();
             if (Current != Mode.Title || s == null) return;
             confirmFrame = Time.frameCount;
-            P = PlayerState.FromSave(s, map);
+            P = PlayerState.FromSave(s);
             facing = "down";
             sfx.Play("start");
             StartCoroutine(ContinueRoutine());
@@ -119,6 +120,17 @@ namespace GirlAdventure.View
             yield return Talk("continue", ("lv", P.Lv));
             HideMessage();
             busy = false;
+        }
+
+        IEnumerator Chapter2ClearRoutine()
+        {
+            yield return Talk("ch2_clear");
+            HideMessage();
+            AutoSave();
+            Current = Mode.Ending;
+            ShowEnding();
+            bgm.Play("ending");
+            sfx.Play("lvup");
         }
 
         void StartChapter2()
@@ -180,7 +192,7 @@ namespace GirlAdventure.View
         public string MessageText => msgWin != null && msgWin.gameObject.activeSelf ? msgText.text : "";
 
         public string DebugState() =>
-            $"mode={Current} bgm={bgm.Current}@{bgm.LevelPercent}% busy={busy} tile=({P.X},{P.Y}) facing={facing} lv={P.Lv} hp={P.Hp}/{P.MaxHp} mp={P.Mp} " +
+            $"mode={Current} ch={P.Chapter} map={map.Kind} mobs={mobs.List.Count} bgm={bgm.Current}@{bgm.LevelPercent}% busy={busy} tile=({P.X},{P.Y}) facing={facing} lv={P.Lv} hp={P.Hp}/{P.MaxHp} mp={P.Mp} " +
             $"cmd={CommandOpen} msg=\"{MessageText.Replace('\n', ' ')}\"";
 
         public void DebugEnterField()
@@ -207,6 +219,24 @@ namespace GirlAdventure.View
         }
 
         public void DebugSetEnemyHp(int hp) { if (battle != null) battle.EnemyHp = hp; }
+
+        public int MobCount => mobs.List.Count;
+        public MapKind MapKind => map.Kind;
+
+        /// <summary>플레이테스트용: 몬스터 생성·이동 멈춤 + 전부 치우기.</summary>
+        public void DebugMobs(bool paused, bool clear)
+        {
+            mobs.Paused = paused;
+            if (clear) mobs.List.Clear();
+            SyncMobViews();
+        }
+
+        public void DebugSpawnMob(int x, int y, int index = 0)
+        {
+            mobs.Spawn(x, y, index);
+            mobs.Grace = 0;
+            SyncMobViews();
+        }
 
         public void DebugDeleteSave() => SaveStore.Delete();
 

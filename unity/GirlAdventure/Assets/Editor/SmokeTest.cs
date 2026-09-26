@@ -25,7 +25,9 @@ namespace GirlAdventure.EditorTools
             MusicTests();
             SaveTests();
             QuestTests();
+            MonsterTests();
             BalanceSimulation();
+            BalanceSimulation2();
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
 
@@ -42,6 +44,7 @@ namespace GirlAdventure.EditorTools
             "candy", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
+            "boss2_meet", "ch2_clear", "ending_card2",
         };
 
         static void DataTests()
@@ -53,7 +56,9 @@ namespace GirlAdventure.EditorTools
             if (enemiesOk)
                 foreach (var d in GameData.Normal)
                     enemiesOk &= !string.IsNullOrEmpty(d.Name) && d.Hp > 0 && d.Atk > 0 && d.Exp > 0 && !d.Boss && d.Color?.Length == 7;
-            Check("enemies.json valid", enemiesOk, $"normal={GameData.Normal?.Length}");
+            if (enemiesOk)
+                enemiesOk &= GameData.Cave != null && GameData.Cave.Length >= 2 && GameData.General != null && GameData.General.Boss;
+            Check("enemies.json valid", enemiesOk, $"normal={GameData.Normal?.Length} cave={GameData.Cave?.Length}");
             bool skillsOk = true;
             foreach (Cmd c in Enum.GetValues(typeof(Cmd)))
             {
@@ -147,60 +152,137 @@ namespace GirlAdventure.EditorTools
             p.GainExp(PlayerState.NextExp(3));
             p.Hp = 7; p.Mp = 2; p.Candy = 1; p.X = WorldMap.Gate.x; p.Y = WorldMap.Gate.y - 1; p.BossDown = true;
             var json = JsonUtility.ToJson(p.ToSave("t"));
-            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(json), m);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(json));
             Check("save roundtrip", q.Name == "서진" && q.Lv == p.Lv && q.Exp == p.Exp && q.Hp == 7 && q.Mp == 2 && q.Candy == 1
                   && q.X == p.X && q.Y == p.Y && q.BossDown && q.MaxHp == p.MaxHp && q.MaxMp == p.MaxMp && q.Atk == p.Atk,
                   $"lv={q.Lv} maxHp={q.MaxHp}/{p.MaxHp} atk={q.Atk}/{p.Atk}");
             // 이상한 값은 안전하게 고친다: 막힌 칸 → 시작점, HP 0 → 가득, 사탕 초과 → 최대치
             var bad = new SaveData { Name = "", Lv = 0, Hp = 0, Mp = 999, Candy = 50, X = 0, Y = 0 };
-            var r = PlayerState.FromSave(bad, m);
+            var r = PlayerState.FromSave(bad);
             Check("save sanitized", r.Lv == 1 && r.Hp == r.MaxHp && r.Mp == r.MaxMp && r.Candy == PlayerState.MaxCandy
                   && r.X == WorldMap.Start.x && r.Y == WorldMap.Start.y && r.Name == "첫째", $"pos=({r.X},{r.Y}) hp={r.Hp}");
         }
 
         static void QuestTests()
         {
-            var m = new WorldMap();
-            Check("chest & door tiles", m.At(WorldMap.Chest.x, WorldMap.Chest.y) == 'H' && m.At(WorldMap.BaseDoor.x, WorldMap.BaseDoor.y) == 'D');
+            var m = WorldMap.Cave();
+            Check("cave: chest, door, boss, spring tiles", m.At(WorldMap.Chest.x, WorldMap.Chest.y) == 'H' && m.At(WorldMap.BaseDoor.x, WorldMap.BaseDoor.y) == 'D'
+                  && m.At(WorldMap.BossSpot.x, WorldMap.BossSpot.y) == 'B' && m.At(WorldMap.CaveSpring.x, WorldMap.CaveSpring.y) == 'F');
+            Check("cave: start & revive walkable", !m.Blocked(m.SpawnPoint.x, m.SpawnPoint.y) && !m.Blocked(m.RevivePoint.x, m.RevivePoint.y));
             Check("key item has data", GameData.HasItemDef(Quest.KeyItem), GameData.ItemName(Quest.KeyItem));
-            // 상자와 문 앞 칸까지 걸어갈 수 있어야 한다
-            var seen = Reach(m);
-            bool chestReach = false, doorReach = seen[WorldMap.BaseDoor.x, WorldMap.BaseDoor.y + 1];
-            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
-                chestReach |= seen[WorldMap.Chest.x + dx, WorldMap.Chest.y + dy];
-            Check("chest reachable", chestReach);
-            Check("base door reachable", doorReach);
-
+            // 상자·문 앞까지 걸어갈 수 있고, 보스는 문이 열려야만 닿는다
             var p = PlayerState.NewGame("t");
+            var closed = Reach(m, p);
+            bool chestReach = false;
+            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                chestReach |= closed[WorldMap.Chest.x + dx, WorldMap.Chest.y + dy];
+            Check("cave: chest reachable", chestReach);
+            Check("cave: base door reachable", closed[WorldMap.BaseDoor.x, WorldMap.BaseDoor.y + 1]);
+            Check("cave: boss sealed behind door", !closed[WorldMap.BossSpot.x, WorldMap.BossSpot.y]);
+
             Check("chapter1: chest sealed", Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Sealed && !p.HasItem(Quest.KeyItem));
             Check("chapter1: door sealed", Quest.TryBaseDoor(p) == DoorResult.Sealed);
             p.BossDown = true;
             Quest.StartChapter2(p);
-            Check("chapter2 starts at village", p.Chapter == 2 && p.X == WorldMap.Start.x && p.Y == WorldMap.Start.y && p.BossDown);
-            Check("door locked without key", Quest.TryBaseDoor(p) == DoorResult.Locked);
+            Check("chapter2 starts at cave entrance", p.Chapter == 2 && (p.X, p.Y) == WorldMap.CaveStart && p.BossDown);
+            Check("door locked without key", Quest.TryBaseDoor(p) == DoorResult.Locked && !Quest.DoorOpen(p));
             var r = Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out var item);
             Check("chest gives key once", r == ChestResult.Got && item == Quest.KeyItem && p.HasItem(Quest.KeyItem)
                   && Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Empty && p.Items.Count == 1);
-            Check("door opens with key", Quest.TryBaseDoor(p) == DoorResult.Opened);
-            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())), m);
-            Check("save keeps chapter & items", q.Chapter == 2 && q.HasItem(Quest.KeyItem) && q.Opened.Count == 1);
-            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":1,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"), m);
-            Check("old save → chapter 1", old.Chapter == 1 && old.Items.Count == 0 && old.Lv == 3);
+            Check("door opens with key", Quest.TryBaseDoor(p) == DoorResult.Opened && Quest.DoorOpen(p));
+            Check("cave: boss reachable after door", Reach(m, p)[WorldMap.BossSpot.x, WorldMap.BossSpot.y]);
+            p.X = WorldMap.BossSpot.x; p.Y = WorldMap.BossSpot.y + 1;   // 기지 안에서 저장
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("save keeps chapter, items, spot in base", q.Chapter == 2 && q.HasItem(Quest.KeyItem) && Quest.DoorOpen(q) && q.X == p.X && q.Y == p.Y);
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":1,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
+            Check("old save → chapter 1", old.Chapter == 1 && old.Items.Count == 0 && old.Lv == 3 && old.X == 3);
+            var ch2Bad = new SaveData { Name = "a", Lv = 7, Chapter = 2, X = 0, Y = 0 };
+            var c2 = PlayerState.FromSave(ch2Bad);
+            Check("ch2 save with bad pos → cave entrance", (c2.X, c2.Y) == WorldMap.CaveStart);
         }
 
-        static bool[,] Reach(WorldMap m)
+        static void MonsterTests()
         {
+            foreach (var m in new[] { new WorldMap(), WorldMap.Cave() })
+            {
+                var mobs = new FieldMonsters(new System.Random(5));
+                var (sx, sy) = m.SpawnPoint;
+                mobs.Reset(m, sx, sy);
+                bool ok = mobs.List.Count == FieldMonsters.StartCount;
+                foreach (var mo in mobs.List)
+                    ok &= mobs.Habitat(mo.X, mo.Y) && Math.Abs(mo.X - sx) + Math.Abs(mo.Y - sy) >= FieldMonsters.MinSpawnDist;
+                Check($"{m.Kind}: mobs spawn in habitat, away from player", ok, $"n={mobs.List.Count}");
+                // 5분 동안 흘려도 최대 수를 넘지 않고, 안전지대로 들어오지 않는다 (플레이어는 시작점에 가만히)
+                bool capped = true, stayOut = true, hitPlayer = false;
+                for (int i = 0; i < 300 * 20; i++)
+                {
+                    var hit = mobs.Tick(.05f, sx, sy);
+                    if (hit != null) { hitPlayer = true; mobs.Remove(hit); }
+                    capped &= mobs.List.Count <= FieldMonsters.Max;
+                    foreach (var mo in mobs.List) stayOut &= !m.Safe(mo.X, mo.Y) && !m.Blocked(mo.X, mo.Y);
+                }
+                Check($"{m.Kind}: mob count capped at {FieldMonsters.Max}", capped && mobs.List.Count == FieldMonsters.Max, $"n={mobs.List.Count}");
+                Check($"{m.Kind}: mobs never enter safe zone / walls", stayOut && !hitPlayer);
+            }
+            // 가까이 있으면 부딪혀 전투가 된다
+            var f = new WorldMap();
+            var mm = new FieldMonsters(new System.Random(1));
+            mm.Reset(f, 3, 4, 0);
+            int tx = 0, ty = 0;
+            for (int y = 8; y < WorldMap.H - 2 && tx == 0; y++)
+                for (int x = 10; x < WorldMap.W - 2; x++)
+                    if (mm.Habitat(x, y) && mm.Habitat(x, y + 1)) { tx = x; ty = y; break; }
+            var target = mm.Spawn(tx, ty, 0);
+            target.Wait = 0;
+            FieldMonster got = null;
+            for (int i = 0; i < 4000 && got == null; i++) got = mm.Tick(.05f, tx, ty + 1);
+            Check("mob walks into nearby player", got == target);
+            mm.Grace = 2;
+            Check("grace blocks contact", mm.Tick(.05f, target.X, target.Y) == null);
+        }
+
+        /// <summary>챕터 2: 킹 젤리를 깬 수준(Lv6)에서 동굴 젤리로 Lv8 까지 → 젤리 장군.</summary>
+        static void BalanceSimulation2()
+        {
+            const int runs = 400;
+            int wins = 0, battles = 0;
+            var r = new System.Random(77);
+            for (int run = 0; run < runs; run++)
+            {
+                var p = PlayerState.NewGame("sim");
+                p.GainExp(PlayerState.NextExp(5));
+                int b = 0;
+                while (p.Lv < 8 && b < 200)
+                {
+                    var def = GameData.Cave[WorldMap.PickCaveEnemyIndex(0, r.Next(4, 20), r)];
+                    if (!Fight(p, def, r)) p.RestoreAll();
+                    b++;
+                    if (p.Hp < p.MaxHp / 3) p.RestoreAll();
+                }
+                p.RestoreAll();
+                if (Fight(p, GameData.General, r)) wins++;
+                battles += b;
+            }
+            float rate = wins / (float)runs;
+            Debug.Log($"[BALANCE2] avgBattlesLv6to8={battles / (float)runs:F1} generalWinRate@Lv8={rate:P0}");
+            Check("general beatable at Lv8", rate >= .6f, $"winRate={rate:P0}");
+            Check("general not trivial at Lv8", rate <= .995f, $"winRate={rate:P0}");
+        }
+
+        static bool[,] Reach(WorldMap m, PlayerState p = null)
+        {
+            p ??= PlayerState.NewGame("r");
             var seen = new bool[WorldMap.W, WorldMap.H];
             var q = new Queue<(int, int)>();
-            q.Enqueue(WorldMap.Start);
-            seen[WorldMap.Start.x, WorldMap.Start.y] = true;
+            q.Enqueue(m.SpawnPoint);
+            seen[m.SpawnPoint.x, m.SpawnPoint.y] = true;
             while (q.Count > 0)
             {
                 var (x, y) = q.Dequeue();
                 foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
                 {
                     int nx = x + dx, ny = y + dy;
-                    if (nx < 0 || ny < 0 || nx >= WorldMap.W || ny >= WorldMap.H || seen[nx, ny] || m.Blocked(nx, ny)) continue;
+                    if (nx < 0 || ny < 0 || nx >= WorldMap.W || ny >= WorldMap.H || seen[nx, ny] || !Quest.Walkable(m, p, nx, ny)) continue;
                     seen[nx, ny] = true;
                     q.Enqueue((nx, ny));
                 }
@@ -211,7 +293,7 @@ namespace GirlAdventure.EditorTools
         static void MusicTests()
         {
             Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
-            foreach (var name in new[] { "title", "field", "battle", "boss", "ending" })
+            foreach (var name in new[] { "title", "field", "cave", "battle", "boss", "ending" })
             {
                 var s = Music.Get(name);
                 if (s == null) { Check($"bgm {name} exists", false); continue; }

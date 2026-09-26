@@ -19,6 +19,7 @@ namespace GirlAdventure.View
         Image heroTitleImg, flashImg, cutinArt;
         Text cutinText, endText;
         Button nextChapterBtn;
+        Text endHead;
         float endingShownAt;                // 엔딩 직후 연타로 바로 넘어가지 않게
 
         // HUD
@@ -57,6 +58,7 @@ namespace GirlAdventure.View
             if (FindFirstObjectByType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
+            BuildVignette();                    // 맨 아래층 (필드 위, 다른 UI 아래)
             popLayer = UIKit.Stretch(ui, "Pops");
             enemyLabel = UIKit.Label(ui, "EnemyName", "", 460, 0, 400, 40, 26, TextAnchor.MiddleCenter, Color.white, true);
 
@@ -357,7 +359,7 @@ namespace GirlAdventure.View
             var frame = UIKit.Img(t, "Frame", UIKit.White, 46, 26, 344, 488, false);
             frame.color = UIKit.Gold;
             UIKit.Img(frame.transform, "Art", Art.UI("art_ultimate"), 4, 4, 336, 480, false);
-            UIKit.Label(t, "Head", "모험 완료!", 430, 70, 500, 60, 44, TextAnchor.UpperLeft, UIKit.Gold, true);
+            endHead = UIKit.Label(t, "Head", "모험 완료!", 430, 70, 500, 60, 44, TextAnchor.UpperLeft, UIKit.Gold, true);
             endText = UIKit.Label(t, "Body", "", 430, 150, 500, 220, 22, TextAnchor.UpperLeft, Color.white, true);
             endText.supportRichText = true;
             var again = UIKit.Button(t, "Again", "처음부터 다시", 430, 390, 250, 60, 24, new Color32(150, 110, 255, 255));
@@ -372,7 +374,9 @@ namespace GirlAdventure.View
             hudWin.SetActive(false);
             hintLabel.SetActive(false);
             enemyLabel.text = "";
-            endText.text = FillText(GameData.Talk("ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
+            bool ch2 = P.Boss2Down;
+            endHead.text = ch2 ? "챕터 2 완료!" : "모험 완료!";
+            endText.text = FillText(GameData.Talk(ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
             nextChapterBtn.gameObject.SetActive(P.Chapter == 1);
             endingShownAt = Time.time;
             endingPanel.SetActive(true);

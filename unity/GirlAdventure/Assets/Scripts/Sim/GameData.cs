@@ -8,8 +8,10 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class EnemyTable
     {
-        public EnemyDef[] Normal;
-        public EnemyDef Boss;
+        public EnemyDef[] Normal;       // 초원 (챕터 1)
+        public EnemyDef Boss;           // 킹 젤리
+        public EnemyDef[] Cave;         // 동굴 (챕터 2)
+        public EnemyDef General;        // 젤리 장군
     }
 
     /// <summary>명령 하나의 수치. 피해 = Atk × AtkMul + Bonus + (0 ~ Rand-1).</summary>
@@ -63,6 +65,8 @@ namespace GirlAdventure.Sim
     {
         public static EnemyDef[] Normal { get; private set; }
         public static EnemyDef King { get; private set; }
+        public static EnemyDef[] Cave { get; private set; }
+        public static EnemyDef General { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
         static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
@@ -76,6 +80,9 @@ namespace GirlAdventure.Sim
             Normal = enemies.Normal;
             King = enemies.Boss;
             King.Boss = true;
+            Cave = enemies.Cave;
+            General = enemies.General;
+            General.Boss = true;
             skills.Clear();
             foreach (var s in skillTable.Skills)
                 skills[(Cmd)Enum.Parse(typeof(Cmd), s.Cmd)] = s;

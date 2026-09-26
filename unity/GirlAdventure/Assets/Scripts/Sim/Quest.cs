@@ -4,12 +4,13 @@ namespace GirlAdventure.Sim
     public enum DoorResult { Sealed, Locked, Opened }
 
     /// <summary>
-    /// 챕터 2 진행 규칙: 보물상자에서 열쇠 → 젤리 기지 문 열기.
-    /// 챕터 1 에서는 상자와 문 모두 꿈쩍하지 않는다 (먼저 킹 젤리를 물리쳐야 한다).
+    /// 챕터 2(동굴) 진행 규칙: 보물상자에서 열쇠 → 젤리 기지 문 열기 → 기지 안 젤리 장군.
+    /// 한 번 연 문은 그 뒤로 지나다닐 수 있다.
     /// </summary>
     public static class Quest
     {
         public const string KeyItem = "key";
+        public const string DoorId = "base_door";
 
         /// <summary>상자 좌표 → 들어 있는 아이템 id.</summary>
         public static string ChestItem(int x, int y) =>
@@ -26,19 +27,28 @@ namespace GirlAdventure.Sim
             return ChestResult.Got;
         }
 
+        /// <summary>기지 문에 부딪혔을 때. 열쇠가 있으면 문이 열리고 그 뒤로는 지나갈 수 있다.</summary>
         public static DoorResult TryBaseDoor(PlayerState p)
         {
             if (p.Chapter < 2) return DoorResult.Sealed;
-            return p.Items.Contains(KeyItem) ? DoorResult.Opened : DoorResult.Locked;
+            if (!p.Items.Contains(KeyItem)) return DoorResult.Locked;
+            if (!p.Opened.Contains(DoorId)) p.Opened.Add(DoorId);
+            return DoorResult.Opened;
         }
 
-        /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 마을에서 다시 출발.</summary>
+        public static bool DoorOpen(PlayerState p) => p.Opened.Contains(DoorId);
+
+        /// <summary>이 칸으로 걸어갈 수 있나 (열린 기지 문 포함).</summary>
+        public static bool Walkable(WorldMap m, PlayerState p, int x, int y) =>
+            !m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p));
+
+        /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>
         public static void StartChapter2(PlayerState p)
         {
             p.Chapter = 2;
             p.RestoreAll();
-            p.X = WorldMap.Start.x;
-            p.Y = WorldMap.Start.y;
+            p.X = WorldMap.CaveStart.x;
+            p.Y = WorldMap.CaveStart.y;
         }
     }
 }

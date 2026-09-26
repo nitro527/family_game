@@ -26,8 +26,27 @@ namespace GirlAdventure.View
             waveSprite = Art.FromTexture(WaveTexture(), new Vector2(0, 1), Painter.Tile);
             puffSprite = Art.FromTexture(Painter.Glow(), new Vector2(.5f, .5f), 64);
             sparkSprite = Art.FromTexture(Painter.Star(), new Vector2(.5f, .5f), 64);
+            petalSprite = Art.FromTexture(PetalTexture(), new Vector2(.5f, .5f), 64);
+            for (int i = 0; i < 3; i++)
+            {
+                var c = new GameObject("CloudShadow").AddComponent<SpriteRenderer>();
+                c.transform.SetParent(fieldFxRoot, false);
+                c.sprite = puffSprite;
+                c.color = new Color(.05f, .1f, .2f, .10f);
+                c.sortingOrder = 4;
+                c.transform.localScale = new Vector3(14 + i * 3, 8 + i * 2, 1);
+                clouds.Add(c);
+            }
+        }
 
-            // 물 타일마다 물결 하나 (위치마다 박자를 다르게)
+        /// <summary>맵이 바뀔 때: 물결을 새 맵의 물 칸에 다시 깐다 (동굴 물은 청록빛).</summary>
+        void RebuildMapFx()
+        {
+            foreach (var (sr, _, _) in waves) Destroy(sr.gameObject);
+            waves.Clear();
+            foreach (var f in fieldFx) if (f.sr) Destroy(f.sr.gameObject);
+            fieldFx.Clear();
+            bool cave = map.Kind == MapKind.Cave;
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
@@ -40,6 +59,22 @@ namespace GirlAdventure.View
                     sr.transform.localPosition = at;
                     waves.Add((sr, at, (x * 1.7f + y * 2.9f) % 6.28f));
                 }
+            waveTint = cave ? new Color(.55f, 1f, .95f) : Color.white;
+            foreach (var c in clouds) c.enabled = !cave;
+        }
+
+        Sprite petalSprite;
+        Color waveTint = Color.white;
+        float ambientTimer;
+        readonly List<SpriteRenderer> clouds = new List<SpriteRenderer>();
+
+        /// <summary>꽃잎 모양 (작은 타원 두 겹).</summary>
+        static Texture2D PetalTexture()
+        {
+            var R = new Raster(64, 64);
+            R.Ellipse(32, 32, 26, 14, new Color32(255, 255, 255, 255));
+            R.Ellipse(26, 28, 10, 5, new Color32(255, 255, 255, 120));
+            return R.ToTexture();
         }
 
         /// <summary>1 타일 크기 투명 텍스처에 짧은 물결선 두 개.</summary>
@@ -75,7 +110,7 @@ namespace GirlAdventure.View
             foreach (var (sr, at, ph) in waves)
             {
                 float k = .5f + .5f * Mathf.Sin(t * 1.8f + ph);
-                sr.color = new Color(1, 1, 1, .15f + .55f * k);
+                sr.color = new Color(waveTint.r, waveTint.g, waveTint.b, .15f + .55f * k);
                 sr.transform.localPosition = at + new Vector3(Mathf.Sin(t * 1.3f + ph) * .08f, 0, 0);
             }
 
@@ -84,9 +119,43 @@ namespace GirlAdventure.View
             if (sparkleTimer <= 0)
             {
                 sparkleTimer = .22f;
-                var c = FeetAt(WorldMap.Fountain.x, WorldMap.Fountain.y) + new Vector3(Random.Range(-.3f, .3f), .5f, 0);
+                var c = FeetAt(map.Spring.x, map.Spring.y) + new Vector3(Random.Range(-.3f, .3f), .5f, 0);
                 SpawnField(sparkSprite, c, new Vector3(Random.Range(-.25f, .25f), Random.Range(.6f, 1.1f)), .9f,
                            Random.Range(.2f, .32f), Random.value < .5f ? new Color(.75f, .95f, 1f) : Color.white, Random.Range(-90, 90));
+            }
+
+            // 떠다니는 것: 초원은 바람에 날리는 꽃잎, 동굴은 반딧불 같은 빛 먼지
+            ambientTimer -= dt;
+            var camPos = cam.transform.position;
+            float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
+            if (ambientTimer <= 0)
+            {
+                if (map.Kind == MapKind.Cave)
+                {
+                    ambientTimer = .12f;
+                    var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
+                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.15f, .15f), Random.Range(.05f, .3f)), Random.Range(2.5f, 4.5f),
+                                        Random.Range(.08f, .16f), Random.value < .6f ? new Color(.5f, .95f, 1f, .9f) : new Color(1f, .8f, 1f, .9f));
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
+                else
+                {
+                    ambientTimer = .45f;
+                    var p = new Vector3(camPos.x - halfW - .5f + Random.Range(0, halfW * 1.5f), camPos.y + halfH + .5f, 0);
+                    var sr = SpawnField(petalSprite, p, new Vector3(Random.Range(.6f, 1.1f), Random.Range(-.9f, -.5f)), 9f, Random.Range(.12f, .18f),
+                                        Random.value < .5f ? new Color(1f, .8f, .9f, .9f) : new Color(1f, 1f, 1f, .85f), Random.Range(-160, 160));
+                    sr.sortingOrder = 4;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
+            }
+            // 구름 그림자: 천천히 흘러가고, 화면 밖으로 나가면 반대편에서 다시
+            for (int i = 0; i < clouds.Count; i++)
+            {
+                var c = clouds[i];
+                var lp = c.transform.localPosition + new Vector3(.35f + i * .1f, -.08f, 0) * dt;
+                if (lp.x > WorldMap.W + 10 || lp == Vector3.zero) lp = new Vector3(-10 - i * 12, -4 - i * 7, 0);
+                c.transform.localPosition = lp;
             }
 
             for (int i = fieldFx.Count - 1; i >= 0; i--)
@@ -102,7 +171,13 @@ namespace GirlAdventure.View
                 f.sr.transform.localPosition += f.vel * dt;
                 f.sr.transform.Rotate(0, 0, f.spin * dt);
                 var col = f.sr.color;
-                col.a = 1 - f.age / f.life;
+                if (f.fadeInOut)
+                {
+                    if (f.alpha < 0) f.alpha = col.a;
+                    col.a = f.alpha * Mathf.Sin(Mathf.PI * f.age / f.life);
+                    f.sr.transform.localPosition += new Vector3(Mathf.Sin(f.age * 2 + i) * .15f * dt, 0, 0);   // 살랑살랑
+                }
+                else col.a = 1 - f.age / f.life;
                 f.sr.color = col;
             }
         }

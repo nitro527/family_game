@@ -16,7 +16,7 @@ namespace GirlAdventure.View
 
         Transform battleRoot;
         SpriteRenderer bgSR, enemySR, heroSR;
-        Sprite bgNormal, bgBoss, glowSprite, starSprite;
+        Sprite bgNormal, bgBoss, bgCave, bgCaveBoss, glowSprite, starSprite;
         readonly Dictionary<EnemyDef, Sprite> jellySprites = new Dictionary<EnemyDef, Sprite>();
         readonly Dictionary<string, Sprite> poses = new Dictionary<string, Sprite>();
         readonly List<Fx> fx = new List<Fx>();
@@ -31,6 +31,8 @@ namespace GirlAdventure.View
             public SpriteRenderer sr;
             public Vector3 vel;
             public float age, life, spin;
+            public bool fadeInOut;      // 서서히 나타났다 사라짐 (필드 꽃잎·빛 먼지)
+            public float alpha = -1;    // fadeInOut 의 최대 알파 (처음 색에서 읽음)
         }
 
         static Vector3 Px(float x, float y) => Stage + new Vector3((x - 480) / 48f, (270 - y) / 48f, 0);
@@ -40,6 +42,8 @@ namespace GirlAdventure.View
             battleRoot = new GameObject("Battle").transform;
             bgNormal = Art.FromTexture(Painter.BattleBackground(false), new Vector2(.5f, .5f), 48);
             bgBoss = Art.FromTexture(Painter.BattleBackground(true), new Vector2(.5f, .5f), 48);
+            bgCave = Art.FromTexture(Painter.CaveBattleBackground(false), new Vector2(.5f, .5f), 48);
+            bgCaveBoss = Art.FromTexture(Painter.CaveBattleBackground(true), new Vector2(.5f, .5f), 48);
             bgSR = NewSR("Background", 0);
             bgSR.transform.position = Px(480, 270);
             enemySR = NewSR("Enemy", 2);
@@ -83,7 +87,7 @@ namespace GirlAdventure.View
             fieldRoot.gameObject.SetActive(false);
             hintLabel.SetActive(false);
             cam.transform.position = Stage + new Vector3(0, 0, -10);
-            bgSR.sprite = def.Boss ? bgBoss : bgNormal;
+            bgSR.sprite = map.Kind == MapKind.Cave ? (def.Boss ? bgCaveBoss : bgCave) : (def.Boss ? bgBoss : bgNormal);
             bgm.Play(def.Boss ? "boss" : "battle");
             enemySR.sprite = JellySprite(def);
             enemySR.transform.localScale = Vector3.one * (def.Boss ? 1.75f : 1.05f);
@@ -204,6 +208,13 @@ namespace GirlAdventure.View
                 yield return Talk("levelup", ("lv", P.Lv - ups + i + 1));
             }
             RefreshHud();
+            if (def == GameData.General)
+            {
+                P.Boss2Down = true;
+                LeaveBattleStage();
+                yield return Chapter2ClearRoutine();
+                yield break;
+            }
             if (def.Boss)
             {
                 P.BossDown = true;
@@ -220,7 +231,7 @@ namespace GirlAdventure.View
             bgm.Stop();
             yield return Talk("defeat");
             P.Hp = P.MaxHp; P.Mp = P.MaxMp;
-            P.X = WorldMap.Fountain.x - 1; P.Y = WorldMap.Fountain.y + 1;
+            (P.X, P.Y) = map.RevivePoint;
             facing = "down";
             yield return Flash(.3f);
             LeaveBattleStage();

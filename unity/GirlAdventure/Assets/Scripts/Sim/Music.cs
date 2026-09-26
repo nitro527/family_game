@@ -59,6 +59,15 @@ namespace GirlAdventure.Sim
             },
             new Song
             {
+                Name = "cave", Bpm = 104,
+                Lead = "E5.2 G5.2 F#5.2 E5.2 | D#5.4 B4.4 | E5.2 G5.2 A5.2 B5.2 | A5.6 R.2 |" +
+                       "G5.2 F#5.2 E5.2 D5.2 | C5.4 E5.4 | D#5.2 F#5.2 A5.2 F#5.2 | E5.6 R.2",
+                Bass = "E2 B2 E3 B2 E2 B2 E3 B2 | B1 F#2 B2 F#2 B1 F#2 B2 F#2 | E2 B2 E3 B2 E2 B2 E3 B2 | A1 E2 A2 E2 A1 E2 A2 E2 |" +
+                       "C2 G2 C3 G2 C2 G2 C3 G2 | A1 E2 A2 E2 A1 E2 A2 E2 | B1 F#2 B2 F#2 B1 F#2 B2 F#2 | E2 B2 E3 B2 E2.4",
+                Drums = "k..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..h.k.hk..hsk.s",
+            },
+            new Song
+            {
                 Name = "ending", Bpm = 96, SoftLead = true,
                 Lead = "C5.2 F5.2 A5.4 | G5.2 F5.2 E5.2 F5.2 | G5.3 A5 A#5.2 G5.2 | A5.6 R.2 |" +
                        "F5.2 A5.2 C6.4 | A#5.2 A5.2 G5.2 F5.2 | E5.2 G5.2 C5.2 E5.2 | F5.6 R.2",
