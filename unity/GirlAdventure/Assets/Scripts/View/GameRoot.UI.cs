@@ -65,6 +65,7 @@ namespace GirlAdventure.View
             BuildCutin();
             BuildEnding();
             BuildTouchPad();
+            BuildSwirl();
 
             flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));
             flashImg.raycastTarget = false;
@@ -290,6 +291,7 @@ namespace GirlAdventure.View
             titleIndex = canContinue ? 1 : 0;       // 세이브가 있으면 "이어하기" 가 기본 (실수로 덮어쓰지 않게)
             RenderTitle();
             cam.transform.position = new Vector3(-100, 0, -10);   // 월드는 안 보이게
+            HideSwirl();
             bgm.Play("title");
         }
 

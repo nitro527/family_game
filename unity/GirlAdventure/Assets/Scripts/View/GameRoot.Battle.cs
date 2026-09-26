@@ -77,7 +77,7 @@ namespace GirlAdventure.View
             Current = Mode.Battle;
             battle = new BattleSystem(P, def, rng);
             sfx.Play("encounter");
-            yield return Flash(.45f);
+            yield return SwirlIn(def.Boss);
 
             battleRoot.gameObject.SetActive(true);
             fieldRoot.gameObject.SetActive(false);
@@ -92,6 +92,7 @@ namespace GirlAdventure.View
             enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -28 : -160);
             enemyLabel.text = def.Name;
             RefreshHud();
+            StartCoroutine(SwirlOut());
 
             yield return Talk("appear", ("enemy", def.Name));
             while (true)
@@ -246,6 +247,7 @@ namespace GirlAdventure.View
             fieldRoot.gameObject.SetActive(true);
             enemyLabel.text = "";
             cmdWin.SetActive(false);
+            HideSwirl();
             foreach (var f in fx) if (f.sr) Destroy(f.sr.gameObject);
             fx.Clear();
         }

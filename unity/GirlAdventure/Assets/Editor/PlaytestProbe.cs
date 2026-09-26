@@ -158,6 +158,14 @@ namespace GirlAdventure.EditorTools
             if (G.Current == GameRoot.Mode.Battle)
                 foreach (var x in FightUntilOver(false)) yield return x;
 
+            // 필드 연출: 연못 물결 + 샘물 반짝임
+            G.DebugTeleport(8, 12, "down");
+            yield return .6f;
+            Shot("field_water");
+            G.DebugTeleport(5, 4, "up");
+            yield return .8f;
+            Shot("fountain_sparkle");
+
             // 터치 버튼: 화면 버튼을 실제 포인터 이벤트로 눌러서 걷기
             G.DebugTeleport(4, 5, "down");
             G.ForceTouchPad = true;
@@ -203,6 +211,7 @@ namespace GirlAdventure.EditorTools
             if (G.Current != GameRoot.Mode.Battle) G.DebugBattle(false);
             yield return (Func<bool>)(() => G.CommandOpen);
             Shot("battle_command");
+            Expect("swirl gone when command opens", !G.SwirlVisible);
             ExpectBgm("battle");
             foreach (var x in Choose(0)) yield return x;    // 리본 파이어
             yield return .65f;
@@ -220,8 +229,10 @@ namespace GirlAdventure.EditorTools
             Shot("after_battle_field");
             ExpectBgm("field");
 
-            // 사탕 / 도망
+            // 사탕 / 도망 (들어갈 때 소용돌이 전환도 찍는다)
             G.DebugBattle(false);
+            yield return .3f;
+            Shot("encounter_swirl");
             yield return (Func<bool>)(() => G.CommandOpen);
             G.DebugSetHp(4);
             yield return .2f;

@@ -41,6 +41,7 @@ namespace GirlAdventure.View
             frontSprite = Art.Get("walk_front", FieldCharHeight);
             backSprite = Art.Get("walk_back", FieldCharHeight);
             playerSR.sprite = frontSprite;
+            BuildFieldFx();
         }
 
         /// <summary>타일 좌표 → 발밑 월드 좌표.</summary>
@@ -89,6 +90,7 @@ namespace GirlAdventure.View
                 if (d != null) TryMove(d);
             }
             UpdatePlayerVisual();
+            TickFieldFx();
         }
 
         void TryMove(string dir)
@@ -107,6 +109,7 @@ namespace GirlAdventure.View
             moveFrom = new Vector2Int(P.X, P.Y);
             P.X = nx; P.Y = ny;
             moveT = 0;
+            SpawnDust(moveFrom.x, moveFrom.y, dx, dy);
         }
 
         void UpdatePlayerVisual()
