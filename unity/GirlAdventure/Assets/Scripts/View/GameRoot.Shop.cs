@@ -64,6 +64,15 @@ namespace GirlAdventure.View
             choiceWin.SetActive(false);
         }
 
+        /// <summary>DQ 가게처럼 지금 장비와 비교: " ▲공3 ▼방1" (좋아지면 초록, 나빠지면 빨강, 같으면 "=").</summary>
+        string CompareText(string id)
+        {
+            var (a, d) = Equipment.Compare(P, id);
+            string Part(string name, int v) => v > 0 ? $"<color=#7CE08A>▲{name}{v}</color>" : v < 0 ? $"<color=#FF7A7A>▼{name}{-v}</color>" : "";
+            string t = (Part("공", a) + " " + Part("방", d)).Trim();
+            return " " + (t == "" ? "<color=#9AA3C7>=</color>" : t);
+        }
+
         IEnumerator ShopRoutine()
         {
             if (busy) yield break;
@@ -82,7 +91,8 @@ namespace GirlAdventure.View
                     string g = goods[i];
                     bool gear = Equipment.IsGear(g);
                     string price = gear && P.Gear.Contains(g) ? "<color=#9AA3C7>가짐</color>" : $"<color=#F2C443>{GameData.ItemPrice(g)}G</color>";
-                    labels[i] = $"{GameData.ItemName(g)} <size=15><color=#9AA3C7>{(gear ? Equipment.BonusText(g) : Items.EffectText(g))}</color>  {price}</size>";
+                    string cmp = gear && !P.Gear.Contains(g) ? CompareText(g) : "";
+                    labels[i] = $"{GameData.ItemName(g)} <size=15><color=#9AA3C7>{(gear ? Equipment.BonusText(g) : Items.EffectText(g))}</color>{cmp}  {price}</size>";
                 }
                 labels[goods.Count] = "그만두기";
                 yield return Choose(labels);

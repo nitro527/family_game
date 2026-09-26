@@ -318,7 +318,10 @@ namespace GirlAdventure.EditorTools
             Check("buy gear", Shop.Buy(p, "star_wand") == BuyResult.Bought && p.Gear.Contains("star_wand") && p.Gold == 200 - wandPrice && p.Atk == atk0,
                   $"gold={p.Gold} atk={p.Atk}");
             Check("gear bought only once", Shop.Buy(p, "star_wand") == BuyResult.Owned && p.Gold == 200 - wandPrice);
+            Check("compare vs bare", Equipment.Compare(p, "star_wand") == (2, 0) && Equipment.Compare(p, "star_pendant") == (1, 2));
             Check("equip adds atk", Equipment.Equip(p, "star_wand") && p.Atk == atk0 + GameData.Item("star_wand").Atk && Equipment.IsEquipped(p, "star_wand"));
+            Check("compare vs equipped", Equipment.Compare(p, "star_wand") == (0, 0) && Equipment.Compare(p, "crystal_wand") == (3, 0),
+                  $"crystal={Equipment.Compare(p, "crystal_wand")}");
             Shop.Buy(p, "flower_cape");
             Shop.Buy(p, "ribbon");
             Equipment.Equip(p, "flower_cape");
