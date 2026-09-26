@@ -184,6 +184,7 @@ namespace GirlAdventure.View
         // ------------------------------------------------------------------ debug hooks (Editor 프로브용)
         public bool Busy => busy;
         public Bounds PlayerBounds => playerSR.bounds;
+        public string PlayerSpriteName => playerSR.sprite != null ? playerSR.sprite.name : "";
         public bool CommandOpen => cmdWin != null && cmdWin.activeSelf;
         public int CommandIndex => cmdIndex;
         public string BgmName => bgm.Current;

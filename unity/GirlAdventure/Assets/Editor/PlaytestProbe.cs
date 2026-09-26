@@ -116,8 +116,10 @@ namespace GirlAdventure.EditorTools
         static IEnumerable Walk(KeyCode key, string dir, float seconds, bool frames)
         {
             Keys.Hold(key, true);
+            var seen = new HashSet<string>();
             if (frames)
-                for (int i = 0; i < 4; i++) { yield return .09f; Shot($"walk_{dir}_{i}"); }
+                for (int i = 0; i < 4; i++) { yield return .09f; seen.Add(G.PlayerSpriteName); Shot($"walk_{dir}_{i}"); }
+            if (frames) Expect($"walk {dir} animates ({string.Join(",", seen)})", seen.Count >= 2);
             yield return seconds;
             Keys.Hold(key, false);
             yield return .35f;

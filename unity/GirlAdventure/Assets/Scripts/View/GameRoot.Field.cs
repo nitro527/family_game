@@ -17,7 +17,7 @@ namespace GirlAdventure.View
         SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR;
         const float GuardHeight = 1.6f;         // 보물상자 지킴이는 보통 젤리보다 크게
         Sprite[] sideFrames;
-        Sprite frontSprite, backSprite;
+        Sprite[] frontFrames, backFrames;       // 앞/뒤 걷기: 한 발 → 두 발 모음 → 반대 발 → 두 발 모음 (tools/make_walk_frames.py)
         string facing = "down";
         Vector2Int moveFrom;
         float moveT = -1, walkT;
@@ -61,9 +61,9 @@ namespace GirlAdventure.View
             playerSR.sortingOrder = 2;
             sideFrames = new[] { Art.Get("walk_side1", FieldCharHeight), Art.Get("walk_side2", FieldCharHeight),
                                  Art.Get("walk_side3", FieldCharHeight), Art.Get("walk_side4", FieldCharHeight) };
-            frontSprite = Art.Get("walk_front", FieldCharHeight);
-            backSprite = Art.Get("walk_back", FieldCharHeight);
-            playerSR.sprite = frontSprite;
+            frontFrames = new[] { Art.Get("walk_front", FieldCharHeight), Art.Get("walk_front2", FieldCharHeight), Art.Get("walk_front3", FieldCharHeight) };
+            backFrames = new[] { Art.Get("walk_back", FieldCharHeight), Art.Get("walk_back2", FieldCharHeight), Art.Get("walk_back3", FieldCharHeight) };
+            playerSR.sprite = frontFrames[1];
 
             chestOpenSR = Prop("ChestOpen", Painter.ChestTexture(true), WorldMap.Chest);
             doorOpenSR = Prop("DoorOpen", MapPainter.OpenDoorTexture(), (WorldMap.BaseDoor.x, WorldMap.BaseDoor.y - 1));
@@ -291,7 +291,7 @@ namespace GirlAdventure.View
             playerTilePos = new Vector2(rx, ry);
             bool moving = moveT >= 0 || (!busy && HeldDir() != null);
             var feet = FeetAt(rx, ry);
-            float bob = 0;
+            float bob = 0, sway = 0, lean = 0;
             if (facing == "left" || facing == "right")
             {
                 playerSR.sprite = sideFrames[moving ? (int)(walkT / .11f) % 4 : 0];
@@ -300,11 +300,19 @@ namespace GirlAdventure.View
             }
             else
             {
-                playerSR.sprite = facing == "up" ? backSprite : frontSprite;
+                // 앞뒤 걷기: 옆걸음처럼 4박자 (한 발 · 모음 · 반대 발 · 모음), 멈추면 두 발 모은 자세.
+                // 발을 든 쪽으로 몸이 살짝 기울고 흔들리며, 발을 디딜 때 톡 튀어 오른다.
+                var fr = facing == "up" ? backFrames : frontFrames;
+                int f = (int)(walkT / .11f) % 4;
+                playerSR.sprite = moving ? fr[f == 3 ? 1 : f] : fr[1];
                 playerSR.flipX = false;
-                bob = moving ? Mathf.Abs(Mathf.Sin(walkT * 12)) * .1f : Mathf.Sin(Time.time * 2.5f) * .02f;
+                float ph = walkT * Mathf.PI / .22f;                 // 한 걸음(.22초)마다 반 바퀴
+                bob = moving ? Mathf.Abs(Mathf.Cos(ph)) * .1f : Mathf.Sin(Time.time * 2.5f) * .02f;
+                lean = moving ? Mathf.Sin(ph) * 4f : 0;
+                sway = moving ? Mathf.Sin(ph) * .04f : 0;
             }
-            playerSR.transform.localPosition = feet + new Vector3(0, bob, 0);
+            playerSR.transform.localPosition = feet + new Vector3(sway, bob, 0);
+            playerSR.transform.localRotation = Quaternion.Euler(0, 0, lean);
             shadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
 
             // 카메라: 맵 밖이 보이지 않게 가둔다
