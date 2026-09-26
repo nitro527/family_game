@@ -129,7 +129,11 @@ namespace GirlAdventure.View
             msgWin.gameObject.SetActive(false);
         }
 
-        void SetFace(string face) => msgFace.sprite = Art.UI("face_" + face);
+        void SetFace(string face)
+        {
+            msgFace.sprite = faceOverride != null ? faceOverride : Art.UI("face_" + face);   // 마을 사람이 말할 때는 그 젤리 얼굴
+            msgFace.preserveAspect = faceOverride != null;
+        }
 
         void ShowMessageWindow(bool narrow)
         {

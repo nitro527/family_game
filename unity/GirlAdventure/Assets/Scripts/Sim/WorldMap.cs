@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
     /// 초원 — '.' 풀밭  ',' 수풀(인카운트↑)  'f' 꽃  '=' 길  'b' 다리  'w' 물  'T' 나무
-    ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'M' 사탕 가게
+    ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'M' 사탕 가게  'N' 마을 사람(Npcs.Place)
     /// 동굴 — '#' 바위벽  '_' 동굴 바닥(인카운트)  ':' 입구 바닥(안전)  'r' 바위기둥  'w' 지하 샘
     ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'M' 사탕 가게
     ///        (보물상자 바로 옆 GuardSpot 에는 바위 대장 젤리가 버티고 있다 — 타일이 아니라 Quest 규칙)
@@ -21,7 +21,7 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
                                                     Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3),
                                                     CaveShop = (8, 17), GuardSpot = (2, 8);
-        const string Blocking = "TwCFSHD#rM";
+        const string Blocking = "TwCFSHD#rMN";
 
         public readonly MapKind Kind;
         readonly char[,] tiles = new char[W, H];
@@ -138,6 +138,12 @@ namespace GirlAdventure.Sim
             for (int y = y0; y <= y1; y++)
                 for (int x = x0; x <= x1; x++)
                     Set(x, y, c);
+        }
+
+        /// <summary>마을 사람 칸 (풀밭·꽃 칸에만).</summary>
+        public void SetNpc(int x, int y)
+        {
+            if (x >= 0 && y >= 0 && x < W && y < H && ".f:_".IndexOf(tiles[x, y]) >= 0) tiles[x, y] = 'N';
         }
 
         void Set(int x, int y, char c)

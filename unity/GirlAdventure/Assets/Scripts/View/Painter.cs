@@ -193,6 +193,8 @@ namespace GirlAdventure.View
             if (look == "rock") RockShell(R, cx, bottom, w, h);
             else if (look == "crystal") CrystalGrowth(R, cx, bottom, w, h);
             else if (look == "general") GeneralArmor(R, cx, bottom, w, h);
+            else if (look == "hat") StrawHat(R, cx, bottom, w, h);
+            else if (look == "bow") HeadBow(R, cx, bottom, w, h);
             foreach (int s in new[] { -1, 1 })
             {
                 float ex = cx + s * w * .15f, ey = bottom - h * .38f;
@@ -304,6 +306,32 @@ namespace GirlAdventure.View
         }
 
         /// <summary>젤리 장군: 왕관 대신 쇠 투구(양쪽 뿔 + 가운데 붉은 볏) + 돌 어깨 갑옷 + 가슴 훈장.</summary>
+        /// <summary>마을 사람: 밀짚모자 (넓은 챙 + 둥근 머리 + 빨간 띠).</summary>
+        static void StrawHat(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            Color32 straw = Raster.Hex("#F2D27A"), strawD = Raster.Hex("#C9A24E");
+            R.Ellipse(cx, top + 34, w * .46f + 5, 27, Ink);
+            R.Ellipse(cx, top + 34, w * .46f, 22, straw);
+            R.Ellipse(cx, top + 40, w * .40f, 12, strawD);
+            R.Ellipse(cx, top + 14, w * .23f + 5, 37, Ink);
+            R.Ellipse(cx, top + 14, w * .23f, 32, straw);
+            R.Rect(cx - w * .23f, top + 24, w * .46f, 12, Raster.Hex("#E0484E"));
+            R.Ellipse(cx - w * .08f, top + 2, 12, 8, new Color32(255, 255, 255, 120));
+        }
+
+        /// <summary>마을 사람: 머리 위 커다란 리본.</summary>
+        static void HeadBow(Raster R, float cx, float bottom, float w, float h)
+        {
+            float cy = bottom - h + 6;
+            Color32 bow = Raster.Hex("#FF5C8A"), bowD = Raster.Hex("#C23A64");
+            foreach (int s in new[] { -1, 1 })
+                R.Polygon(new[] { new Vector2(cx, cy), new Vector2(cx + s * 70, cy - 40), new Vector2(cx + s * 78, cy + 26) },
+                          (x, y) => Color32.Lerp(bow, bowD, Mathf.Clamp01((y - cy + 40) / 70)), Ink, 6);
+            R.Circle(cx, cy, 20, Ink);
+            R.Circle(cx, cy, 15, bow);
+        }
+
         static void GeneralArmor(Raster R, float cx, float bottom, float w, float h)
         {
             Color32 iron = Raster.Hex("#8C96A4"), ironD = Raster.Hex("#56606E"), ironL = Raster.Hex("#DDE4EE");

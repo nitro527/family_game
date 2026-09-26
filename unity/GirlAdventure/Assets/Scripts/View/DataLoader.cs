@@ -15,6 +15,7 @@ namespace GirlAdventure.View
                 Read<DialogueTable>("dialogue"),
                 Read<ItemTable>("items"),
                 Read<EncounterTable>("encounters"));
+            Npcs.Set(Read<NpcTable>("npcs"));
         }
 
         static T Read<T>(string name)

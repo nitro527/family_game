@@ -45,7 +45,7 @@ namespace GirlAdventure.EditorTools
         /// <summary>코드가 부르는 대사 id 목록 — 새 대사를 코드에서 쓰면 여기에도 추가.</summary>
         static readonly string[] TalkIds =
         {
-            "intro", "continue", "slot_new", "slot_load", "slot_overwrite", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
+            "intro", "continue", "npc_guide", "npc_guide_after", "npc_tips", "npc_tips_after", "slot_new", "slot_load", "slot_overwrite", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
             "item_hp", "item_mp", "item_noneed", "item_none", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
@@ -147,6 +147,37 @@ namespace GirlAdventure.EditorTools
             }
             Check("gate reachable", seen[WorldMap.Gate.x, WorldMap.Gate.y], $"reachable tiles={reach}");
             Check("no encounter on path", m.EncounterRate(WorldMap.Start.x, WorldMap.Start.y) == 0);
+
+            // 마을 사람: 풀밭 칸에 놓이고(막힘), 대사·겉모습이 있고, 놓은 뒤에도 성문까지 갈 수 있다
+            var withNpc = new WorldMap();
+            Npcs.Place(withNpc);
+            string badNpc = "";
+            foreach (var n in Npcs.On(MapKind.Field))
+                if (withNpc.At(n.X, n.Y) != 'N' || !withNpc.Blocked(n.X, n.Y) || !GameData.HasTalk(n.Talk)
+                    || (!string.IsNullOrEmpty(n.TalkAfter) && !GameData.HasTalk(n.TalkAfter)) || Array.IndexOf(EnemyDef.Looks, n.Look ?? "") < 0)
+                    badNpc += n.Id + " ";
+            Check("npcs placed with talk+look", Npcs.All.Count >= 2 && badNpc == "", $"n={Npcs.All.Count} bad={badNpc}");
+            var seen2 = new bool[WorldMap.W, WorldMap.H];
+            var q2 = new Queue<(int, int)>();
+            q2.Enqueue(WorldMap.Start);
+            seen2[WorldMap.Start.x, WorldMap.Start.y] = true;
+            while (q2.Count > 0)
+            {
+                var (x, y) = q2.Dequeue();
+                foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= WorldMap.W || ny >= WorldMap.H || seen2[nx, ny] || withNpc.Blocked(nx, ny)) continue;
+                    seen2[nx, ny] = true;
+                    q2.Enqueue((nx, ny));
+                }
+            }
+            Check("gate reachable with npcs", seen2[WorldMap.Gate.x, WorldMap.Gate.y] && seen2[WorldMap.Fountain.x - 1, WorldMap.Fountain.y + 1]);
+            var talker = PlayerState.NewGame("t");
+            var guide = Npcs.At(MapKind.Field, Npcs.All[0].X, Npcs.All[0].Y);
+            string before = Npcs.TalkId(guide, talker);
+            talker.BossDown = true;
+            Check("npc talk changes after boss", before == guide.Talk && Npcs.TalkId(guide, talker) == guide.TalkAfter);
 
             // PIPOYA 타일 맵: 타일을 읽을 수 있고, 그린 맵에 빈(투명) 칸이 없어야 한다
             var tiles = FieldTiles.Load();

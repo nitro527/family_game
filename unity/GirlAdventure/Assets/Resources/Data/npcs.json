@@ -1,0 +1,8 @@
+{
+  "Npcs": [
+    { "Id": "guide", "Map": "field", "X": 7, "Y": 2, "Name": "밀짚모자 젤리", "Color": "#9FE08A", "Dark": "#5FA84E", "Look": "hat",
+      "Talk": "npc_guide", "TalkAfter": "npc_guide_after" },
+    { "Id": "tips", "Map": "field", "X": 2, "Y": 6, "Name": "리본 젤리", "Color": "#FFC3DA", "Dark": "#D98AAE", "Look": "bow",
+      "Talk": "npc_tips", "TalkAfter": "npc_tips_after" }
+  ]
+}

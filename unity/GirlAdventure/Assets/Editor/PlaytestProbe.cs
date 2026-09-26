@@ -186,6 +186,16 @@ namespace GirlAdventure.EditorTools
             yield return .6f;
             Shot("field_water");
             Expect($"flowers are sway sprites (n={G.FlowerCount} tilt={G.FlowerTilt:F2})", G.FlowerCount > 10 && Mathf.Abs(G.FlowerTilt) > .01f);
+            // 마을 사람: 밀짚모자 젤리 아래에서 위로 부딪히면 말을 건다 (초상화도 젤리)
+            Expect($"npcs on field (n={G.NpcCount})", G.NpcCount == 2);
+            G.DebugTeleport(7, 3, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return 1.2f;
+            Shot("npc_talk");
+            Expect("npc talks when bumped", G.TalkingToNpc && G.MessageText.Contains("밀짚모자"));
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("npc talk ends", !G.TalkingToNpc && G.P.X == 7 && G.P.Y == 3);
             G.DebugTeleport(5, 4, "up");
             yield return .8f;
             Shot("fountain_sparkle");

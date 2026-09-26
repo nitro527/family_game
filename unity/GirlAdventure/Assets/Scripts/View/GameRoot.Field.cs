@@ -39,6 +39,8 @@ namespace GirlAdventure.View
             fieldMap = map;
             caveMap = WorldMap.Cave();
             mobs = new FieldMonsters(rng);
+            Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
+            Npcs.Place(caveMap);
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
@@ -109,6 +111,7 @@ namespace GirlAdventure.View
             mapSR.sprite = MapSprite(map);
             RebuildMapFx();
             RebuildLights();
+            RebuildNpcs();
             mobs.Reset(map, P.X, P.Y);
             SyncMobViews();
         }
@@ -333,6 +336,7 @@ namespace GirlAdventure.View
             }
             SyncMobViews();
             TickGuard();
+            TickNpcs();
             UpdatePlayerVisual();
             TickFieldFx();
             TickLighting();
@@ -355,6 +359,7 @@ namespace GirlAdventure.View
                 else if (c == 'H') StartCoroutine(ChestRoutine(nx, ny));
                 else if (c == 'D') StartCoroutine(DoorRoutine());
                 else if (c == 'M') StartCoroutine(ShopRoutine());
+                else if (c == 'N') { var npc = Npcs.At(map.Kind, nx, ny); if (npc != null) StartCoroutine(NpcRoutine(npc)); }
                 return;
             }
             moveFrom = new Vector2Int(P.X, P.Y);

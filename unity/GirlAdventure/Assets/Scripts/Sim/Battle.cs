@@ -16,8 +16,8 @@ namespace GirlAdventure.Sim
         public string Look;                 // 겉모습 장식 (Looks 중 하나, 없으면 기본 젤리)
         public string Backdrop;             // 전투 배경 이름 (Resources/Battle/, 없으면 맵 기본 배경)
 
-        /// <summary>View 가 그릴 줄 아는 겉모습: 돌 껍데기, 수정 결정, 장군 투구.</summary>
-        public static readonly string[] Looks = { "", "rock", "crystal", "general" };
+        /// <summary>View 가 그릴 줄 아는 겉모습: 돌 껍데기, 수정 결정, 장군 투구, (마을 사람) 밀짚모자·리본.</summary>
+        public static readonly string[] Looks = { "", "rock", "crystal", "general", "hat", "bow" };
 
         /// <summary>View 가 연출할 줄 아는 공격 모션.</summary>
         public static readonly string[] Moves = { "tackle", "hop", "spin", "slam", "shard", "charge" };
