@@ -23,6 +23,7 @@ namespace GirlAdventure.View
         float moveT = -1, walkT;
         WorldMap fieldMap, caveMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
+        FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
 
         // 보이는 몬스터
@@ -39,10 +40,12 @@ namespace GirlAdventure.View
             caveMap = WorldMap.Cave();
             mobs = new FieldMonsters(rng);
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
+            // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
+            fieldTiles = FieldTiles.Load();
             foreach (var m in new[] { fieldMap, caveMap })
             {
                 var mm = m;
-                mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm));
+                mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
             }
 
             mapSR = new GameObject("Map").AddComponent<SpriteRenderer>();
@@ -88,7 +91,7 @@ namespace GirlAdventure.View
             if (!mapSprites.TryGetValue(m, out var s))
             {
                 float t0 = Time.realtimeSinceStartup;
-                var raster = mapJobs.TryGetValue(m, out var job) ? job.Result : MapPainter.RenderRaster(m);   // 아직이면 기다린다
+                var raster = mapJobs.TryGetValue(m, out var job) ? job.Result : MapPainter.RenderRaster(m, fieldTiles);   // 아직이면 기다린다
                 s = Art.FromTexture(raster.ToTexture(), new Vector2(0, 1), Painter.Tile);   // 1 타일 = 1 유닛
                 mapSprites[m] = s;
                 mapJobs.Remove(m);

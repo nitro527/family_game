@@ -147,6 +147,24 @@ namespace GirlAdventure.EditorTools
             }
             Check("gate reachable", seen[WorldMap.Gate.x, WorldMap.Gate.y], $"reachable tiles={reach}");
             Check("no encounter on path", m.EncounterRate(WorldMap.Start.x, WorldMap.Start.y) == 0);
+
+            // PIPOYA 타일 맵: 타일을 읽을 수 있고, 그린 맵에 빈(투명) 칸이 없어야 한다
+            var tiles = FieldTiles.Load();
+            Check("field tiles load", tiles != null);
+            if (tiles != null)
+            {
+                var r = MapPainter.RenderRaster(m, tiles);
+                int holes = 0;
+                for (int y = 0; y < r.H; y++)
+                    for (int x = 0; x < r.W; x++)
+                        if (r.Pixel(x, y).a < 255) holes++;
+                Check("tiled field has no holes", holes == 0, $"transparent px={holes}");
+                // 눈으로 볼 수 있게 맵 전체를 저장 (unity/playtest/map_field.png)
+                var tex = r.ToTexture(FilterMode.Point, true);
+                System.IO.Directory.CreateDirectory("../playtest");
+                System.IO.File.WriteAllBytes("../playtest/map_field.png", tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+            }
         }
 
         static void ProgressionTests()

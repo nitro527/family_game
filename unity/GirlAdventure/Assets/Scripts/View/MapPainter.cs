@@ -19,7 +19,9 @@ namespace GirlAdventure.View
         public static Texture2D Render(WorldMap m) => RenderRaster(m).ToTexture();
 
         /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
-        public static Raster RenderRaster(WorldMap m) => m.Kind == MapKind.Cave ? Cave(m) : Field(m);
+        /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
+        public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
+            m.Kind == MapKind.Cave ? Cave(m) : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
         static float Hash(int x, int y, int s)
@@ -183,6 +185,74 @@ namespace GirlAdventure.View
                     if (m.At(x, y) == 'T') Tree(R, x, y, x < 2 || y < 2 || x >= WorldMap.W - 2 || y >= WorldMap.H - 1);
             Painter.Castle(R);
             return R;
+        }
+
+        // ------------------------------------------------------------------ field (PIPOYA 타일)
+        /// <summary>
+        /// 초원을 PIPOYA 월드 타일로: 풀밭 바탕 → 수풀·길·물·숲 오토타일 → 다리·샘물·표지판·가게·꽃 → 성.
+        /// 성(C)은 가장자리를 숲으로 덮고, 가운데에 파란 성 그림(2배)을 성문 위치에 맞춰 얹는다.
+        /// </summary>
+        static Raster TiledField(WorldMap m, FieldTiles t)
+        {
+            var R = new Raster(WorldMap.W * T, WorldMap.H * T);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    R.Stamp(t.Sheet, 0, 0, T, T, x * T, y * T);             // 풀밭 (시트 0,0)
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    if (ch == ',') AutoTile(R, t.Grass, m, ",", x, y);
+                    else if (ch == '=' || ch == 'G') AutoTile(R, t.Path, m, "=Gb", x, y);
+                    else if (ch == 'w' || ch == 'b') AutoTile(R, t.Water, m, "wb", x, y);
+                }
+            var rnd = new System.Random(11);
+            float Rn() => (float)rnd.NextDouble();
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    if (ch == 'b')
+                    {
+                        // 다리: 물이 좌우로 이어지면 세로 다리(시트 1,2), 아니면 가로 다리(시트 0,2 — 다리 기둥까지 64px)
+                        bool vert = "wb".IndexOf(m.At(x - 1, y)) >= 0 && "wb".IndexOf(m.At(x + 1, y)) >= 0;
+                        if (vert) R.Stamp(t.Sheet, T, 2 * T, T, T, x * T, y * T);
+                        else R.Stamp(t.Sheet, 0, 2 * T, T, 64, x * T, y * T);
+                    }
+                    if (ch == 'f')
+                        for (int i = 0; i < 5; i++)
+                            Flower(R, x * T + 6 + Rn() * 36, y * T + 8 + Rn() * 34, new[] { "#FFFFFF", "#FFD84A", "#FF8FB0", "#B9A2FF", "#FF9F6B" }[rnd.Next(5)]);
+                }
+            Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
+            Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
+            CandyShop(R, WorldMap.FieldShop.x * T, WorldMap.FieldShop.y * T);
+            // 숲: 위 칸부터 (아래 줄 나무가 위 줄을 살짝 덮게)
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if ("TC".IndexOf(m.At(x, y)) >= 0) AutoTile(R, t.Forest, m, "TC", x, y);
+            // 성: 시트 (5,6)~(6,7) 의 96×96 파란 성을 2배 → 4×4 칸. 성문 칸 가운데 위에서부터 아래로
+            int gx = WorldMap.Gate.x * T + T / 2, gy = WorldMap.Gate.y * T;
+            R.Stamp(t.Sheet, 5 * T, 6 * T, 2 * T, 2 * T, gx - 2 * T, gy, 2);
+            return R;
+        }
+
+        /// <summary>WOLF 형식 오토타일 한 칸: 24px 네 조각마다 가로·세로·대각 이웃이 같은 종류인지 보고 고른다.</summary>
+        static void AutoTile(Raster R, TileImage a, WorldMap m, string same, int x, int y)
+        {
+            const int Q = T / 2;
+            bool Same(int dx, int dy)
+            {
+                int xx = x + dx, yy = y + dy;
+                if (xx < 0 || yy < 0 || xx >= WorldMap.W || yy >= WorldMap.H) return true;   // 맵 밖은 이어진 것으로
+                return same.IndexOf(m.At(xx, yy)) >= 0;
+            }
+            for (int q = 0; q < 4; q++)
+            {
+                int qx = q % 2, qy = q / 2, dx = qx == 0 ? -1 : 1, dy = qy == 0 ? -1 : 1;
+                bool h = Same(dx, 0), v = Same(0, dy), d = Same(dx, dy);
+                int k = !h && !v ? 0 : !h ? 1 : !v ? 2 : !d ? 3 : 4;
+                R.Stamp(a, qx * Q, k * T + qy * Q, Q, Q, x * T + qx * Q, y * T + qy * Q);
+            }
         }
 
         static void Tuft(Raster R, float x, float y, Color32 dark, Color32 light)

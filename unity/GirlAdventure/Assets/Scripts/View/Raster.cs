@@ -123,11 +123,25 @@ namespace GirlAdventure.View
             }
         }
 
-        public Texture2D ToTexture(FilterMode filter = FilterMode.Bilinear)
+        /// <summary>(x, y) 픽셀 (캔버스 좌표). 테스트용.</summary>
+        public Color32 Pixel(int x, int y) => px[(H - 1 - y) * W + x];
+
+        /// <summary>이미지 조각 (sx,sy,sw,sh) 을 (dx,dy) 에 scale 배(최근접)로 찍는다. 투명도는 섞는다.</summary>
+        public void Stamp(TileImage src, int sx, int sy, int sw, int sh, int dx, int dy, int scale = 1)
+        {
+            for (int y = 0; y < sh * scale; y++)
+                for (int x = 0; x < sw * scale; x++)
+                {
+                    var c = src.At(sx + x / scale, sy + y / scale);
+                    if (c.a > 0) Blend(dx + x, dy + y, c);
+                }
+        }
+
+        public Texture2D ToTexture(FilterMode filter = FilterMode.Bilinear, bool readable = false)
         {
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false) { filterMode = filter, wrapMode = TextureWrapMode.Clamp };
             tex.SetPixels32(px);
-            tex.Apply(false, true);
+            tex.Apply(false, !readable);
             return tex;
         }
 

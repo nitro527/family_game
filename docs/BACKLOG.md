@@ -8,7 +8,7 @@
 
 ## 진행 대기 (우선순위 순)
 0. [ ] ⭐ **최우선 (사용자 지시): 무료 고퀄 에셋 적용** — 출처·라이선스는 docs/thirdparty_assets.md
-   - a) **필드**: `assets/thirdparty/pipoya_world_tileset/.../48x48/` 타일로 월드맵 다시 그리기 (지금 코드로 그린 풀·나무·물·길·성을 교체). 타일 1칸이 48px라 지금 맵 좌표계와 그대로 맞아요. 오토타일 규칙은 샘플 맵 pipo-map001.png 참고. 필요한 타일만 Unity Resources로 복사
+   - [x] a) (완료 2026-09-27, 초원만 — 동굴은 PIPOYA 에 동굴 타일이 없어 코드 그림 유지) **필드**: `assets/thirdparty/pipoya_world_tileset/.../48x48/` 타일로 월드맵 다시 그리기 (지금 코드로 그린 풀·나무·물·길·성을 교체). 타일 1칸이 48px라 지금 맵 좌표계와 그대로 맞아요. 오토타일 규칙은 샘플 맵 pipo-map001.png 참고. 필요한 타일만 Unity Resources로 복사
    - [x] b) (완료 2026-09-27) **전투 배경**: painterly_battle_backgrounds 50장 중 초원·숲·동굴·성(보스)에 맞는 4~6장을 골라 `Resources/Battle/`에 1280×720으로 줄여 복사하고, 지역·보스별로 배경 매핑 (코드 그라데이션 배경 교체)
    - c) **UI**: kenney_ui_rpg 창·버튼·바·화살표로 대화창, 명령창, HUD 바 스킨 교체 (9-slice). DQ 느낌이 나게 어두운 배경과 테두리는 유지
    - 검증: PlaytestProbe 스크린샷으로 전후 비교. 엔딩 크레딧에 출처 3개 추가
@@ -75,6 +75,7 @@ A. **사용자 요청 (2026-09-26)** — 최우선
 - 🙋 엄마·아빠 캐릭터를 아이들 그림체로 만들기 (Gemini)
 
 ## 완료 기록
+- 2026-09-27: 초원 맵을 PIPOYA 타일로 (0-a) — `Resources/Tiles/`(시트 + 오토타일 kusa·miti·umi·mori), `View/FieldTiles.cs`(메인 스레드에서 픽셀 읽기 → 백그라운드 그리기), `MapPainter.TiledField` + WOLF 형식 오토타일(24px 네 조각). 풀밭 바탕, 수풀=kusa, 길=miti, 물=umi, 나무·성 가장자리=mori 숲, 성=파란 성 2배(성문 칸 위). 샘물·표지판·가게·꽃은 기존 그림. 타일이 없으면 옛 코드 맵. SmokeTest: 타일 로딩·빈 픽셀 0 검사, 맵 전체를 unity/playtest/map_field.png 로 저장
 - 2026-09-27: 전투 배경 그림 (0-b) — Painterly 배경 5장을 1280×720 JPG 로 `Resources/Battle/`: 초원 meadow(22번)·킹 젤리 meadow_boss(23번 노을 풍차)·동굴 cave(49번 초록 수정)·바위 대장 cave_guard(36번)·젤리 장군 cave_boss(40번 벽돌 아치). 핏자국·해골 있는 배경은 뺌. `EnemyDef.Backdrop`(enemies.json)으로 보스별 배경, 없으면 맵 기본, 그림이 없으면 옛 코드 배경. `Editor/BattleArtImporter.cs` 가 NPOT 늘림을 꺼서 16:9 유지. 엔딩 오른쪽 아래에 출처 3개. SmokeTest 배경 크기 검사
 - 2026-09-26: 앞/뒤 걷기 애니메이션 (사용자 요청) — 한 장뿐이던 앞·뒷모습에서 `tools/make_walk_frames.py` 로 두 발 모음·반대 발 프레임을 만들어(다리만 떼어 반전, 치마 뒤에 다시 그림) 옆걸음처럼 4박자로 걷고, 걸음마다 몸이 좌우로 기울고 흔들림. 멈추면 두 발 모은 자세. 프로브가 네 방향 모두 프레임이 바뀌는지 확인
 - 2026-09-26: 겁먹은 몬스터 — 초원 Lv7+, 동굴 Lv11+ 이면 `FieldMonsters.Timid`: 가까운 젤리가 80% 확률로 멀어지고 스스로 부딪히지 않음 (주인공이 부딪히러 가면 싸움). SmokeTest 도망 규칙 확인

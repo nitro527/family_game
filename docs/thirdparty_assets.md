@@ -15,3 +15,4 @@
 
 ## 게임에 쓰는 파일
 - 전투 배경 (`unity/GirlAdventure/Assets/Resources/Battle/`, 1280×720 JPG로 줄임): meadow=22번, meadow_boss=23번, cave=49번, cave_guard=36번, cave_boss=40번
+- 초원 타일 (`unity/GirlAdventure/Assets/Resources/Tiles/`, 48×48 원본 그대로): pipo_sheet=pipo-map001.png, pipo_at_kusa/miti/umi/mori=[A]_type1 오토타일
