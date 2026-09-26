@@ -6,6 +6,7 @@ using GirlAdventure.View;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace GirlAdventure.EditorTools
 {
@@ -157,6 +158,26 @@ namespace GirlAdventure.EditorTools
             if (G.Current == GameRoot.Mode.Battle)
                 foreach (var x in FightUntilOver(false)) yield return x;
 
+            // 터치 버튼: 화면 버튼을 실제 포인터 이벤트로 눌러서 걷기
+            G.DebugTeleport(4, 5, "down");
+            G.ForceTouchPad = true;
+            yield return .3f;
+            Expect("touch pad visible in field", G.TouchPadVisible);
+            Shot("touchpad");
+            int tx = G.P.X;
+            var btn = G.TouchButton("Right");
+            var ev = new PointerEventData(EventSystem.current);
+            ExecuteEvents.Execute(btn, ev, ExecuteEvents.pointerDownHandler);
+            yield return .45f;
+            ExecuteEvents.Execute(btn, ev, ExecuteEvents.pointerUpHandler);
+            yield return .4f;
+            Expect("touch right moves player", G.P.X > tx);
+            G.ForceTouchPad = false;
+            yield return .1f;
+            Expect("touch pad hidden again", !G.TouchPadVisible);
+            if (G.Current == GameRoot.Mode.Battle)
+                foreach (var x in FightUntilOver(false)) yield return x;
+
             // 표지판 & 샘물
             G.DebugTeleport(4, 4, "up");
             yield return .3f;
@@ -264,7 +285,7 @@ namespace GirlAdventure.EditorTools
             ExpectBgm("ending");
         }
 
-        /// <summary>전투가 끝날 때까지: 보스면 별빛 폭풍 우선, 아니면 리본 파이어.</summary>
+        /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
         {
             int lvShot = 0;
@@ -272,7 +293,8 @@ namespace GirlAdventure.EditorTools
             {
                 if (G.CommandOpen)
                 {
-                    foreach (var x in Choose(boss && G.P.Mp >= 6 ? 1 : 0)) yield return x;
+                    int pick = G.P.Hp <= G.P.MaxHp * .35f && G.P.Candy > 0 ? 2 : boss && G.P.Mp >= 6 ? 1 : 0;
+                    foreach (var x in Choose(pick)) yield return x;
                 }
                 else Keys.Press(KeyCode.Z);
                 yield return .3f;

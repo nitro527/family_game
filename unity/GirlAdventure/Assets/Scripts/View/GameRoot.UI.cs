@@ -64,6 +64,7 @@ namespace GirlAdventure.View
             BuildTitle();
             BuildCutin();
             BuildEnding();
+            BuildTouchPad();
 
             flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));
             flashImg.raycastTarget = false;

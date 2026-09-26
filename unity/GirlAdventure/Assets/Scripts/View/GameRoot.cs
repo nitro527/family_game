@@ -7,7 +7,7 @@ namespace GirlAdventure.View
     /// <summary>
     /// 게임 전체 부트스트랩 + 상태 머신 (타이틀 → 필드 ↔ 전투 → 엔딩).
     /// 씬에는 카메라와 이 컴포넌트만 있으면 되고, 나머지는 전부 런타임에 코드로 만든다.
-    /// 부분 클래스: GameRoot.UI.cs (화면 UI), GameRoot.Field.cs (필드), GameRoot.Battle.cs (전투)
+    /// 부분 클래스: GameRoot.UI.cs (화면 UI), GameRoot.Field.cs (필드), GameRoot.Battle.cs (전투), GameRoot.Touch.cs (터치 버튼)
     /// </summary>
     public partial class GameRoot : MonoBehaviour
     {
@@ -73,6 +73,7 @@ namespace GirlAdventure.View
                 case Mode.Battle: TickBattle(); break;
             }
             TickPops();
+            TickTouchPad();
         }
 
         /// <summary>확인 입력 (Enter/Space/Z). 같은 프레임에 한 번만 소비된다.</summary>
