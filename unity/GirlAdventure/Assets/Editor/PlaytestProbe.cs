@@ -186,6 +186,9 @@ namespace GirlAdventure.EditorTools
             G.ForceTouchPad = false;
             yield return .1f;
             Expect("touch pad hidden again", !G.TouchPadVisible);
+            bool dpad = true;
+            try { Input.GetAxisRaw("PadDpadX"); Input.GetAxisRaw("PadDpadY"); } catch (ArgumentException) { dpad = false; }
+            Expect("gamepad d-pad axes configured", dpad);
             if (G.Current == GameRoot.Mode.Battle)
                 foreach (var x in FightUntilOver(false)) yield return x;
 

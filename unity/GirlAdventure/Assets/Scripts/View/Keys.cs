@@ -33,12 +33,20 @@ namespace GirlAdventure.View
             foreach (var k in devNow) if (!devPrev.Contains(k)) downNow.Add(k);   // 새로 눌린 것만 "Down"
         }
 
-        /// <summary>게임패드: 왼쪽 스틱(기본 Horizontal/Vertical 축) + A(0)/Start(7) 버튼 = 확인, Y(3)/Back(6) = 메뉴(Esc).</summary>
+        /// <summary>
+        /// 게임패드: 왼쪽 스틱(기본 Horizontal/Vertical 축) 또는 십자키(PadDpadX/Y = Xbox 패드 6·7번째 축, 위가 +),
+        /// A(0)/Start(7) 버튼 = 확인, Y(3)/Back(6) = 메뉴(Esc). 스틱을 기울이고 있으면 스틱이 먼저.
+        /// </summary>
         static void ReadPad(HashSet<KeyCode> into)
         {
             float h = 0, v = 0;
             try { h = Input.GetAxisRaw("Horizontal"); v = Input.GetAxisRaw("Vertical"); }
             catch (System.ArgumentException) { }
+            if (Mathf.Abs(h) <= Dead && Mathf.Abs(v) <= Dead)
+            {
+                try { h = Input.GetAxisRaw("PadDpadX"); v = Input.GetAxisRaw("PadDpadY"); }
+                catch (System.ArgumentException) { }     // 축 설정이 없는 옛 프로젝트 설정이면 스틱만
+            }
             // 한 번에 한 방향만 (대각선이면 더 크게 기운 쪽)
             if (Mathf.Abs(h) >= Mathf.Abs(v))
             {
