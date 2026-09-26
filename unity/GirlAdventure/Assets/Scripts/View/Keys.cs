@@ -33,7 +33,7 @@ namespace GirlAdventure.View
             foreach (var k in devNow) if (!devPrev.Contains(k)) downNow.Add(k);   // 새로 눌린 것만 "Down"
         }
 
-        /// <summary>게임패드: 왼쪽 스틱(기본 Horizontal/Vertical 축) + A(0)/Start(7) 버튼.</summary>
+        /// <summary>게임패드: 왼쪽 스틱(기본 Horizontal/Vertical 축) + A(0)/Start(7) 버튼 = 확인, Y(3)/Back(6) = 메뉴(Esc).</summary>
         static void ReadPad(HashSet<KeyCode> into)
         {
             float h = 0, v = 0;
@@ -55,6 +55,7 @@ namespace GirlAdventure.View
                 into.Add(KeyCode.Return);
                 into.Add(KeyCode.Z);
             }
+            if (Input.GetKey(KeyCode.JoystickButton3) || Input.GetKey(KeyCode.JoystickButton6)) into.Add(KeyCode.Escape);
         }
 
         public static bool Held(KeyCode k) => Input.GetKey(k) || held.Contains(k) || devNow.Contains(k);

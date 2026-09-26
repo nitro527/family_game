@@ -133,6 +133,11 @@ namespace GirlAdventure.EditorTools
             Check("level up at threshold", ups == 1 && p.Lv == 2 && p.Hp == p.MaxHp, $"lv={p.Lv} hp={p.Hp}/{p.MaxHp}");
             ups = p.GainExp(1000);
             Check("multi level up", ups > 1, $"lv={p.Lv}");
+            var s = PlayerState.NewGame("s");
+            Check("exp to next (Lv1)", s.ExpToNext == PlayerState.NextExp(1) && s.LevelProgress == 0f, $"next={s.ExpToNext}");
+            s.GainExp(PlayerState.NextExp(1) + (PlayerState.NextExp(2) - PlayerState.NextExp(1)) / 2);
+            Check("level progress halfway (Lv2)", s.Lv == 2 && Math.Abs(s.LevelProgress - .5f) < .01f && s.ExpToNext == PlayerState.NextExp(2) - s.Exp,
+                  $"prog={s.LevelProgress:F2} next={s.ExpToNext}");
         }
 
         static void BattleRuleTests()

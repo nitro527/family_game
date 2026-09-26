@@ -221,6 +221,16 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             Expect("shop: bought one candy", G.P.Candy == candy0 + 1 && G.P.Gold == 20 - Shop.CandyPrice && !G.Busy);
 
+            // 상태 창: Esc 로 열고 닫기
+            Keys.Press(KeyCode.Escape);
+            yield return .4f;
+            Shot("status");
+            Expect("status opens with Esc", G.StatusOpen && G.Busy && G.StatusText.Contains("다음 레벨까지") && G.StatusText.Contains("사탕"));
+            Log("STATUS " + G.StatusText);
+            Keys.Press(KeyCode.Escape);
+            yield return .3f;
+            Expect("status closes with Esc", !G.StatusOpen && !G.Busy);
+
             // 보이는 몬스터: 필드에 돌아다니는 모습 → 앞 칸의 몬스터에게 걸어 들어가면 전투
             Expect("mobs spawned on field", G.MobCount >= FieldMonsters.StartCount);
             G.DebugMobs(true, false);                 // 이후 시나리오가 흔들리지 않게 멈춤
@@ -242,10 +252,13 @@ namespace GirlAdventure.EditorTools
             yield return (Func<bool>)(() => G.CommandOpen);
             Shot("battle_command");
             Expect("swirl gone when command opens", !G.SwirlVisible);
+            Expect("enemy hp bar shown", G.EnemyHpVisible && G.EnemyHpShown > .99f);
             ExpectBgm("battle");
             foreach (var x in Choose(0)) yield return x;    // 리본 파이어
             yield return .65f;
             Shot("battle_fireball");
+            yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
+            if (G.CommandOpen) { Shot("enemy_hp_after_hit"); Log($"ENEMY HP shown={G.EnemyHpShown:F2}"); }
             yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
             if (G.CommandOpen)
             {
@@ -257,6 +270,7 @@ namespace GirlAdventure.EditorTools
             }
             foreach (var x in FightUntilOver(false)) yield return x;
             Shot("after_battle_field");
+            Expect("enemy hp bar hidden in field", !G.EnemyHpVisible);
             ExpectBgm("field");
 
             // 사탕 / 도망 (들어갈 때 소용돌이 전환도 찍는다)

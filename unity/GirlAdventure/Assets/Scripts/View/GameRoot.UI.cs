@@ -61,6 +61,7 @@ namespace GirlAdventure.View
             BuildVignette();                    // 맨 아래층 (필드 위, 다른 UI 아래)
             popLayer = UIKit.Stretch(ui, "Pops");
             enemyLabel = UIKit.Label(ui, "EnemyName", "", 460, 0, 400, 40, 26, TextAnchor.MiddleCenter, Color.white, true);
+            BuildEnemyHp();
 
             BuildHud();
             BuildMessage();
@@ -70,6 +71,7 @@ namespace GirlAdventure.View
             BuildCutin();
             BuildEnding();
             BuildTouchPad();
+            BuildStatus();
             BuildSwirl();
 
             flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));

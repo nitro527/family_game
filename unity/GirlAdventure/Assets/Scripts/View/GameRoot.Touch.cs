@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace GirlAdventure.View
 {
     /// <summary>
-    /// 태블릿용 화면 버튼: 왼쪽 아래 십자 버튼, 오른쪽 아래 A 버튼.
+    /// 태블릿용 화면 버튼: 왼쪽 아래 십자 버튼, 오른쪽 아래 A 버튼, 그 위 메뉴(상태 창) 버튼.
     /// 누르고 있는 동안 Keys 에 해당 키를 넣는다. 필드에서 대화창이 없을 때만 보인다
     /// (전투 명령창과 대화창은 원래 터치로 누를 수 있다).
     /// </summary>
@@ -25,6 +25,7 @@ namespace GirlAdventure.View
             PadButton(t, "Right", "▶", x0 + 2 * s, y0 + s, s, KeyCode.RightArrow);
             PadButton(t, "Down", "▼", x0 + s, y0 + 2 * s, s, KeyCode.DownArrow);
             PadButton(t, "A", "A", 960 - 22 - 110, 540 - 30 - 110, 110, KeyCode.Return, KeyCode.Z);
+            PadButton(t, "Menu", "메뉴", 960 - 22 - 84, 540 - 30 - 110 - 92, 84, KeyCode.Escape);
             touchPad.SetActive(false);
         }
 
@@ -51,11 +52,11 @@ namespace GirlAdventure.View
 
         void TickTouchPad()
         {
-            bool show = (Input.touchSupported || ForceTouchPad) && Current == Mode.Field && !msgWin.gameObject.activeSelf;
+            bool show = (Input.touchSupported || ForceTouchPad) && Current == Mode.Field && !msgWin.gameObject.activeSelf && !statusOpen;
             if (touchPad.activeSelf == show) return;
             touchPad.SetActive(show);
             if (!show)
-                foreach (var k in new[] { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.Return, KeyCode.Z })
+                foreach (var k in new[] { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.Return, KeyCode.Z, KeyCode.Escape })
                     Keys.Touch(k, false);       // 숨길 때 눌린 채로 남지 않게
         }
 

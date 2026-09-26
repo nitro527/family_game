@@ -198,6 +198,7 @@ namespace GirlAdventure.View
                     OnArrive();
                 }
             }
+            if (moveT < 0 && !busy && Keys.Down(KeyCode.Escape)) StartCoroutine(StatusRoutine());
             if (moveT < 0 && !busy)
             {
                 var d = HeldDir();

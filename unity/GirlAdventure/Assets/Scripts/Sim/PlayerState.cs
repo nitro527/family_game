@@ -46,6 +46,19 @@ namespace GirlAdventure.Sim
         /// <summary>다음 레벨까지 필요한 누적 경험치.</summary>
         public static int NextExp(int lv) => 5 * lv * (lv + 1);
 
+        /// <summary>다음 레벨까지 남은 경험치 (상태 창).</summary>
+        public int ExpToNext => Math.Max(0, NextExp(Lv) - Exp);
+
+        /// <summary>이번 레벨 안에서 얼마나 왔나 (0~1, 상태 창 경험치 막대).</summary>
+        public float LevelProgress
+        {
+            get
+            {
+                int from = Lv > 1 ? NextExp(Lv - 1) : 0, to = NextExp(Lv);
+                return Math.Max(0f, Math.Min(1f, (Exp - from) / (float)Math.Max(1, to - from)));
+            }
+        }
+
         public static PlayerState NewGame(string name)
         {
             var p = new PlayerState { Name = string.IsNullOrWhiteSpace(name) ? "첫째" : name.Trim() };

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using GirlAdventure.Sim;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GirlAdventure.View
 {
@@ -101,8 +102,9 @@ namespace GirlAdventure.View
             enemyAppear = def.Boss ? -.45f : -.65f;   // 음수 = 소용돌이가 걷힐 때(.35초)까지 숨어서 기다림
             if (def.Boss) camShake = .45f;      // 보스는 땅이 울리며 솟아오른다
             pose = "ready";
-            enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -28 : -160);
+            enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -18 : -160);
             enemyLabel.text = def.Name;
+            enemyHpShown = 1;
             RefreshHud();
             StartCoroutine(SwirlOut());
 
@@ -170,6 +172,45 @@ namespace GirlAdventure.View
             }
             pose = "ready";
         }
+
+        // ------------------------------------------------------------------ 적 체력 막대 (이름표 아래)
+        Image enemyHpBar;
+        Text enemyHpText;
+        CanvasGroup enemyTagGroup;
+        float enemyHpShown = 1;
+
+        void BuildEnemyHp()
+        {
+            enemyHpBar = UIKit.Bar(enemyLabel.transform, "EnemyHP", 96, 42, 150, 10, new Color32(86, 212, 106, 255));
+            var frame = enemyHpBar.transform.parent.gameObject.AddComponent<Outline>();
+            frame.effectColor = new Color(0, 0, 0, .9f);
+            frame.effectDistance = new Vector2(2, -2);
+            enemyHpText = UIKit.Label(enemyLabel.transform, "EnemyHPText", "", 254, 35, 120, 24, 16, TextAnchor.MiddleLeft, Color.white, true);
+            enemyTagGroup = enemyLabel.gameObject.AddComponent<CanvasGroup>();
+            enemyTagGroup.blocksRaycasts = false;
+        }
+
+        /// <summary>
+        /// 막대는 실제 HP 를 향해 천천히 줄어든다 (맞은 게 눈에 보이게). 절반 아래 노랑, 1/4 아래 빨강.
+        /// 적이 공격 모션·등장 중일 때는 이름표째 흐려져서 몸과 겹치지 않는다.
+        /// </summary>
+        void TickEnemyHp()
+        {
+            bool on = Current == Mode.Battle && battle != null && enemyLabel.text != "";
+            var bg = enemyHpBar.transform.parent.gameObject;
+            if (bg.activeSelf != on) { bg.SetActive(on); enemyHpText.gameObject.SetActive(on); }
+            if (!on) return;
+            float target = Mathf.Clamp01(battle.EnemyHp / (float)Mathf.Max(1, battle.Def.Hp));
+            enemyHpShown = Mathf.MoveTowards(enemyHpShown, target, Time.deltaTime * .9f);
+            enemyHpBar.fillAmount = enemyHpShown;
+            enemyHpBar.color = enemyHpShown > .5f ? new Color32(86, 212, 106, 255) : enemyHpShown > .25f ? new Color32(242, 196, 67, 255) : new Color32(255, 96, 96, 255);
+            enemyHpText.text = $"HP {Mathf.Min(battle.EnemyHp, battle.Def.Hp)}/{battle.Def.Hp}";
+            bool hide = moveP < 1 || enemyAppear < 1;
+            enemyTagGroup.alpha = Mathf.MoveTowards(enemyTagGroup.alpha, hide ? 0 : 1, Time.deltaTime * 6);
+        }
+
+        public bool EnemyHpVisible => enemyHpBar != null && enemyHpBar.transform.parent.gameObject.activeSelf;
+        public float EnemyHpShown => enemyHpShown;
 
         void HitEnemy(int dmg, bool big)
         {
