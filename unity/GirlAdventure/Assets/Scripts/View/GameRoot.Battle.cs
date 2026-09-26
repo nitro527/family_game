@@ -233,6 +233,7 @@ namespace GirlAdventure.View
         {
             yield return new WaitForSeconds(.25f);
             StartMove(battle.Def.Move);
+            sfx.Play("mv_" + moveName);             // 모션마다 다른 소리
             if (moveName == "shard") StartCoroutine(ShardVolley());
             yield return Talk("enemy_attack", ("enemy", battle.Def.Name), ("attack", battle.Def.Attack ?? "공격"));
             var e = battle.EnemyAct();
@@ -482,6 +483,7 @@ namespace GirlAdventure.View
         void OnMoveImpact()
         {
             if (moveName != "slam" && moveName != "charge") return;
+            sfx.Play("thud");
             camShake = Mathf.Max(camShake, battle != null && battle.Def.Boss ? .4f : .22f);
             for (int i = 0; i < 12; i++)
                 Spawn(glowSprite, Px(EnemyX - 60, EnemyY + 70), new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(.2f, 1.4f)), .45f,

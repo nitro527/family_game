@@ -228,6 +228,7 @@ namespace GirlAdventure.View
 
         // ---- 프로브용
         public bool ChoiceOpen => choiceWin != null && choiceWin.activeSelf;
+        public bool HasSfx(string name) => sfx != null && sfx.Has(name);
         public void DebugSetGold(int g) { P.Gold = g; RefreshHud(); }
         public void DebugSetMp(int mp) { P.Mp = Mathf.Clamp(mp, 0, P.MaxMp); RefreshHud(); }
     }

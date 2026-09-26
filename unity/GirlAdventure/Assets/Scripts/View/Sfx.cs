@@ -32,6 +32,14 @@ namespace GirlAdventure.View
             Add("unlock", Wave.Square, .05f, .22f, 220, 0, 330, 660);
             Add("start", Wave.Triangle, .12f, .30f, 392, 523, 659, 784);
             Add("coin", Wave.Square, .05f, .16f, 988, 1318);
+            // 적 공격 모션마다 다른 소리 ("mv_" + EnemyDef.Moves), 쿵 누르기·돌격은 부딪힐 때 "thud" 도
+            Add("mv_tackle", Wave.Square, .05f, .20f, 220, 160, 120);            // 퉁
+            Add("mv_hop", Wave.Triangle, .05f, .30f, 330, 500, 740, 990);        // 뾰잉
+            Add("mv_spin", Wave.Saw, .035f, .12f, 520, 780, 520, 780, 520, 780); // 휘리릭
+            Add("mv_slam", Wave.Triangle, .06f, .28f, 260, 390, 520);            // 붕 (뛰어오름)
+            Add("mv_shard", Wave.Triangle, .04f, .22f, 1760, 2349, 1976, 2637);  // 챙챙
+            Add("mv_charge", Wave.Saw, .05f, .14f, 180, 240, 320, 420);          // 우우웅 (달려옴)
+            Add("thud", Wave.Square, .08f, .30f, 95, 70, 55);                    // 쿵
         }
 
         void Add(string name, Wave wave, float noteDur, float vol, params float[] freqs)
@@ -57,6 +65,8 @@ namespace GirlAdventure.View
             clip.SetData(data, 0);
             clips[name] = clip;
         }
+
+        public bool Has(string name) => clips.ContainsKey(name);
 
         public void Play(string name)
         {

@@ -189,6 +189,9 @@ namespace GirlAdventure.EditorTools
             bool dpad = true;
             try { Input.GetAxisRaw("PadDpadX"); Input.GetAxisRaw("PadDpadY"); } catch (ArgumentException) { dpad = false; }
             Expect("gamepad d-pad axes configured", dpad);
+            string noSound = "";
+            foreach (var m in EnemyDef.Moves) if (!G.HasSfx("mv_" + m)) noSound += m + " ";
+            Expect("every attack move has its own sound " + noSound, noSound == "" && G.HasSfx("thud"));
             if (G.Current == GameRoot.Mode.Battle)
                 foreach (var x in FightUntilOver(false)) yield return x;
 
