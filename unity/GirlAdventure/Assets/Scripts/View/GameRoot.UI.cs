@@ -1,0 +1,357 @@
+using System.Collections;
+using System.Collections.Generic;
+using GirlAdventure.Sim;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+namespace GirlAdventure.View
+{
+    /// <summary>화면 UI: 타이틀, HUD, 대화창, 전투 명령창, 컷인, 엔딩, 데미지 숫자.</summary>
+    public partial class GameRoot
+    {
+        Transform ui;
+        GameObject titlePanel, endingPanel, cutinPanel, hudWin, hintLabel;
+        InputField nameInput;
+        Image heroTitleImg, flashImg, cutinArt;
+        Text cutinText, endText;
+
+        // HUD
+        Text hudName, hudHp, hudMp;
+        Image hudHpBar, hudMpBar;
+
+        // message window
+        RectTransform msgWin;
+        Image msgFace;
+        Text msgText;
+        bool msgClicked;
+        const float MsgW = 928, MsgNarrowW = 612;
+
+        // command window
+        GameObject cmdWin;
+        readonly List<Text> cmdTexts = new List<Text>();
+        readonly Cmd[] cmdOrder = { Cmd.Fire, Cmd.Star, Cmd.Candy, Cmd.Run };
+        int cmdIndex;
+        Cmd? chosenCmd;
+
+        // floating texts
+        RectTransform popLayer;
+        readonly List<(Text t, float age, Vector2 from)> pops = new List<(Text, float, Vector2)>();
+        Text enemyLabel;
+
+        void BuildUI()
+        {
+            var canvasGo = new GameObject("UI", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(UIKit.RefW, UIKit.RefH);
+            scaler.matchWidthOrHeight = .5f;
+            ui = canvasGo.transform;
+            if (FindFirstObjectByType<EventSystem>() == null)
+                new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+
+            popLayer = UIKit.Stretch(ui, "Pops");
+            enemyLabel = UIKit.Label(ui, "EnemyName", "", 460, 0, 400, 40, 26, TextAnchor.MiddleCenter, Color.white, true);
+
+            BuildHud();
+            BuildMessage();
+            BuildCommands();
+            BuildTitle();
+            BuildCutin();
+            BuildEnding();
+
+            flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));
+            flashImg.raycastTarget = false;
+        }
+
+        // ------------------------------------------------------------------ HUD
+        void BuildHud()
+        {
+            hudWin = UIKit.Window(ui, "HUD", 14, 12, 250, 118).gameObject;
+            var t = hudWin.transform;
+            hudName = UIKit.Label(t, "Name", "", 16, 10, 230, 26, 20, TextAnchor.UpperLeft, UIKit.Gold);
+            hudHp = UIKit.Label(t, "HP", "", 16, 36, 230, 24, 18);
+            hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
+            hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
+            hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
+            hintLabel = UIKit.Label(ui, "Hint", "방향키로 이동 · 샘물에 부딪히면 회복", 560, 14, 386, 24, 15,
+                TextAnchor.UpperRight, new Color32(207, 214, 255, 255), true).gameObject;
+        }
+
+        void RefreshHud()
+        {
+            hudName.text = $"{P.Name} · 마법사 Lv {P.Lv}";
+            hudHp.text = $"HP {P.Hp}/{P.MaxHp}";
+            hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}";
+            hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
+            hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;
+        }
+
+        // ------------------------------------------------------------------ message
+        void BuildMessage()
+        {
+            var win = UIKit.Window(ui, "Message", 16, 398, MsgW, 128);
+            msgWin = win.rectTransform;
+            var btn = win.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() => msgClicked = true);
+            var faceFrame = UIKit.Img(win.transform, "FaceFrame", UIKit.White, 14, 14, 100, 100, false);
+            faceFrame.color = Color.white;
+            msgFace = UIKit.Img(faceFrame.transform, "Face", null, 2, 2, 96, 96, false);
+            msgText = UIKit.Label(win.transform, "Text", "", 132, 12, MsgW - 150, 106, 23);
+            msgText.supportRichText = true;
+            msgWin.gameObject.SetActive(false);
+        }
+
+        void SetFace(string face) => msgFace.sprite = Art.UI("face_" + face);
+
+        void ShowMessageWindow(bool narrow)
+        {
+            msgWin.gameObject.SetActive(true);
+            float w = narrow ? MsgNarrowW : MsgW;
+            msgWin.sizeDelta = new Vector2(w, 128);
+            msgText.rectTransform.sizeDelta = new Vector2(w - 150, 106);
+        }
+
+        void HideMessage() => msgWin.gameObject.SetActive(false);
+
+        /// <summary>DQ 식 대사: 한 글자씩 출력 → 잠시 대기(확인 입력 시 즉시 진행).</summary>
+        IEnumerator Say(string text, string face = "smile", float hold = 0)
+        {
+            ShowMessageWindow(false);
+            SetFace(face);
+            msgClicked = false;
+            for (int i = 1; i <= text.Length; i++)
+            {
+                msgText.text = text.Substring(0, i);
+                if (ConfirmDown()) { msgText.text = text; break; }
+                yield return new WaitForSeconds(.032f);
+            }
+            msgText.text = text + " <color=#F2C443>▼</color>";
+            float wait = hold > 0 ? hold : Mathf.Min(2.6f, .9f + text.Length * .03f);
+            for (float t = 0; t < wait; t += Time.deltaTime)
+            {
+                if (ConfirmDown()) break;
+                yield return null;
+            }
+        }
+
+        // ------------------------------------------------------------------ commands
+        void BuildCommands()
+        {
+            cmdWin = UIKit.Window(ui, "Commands", 644, 330, 300, 196).gameObject;
+            for (int i = 0; i < cmdOrder.Length; i++)
+            {
+                int idx = i;
+                var t = UIKit.Label(cmdWin.transform, "Cmd" + i, "", 12, 12 + i * 43, 276, 42, 22, TextAnchor.MiddleLeft);
+                t.raycastTarget = true;
+                t.supportRichText = true;
+                var b = t.gameObject.AddComponent<Button>();
+                b.transition = Selectable.Transition.None;
+                b.onClick.AddListener(() => ClickCommand(idx));
+                cmdTexts.Add(t);
+            }
+            cmdWin.SetActive(false);
+        }
+
+        string CmdLabel(Cmd c)
+        {
+            switch (c)
+            {
+                case Cmd.Fire: return "리본 파이어";
+                case Cmd.Star: return $"별빛 폭풍 <size=15><color=#9AA3C7>MP {BattleSystem.StarCost}</color></size>";
+                case Cmd.Candy: return $"사탕 먹기 <size=15><color=#9AA3C7>×{P.Candy}</color></size>";
+                default: return "도망가기";
+            }
+        }
+
+        void RenderCommands()
+        {
+            for (int i = 0; i < cmdOrder.Length; i++)
+            {
+                bool ok = battle.CanUse(cmdOrder[i]);
+                string arrow = i == cmdIndex ? "<color=#F2C443>▶</color> " : "    ";
+                cmdTexts[i].text = arrow + CmdLabel(cmdOrder[i]);
+                cmdTexts[i].color = ok ? Color.white : new Color(.5f, .5f, .55f);
+            }
+        }
+
+        void ClickCommand(int i)
+        {
+            if (!cmdWin.activeSelf) return;
+            cmdIndex = i;
+            TryPickCommand();
+        }
+
+        void TryPickCommand()
+        {
+            var c = cmdOrder[cmdIndex];
+            if (!battle.CanUse(c)) { sfx.Play("miss"); RenderCommands(); return; }
+            sfx.Play("select");
+            chosenCmd = c;
+        }
+
+        IEnumerator AskCommand()
+        {
+            chosenCmd = null;
+            ShowMessageWindow(true);
+            SetFace("smile");
+            msgText.text = $"{Josa.With(P.Name, "은/는")} 무엇을 할까?";
+            cmdWin.SetActive(true);
+            if (!battle.CanUse(cmdOrder[cmdIndex])) cmdIndex = 0;
+            RenderCommands();
+            while (chosenCmd == null)
+            {
+                if (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.W)) { cmdIndex = (cmdIndex + 3) % 4; sfx.Play("select"); RenderCommands(); }
+                if (Keys.Down(KeyCode.DownArrow) || Keys.Down(KeyCode.S)) { cmdIndex = (cmdIndex + 1) % 4; sfx.Play("select"); RenderCommands(); }
+                if (ConfirmDown()) TryPickCommand();
+                yield return null;
+            }
+            cmdWin.SetActive(false);
+        }
+
+        // ------------------------------------------------------------------ title
+        void BuildTitle()
+        {
+            titlePanel = UIKit.Stretch(ui, "Title").gameObject;
+            var t = titlePanel.transform;
+            UIKit.Fill(t, "Bg", new Color32(12, 8, 34, 255));
+            var art = UIKit.Img(t, "Art", Art.UI("art_card"), -40, -280, 1040, 1440, true);
+            art.color = new Color(1, 1, 1, .5f);
+            UIKit.Fill(t, "Dim", new Color(.04f, .02f, .12f, .45f)).raycastTarget = false;
+            heroTitleImg = UIKit.Img(t, "Hero", Art.UI("hero"), 560, 30, 380, 515, true);
+            UIKit.Label(t, "Title", "꼬마 마법사\n첫째의 모험", 60, 70, 520, 140, 50, TextAnchor.UpperLeft, Color.white, true);
+            UIKit.Label(t, "Sub", "킹 젤리가 훔쳐 간 밤하늘의 별빛을 되찾아라!", 62, 214, 520, 30, 19,
+                TextAnchor.UpperLeft, new Color32(232, 220, 255, 255), true);
+            UIKit.Label(t, "NameLbl", "용사의 이름", 62, 272, 200, 26, 18, TextAnchor.UpperLeft, UIKit.Gold, true);
+
+            var box = UIKit.Window(t, "NameBox", 60, 300, 240, 50);
+            nameInput = box.gameObject.AddComponent<InputField>();
+            var txt = UIKit.Label(box.transform, "Text", "", 16, 6, 208, 38, 24, TextAnchor.MiddleLeft);
+            txt.supportRichText = false;
+            var ph = UIKit.Label(box.transform, "Placeholder", "이름", 16, 6, 208, 38, 24, TextAnchor.MiddleLeft, UIKit.Dim);
+            nameInput.textComponent = txt;
+            nameInput.placeholder = ph;
+            nameInput.characterLimit = 6;
+
+            var start = UIKit.Button(t, "Start", "모험 시작!", 60, 372, 240, 62, 26, new Color32(150, 110, 255, 255));
+            start.onClick.AddListener(StartGame);
+        }
+
+        void ShowTitle()
+        {
+            Current = Mode.Title;
+            titlePanel.SetActive(true);
+            endingPanel.SetActive(false);
+            cutinPanel.SetActive(false);
+            hudWin.SetActive(false);
+            hintLabel.SetActive(false);
+            cmdWin.SetActive(false);
+            enemyLabel.text = "";
+            HideMessage();
+            nameInput.text = PlayerPrefs.GetString("girlName", "첫째");
+            cam.transform.position = new Vector3(-100, 0, -10);   // 월드는 안 보이게
+        }
+
+        void TickTitle()
+        {
+            var rt = heroTitleImg.rectTransform;
+            rt.anchoredPosition = new Vector2(560, -30 + Mathf.Sin(Time.time * 2f) * 5);
+        }
+
+        // ------------------------------------------------------------------ cut-in / flash
+        void BuildCutin()
+        {
+            cutinPanel = UIKit.Stretch(ui, "Cutin").gameObject;
+            UIKit.Fill(cutinPanel.transform, "Bg", new Color32(34, 14, 70, 245));
+            cutinArt = UIKit.Img(cutinPanel.transform, "Art", Art.UI("art_ultimate"), 250, -40, 460, 640, true);
+            cutinText = UIKit.Label(cutinPanel.transform, "Text", "별빛 폭풍!!", 0, 430, 960, 90, 64, TextAnchor.MiddleCenter,
+                new Color32(255, 240, 250, 255), true);
+            var o = cutinText.gameObject.AddComponent<Outline>();
+            o.effectColor = new Color32(255, 110, 210, 200);
+            o.effectDistance = new Vector2(4, -4);
+            cutinPanel.SetActive(false);
+        }
+
+        IEnumerator CutinRoutine()
+        {
+            cutinPanel.SetActive(true);
+            sfx.Play("star");
+            var art = cutinArt.rectTransform;
+            var txt = cutinText.rectTransform;
+            for (float t = 0; t < 1.5f; t += Time.deltaTime)
+            {
+                float k = Mathf.Clamp01(t / 1.2f), e = 1 - (1 - k) * (1 - k);
+                art.localScale = Vector3.one * Mathf.Lerp(1.3f, 1f, e);
+                art.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(-4, 0, e));
+                cutinArt.color = new Color(1, 1, 1, Mathf.Clamp01(t * 3));
+                float tk = Mathf.Clamp01((t - .2f) / .35f);
+                txt.localScale = Vector3.one * Mathf.Lerp(2.4f, 1f, tk);
+                cutinText.color = new Color(1, .95f, .98f, tk);
+                yield return null;
+            }
+            cutinPanel.SetActive(false);
+        }
+
+        IEnumerator Flash(float dur = .35f)
+        {
+            for (float t = 0; t < dur; t += Time.deltaTime)
+            {
+                float a = t < dur * .3f ? t / (dur * .3f) : 1 - (t - dur * .3f) / (dur * .7f);
+                flashImg.color = new Color(1, 1, 1, a * .9f);
+                yield return null;
+            }
+            flashImg.color = new Color(1, 1, 1, 0);
+        }
+
+        // ------------------------------------------------------------------ ending
+        void BuildEnding()
+        {
+            endingPanel = UIKit.Stretch(ui, "Ending").gameObject;
+            var t = endingPanel.transform;
+            UIKit.Fill(t, "Bg", new Color32(24, 14, 52, 255));
+            var frame = UIKit.Img(t, "Frame", UIKit.White, 46, 26, 344, 488, false);
+            frame.color = UIKit.Gold;
+            UIKit.Img(frame.transform, "Art", Art.UI("art_ultimate"), 4, 4, 336, 480, false);
+            UIKit.Label(t, "Head", "모험 완료!", 430, 70, 500, 60, 44, TextAnchor.UpperLeft, UIKit.Gold, true);
+            endText = UIKit.Label(t, "Body", "", 430, 150, 500, 220, 22, TextAnchor.UpperLeft, Color.white, true);
+            endText.supportRichText = true;
+            var again = UIKit.Button(t, "Again", "처음부터 다시", 430, 390, 250, 60, 24, new Color32(150, 110, 255, 255));
+            again.onClick.AddListener(ShowTitle);
+            endingPanel.SetActive(false);
+        }
+
+        void ShowEnding()
+        {
+            hudWin.SetActive(false);
+            hintLabel.SetActive(false);
+            enemyLabel.text = "";
+            endText.text = $"꼬마 마법사 <color=#F2C443>{P.Name}</color>의 활약으로\n밤하늘에 별빛이 다시 반짝이기 시작했어요!\n\n최종 레벨 {P.Lv}\n<color=#F2C443>'별빛 마법사'</color>의 칭호를 얻었다!";
+            endingPanel.SetActive(true);
+        }
+
+        // ------------------------------------------------------------------ floating numbers
+        /// <summary>960×540 기준 좌표 (x, y) 에 떠오르는 숫자.</summary>
+        void Pop(string text, float x, float y, Color color, int size = 44)
+        {
+            var t = UIKit.Label(popLayer, "Pop", text, x - 100, y - 30, 200, 60, size, TextAnchor.MiddleCenter, color, true);
+            t.GetComponent<Outline>().effectDistance = new Vector2(3, -3);
+            pops.Add((t, 0, new Vector2(x - 100, -(y - 30))));
+        }
+
+        void TickPops()
+        {
+            for (int i = pops.Count - 1; i >= 0; i--)
+            {
+                var (t, age, from) = pops[i];
+                age += Time.deltaTime;
+                t.rectTransform.anchoredPosition = from + new Vector2(0, Mathf.Min(30, age * 80));
+                var c = t.color; c.a = Mathf.Clamp01(1 - Mathf.Max(0, age - .7f) / .4f); t.color = c;
+                if (age > 1.1f) { Destroy(t.gameObject); pops.RemoveAt(i); }
+                else pops[i] = (t, age, from);
+            }
+        }
+    }
+}

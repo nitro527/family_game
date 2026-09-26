@@ -1,0 +1,15 @@
+# Unity generated
+unity/GirlAdventure/Library/
+unity/GirlAdventure/Temp/
+unity/GirlAdventure/Logs/
+unity/GirlAdventure/UserSettings/
+unity/GirlAdventure/obj/
+unity/GirlAdventure/*.csproj
+unity/GirlAdventure/*.sln
+unity/Build/
+unity/playtest/
+unity/screenshots/
+unity/*.log
+# family photos stay local only
+사진/
+__pycache__/
