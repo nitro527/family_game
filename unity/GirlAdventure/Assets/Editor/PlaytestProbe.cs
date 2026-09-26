@@ -159,7 +159,8 @@ namespace GirlAdventure.EditorTools
             if (G.Current == GameRoot.Mode.Battle)
                 foreach (var x in FightUntilOver(false)) yield return x;
 
-            // 필드 연출: 연못 물결 + 샘물 반짝임
+            // 필드 연출: 연못 물결 + 샘물 반짝임 (촬영하는 동안 몬스터가 부딪혀 전투가 끼어들지 않게 멈춤)
+            G.DebugMobs(true, false);
             G.DebugTeleport(8, 12, "down");
             yield return .6f;
             Shot("field_water");

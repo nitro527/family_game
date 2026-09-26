@@ -31,7 +31,8 @@ namespace GirlAdventure.EditorTools
             MonsterTests();
             float ch1 = BalanceSimulation(false), ch2 = BalanceSimulation2(false);
             float ch1Gear = BalanceSimulation(true), ch2Gear = BalanceSimulation2(true);
-            Check("gear helps (boss win rate)", ch1Gear >= ch1 && ch2Gear >= ch2, $"ch1 {ch1:P1}→{ch1Gear:P1} ch2 {ch2:P1}→{ch2Gear:P1}");
+            // 목표: 장비 없이도 대부분 이기지만(보스다운 긴장감), 장비를 사 두면 확실히 이긴다
+            Check("gear makes bosses safe (≥99%)", ch1Gear >= .99f && ch2Gear >= .99f && ch1Gear >= ch1 && ch2Gear >= ch2, $"ch1 {ch1:P1}→{ch1Gear:P1} ch2 {ch2:P1}→{ch2Gear:P1}");
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
 
@@ -433,11 +434,13 @@ namespace GirlAdventure.EditorTools
         {
             const int runs = 400;
             int wins = 0, battles = 0;
+            long goldSum = 0;
             var r = new System.Random(77);
             for (int run = 0; run < runs; run++)
             {
                 var p = PlayerState.NewGame("sim");
                 p.GainExp(PlayerState.NextExp(5));
+                p.GainGold(GameData.King.Gold + GameData.Guard.Gold);   // 챕터 1 돈은 다 썼다고 치고, 킹 젤리·지킴이 보상만
                 if (gear) GearUp(p, MapKind.Cave);
                 int b = 0;
                 while (p.Lv < 8 && b < 200)
@@ -448,6 +451,7 @@ namespace GirlAdventure.EditorTools
                     if (p.Hp < p.MaxHp / 3) p.RestoreAll();
                 }
                 p.RestoreAll();
+                goldSum += p.Gold;
                 if (Fight(p, GameData.General, r)) wins++;
                 battles += b;
             }
@@ -467,10 +471,14 @@ namespace GirlAdventure.EditorTools
                 Check("guard beatable at Lv7", gr >= .7f, $"winRate={gr:P0}");
                 Check("guard not trivial at Lv7", gr <= .995f, $"winRate={gr:P0}");
             }
-            Debug.Log($"[BALANCE2{(gear ? " +cave gear" : "")}] avgBattlesLv6to8={battles / (float)runs:F1} generalWinRate@Lv8={rate:P1}");
+            float gold = goldSum / (float)runs;
+            Debug.Log($"[BALANCE2{(gear ? " +cave gear" : "")}] avgBattlesLv6to8={battles / (float)runs:F1} goldBeforeGeneral={gold:F0} generalWinRate@Lv8={rate:P1}");
             if (gear) return rate;     // 장비를 다 산 경우는 기록만 (쉬워지는 건 의도)
-            Check("general beatable at Lv8", rate >= .6f, $"winRate={rate:P0}");
-            Check("general not trivial at Lv8", rate <= .995f, $"winRate={rate:P0}");
+            Check("general beatable at Lv8 (5살도)", rate >= .85f, $"winRate={rate:P0}");
+            Check("general not trivial at Lv8", rate <= .985f, $"winRate={rate:P0}");
+            int cheapest = int.MaxValue;
+            foreach (var id in Shop.Goods(MapKind.Cave)) if (Equipment.IsGear(id)) cheapest = Math.Min(cheapest, GameData.ItemPrice(id));
+            Check("can afford a cave gear before general", gold >= cheapest, $"gold={gold:F0} cheapest={cheapest}");
             return rate;
         }
 
@@ -524,6 +532,7 @@ namespace GirlAdventure.EditorTools
         {
             const int runs = 400;
             int bossWins = 0, totalBattles = 0, totalDeaths = 0;
+            long goldSum = 0;
             var r = new System.Random(42);
             for (int run = 0; run < runs; run++)
             {
@@ -539,16 +548,19 @@ namespace GirlAdventure.EditorTools
                     if (p.Hp < p.MaxHp / 3) p.RestoreAll();
                 }
                 p.RestoreAll();
+                goldSum += p.Gold;
                 bool won = Fight(p, GameData.King, r);
                 if (won) bossWins++;
                 totalBattles += battles;
                 totalDeaths += deaths;
             }
             float winRate = bossWins / (float)runs;
-            Debug.Log($"[BALANCE{(gear ? " +field gear" : "")}] runs={runs} avgBattlesToLv5={totalBattles / (float)runs:F1} deathsPerRun={totalDeaths / (float)runs:F2} bossWinRate@Lv5={winRate:P1}");
+            float gold = goldSum / (float)runs;
+            Debug.Log($"[BALANCE{(gear ? " +field gear" : "")}] runs={runs} avgBattlesToLv5={totalBattles / (float)runs:F1} deathsPerRun={totalDeaths / (float)runs:F2} goldBeforeKing={gold:F0} bossWinRate@Lv5={winRate:P1}");
             if (gear) return winRate;
-            Check("boss beatable at Lv5", winRate >= .6f, $"winRate={winRate:P0}");
-            Check("boss not trivial at Lv5", winRate <= .995f, $"winRate={winRate:P0}");
+            Check("boss beatable at Lv5 (5살도)", winRate >= .85f, $"winRate={winRate:P0}");
+            Check("boss not trivial at Lv5", winRate <= .985f, $"winRate={winRate:P0}");
+            Check("can afford field wand before king", gold >= GameData.ItemPrice("star_wand"), $"gold={gold:F0}");
             return winRate;
         }
 
@@ -561,7 +573,7 @@ namespace GirlAdventure.EditorTools
                       : def.Boss && b.CanUse(Cmd.Star) ? Cmd.Star
                       : Cmd.Fire;
                 b.Act(c);
-                if (b.EnemyDown) { p.GainExp(def.Exp); return true; }
+                if (b.EnemyDown) { p.GainExp(def.Exp); p.GainGold(def.Gold); return true; }
                 b.EnemyAct();
                 if (b.PlayerDown) return false;
             }
