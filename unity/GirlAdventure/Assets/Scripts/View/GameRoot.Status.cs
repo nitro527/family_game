@@ -7,18 +7,20 @@ namespace GirlAdventure.View
 {
     /// <summary>
     /// 상태 창: 필드에서 Esc (패드 Y/Back, 터치 "메뉴") → 레벨·다음 레벨까지 경험치·HP·MP·공격력·골드,
-    /// 오른쪽에 주문·가방·지금 할 일. Z/Enter(또는 "도구 쓰기" 버튼)로 도구 사용, Esc·바깥 클릭으로 닫는다.
+    /// 방어력, 가운데 장비·주문, 오른쪽 가방·지금 할 일. Z/Enter 메뉴(또는 "도구 쓰기"·"장비 바꾸기" 버튼)로
+    /// 도구 사용·장비 바꾸기, Esc·바깥 클릭으로 닫는다.
     /// 열려 있는 동안 몬스터도 멈춘다(busy).
     /// </summary>
     public partial class GameRoot
     {
         GameObject statusPanel;
-        Text stHead, stLeftVals, stRight, stExpText;
+        Text stHead, stLeftVals, stMid, stRight, stExpText;
         Image stExpBar, stHpBar, stMpBar, stFace;
-        bool statusOpen, statusClicked, statusUse;
+        bool statusOpen, statusClicked, statusUse, statusGear;
 
-        // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다
-        const float StW = 760, StH = 384, StX = (960 - StW) / 2, StY = 8, RowY = 112, RowH = 40;
+        // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다.
+        // 세 칸: 왼쪽 능력치 / 가운데 장비·주문 / 오른쪽 가방·지금 할 일
+        const float StW = 920, StH = 384, StX = (960 - StW) / 2, StY = 8, RowY = 108, RowH = 34, MidX = 404, RightX = 664;
 
         void BuildStatus()
         {
@@ -36,27 +38,34 @@ namespace GirlAdventure.View
             UIKit.Label(win, "Class", "꼬마 마법사", 126, 62, 250, 30, 19, TextAnchor.UpperLeft, UIKit.Dim);
 
             // 왼쪽: 능력치 (이름 칸 / 값 칸). 줄마다 RowH
-            string[] names = { "레벨", "HP", "MP", "공격력", "골드" };
+            string[] names = { "레벨", "HP", "MP", "공격력", "방어력", "골드" };
             for (int i = 0; i < names.Length; i++)
                 UIKit.Label(win, "N" + i, names[i], 30, RowY + i * RowH, 110, 30, 22, TextAnchor.UpperLeft, UIKit.Dim);
             stLeftVals = UIKit.Label(win, "Vals", "", 140, RowY, 230, RowH * names.Length, 22, TextAnchor.UpperLeft);
             stLeftVals.supportRichText = true;
-            stHpBar = UIKit.Bar(win, "HPBar", 142, RowY + RowH + 28, 200, 6, new Color32(86, 212, 106, 255));
-            stMpBar = UIKit.Bar(win, "MPBar", 142, RowY + 2 * RowH + 28, 200, 6, new Color32(90, 168, 255, 255));
+            stHpBar = UIKit.Bar(win, "HPBar", 142, RowY + RowH + 27, 200, 5, new Color32(86, 212, 106, 255));
+            stMpBar = UIKit.Bar(win, "MPBar", 142, RowY + 2 * RowH + 27, 200, 5, new Color32(90, 168, 255, 255));
 
             // 경험치 막대
-            stExpText = UIKit.Label(win, "ExpText", "", 30, RowY + 5 * RowH + 4, 350, 28, 19, TextAnchor.UpperLeft);
+            stExpText = UIKit.Label(win, "ExpText", "", 30, RowY + 6 * RowH + 4, 350, 28, 19, TextAnchor.UpperLeft);
             stExpText.supportRichText = true;
-            stExpBar = UIKit.Bar(win, "ExpBar", 32, RowY + 5 * RowH + 34, 330, 12, UIKit.Gold);
+            stExpBar = UIKit.Bar(win, "ExpBar", 32, RowY + 6 * RowH + 34, 330, 12, UIKit.Gold);
 
-            // 오른쪽: 주문 · 가방 · 지금 할 일
-            var line = UIKit.Img(win, "Line", UIKit.White, 392, 24, 2, StH - 48, false);
-            line.color = new Color(1, 1, 1, .18f);
-            stRight = UIKit.Label(win, "Right", "", 414, 20, StW - 434, StH - 78, 19, TextAnchor.UpperLeft);
+            // 가운데: 장비 · 주문 / 오른쪽: 가방 · 지금 할 일
+            foreach (var lx in new[] { MidX - 14, RightX - 14 })
+            {
+                var line = UIKit.Img(win, "Line", UIKit.White, lx, 24, 2, StH - 48, false);
+                line.color = new Color(1, 1, 1, .18f);
+            }
+            stMid = UIKit.Label(win, "Mid", "", MidX, 20, RightX - MidX - 24, StH - 78, 19, TextAnchor.UpperLeft);
+            stMid.supportRichText = true;
+            stRight = UIKit.Label(win, "Right", "", RightX, 20, StW - RightX - 20, StH - 78, 19, TextAnchor.UpperLeft);
             stRight.supportRichText = true;
-            var use = UIKit.Button(win, "UseItem", "도구 쓰기", 414, StH - 54, 140, 40, 19, new Color32(150, 200, 255, 255));
+            var use = UIKit.Button(win, "UseItem", "도구 쓰기", MidX, StH - 54, 140, 40, 19, new Color32(150, 200, 255, 255));
             use.onClick.AddListener(() => statusUse = true);
-            UIKit.Label(win, "Close", "Z 도구 · Esc 닫기", 564, StH - 44, StW - 590, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
+            var gear = UIKit.Button(win, "Gear", "장비 바꾸기", MidX + 152, StH - 54, 150, 40, 19, new Color32(255, 214, 120, 255));
+            gear.onClick.AddListener(() => statusGear = true);
+            UIKit.Label(win, "Close", "Z 메뉴 · Esc 닫기", RightX, StH - 44, StW - RightX - 24, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
             statusPanel.SetActive(false);
         }
 
@@ -69,7 +78,8 @@ namespace GirlAdventure.View
                 $"{P.Lv}",
                 $"{P.Hp} <color=#9AA3C7>/ {P.MaxHp}</color>",
                 $"{P.Mp} <color=#9AA3C7>/ {P.MaxMp}</color>",
-                $"{P.Atk}",
+                P.Atk > P.BaseAtk ? $"{P.Atk} <color=#9AA3C7>({P.BaseAtk}+{P.Atk - P.BaseAtk})</color>" : $"{P.Atk}",
+                $"{P.Def}",
                 $"<color=#F2C443>{P.Gold} G</color>",
             };
             SetRows(vals);
@@ -78,14 +88,25 @@ namespace GirlAdventure.View
             stExpText.text = $"경험치 {P.Exp}   <color=#F2C443>다음 레벨까지 {P.ExpToNext}</color>";
             stExpBar.fillAmount = P.LevelProgress;
 
-            var sb = new System.Text.StringBuilder();
-            sb.Append("<color=#F2C443>주문</color>\n");
+            var mid = new System.Text.StringBuilder();
+            mid.Append("<color=#F2C443>장비</color>\n");
+            foreach (var slot in Equipment.Slots)
+            {
+                string id = Equipment.In(P, slot);
+                mid.Append($"  <color=#9AA3C7>{Equipment.SlotName(slot)}</color> ");
+                mid.Append(id != null ? $"{GameData.ItemName(id)}\n     <size=15><color=#9AA3C7>{Equipment.BonusText(id)}</color></size>\n"
+                                      : "<color=#9AA3C7>(없음)</color>\n");
+            }
+            mid.Append("\n<color=#F2C443>주문</color>\n");
             foreach (var c in new[] { Cmd.Fire, Cmd.Star })
             {
                 var s = GameData.Skill(c);
-                sb.Append($"  {s.Name}  <size=16><color=#9AA3C7>MP {s.Mp}</color></size>\n");
+                mid.Append($"  {s.Name}  <size=16><color=#9AA3C7>MP {s.Mp}</color></size>\n");
             }
-            sb.Append("\n<color=#F2C443>가방</color>\n");
+            stMid.text = mid.ToString();
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append("<color=#F2C443>가방</color>\n");
             var owned = Items.Owned(P);
             if (owned.Count == 0 && P.Items.Count == 0) sb.Append("  <color=#9AA3C7>(비어 있어요)</color>\n");
             foreach (var id in owned) sb.Append($"  {GameData.ItemName(id)} ×{P.Count(id)} <size=16><color=#9AA3C7>{Items.EffectText(id)}</color></size>\n");
@@ -130,11 +151,34 @@ namespace GirlAdventure.View
             RenderStatus();
             statusPanel.SetActive(true);
             sfx.Play("select");
-            statusClicked = statusUse = false;
+            statusClicked = statusUse = statusGear = false;
             yield return null;                  // 여는 입력으로 바로 닫히지 않게
             while (true)
             {
-                if (statusUse || ConfirmDown())
+                if (!statusUse && !statusGear && ConfirmDown())
+                {
+                    // 키보드·패드: 작은 메뉴에서 고른다 (버튼은 바로)
+                    ShowMessageWindow(true);
+                    SetFace("smile");
+                    msgText.text = "무엇을 할까?";
+                    choiceIndex = 0;
+                    yield return Choose("도구 쓰기", "장비 바꾸기", "닫기");
+                    HideMessage();
+                    if (choicePicked == 2) break;
+                    statusUse = choicePicked == 0;
+                    statusGear = choicePicked == 1;
+                }
+                if (statusGear)
+                {
+                    statusGear = false;
+                    yield return ChangeGear();
+                    HideMessage();
+                    RenderStatus();
+                    statusClicked = false;
+                    yield return null;
+                    continue;
+                }
+                if (statusUse)
                 {
                     statusUse = false;
                     yield return PickItem();
@@ -170,7 +214,7 @@ namespace GirlAdventure.View
                 if (!statusOpen) return "";
                 var s = "";
                 foreach (var r in stRows) s += r.text + " | ";
-                return s + stExpText.text + " | " + stRight.text.Replace('\n', ' ');
+                return s + stExpText.text + " | " + stMid.text.Replace('\n', ' ') + " | " + stRight.text.Replace('\n', ' ');
             }
         }
     }

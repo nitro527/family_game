@@ -225,15 +225,49 @@ namespace GirlAdventure.EditorTools
             Expect("shop: bought candy + potion", G.P.Candy == candy0 + 1 && G.P.Count("potion") == 1
                    && G.P.Gold == 40 - Shop.CandyPrice - GameData.ItemPrice("potion") && !G.Busy);
 
+            // 장비 사기: 별빛 지팡이(목록 3번째)를 사서 바로 장착, 한 번 더 고르면 "가짐"
+            G.DebugSetGold(100);
+            int atk0 = G.P.Atk;
+            G.DebugTeleport(WorldMap.FieldShop.x - 1, WorldMap.FieldShop.y, "right");
+            yield return .3f;
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            yield return .2f;
+            int wandIdx = Shop.Goods(MapKind.Field).IndexOf("star_wand");
+            for (int k = 0; k < wandIdx; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Shot("shop_gear_list");
+            Keys.Press(KeyCode.Return);                // 별빛 지팡이 사기
+            yield return (Func<bool>)(() => G.ChoiceOpen);   // "지금 장착할까?" 예/나중에
+            yield return .3f;
+            Shot("shop_gear_ask");
+            Keys.Press(KeyCode.Return);                // 지금 장착하기
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Expect("shop: bought & equipped wand", G.P.Gear.Contains("star_wand") && Equipment.IsEquipped(G.P, "star_wand")
+                   && G.P.Atk == atk0 + GameData.Item("star_wand").Atk && G.P.Gold == 100 - GameData.ItemPrice("star_wand"));
+            Shot("shop_gear_owned_label");
+            Keys.Press(KeyCode.Return);                // 커서가 그대로 지팡이 → 이미 가짐
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Expect("shop: gear not bought twice", G.P.Gold == 100 - GameData.ItemPrice("star_wand"));
+            Keys.Press(KeyCode.Escape);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+
             // 상태 창: Esc 로 열고 닫기
             Keys.Press(KeyCode.Escape);
             yield return .4f;
             Shot("status");
-            Expect("status opens with Esc", G.StatusOpen && G.Busy && G.StatusText.Contains("다음 레벨까지") && G.StatusText.Contains("사탕"));
+            Expect("status opens with Esc", G.StatusOpen && G.Busy && G.StatusText.Contains("다음 레벨까지") && G.StatusText.Contains("사탕")
+                   && G.StatusText.Contains("별빛 지팡이") && G.StatusText.Contains("장비"));
             Log("STATUS " + G.StatusText);
-            // 상태 창에서 도구 쓰기: MP 를 줄여 두고 마법 물약 (HP 는 가득이라 사탕은 못 씀)
+            // 상태 창에서 도구 쓰기: MP 를 줄여 두고 마법 물약 (HP 는 가득이라 사탕은 못 씀). Z → 메뉴 → 도구 쓰기
             G.DebugSetMp(2);
             Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Shot("status_menu");
+            Keys.Press(KeyCode.Return);                // 도구 쓰기
+            yield return .3f;
             yield return (Func<bool>)(() => G.ChoiceOpen);
             yield return .2f;
             Shot("status_items");
@@ -244,6 +278,39 @@ namespace GirlAdventure.EditorTools
             yield return (Func<bool>)(() => G.MessageText == "");
             yield return .2f;
             Expect("status: potion used", G.StatusOpen && G.P.Count("potion") == 0 && G.P.Mp == Math.Min(2 + GameData.Item("potion").Mp, G.P.MaxMp));
+            // 장비 바꾸기: 메뉴 → 장비 바꾸기 → 무기 → 벗기 → 그만두기
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);                // 장비 바꾸기
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Shot("status_gear_slots");
+            Keys.Press(KeyCode.Return);                // 무기
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Shot("status_gear_weapon");
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);                // 벗기
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Expect("status: wand unequipped", !Equipment.IsEquipped(G.P, "star_wand") && G.P.Atk == atk0 && G.P.Gear.Contains("star_wand"));
+            Keys.Press(KeyCode.Return);                // 다시 무기 → 지팡이 장착
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Keys.Press(KeyCode.Return);
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Expect("status: wand re-equipped", Equipment.IsEquipped(G.P, "star_wand"));
+            Keys.Press(KeyCode.Escape);                // 부위 고르기 그만두기
+            yield return (Func<bool>)(() => G.MessageText == "");
+            yield return .3f;
+            Shot("status_after_gear");
+            Expect("status still open after gear", G.StatusOpen);
             Keys.Press(KeyCode.Escape);
             yield return .3f;
             Expect("status closes with Esc", !G.StatusOpen && !G.Busy);

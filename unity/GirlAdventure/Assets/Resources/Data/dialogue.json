@@ -11,7 +11,12 @@
     { "Id": "fountain", "Lines": [
       { "Text": "반짝이는 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
     { "Id": "shop_hello", "Lines": [
-      { "Text": "가게 아주머니: \"어서 오렴! 달콤한 사탕이랑 신기한 물약이 있단다.\"", "Face": "smile" } ] },
+      { "Text": "가게 아주머니: \"어서 오렴! 달콤한 사탕이랑 신기한 물약, 튼튼한 장비도 있단다.\"", "Face": "smile" } ] },
+    { "Id": "shop_gear",    "Lines": [ { "Text": "{item:을/를} 샀다! 지금 장착할까?", "Face": "laugh" } ] },
+    { "Id": "shop_owned",   "Lines": [ { "Text": "\"{item:은/는} 벌써 가지고 있구나! 상태 창(Esc)에서 장착할 수 있단다.\"", "Face": "smile" } ] },
+    { "Id": "equip_on",     "Lines": [ { "Text": "{item:을/를} 장착했다! 공격력 {atk}, 방어력 {def}", "Face": "laugh", "Hold": 1.0 } ] },
+    { "Id": "equip_off",    "Lines": [ { "Text": "{item:을/를} 벗었다. 공격력 {atk}, 방어력 {def}", "Face": "smile", "Hold": 0.9 } ] },
+    { "Id": "equip_none",   "Lines": [ { "Text": "{slot}에 쓸 장비가 없어요. 가게에서 살 수 있어요!", "Face": "pout" } ] },
     { "Id": "shop_ask",     "Lines": [ { "Text": "무엇을 살까? (가진 골드 {gold})", "Face": "smile" } ] },
     { "Id": "shop_bought",  "Lines": [ { "Text": "{item:을/를} 샀다! (가방에 ×{count})", "Face": "laugh", "Hold": 0.7 } ] },
     { "Id": "shop_nogold",  "Lines": [ { "Text": "\"어머, 골드가 모자라는구나. 젤리를 물리치면 골드를 얻을 수 있단다.\"", "Face": "pout" } ] },

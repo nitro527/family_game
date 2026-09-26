@@ -90,7 +90,7 @@ namespace GirlAdventure.View
             hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
             hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
             hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
-            hintLabel = UIKit.Label(ui, "Hint", "방향키 이동 · 샘물 회복 · 가게에서 사탕 · M 음악", 560, 14, 386, 24, 15,
+            hintLabel = UIKit.Label(ui, "Hint", "방향키 이동 · Esc 상태 · 가게 쇼핑 · M 음악", 560, 14, 386, 24, 15,
                 TextAnchor.UpperRight, new Color32(207, 214, 255, 255), true).gameObject;
         }
 

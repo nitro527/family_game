@@ -27,9 +27,11 @@ namespace GirlAdventure.EditorTools
             QuestTests();
             ShopTests();
             ItemTests();
+            GearTests();
             MonsterTests();
-            BalanceSimulation();
-            BalanceSimulation2();
+            float ch1 = BalanceSimulation(false), ch2 = BalanceSimulation2(false);
+            float ch1Gear = BalanceSimulation(true), ch2Gear = BalanceSimulation2(true);
+            Check("gear helps (boss win rate)", ch1Gear >= ch1 && ch2Gear >= ch2, $"ch1 {ch1:P1}→{ch1Gear:P1} ch2 {ch2:P1}→{ch2Gear:P1}");
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
 
@@ -48,6 +50,7 @@ namespace GirlAdventure.EditorTools
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
             "boss2_meet", "ch2_clear", "ending_card2",
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
+            "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none",
         };
 
         static void DataTests()
@@ -82,7 +85,7 @@ namespace GirlAdventure.EditorTools
                 catch (Exception) { skillsOk = false; }
             }
             Check("skills.json has every command", skillsOk);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12) };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -223,7 +226,7 @@ namespace GirlAdventure.EditorTools
             var fieldGoods = Shop.Goods(MapKind.Field);
             var caveGoods = Shop.Goods(MapKind.Cave);
             Check("shop goods per map", fieldGoods.Contains("candy") && fieldGoods.Contains("potion") && !fieldGoods.Contains("moon")
-                  && caveGoods.Contains("moon") && caveGoods.Count <= 3 && !fieldGoods.Contains("key"), string.Join(",", caveGoods));
+                  && caveGoods.Contains("moon") && caveGoods.FindAll(Items.IsConsumable).Count <= 3 && !fieldGoods.Contains("key"), string.Join(",", caveGoods));
 
             var p = PlayerState.NewGame("i");
             Check("potion not owned", !Items.CanUse(p, "potion") && Items.Use(p, "potion") == (0, 0));
@@ -253,6 +256,83 @@ namespace GirlAdventure.EditorTools
             var bad = new SaveData { Name = "x", Lv = 1, Candy = 2, Bag = new[] { "zzz:5", "potion:99", "moon", "key:1" } };
             var r = PlayerState.FromSave(bad);
             Check("save bag sanitized", r.Count("zzz") == 0 && r.Count("potion") == Items.BagMax && r.Count("moon") == 0 && r.Count("key") == 0 && r.Candy == 2);
+        }
+
+        /// <summary>장비: 데이터(가게마다 3부위), 사기(하나만), 장착·벗기·같은 부위 교체, 공격력·방어력 반영, 세이브.</summary>
+        static void GearTests()
+        {
+            bool dataOk = GameData.Gear.Count >= 6;
+            foreach (var d in GameData.Gear)
+                dataOk &= !string.IsNullOrEmpty(d.Name) && (d.Atk > 0 || d.Def > 0) && d.Price > 0 && !string.IsNullOrEmpty(d.Shops);
+            Check("items.json gear valid", dataOk, $"n={GameData.Gear.Count}");
+            foreach (var kind in new[] { MapKind.Field, MapKind.Cave })
+            {
+                var slots = new HashSet<string>();
+                foreach (var id in Shop.Goods(kind))
+                    if (Equipment.IsGear(id)) slots.Add(GameData.Item(id).Kind);
+                Check($"{kind}: shop sells all 3 slots", slots.Count == 3 && Shop.Goods(kind).Count + 1 <= 7, $"goods={Shop.Goods(kind).Count}");
+            }
+
+            var p = PlayerState.NewGame("g");
+            int atk0 = p.Atk;
+            Check("no gear at start", p.Def == 0 && p.Gear.Count == 0 && atk0 == PlayerState.StartAtk);
+            Check("can't equip unowned", !Equipment.Equip(p, "star_wand") && p.Atk == atk0);
+            p.GainGold(200);
+            int wandPrice = GameData.ItemPrice("star_wand");
+            Check("buy gear", Shop.Buy(p, "star_wand") == BuyResult.Bought && p.Gear.Contains("star_wand") && p.Gold == 200 - wandPrice && p.Atk == atk0,
+                  $"gold={p.Gold} atk={p.Atk}");
+            Check("gear bought only once", Shop.Buy(p, "star_wand") == BuyResult.Owned && p.Gold == 200 - wandPrice);
+            Check("equip adds atk", Equipment.Equip(p, "star_wand") && p.Atk == atk0 + GameData.Item("star_wand").Atk && Equipment.IsEquipped(p, "star_wand"));
+            Shop.Buy(p, "flower_cape");
+            Shop.Buy(p, "ribbon");
+            Equipment.Equip(p, "flower_cape");
+            Equipment.Equip(p, "ribbon");
+            int def = GameData.Item("flower_cape").Def + GameData.Item("ribbon").Def;
+            Check("armor+acc add def", p.Def == def, $"def={p.Def}");
+            p.GainExp(PlayerState.NextExp(1));
+            Check("level up keeps gear bonus", p.Atk == p.BaseAtk + GameData.Item("star_wand").Atk && p.BaseAtk == PlayerState.StartAtk + PlayerState.AtkPerLevel);
+            p.Gear.Add("crystal_wand");
+            Equipment.Equip(p, "crystal_wand");
+            Check("same slot swaps", Equipment.In(p, "weapon") == "crystal_wand" && p.Atk == p.BaseAtk + GameData.Item("crystal_wand").Atk);
+            Equipment.Unequip(p, "weapon");
+            Check("unequip", Equipment.In(p, "weapon") == null && p.Atk == p.BaseAtk);
+
+            // 방어력은 적 피해를 줄이지만 최소 1
+            var weak = new EnemyDef { Name = "t", Hp = 5, Atk = 1, Move = "tackle" };
+            var b = new BattleSystem(p, weak, new System.Random(3));
+            bool min1 = true;
+            for (int i = 0; i < 50; i++) { p.Hp = p.MaxHp; var o = b.EnemyAct(); min1 &= o.Dodged || o.Damage == 1; }
+            Check("def: damage at least 1", min1);
+            var strong = GameData.Normal[2];
+            var bare = PlayerState.NewGame("b");
+            int dmgBare = 0, dmgGear = 0;
+            var rb = new BattleSystem(bare, strong, new System.Random(9));
+            var rg = new BattleSystem(p, strong, new System.Random(9));
+            for (int i = 0; i < 30; i++)
+            {
+                bare.Hp = bare.MaxHp; p.Hp = p.MaxHp;
+                dmgBare += rb.EnemyAct().Damage;
+                dmgGear += rg.EnemyAct().Damage;
+            }
+            Check("def reduces damage", dmgGear < dmgBare, $"bare={dmgBare} gear={dmgGear}");
+
+            // 세이브: 가진 장비·장착 유지, 이상한 값은 버린다, 옛 세이브는 장비 없음
+            Equipment.Equip(p, "crystal_wand");
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("save keeps gear & equipped", q.Gear.Count == p.Gear.Count && q.Atk == p.Atk && q.Def == p.Def && Equipment.In(q, "weapon") == "crystal_wand",
+                  $"atk={q.Atk}/{p.Atk} def={q.Def}/{p.Def}");
+            var bad = new SaveData { Name = "x", Lv = 1, Gear = new[] { "zzz", "ribbon", "ribbon", "candy" }, Equipped = new[] { "moon_robe", "ribbon", "zzz" } };
+            var r = PlayerState.FromSave(bad);
+            Check("save gear sanitized", r.Gear.Count == 1 && r.Gear[0] == "ribbon" && Equipment.In(r, "acc") == "ribbon" && Equipment.In(r, "armor") == null && r.Equipped.Count == 1);
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":4,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
+            Check("old save → no gear", old.Gear.Count == 0 && old.Def == 0 && old.Atk == old.BaseAtk);
+        }
+
+        /// <summary>그 가게의 장비를 다 사서 장착한 상태로 만든다 (밸런스 시뮬레이션용).</summary>
+        static void GearUp(PlayerState p, MapKind kind)
+        {
+            foreach (var id in Shop.Goods(kind))
+                if (Equipment.IsGear(id)) { p.Gear.Add(id); Equipment.Equip(p, id); }
         }
 
         static void QuestTests()
@@ -334,7 +414,7 @@ namespace GirlAdventure.EditorTools
         }
 
         /// <summary>챕터 2: 킹 젤리를 깬 수준(Lv6)에서 동굴 젤리로 Lv8 까지 → 젤리 장군.</summary>
-        static void BalanceSimulation2()
+        static float BalanceSimulation2(bool gear)
         {
             const int runs = 400;
             int wins = 0, battles = 0;
@@ -343,6 +423,7 @@ namespace GirlAdventure.EditorTools
             {
                 var p = PlayerState.NewGame("sim");
                 p.GainExp(PlayerState.NextExp(5));
+                if (gear) GearUp(p, MapKind.Cave);
                 int b = 0;
                 while (p.Lv < 8 && b < 200)
                 {
@@ -356,9 +437,11 @@ namespace GirlAdventure.EditorTools
                 battles += b;
             }
             float rate = wins / (float)runs;
-            Debug.Log($"[BALANCE2] avgBattlesLv6to8={battles / (float)runs:F1} generalWinRate@Lv8={rate:P0}");
+            Debug.Log($"[BALANCE2{(gear ? " +cave gear" : "")}] avgBattlesLv6to8={battles / (float)runs:F1} generalWinRate@Lv8={rate:P1}");
+            if (gear) return rate;     // 장비를 다 산 경우는 기록만 (쉬워지는 건 의도)
             Check("general beatable at Lv8", rate >= .6f, $"winRate={rate:P0}");
             Check("general not trivial at Lv8", rate <= .995f, $"winRate={rate:P0}");
+            return rate;
         }
 
         static bool[,] Reach(WorldMap m, PlayerState p = null)
@@ -407,7 +490,7 @@ namespace GirlAdventure.EditorTools
         /// 규칙: HP 35% 이하면 사탕, 보스전은 MP 가 있으면 별빛 폭풍, 나머지는 리본 파이어.
         /// 레벨 5 가 되면 샘물에서 회복 후 보스에 도전.
         /// </summary>
-        static void BalanceSimulation()
+        static float BalanceSimulation(bool gear)
         {
             const int runs = 400;
             int bossWins = 0, totalBattles = 0, totalDeaths = 0;
@@ -415,6 +498,7 @@ namespace GirlAdventure.EditorTools
             for (int run = 0; run < runs; run++)
             {
                 var p = PlayerState.NewGame("sim");
+                if (gear) GearUp(p, MapKind.Field);
                 int battles = 0, deaths = 0;
                 while (p.Lv < 5 && battles < 200)
                 {
@@ -431,9 +515,11 @@ namespace GirlAdventure.EditorTools
                 totalDeaths += deaths;
             }
             float winRate = bossWins / (float)runs;
-            Debug.Log($"[BALANCE] runs={runs} avgBattlesToLv5={totalBattles / (float)runs:F1} deathsPerRun={totalDeaths / (float)runs:F2} bossWinRate@Lv5={winRate:P0}");
+            Debug.Log($"[BALANCE{(gear ? " +field gear" : "")}] runs={runs} avgBattlesToLv5={totalBattles / (float)runs:F1} deathsPerRun={totalDeaths / (float)runs:F2} bossWinRate@Lv5={winRate:P1}");
+            if (gear) return winRate;
             Check("boss beatable at Lv5", winRate >= .6f, $"winRate={winRate:P0}");
             Check("boss not trivial at Lv5", winRate <= .995f, $"winRate={winRate:P0}");
+            return winRate;
         }
 
         static bool Fight(PlayerState p, EnemyDef def, System.Random r)

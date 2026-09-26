@@ -111,7 +111,7 @@ namespace GirlAdventure.Sim
         {
             var o = new EnemyOutcome();
             if (r.NextDouble() < DodgeRate) { o.Dodged = true; return o; }
-            o.Damage = Def.Atk + r.Next(0, 3);
+            o.Damage = Math.Max(1, Def.Atk + r.Next(0, 3) - P.Def);     // 방어력(장비)만큼 줄지만 최소 1
             P.Hp = Math.Max(0, P.Hp - o.Damage);
             return o;
         }

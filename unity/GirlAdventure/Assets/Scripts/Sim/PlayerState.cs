@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 4;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방
+        public const int CurrentVersion = 5;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -16,6 +16,7 @@ namespace GirlAdventure.Sim
         public int Chapter;
         public string[] Items, Opened;
         public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
+        public string[] Gear, Equipped; // 가진 장비 id, 장착한 장비 id
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
@@ -31,7 +32,11 @@ namespace GirlAdventure.Sim
         public int Lv = 1;
         public int Hp = StartHp, MaxHp = StartHp;
         public int Mp = StartMp, MaxMp = StartMp;
-        public int Atk = StartAtk;
+        public int BaseAtk = StartAtk;      // 레벨로 오르는 공격력 (장비 빼고)
+        /// <summary>공격력 = 레벨 공격력 + 장비.</summary>
+        public int Atk => BaseAtk + Equipment.AtkBonus(this);
+        /// <summary>방어력 = 장비 합 (적 피해에서 뺀다).</summary>
+        public int Def => Equipment.DefBonus(this);
         public int Exp;
         public int Gold;
         readonly Dictionary<string, int> bag = new Dictionary<string, int>();   // 소모품 가방 (id → 개수)
@@ -41,6 +46,8 @@ namespace GirlAdventure.Sim
         public int Chapter = 1;
         public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
+        public List<string> Gear = new List<string>();      // 가진 장비 id
+        public Dictionary<string, string> Equipped = new Dictionary<string, string>();   // 부위 → 장착한 장비 id
 
         public bool HasItem(string id) => Items.Contains(id);
 
@@ -93,7 +100,7 @@ namespace GirlAdventure.Sim
                 Lv++;
                 MaxHp += HpPerLevel;
                 MaxMp += MpPerLevel;
-                Atk += AtkPerLevel;
+                BaseAtk += AtkPerLevel;
                 Hp = MaxHp;
                 Mp = MaxMp;
                 ups++;
@@ -105,6 +112,7 @@ namespace GirlAdventure.Sim
         {
             Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, SavedAt = savedAt,
             Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
+            Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
         };
 
         string[] BagEntries()
@@ -126,7 +134,7 @@ namespace GirlAdventure.Sim
             p.Lv = lv;
             p.MaxHp = StartHp + HpPerLevel * (lv - 1);
             p.MaxMp = StartMp + MpPerLevel * (lv - 1);
-            p.Atk = StartAtk + AtkPerLevel * (lv - 1);
+            p.BaseAtk = StartAtk + AtkPerLevel * (lv - 1);
             p.Exp = Math.Max(lv > 1 ? NextExp(lv - 1) : 0, Math.Min(s.Exp, NextExp(lv) - 1));
             p.Hp = s.Hp <= 0 ? p.MaxHp : Math.Min(s.Hp, p.MaxHp);
             p.Mp = Math.Max(0, Math.Min(s.Mp, p.MaxMp));
@@ -145,6 +153,11 @@ namespace GirlAdventure.Sim
                     string id = e.Substring(0, colon);
                     if (id != "candy" && (!GameData.Loaded || Sim.Items.IsConsumable(id))) p.AddItem(id, n);   // 모르는 id 는 버린다
                 }
+            if (s.Gear != null)     // 옛 세이브(버전 4 이하)는 장비 없음. 모르는 id·중복은 버린다
+                foreach (var id in s.Gear)
+                    if (!p.Gear.Contains(id) && (!GameData.Loaded || Equipment.IsGear(id))) p.Gear.Add(id);
+            if (s.Equipped != null && GameData.Loaded)
+                foreach (var id in s.Equipped) Equipment.Equip(p, id);    // 가진 장비만 장착된다
             var map = WorldMap.ForChapter(p.Chapter);
             (p.X, p.Y) = map.SpawnPoint;
             if (Quest.Walkable(map, p, s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)
