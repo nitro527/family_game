@@ -75,6 +75,18 @@ namespace GirlAdventure.EditorTools
             foreach (var d in GameData.Cave)
                 if (string.IsNullOrEmpty(d.Look)) badMove += d.Name + "(동굴 모양 없음) ";
             Check("every enemy has move+attack+look", enemiesOk && badMove == "", badMove);
+            // 전투 배경 그림: 맵 기본(meadow/cave) + 적이 정한 것 모두 1280×720 으로 들어와야 함 (NPOT 늘림 없음)
+            string badBg = "";
+            var bgNames = new List<string> { "meadow", "cave" };
+            if (enemiesOk)
+                foreach (var d in GameData.AllEnemies())
+                    if (!string.IsNullOrEmpty(d.Backdrop)) bgNames.Add(d.Backdrop);
+            foreach (var n in bgNames)
+            {
+                var tex = Resources.Load<Texture2D>("Battle/" + n);
+                if (tex == null || tex.width != 1280 || tex.height != 720) badBg += $"{n}({(tex == null ? "없음" : tex.width + "x" + tex.height)}) ";
+            }
+            Check("battle backdrops load 1280x720", badBg == "", badBg);
             string noGold = "";
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())

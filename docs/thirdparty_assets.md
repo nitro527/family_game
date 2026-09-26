@@ -12,3 +12,6 @@
 ## 사용 규칙
 - 게임 엔딩 크레딧에 세 출처를 적어요 (의무는 아니지만 예의).
 - 원본 에셋 파일만 따로 공유하거나 배포하지 않아요 (PIPOYA, Painterly 조건).
+
+## 게임에 쓰는 파일
+- 전투 배경 (`unity/GirlAdventure/Assets/Resources/Battle/`, 1280×720 JPG로 줄임): meadow=22번, meadow_boss=23번, cave=49번, cave_guard=36번, cave_boss=40번

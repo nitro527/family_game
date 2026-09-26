@@ -402,6 +402,9 @@ namespace GirlAdventure.View
             again.onClick.AddListener(ShowTitle);
             nextChapterBtn = UIKit.Button(t, "Chapter2", "▶ 챕터 2 시작!", 430, 462, 250, 56, 24, new Color32(110, 190, 255, 255));
             nextChapterBtn.onClick.AddListener(StartChapter2);
+            // 무료 에셋 출처 (docs/thirdparty_assets.md)
+            UIKit.Label(t, "Credits", "그림 도움\nPipoya · Kalponic Studio · Kenney", 690, 470, 250, 50, 14,
+                TextAnchor.LowerRight, new Color(1, 1, 1, .55f), false);
             endingPanel.SetActive(false);
         }
 

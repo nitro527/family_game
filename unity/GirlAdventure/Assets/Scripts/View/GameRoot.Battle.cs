@@ -19,6 +19,7 @@ namespace GirlAdventure.View
         SpriteRenderer bgSR, enemySR, heroSR;
         Sprite bgNormal, bgBoss, bgCave, bgCaveBoss, glowSprite, starSprite;
         readonly Dictionary<EnemyDef, Sprite> jellySprites = new Dictionary<EnemyDef, Sprite>();
+        readonly Dictionary<string, Sprite> backdrops = new Dictionary<string, Sprite>();
         readonly Dictionary<string, Sprite> poses = new Dictionary<string, Sprite>();
         readonly List<Fx> fx = new List<Fx>();
 
@@ -69,6 +70,25 @@ namespace GirlAdventure.View
             return sr;
         }
 
+        /// <summary>
+        /// 전투 배경: 적이 정한 그림(보스) → 맵 기본 그림(초원/동굴) → 없으면 코드로 그린 배경.
+        /// 그림은 Resources/Battle/*.jpg (1280×720, Painterly Battle Backgrounds 에서 골라 줄임).
+        /// </summary>
+        Sprite Backdrop(EnemyDef def)
+        {
+            bool cave = map.Kind == MapKind.Cave;
+            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : cave ? "cave" : "meadow";
+            if (!backdrops.TryGetValue(name, out var s))
+            {
+                var tex = Resources.Load<Texture2D>("Battle/" + name);
+                // 무대 폭 960px(20 유닛)에 딱 맞게: PPU = 그림 폭 / 20
+                s = tex != null ? Art.FromTexture(tex, new Vector2(.5f, .5f), tex.width / 20f) : null;
+                if (s == null) Debug.LogWarning($"[Battle] missing Resources/Battle/{name}, 코드 배경 사용");
+                backdrops[name] = s;
+            }
+            return s != null ? s : cave ? (def.Boss ? bgCaveBoss : bgCave) : (def.Boss ? bgBoss : bgNormal);
+        }
+
         Sprite JellySprite(EnemyDef def)
         {
             if (!jellySprites.TryGetValue(def, out var s))
@@ -93,7 +113,7 @@ namespace GirlAdventure.View
             fieldRoot.gameObject.SetActive(false);
             hintLabel.SetActive(false);
             cam.transform.position = Stage + new Vector3(0, 0, -10);
-            bgSR.sprite = map.Kind == MapKind.Cave ? (def.Boss ? bgCaveBoss : bgCave) : (def.Boss ? bgBoss : bgNormal);
+            bgSR.sprite = Backdrop(def);
             bgm.Play(def.Boss ? "boss" : "battle");
             enemySR.sprite = JellySprite(def);
             enemySR.transform.localScale = Vector3.one * (def.Boss ? 1.75f : 1.05f);
