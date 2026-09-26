@@ -394,8 +394,15 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(16, 10, "right");
             yield return .6f;
             Shot("field_mobs");
+            // 앞뒤 정렬: 한 칸 아래(앞)의 몬스터는 주인공 위에, 한 칸 위(뒤)의 몬스터는 주인공 뒤에 그려진다
             G.DebugMobs(true, true);
             G.DebugTeleport(8, 12, "right");
+            G.DebugSpawnMob(8, 13, 0);
+            G.DebugSpawnMob(8, 11, 0);
+            yield return .3f;
+            Shot("mob_depth");
+            Expect("mob depth sorting (front over, back under)", G.DebugMobDepthOk());
+            G.DebugMobs(true, true);
             G.DebugSpawnMob(9, 12, 1);
             yield return .3f;
             Shot("mob_ahead");

@@ -200,7 +200,15 @@ namespace GirlAdventure.View
         }
 
         /// <summary>타일 좌표 → 발밑 월드 좌표.</summary>
-        static Vector3 FeetAt(float x, float y) => new Vector3(x + .5f, -(y + 1) + .12f, 0);
+        /// <summary>
+        /// 칸 (x, y) 의 발밑 월드 위치. z 는 발 높이에 비례 → 같은 sortingOrder 끼리는 화면 아래(앞)에 선 것이 위에 그려진다
+        /// (주인공·몬스터·지킴이가 겹칠 때 앞뒤가 맞게).
+        /// </summary>
+        static Vector3 FeetAt(float x, float y)
+        {
+            float wy = -(y + 1) + .12f;
+            return new Vector3(x + .5f, wy, wy * .01f);
+        }
 
         void EnterField()
         {
@@ -423,6 +431,21 @@ namespace GirlAdventure.View
         }
 
         readonly Dictionary<int, float> alertBorn = new Dictionary<int, float>();
+
+        /// <summary>프로브용: 주인공보다 아래 칸 몬스터는 카메라에 더 가깝고(앞), 위 칸 몬스터는 더 멀다(뒤).</summary>
+        public bool DebugMobDepthOk()
+        {
+            float pz = playerSR.transform.position.z;
+            bool any = false;
+            foreach (var m in mobs.List)
+            {
+                if (!mobViews.TryGetValue(m.Id, out var v) || m.Y == P.Y) continue;
+                any = true;
+                float z = v.body.transform.position.z;
+                if (m.Y > P.Y ? z >= pz : z <= pz) return false;
+            }
+            return any;
+        }
 
         public int AlertCount => mobAlerts.Count;
 
