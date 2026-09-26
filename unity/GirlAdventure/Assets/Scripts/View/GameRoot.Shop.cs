@@ -15,6 +15,7 @@ namespace GirlAdventure.View
         int choiceIndex, choicePicked = -1;
         const int MaxChoices = 7;                   // 동굴 가게: 소모품 3 + 장비 3 + 그만두기
         const float ChoiceX = 628, ChoiceW = 320;       // 좁은 대화창(16~628)과 옆으로 겹치지 않게
+        const float StatusChoiceX = 364;                // 상태 창 HP 막대 끝(362) ~ 가방 칸(684) 사이
 
         void BuildChoice()
         {
@@ -50,7 +51,8 @@ namespace GirlAdventure.View
             choicePicked = -1;
             var rt = (RectTransform)choiceWin.transform;
             rt.sizeDelta = new Vector2(ChoiceW, 24 + items.Length * 43);
-            rt.anchoredPosition = new Vector2(ChoiceX, -ChoiceTopY(24 + items.Length * 43));   // 대화창 바로 위(또는 아래)에 붙인다
+            // 대화창 바로 위(또는 아래)에 붙인다. 상태 창이 열려 있으면 가운데 칸 위로 (왼쪽 능력치·오른쪽 가방이 보이게)
+            rt.anchoredPosition = new Vector2(statusOpen ? StatusChoiceX : ChoiceX, -ChoiceTopY(24 + items.Length * 43));
             choiceWin.SetActive(true);
             RenderChoice();
             while (choicePicked < 0)
