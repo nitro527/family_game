@@ -32,6 +32,9 @@ namespace GirlAdventure.View
         Text msgText;
         bool msgClicked;
         const float MsgW = 928, MsgNarrowW = 612;
+        // 대화창 자리: 보통은 아래(398). 필드에서 주인공이 화면 아래쪽에 있으면 가리지 않게 위(HUD 바로 아래)로 — DQ 처럼
+        const float MsgBottomY = 398, MsgTopY = 146, MsgH = 128;
+        bool msgTop;
 
         // command window
         GameObject cmdWin;
@@ -129,6 +132,8 @@ namespace GirlAdventure.View
 
         void ShowMessageWindow(bool narrow)
         {
+            msgTop = Current == Mode.Field && !statusOpen && PlayerFeetScreenY() > MsgBottomY - 6;
+            msgWin.anchoredPosition = new Vector2(16, -(msgTop ? MsgTopY : MsgBottomY));
             msgWin.gameObject.SetActive(true);
             float w = narrow ? MsgNarrowW : MsgW;
             msgWin.sizeDelta = new Vector2(w, 128);
@@ -136,6 +141,23 @@ namespace GirlAdventure.View
         }
 
         void HideMessage() => msgWin.gameObject.SetActive(false);
+
+        /// <summary>주인공 발밑의 화면 y (960×540 UI 좌표, 위가 0).</summary>
+        float PlayerFeetScreenY()
+        {
+            if (cam == null || playerSR == null) return 0;
+            var vp = cam.WorldToViewportPoint(playerSR.transform.position);
+            return (1 - vp.y) * 540;
+        }
+
+        /// <summary>선택창의 위쪽 y: 대화창 바로 위 (대화창이 위에 있으면 그 아래, 화면을 넘치면 끌어올림).</summary>
+        float ChoiceTopY(float h) =>
+            msgTop && msgWin.gameObject.activeSelf ? Mathf.Min(MsgTopY + MsgH + 8, 532 - h) : MsgBottomY - 8 - h;
+
+        // ---- 프로브용
+        public bool MessageAtTop => msgWin != null && msgWin.gameObject.activeSelf && msgTop;
+        public void DebugShowMessage(string text) { ShowMessageWindow(false); SetFace("smile"); msgText.text = text; }
+        public void DebugHideMessage() => HideMessage();
 
         /// <summary>DQ 식 대사: 한 글자씩 출력 → 잠시 대기(확인 입력 시 즉시 진행).</summary>
         IEnumerator Say(string text, string face = "smile", float hold = 0)

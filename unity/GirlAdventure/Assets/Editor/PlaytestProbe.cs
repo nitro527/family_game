@@ -354,6 +354,20 @@ namespace GirlAdventure.EditorTools
             // 보이는 몬스터: 필드에 돌아다니는 모습 → 앞 칸의 몬스터에게 걸어 들어가면 전투
             Expect("mobs spawned on field", G.MobCount >= FieldMonsters.StartCount);
             G.DebugMobs(true, false);                 // 이후 시나리오가 흔들리지 않게 멈춤
+            // 대화창 자리: 주인공이 화면 아래쪽(맵 아래 끝)이면 위로, 가운데면 아래로
+            G.DebugTeleport(20, 22, "down");
+            yield return .3f;
+            G.DebugShowMessage("주인공이 아래에 있으면 대화창이 위로 올라가요.");
+            yield return .2f;
+            Shot("message_top");
+            Expect("message moves up when player is low", G.MessageAtTop);
+            G.DebugHideMessage();
+            G.DebugTeleport(20, 12, "down");
+            yield return .3f;
+            G.DebugShowMessage("가운데에 있으면 대화창은 아래에 있어요.");
+            yield return .1f;
+            Expect("message stays down normally", !G.MessageAtTop && G.MessageText != "");
+            G.DebugHideMessage();
             G.DebugTeleport(16, 10, "right");
             yield return .6f;
             Shot("field_mobs");
