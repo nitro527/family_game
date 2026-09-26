@@ -20,6 +20,7 @@ namespace GirlAdventure.EditorTools
             ProgressionTests();
             BattleRuleTests();
             JosaTests();
+            MusicTests();
             BalanceSimulation();
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
@@ -91,6 +92,26 @@ namespace GirlAdventure.EditorTools
         {
             Check("josa 이/가", Josa.With("첫째", "이/가") == "첫째가" && Josa.With("젤리", "을/를") == "젤리를" && Josa.With("킹 젤리", "이/가") == "킹 젤리가");
             Check("josa batchim", Josa.With("서진", "은/는") == "서진은");
+        }
+
+        static void MusicTests()
+        {
+            Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
+            foreach (var name in new[] { "title", "field", "battle", "boss", "ending" })
+            {
+                var s = Music.Get(name);
+                if (s == null) { Check($"bgm {name} exists", false); continue; }
+                int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
+                bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
+                Check($"bgm {name} loops cleanly", lead == 64 && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
+                var buf = Music.Render(s, 22050);
+                float peak = 0, sum = 0;
+                bool finite = true;
+                foreach (var v in buf) { peak = Math.Max(peak, Math.Abs(v)); sum += v * v; finite &= !float.IsNaN(v); }
+                float rms = (float)Math.Sqrt(sum / buf.Length);
+                Check($"bgm {name} renders", finite && peak <= 1f && rms > .03f && peak < .98f,
+                      $"sec={buf.Length / 22050f:F1} peak={peak:F2} rms={rms:F3}");
+            }
         }
 
         /// <summary>

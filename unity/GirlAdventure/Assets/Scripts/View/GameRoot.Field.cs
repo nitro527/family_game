@@ -58,6 +58,7 @@ namespace GirlAdventure.View
             RefreshHud();
             moveT = -1;
             UpdatePlayerVisual();
+            bgm.Play("field");
         }
 
         string HeldDir()

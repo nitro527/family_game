@@ -22,6 +22,7 @@ namespace GirlAdventure.EditorTools
         static double condDeadline;
         static string outDir;
         static int shotNo;
+        static int fails;
         static GameRoot G => GameRoot.Instance;
 
         public static void Run()
@@ -34,6 +35,7 @@ namespace GirlAdventure.EditorTools
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
             script = null;
             shotNo = 0;
+            fails = 0;
             EditorApplication.update += Tick;
             EditorApplication.isPlaying = true;
         }
@@ -52,7 +54,7 @@ namespace GirlAdventure.EditorTools
             }
             try
             {
-                if (!script.MoveNext()) { Log("DONE"); Debug.Log("PLAYTEST_RESULT: OK"); Finish(); return; }
+                if (!script.MoveNext()) { Log("DONE"); Debug.Log(fails == 0 ? "PLAYTEST_RESULT: OK" : $"PLAYTEST_RESULT: {fails}_FAILURES"); Finish(); return; }
                 switch (script.Current)
                 {
                     case float s: waitUntil = now + s; break;
@@ -67,6 +69,14 @@ namespace GirlAdventure.EditorTools
         }
 
         static void Log(string s) => Debug.Log($"PT: {s} | {G.DebugState()}");
+
+        /// <summary>기대한 배경음악이 나오는지 확인 (틀리면 실패로 센다).</summary>
+        static void ExpectBgm(string name)
+        {
+            bool ok = G.BgmName == name;
+            if (!ok) fails++;
+            Log($"BGM {(ok ? "OK" : "FAIL")} expect={name} actual={G.BgmName}");
+        }
 
         static void Shot(string name)
         {
@@ -109,12 +119,21 @@ namespace GirlAdventure.EditorTools
         {
             yield return 2f;
             Shot("title");
+            ExpectBgm("title");
+            // 음량 4단계를 한 바퀴 돌려 원래대로
+            int vol0 = G.BgmLevel;
+            Keys.Press(KeyCode.M); yield return .2f;
+            if (G.BgmLevel == vol0) { fails++; Log("BGM VOLUME FAIL (M 키로 안 바뀜)"); }
+            for (int i = 0; i < 3; i++) { Keys.Press(KeyCode.M); yield return .2f; }
+            if (G.BgmLevel != vol0) { fails++; Log("BGM VOLUME FAIL (한 바퀴 뒤 원래대로 안 돌아옴)"); }
+            yield return .5f;
             Keys.Press(KeyCode.Return);
             yield return 1.2f;
             Shot("intro_first_line");                 // 첫 대사가 Enter 로 건너뛰어지지 않았는지
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             yield return .5f;
             Shot("field_start");
+            ExpectBgm("field");
 
             // 네 방향 걷기 — 방향별 캐릭터 크기 비교
             foreach (var x in Walk(KeyCode.RightArrow, "right", .5f, true)) yield return x;
@@ -153,6 +172,7 @@ namespace GirlAdventure.EditorTools
             if (G.Current != GameRoot.Mode.Battle) G.DebugBattle(false);
             yield return (Func<bool>)(() => G.CommandOpen);
             Shot("battle_command");
+            ExpectBgm("battle");
             foreach (var x in Choose(0)) yield return x;    // 리본 파이어
             yield return .65f;
             Shot("battle_fireball");
@@ -167,6 +187,7 @@ namespace GirlAdventure.EditorTools
             }
             foreach (var x in FightUntilOver(false)) yield return x;
             Shot("after_battle_field");
+            ExpectBgm("field");
 
             // 사탕 / 도망
             G.DebugBattle(false);
@@ -201,15 +222,18 @@ namespace GirlAdventure.EditorTools
             }
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             Shot("after_revive");
+            ExpectBgm("field");
 
             // 보스 → 엔딩
             G.DebugBattle(true);
             yield return (Func<bool>)(() => G.CommandOpen);
             Shot("boss_command");
+            ExpectBgm("boss");
             foreach (var x in FightUntilOver(true)) yield return x;
             yield return (Func<bool>)(() => G.Current == GameRoot.Mode.Ending);
             yield return 1f;
             Shot("ending");
+            ExpectBgm("ending");
         }
 
         /// <summary>전투가 끝날 때까지: 보스면 별빛 폭풍 우선, 아니면 리본 파이어.</summary>

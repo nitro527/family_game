@@ -84,6 +84,7 @@ namespace GirlAdventure.View
             hintLabel.SetActive(false);
             cam.transform.position = Stage + new Vector3(0, 0, -10);
             bgSR.sprite = def.Boss ? bgBoss : bgNormal;
+            bgm.Play(def.Boss ? "boss" : "battle");
             enemySR.sprite = JellySprite(def);
             enemySR.transform.localScale = Vector3.one * (def.Boss ? 1.75f : 1.05f);
             enemyAlpha = 1; enemyFading = false; enemyBlink = enemyShake = enemyLunge = heroShake = heroLunge = 0;
@@ -188,6 +189,7 @@ namespace GirlAdventure.View
         {
             var def = battle.Def;
             enemyFading = true;
+            bgm.Stop();                // DQ 처럼 승리 팡파르만 들리게
             sfx.Play("win");
             pose = "victory";
             enemyLabel.text = "";
@@ -214,6 +216,7 @@ namespace GirlAdventure.View
         IEnumerator Defeat()
         {
             pose = "damage";
+            bgm.Stop();
             yield return Say($"{Josa.With(P.Name, "은/는")} 쓰러지고 말았다…", "cry", 1.4f);
             yield return Say("…그때, 멀리서 엄마 아빠의 응원 소리가 들렸다! 힘을 내!", "surprised", 1.6f);
             P.Hp = P.MaxHp; P.Mp = P.MaxMp;

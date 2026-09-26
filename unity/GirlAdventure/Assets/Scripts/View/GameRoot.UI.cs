@@ -76,7 +76,7 @@ namespace GirlAdventure.View
             hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
             hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
             hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
-            hintLabel = UIKit.Label(ui, "Hint", "방향키로 이동 · 샘물에 부딪히면 회복", 560, 14, 386, 24, 15,
+            hintLabel = UIKit.Label(ui, "Hint", "방향키로 이동 · 샘물에서 회복 · M 음악 크기", 560, 14, 386, 24, 15,
                 TextAnchor.UpperRight, new Color32(207, 214, 255, 255), true).gameObject;
         }
 
@@ -253,6 +253,7 @@ namespace GirlAdventure.View
             HideMessage();
             nameInput.text = PlayerPrefs.GetString("girlName", "첫째");
             cam.transform.position = new Vector3(-100, 0, -10);   // 월드는 안 보이게
+            bgm.Play("title");
         }
 
         void TickTitle()

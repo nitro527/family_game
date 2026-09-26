@@ -21,6 +21,7 @@ namespace GirlAdventure.View
         readonly System.Random rng = new System.Random();
         Camera cam;
         Sfx sfx;
+        Bgm bgm;
         bool busy;
         int confirmFrame = -1;
 
@@ -36,6 +37,7 @@ namespace GirlAdventure.View
             cam.backgroundColor = Color.black;
             cam.clearFlags = CameraClearFlags.SolidColor;
             sfx = gameObject.AddComponent<Sfx>();
+            bgm = gameObject.AddComponent<Bgm>();
 
             map = new WorldMap();
             P = PlayerState.NewGame("첫째");
@@ -49,6 +51,7 @@ namespace GirlAdventure.View
         void Update()
         {
             Keys.BeginFrame();
+            if (Keys.Down(KeyCode.M) && !(Current == Mode.Title && nameInput.isFocused)) Pop($"음악 {bgm.CycleVolume()}%", 840, 60, Color.white, 28);
             switch (Current)
             {
                 case Mode.Title:
@@ -100,6 +103,7 @@ namespace GirlAdventure.View
             HideMessage();
             Current = Mode.Ending;
             ShowEnding();
+            bgm.Play("ending");
             sfx.Play("lvup");
         }
 
@@ -108,10 +112,12 @@ namespace GirlAdventure.View
         public Bounds PlayerBounds => playerSR.bounds;
         public bool CommandOpen => cmdWin != null && cmdWin.activeSelf;
         public int CommandIndex => cmdIndex;
+        public string BgmName => bgm.Current;
+        public int BgmLevel => bgm.LevelPercent;
         public string MessageText => msgWin != null && msgWin.gameObject.activeSelf ? msgText.text : "";
 
         public string DebugState() =>
-            $"mode={Current} busy={busy} tile=({P.X},{P.Y}) facing={facing} lv={P.Lv} hp={P.Hp}/{P.MaxHp} mp={P.Mp} " +
+            $"mode={Current} bgm={bgm.Current}@{bgm.LevelPercent}% busy={busy} tile=({P.X},{P.Y}) facing={facing} lv={P.Lv} hp={P.Hp}/{P.MaxHp} mp={P.Mp} " +
             $"cmd={CommandOpen} msg=\"{MessageText.Replace('\n', ' ')}\"";
 
         public void DebugEnterField()
