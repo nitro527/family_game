@@ -65,7 +65,7 @@ A. **사용자 요청 (2026-09-26)** — 최우선
 31. [ ] **상태 창 메뉴 선택창 위치**: Z 메뉴·장비 목록 선택창이 상태 창 오른쪽 아래(가방 칸)를 가림 → 상태 창 열려 있을 때는 선택창을 가운데 칸 위에
 
 ## 사용자 확인 필요 🙋
-- 🙋 (브라우저 필요, 대화 세션에서 진행) 엄마 현자(mom_main.png)·아빠 기사(dad_main.png) 확정. 엄마 표정 시트 완료(mom_expressions.png). 남은 것: 엄마 전투·걷기·초상화·카드, 아빠 표정·전투·걷기·초상화·카드. 막내 세트는 완료됨(boy_expressions/battle/walk/portrait/card)
+- ✅ (2026-09-27 완료) 엄마 현자·아빠 기사 에셋 세트: main/expressions/battle/walk/portrait/card (assets/characters/gen/mom, dad). 다음: 게임 파티 합류(M5) 때 poses 분할·투명화(tools/postprocess.py)해서 Unity로
 - 🙋 카드 게임 규칙 정하기 (BACKLOG 10): 덱 몇 장, 코스트(MP?) 방식, 한 턴에 몇 장, 딸 카드 2장 외 어떤 카드
 - 🙋 픽셀 폰트(갈무리, OFL 무료) 다운로드해서 DQ 느낌 강화 → 다운로드 허락 필요
 - 🙋 Unity 공식 Claude Code 플러그인 설치 → 설치 승인 필요
