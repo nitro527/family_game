@@ -90,8 +90,13 @@ namespace GirlAdventure.View
             hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
             hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
             hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
-            hintLabel = UIKit.Label(ui, "Hint", "방향키 이동 · Esc 상태 · 가게 쇼핑 · M 음악", 560, 14, 386, 24, 15,
-                TextAnchor.UpperRight, new Color32(207, 214, 255, 255), true).gameObject;
+            // 안내 문구: 나무·바위 위에서도 읽히게 반투명 띠를 깔고 그 위에 쓴다
+            var band = UIKit.Img(ui, "HintBand", UIKit.White, 586, 8, 366, 30, false);
+            band.color = new Color(.04f, .03f, .12f, .62f);
+            band.raycastTarget = false;
+            UIKit.Label(band.transform, "Hint", "방향키 이동 · Esc 상태 · 가게 쇼핑 · M 음악", 10, 4, 346, 24, 15,
+                TextAnchor.UpperRight, new Color32(222, 228, 255, 255), true);
+            hintLabel = band.gameObject;
         }
 
         void RefreshHud()
