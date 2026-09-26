@@ -185,6 +185,7 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(8, 12, "down");
             yield return .6f;
             Shot("field_water");
+            Expect($"flowers are sway sprites (n={G.FlowerCount} tilt={G.FlowerTilt:F2})", G.FlowerCount > 10 && Mathf.Abs(G.FlowerTilt) > .01f);
             G.DebugTeleport(5, 4, "up");
             yield return .8f;
             Shot("fountain_sparkle");

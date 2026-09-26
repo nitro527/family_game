@@ -206,8 +206,7 @@ namespace GirlAdventure.View
                     else if (ch == '=' || ch == 'G') AutoTile(R, t.Path, m, "=Gb", x, y);
                     else if (ch == 'w' || ch == 'b') AutoTile(R, t.Water, m, "wb", x, y);
                 }
-            var rnd = new System.Random(11);
-            float Rn() => (float)rnd.NextDouble();
+            // 꽃(f)은 여기서 안 그린다 — View 가 FlowerTuft 스프라이트로 얹어 바람에 살랑이게 한다
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
@@ -219,9 +218,6 @@ namespace GirlAdventure.View
                         if (vert) R.Stamp(t.Sheet, T, 2 * T, T, T, x * T, y * T);
                         else R.Stamp(t.Sheet, 0, 2 * T, T, 64, x * T, y * T);
                     }
-                    if (ch == 'f')
-                        for (int i = 0; i < 5; i++)
-                            Flower(R, x * T + 6 + Rn() * 36, y * T + 8 + Rn() * 34, new[] { "#FFFFFF", "#FFD84A", "#FF8FB0", "#B9A2FF", "#FF9F6B" }[rnd.Next(5)]);
                 }
             Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
             Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
@@ -234,6 +230,17 @@ namespace GirlAdventure.View
             int gx = WorldMap.Gate.x * T + T / 2, gy = WorldMap.Gate.y * T;
             R.Stamp(t.Sheet, 5 * T, 6 * T, 2 * T, 2 * T, gx - 2 * T, gy, 2);
             return R;
+        }
+
+        /// <summary>꽃 한 칸 (48×48, 투명 바탕에 꽃 다섯 송이). 모양은 variant 로 정해져 늘 같다.</summary>
+        public static Texture2D FlowerTuft(int variant)
+        {
+            var R = new Raster(T, T);
+            var rnd = new System.Random(100 + variant);
+            float Rn() => (float)rnd.NextDouble();
+            for (int i = 0; i < 5; i++)
+                Flower(R, 6 + Rn() * 36, 8 + Rn() * 32, new[] { "#FFFFFF", "#FFD84A", "#FF8FB0", "#B9A2FF", "#FF9F6B" }[rnd.Next(5)]);
+            return R.ToTexture();
         }
 
         /// <summary>WOLF 형식 오토타일 한 칸: 24px 네 조각마다 가로·세로·대각 이웃이 같은 종류인지 보고 고른다.</summary>

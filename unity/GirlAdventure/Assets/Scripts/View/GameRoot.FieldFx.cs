@@ -40,6 +40,9 @@ namespace GirlAdventure.View
         }
 
         /// <summary>맵이 바뀔 때: 물결을 새 맵의 물 칸에 다시 깐다 (동굴 물은 청록빛).</summary>
+        public int FlowerCount => flowers.Count;
+        public float FlowerTilt => flowers.Count > 0 ? Mathf.DeltaAngle(0, flowers[0].sr.transform.localEulerAngles.z) : 0;
+
         void RebuildMapFx()
         {
             foreach (var (sr, _, _) in waves) Destroy(sr.gameObject);
@@ -59,11 +62,36 @@ namespace GirlAdventure.View
                     sr.transform.localPosition = at;
                     waves.Add((sr, at, (x * 1.7f + y * 2.9f) % 6.28f));
                 }
+            // 꽃: 타일 맵일 때만 (코드 맵은 꽃이 그림에 들어 있다). 칸 아래 가운데를 축으로 살랑
+            foreach (var (sr, _) in flowers) Destroy(sr.gameObject);
+            flowers.Clear();
+            if (!cave && fieldTiles != null)
+            {
+                if (flowerSprites == null)
+                {
+                    flowerSprites = new Sprite[6];
+                    for (int i = 0; i < flowerSprites.Length; i++)
+                        flowerSprites[i] = Art.FromTexture(MapPainter.FlowerTuft(i), new Vector2(.5f, 0), Painter.Tile);
+                }
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                    {
+                        if (map.At(x, y) != 'f') continue;
+                        var sr = new GameObject("Flower").AddComponent<SpriteRenderer>();
+                        sr.transform.SetParent(fieldFxRoot, false);
+                        sr.sprite = flowerSprites[(x * 7 + y * 13) % flowerSprites.Length];
+                        sr.sortingOrder = 1;
+                        sr.transform.localPosition = new Vector3(x + .5f, -(y + 1) + .1f, 0);
+                        flowers.Add((sr, x * .9f + y * 1.7f));
+                    }
+            }
             waveTint = cave ? new Color(.55f, 1f, .95f) : Color.white;
             foreach (var c in clouds) c.enabled = !cave;
         }
 
         Sprite petalSprite;
+        Sprite[] flowerSprites;
+        readonly List<(SpriteRenderer sr, float phase)> flowers = new List<(SpriteRenderer, float)>();
         Color waveTint = Color.white;
         float ambientTimer;
         readonly List<SpriteRenderer> clouds = new List<SpriteRenderer>();
@@ -107,6 +135,12 @@ namespace GirlAdventure.View
         void TickFieldFx()
         {
             float t = Time.time, dt = Time.deltaTime;
+            // 꽃 살랑: 느린 바람(맵을 가로질러 번지는 물결) + 칸마다 다른 박자
+            foreach (var (sr, ph) in flowers)
+            {
+                float wind = Mathf.Sin(t * .7f - sr.transform.localPosition.x * .25f) * .5f + .5f;
+                sr.transform.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t * 2.2f + ph) * (3 + 5 * wind));
+            }
             foreach (var (sr, at, ph) in waves)
             {
                 float k = .5f + .5f * Mathf.Sin(t * 1.8f + ph);
