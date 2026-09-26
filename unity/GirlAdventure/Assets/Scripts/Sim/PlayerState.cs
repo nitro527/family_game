@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 3;        // 2: 챕터·아이템·연 상자, 3: 골드
+        public const int CurrentVersion = 4;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -15,6 +15,7 @@ namespace GirlAdventure.Sim
         public bool BossDown, Boss2Down;
         public int Chapter;
         public string[] Items, Opened;
+        public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
@@ -32,8 +33,8 @@ namespace GirlAdventure.Sim
         public int Mp = StartMp, MaxMp = StartMp;
         public int Atk = StartAtk;
         public int Exp;
-        public int Candy = MaxCandy;
         public int Gold;
+        readonly Dictionary<string, int> bag = new Dictionary<string, int>();   // 소모품 가방 (id → 개수)
         public int X, Y;
         public bool BossDown;               // 킹 젤리 (챕터 1)
         public bool Boss2Down;              // 젤리 장군 (챕터 2)
@@ -42,6 +43,21 @@ namespace GirlAdventure.Sim
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
 
         public bool HasItem(string id) => Items.Contains(id);
+
+        public PlayerState() { Candy = MaxCandy; }
+
+        /// <summary>가방 속 소모품 개수.</summary>
+        public int Count(string id) => bag.TryGetValue(id, out var n) ? n : 0;
+
+        /// <summary>소모품을 넣거나(+) 뺀다(-). 0 ~ BagCandy 개로 자른다.</summary>
+        public void AddItem(string id, int n) => bag[id] = Math.Max(0, Math.Min(BagCandy, Count(id) + n));
+
+        /// <summary>사탕 (가방의 "candy").</summary>
+        public int Candy
+        {
+            get => Count("candy");
+            set => bag["candy"] = Math.Max(0, Math.Min(BagCandy, value));
+        }
 
         /// <summary>다음 레벨까지 필요한 누적 경험치.</summary>
         public static int NextExp(int lv) => 5 * lv * (lv + 1);
@@ -88,8 +104,16 @@ namespace GirlAdventure.Sim
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
             Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, SavedAt = savedAt,
-            Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(),
+            Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
         };
+
+        string[] BagEntries()
+        {
+            var list = new List<string>();
+            foreach (var kv in bag)
+                if (kv.Key != "candy" && kv.Value > 0) list.Add(kv.Key + ":" + kv.Value);
+            return list.ToArray();
+        }
 
         /// <summary>
         /// 세이브에서 복원 (챕터에 맞는 맵으로 위치 검사). 최대 HP/MP/공격력은 레벨로 다시 계산하고, 값이 이상하면 안전한 값으로 고친다
@@ -113,6 +137,14 @@ namespace GirlAdventure.Sim
             p.Chapter = Math.Max(1, Math.Min(2, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1
             if (s.Items != null) p.Items.AddRange(s.Items);
             if (s.Opened != null) p.Opened.AddRange(s.Opened);
+            if (s.Bag != null)
+                foreach (var e in s.Bag)
+                {
+                    int colon = e?.LastIndexOf(':') ?? -1;
+                    if (colon <= 0 || !int.TryParse(e.Substring(colon + 1), out int n)) continue;
+                    string id = e.Substring(0, colon);
+                    if (id != "candy" && (!GameData.Loaded || Sim.Items.IsConsumable(id))) p.AddItem(id, n);   // 모르는 id 는 버린다
+                }
             var map = WorldMap.ForChapter(p.Chapter);
             (p.X, p.Y) = map.SpawnPoint;
             if (Quest.Walkable(map, p, s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)

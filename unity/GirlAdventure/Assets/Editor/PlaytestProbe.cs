@@ -104,7 +104,7 @@ namespace GirlAdventure.EditorTools
             }
         }
 
-        /// <summary>명령창에서 idx 번째(0 파이어,1 별빛,2 사탕,3 도망)로 커서를 옮겨 결정.</summary>
+        /// <summary>명령창에서 idx 번째(0 파이어,1 별빛,2 도구,3 도망)로 커서를 옮겨 결정.</summary>
         static IEnumerable Choose(int idx, string shotBeforeConfirm = null)
         {
             for (int k = 0; k < 4 && G.CommandIndex != idx; k++) { Keys.Press(KeyCode.DownArrow); yield return .12f; }
@@ -168,7 +168,7 @@ namespace GirlAdventure.EditorTools
             Shot("fountain_sparkle");
 
             // 터치 버튼: 화면 버튼을 실제 포인터 이벤트로 눌러서 걷기
-            G.DebugTeleport(4, 5, "down");
+            G.DebugTeleport(3, 6, "down");               // 가게(7,5)에 부딪히지 않는 줄
             G.ForceTouchPad = true;
             yield return .3f;
             Expect("touch pad visible in field", G.TouchPadVisible);
@@ -202,8 +202,8 @@ namespace GirlAdventure.EditorTools
             Shot("fountain");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
 
-            // 사탕 가게: 골드로 사탕 하나 사고 그만두기
-            G.DebugSetGold(20);
+            // 도구 가게: 사탕 하나, 마법 물약 하나 사고 Esc 로 그만두기
+            G.DebugSetGold(40);
             int candy0 = G.P.Candy;
             G.DebugTeleport(WorldMap.FieldShop.x - 1, WorldMap.FieldShop.y, "right");
             yield return .3f;
@@ -217,9 +217,13 @@ namespace GirlAdventure.EditorTools
             Shot("shop_bought");
             foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
             Keys.Press(KeyCode.DownArrow); yield return .15f;
-            Keys.Press(KeyCode.Return);                // 그만두기
+            Keys.Press(KeyCode.Return);                // 마법 물약 사기
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Keys.Press(KeyCode.Escape);                // 그만두기
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
-            Expect("shop: bought one candy", G.P.Candy == candy0 + 1 && G.P.Gold == 20 - Shop.CandyPrice && !G.Busy);
+            Expect("shop: bought candy + potion", G.P.Candy == candy0 + 1 && G.P.Count("potion") == 1
+                   && G.P.Gold == 40 - Shop.CandyPrice - GameData.ItemPrice("potion") && !G.Busy);
 
             // 상태 창: Esc 로 열고 닫기
             Keys.Press(KeyCode.Escape);
@@ -227,6 +231,19 @@ namespace GirlAdventure.EditorTools
             Shot("status");
             Expect("status opens with Esc", G.StatusOpen && G.Busy && G.StatusText.Contains("다음 레벨까지") && G.StatusText.Contains("사탕"));
             Log("STATUS " + G.StatusText);
+            // 상태 창에서 도구 쓰기: MP 를 줄여 두고 마법 물약 (HP 는 가득이라 사탕은 못 씀)
+            G.DebugSetMp(2);
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Shot("status_items");
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);
+            yield return .6f;
+            Shot("status_item_used");
+            yield return (Func<bool>)(() => G.MessageText == "");
+            yield return .2f;
+            Expect("status: potion used", G.StatusOpen && G.P.Count("potion") == 0 && G.P.Mp == Math.Min(2 + GameData.Item("potion").Mp, G.P.MaxMp));
             Keys.Press(KeyCode.Escape);
             yield return .3f;
             Expect("status closes with Esc", !G.StatusOpen && !G.Busy);
@@ -295,6 +312,10 @@ namespace GirlAdventure.EditorTools
             G.DebugSetHp(4);
             yield return .2f;
             foreach (var x in Choose(2, "battle_candy_select")) yield return x;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .15f;
+            Shot("battle_item_list");
+            Keys.Press(KeyCode.Return);                // 사탕 (목록 맨 위)
             yield return .9f;
             Shot("battle_candy");
             yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
@@ -445,6 +466,11 @@ namespace GirlAdventure.EditorTools
                 {
                     int pick = G.P.Hp <= G.P.MaxHp * .35f && G.P.Candy > 0 ? 2 : boss && G.P.Mp >= 6 ? 1 : 0;
                     foreach (var x in Choose(pick)) yield return x;
+                    if (pick == 2)
+                    {
+                        yield return (Func<bool>)(() => G.ChoiceOpen);
+                        Keys.Press(KeyCode.Return);    // 도구 목록 맨 위 = 사탕
+                    }
                 }
                 else Keys.Press(KeyCode.Z);
                 yield return .3f;

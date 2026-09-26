@@ -7,14 +7,15 @@ namespace GirlAdventure.View
 {
     /// <summary>
     /// 상태 창: 필드에서 Esc (패드 Y/Back, 터치 "메뉴") → 레벨·다음 레벨까지 경험치·HP·MP·공격력·골드,
-    /// 오른쪽에 주문·가방·지금 할 일. 아무 확인/취소 입력이나 클릭으로 닫는다. 열려 있는 동안 몬스터도 멈춘다(busy).
+    /// 오른쪽에 주문·가방·지금 할 일. Z/Enter(또는 "도구 쓰기" 버튼)로 도구 사용, Esc·바깥 클릭으로 닫는다.
+    /// 열려 있는 동안 몬스터도 멈춘다(busy).
     /// </summary>
     public partial class GameRoot
     {
         GameObject statusPanel;
         Text stHead, stLeftVals, stRight, stExpText;
         Image stExpBar, stHpBar, stMpBar, stFace;
-        bool statusOpen, statusClicked;
+        bool statusOpen, statusClicked, statusUse;
 
         const float StW = 760, StH = 430, StX = (960 - StW) / 2, StY = (540 - StH) / 2;
 
@@ -50,9 +51,11 @@ namespace GirlAdventure.View
             // 오른쪽: 주문 · 가방 · 지금 할 일
             var line = UIKit.Img(win, "Line", UIKit.White, 392, 24, 2, StH - 48, false);
             line.color = new Color(1, 1, 1, .18f);
-            stRight = UIKit.Label(win, "Right", "", 414, 26, StW - 434, StH - 70, 21, TextAnchor.UpperLeft);
+            stRight = UIKit.Label(win, "Right", "", 414, 24, StW - 434, StH - 90, 20, TextAnchor.UpperLeft);
             stRight.supportRichText = true;
-            UIKit.Label(win, "Close", "Esc · Z · 클릭으로 닫기", 414, StH - 38, StW - 440, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
+            var use = UIKit.Button(win, "UseItem", "도구 쓰기", 414, StH - 62, 150, 44, 20, new Color32(110, 190, 255, 255));
+            use.onClick.AddListener(() => statusUse = true);
+            UIKit.Label(win, "Close", "Z 도구 · Esc 닫기", 574, StH - 50, StW - 590, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
             statusPanel.SetActive(false);
         }
 
@@ -82,8 +85,10 @@ namespace GirlAdventure.View
                 sb.Append($"  {s.Name}  <size=16><color=#9AA3C7>MP {s.Mp}</color></size>\n");
             }
             sb.Append("\n<color=#F2C443>가방</color>\n");
-            sb.Append($"  {GameData.ItemName(Shop.CandyId)} ×{P.Candy} <size=16><color=#9AA3C7>(최대 {PlayerState.BagCandy})</color></size>\n");
-            foreach (var id in P.Items) sb.Append($"  {GameData.ItemName(id)}\n");
+            var owned = Items.Owned(P);
+            if (owned.Count == 0 && P.Items.Count == 0) sb.Append("  <color=#9AA3C7>(비어 있어요)</color>\n");
+            foreach (var id in owned) sb.Append($"  {GameData.ItemName(id)} ×{P.Count(id)} <size=16><color=#9AA3C7>{Items.EffectText(id)}</color></size>\n");
+            foreach (var id in P.Items) sb.Append($"  <color=#F2C443>★</color> {GameData.ItemName(id)}\n");
             sb.Append("\n<color=#F2C443>지금 할 일</color>\n  ");
             sb.Append(Goal());
             stRight.text = sb.ToString();
@@ -124,10 +129,31 @@ namespace GirlAdventure.View
             RenderStatus();
             statusPanel.SetActive(true);
             sfx.Play("select");
-            statusClicked = false;
+            statusClicked = statusUse = false;
             yield return null;                  // 여는 입력으로 바로 닫히지 않게
-            while (!(statusClicked || Keys.Down(KeyCode.Escape) || Keys.Down(KeyCode.X) || ConfirmDown()))
+            while (true)
+            {
+                if (statusUse || ConfirmDown())
+                {
+                    statusUse = false;
+                    yield return PickItem();
+                    if (pickedItem != null)
+                    {
+                        var (hp, mp) = Items.Use(P, pickedItem);
+                        sfx.Play("heal");
+                        RefreshHud();
+                        RenderStatus();
+                        yield return ItemTalk(pickedItem, hp, mp);
+                    }
+                    HideMessage();
+                    RenderStatus();
+                    statusClicked = false;
+                    yield return null;
+                    continue;
+                }
+                if (statusClicked || Keys.Down(KeyCode.Escape) || Keys.Down(KeyCode.X)) break;
                 yield return null;
+            }
             sfx.Play("select");
             statusPanel.SetActive(false);
             statusOpen = false;

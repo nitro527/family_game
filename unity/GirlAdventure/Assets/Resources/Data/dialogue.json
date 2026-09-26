@@ -11,11 +11,11 @@
     { "Id": "fountain", "Lines": [
       { "Text": "반짝이는 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
     { "Id": "shop_hello", "Lines": [
-      { "Text": "사탕 가게 아주머니: \"어서 오렴! 달콤한 사탕 하나에 {price}골드란다.\"", "Face": "smile" } ] },
-    { "Id": "shop_ask",     "Lines": [ { "Text": "사탕을 살까? (골드 {gold} · 사탕 ×{candy})", "Face": "smile" } ] },
-    { "Id": "shop_bought",  "Lines": [ { "Text": "사탕을 샀다! 달콤한 냄새가 난다~ (사탕 ×{candy})", "Face": "laugh", "Hold": 0.7 } ] },
+      { "Text": "가게 아주머니: \"어서 오렴! 달콤한 사탕이랑 신기한 물약이 있단다.\"", "Face": "smile" } ] },
+    { "Id": "shop_ask",     "Lines": [ { "Text": "무엇을 살까? (가진 골드 {gold})", "Face": "smile" } ] },
+    { "Id": "shop_bought",  "Lines": [ { "Text": "{item:을/를} 샀다! (가방에 ×{count})", "Face": "laugh", "Hold": 0.7 } ] },
     { "Id": "shop_nogold",  "Lines": [ { "Text": "\"어머, 골드가 모자라는구나. 젤리를 물리치면 골드를 얻을 수 있단다.\"", "Face": "pout" } ] },
-    { "Id": "shop_full",    "Lines": [ { "Text": "\"가방이 사탕으로 꽉 찼구나! 사탕은 {max}개까지 들 수 있단다.\"", "Face": "surprised" } ] },
+    { "Id": "shop_full",    "Lines": [ { "Text": "\"가방이 꽉 찼구나! {item:은/는} {max}개까지 들 수 있단다.\"", "Face": "surprised" } ] },
     { "Id": "shop_bye",     "Lines": [ { "Text": "\"조심해서 다녀오렴! 또 오렴~\"", "Face": "smile", "Hold": 0.8 } ] },
     { "Id": "boss_gate", "Lines": [
       { "Text": "성문 앞에 거대한 그림자가… 킹 젤리다!", "Face": "surprised" } ] },
@@ -26,7 +26,10 @@
     { "Id": "fire_hit",     "Lines": [ { "Text": "{enemy}에게 {dmg}의 피해!", "Face": "cast", "Hold": 0.8 } ] },
     { "Id": "star_cast",    "Lines": [ { "Text": "{name}의 필살 주문…", "Face": "cast", "Hold": 0.55 } ] },
     { "Id": "star_hit",     "Lines": [ { "Text": "별빛이 쏟아진다! {enemy}에게 {dmg}의 피해!", "Face": "laugh", "Hold": 1.0 } ] },
-    { "Id": "candy",        "Lines": [ { "Text": "달콤한 사탕을 먹었다! HP가 {heal} 회복되었다.", "Face": "laugh", "Hold": 1.0 } ] },
+    { "Id": "item_hp",      "Lines": [ { "Text": "{item:을/를} 먹었다! HP가 {heal} 회복되었다.", "Face": "laugh", "Hold": 1.0 } ] },
+    { "Id": "item_mp",      "Lines": [ { "Text": "{item:을/를} 마셨다! MP가 {mp} 회복되었다.", "Face": "laugh", "Hold": 1.0 } ] },
+    { "Id": "item_noneed",  "Lines": [ { "Text": "지금은 {item:을/를} 쓸 필요가 없어요.", "Face": "pout", "Hold": 0.9 } ] },
+    { "Id": "item_none",    "Lines": [ { "Text": "가방에 쓸 수 있는 도구가 없어요. 가게에서 살 수 있어요!", "Face": "pout" } ] },
     { "Id": "run_ok",       "Lines": [ { "Text": "{name:은/는} 재빨리 도망쳤다!", "Face": "surprised", "Hold": 0.9 } ] },
     { "Id": "run_fail",     "Lines": [ { "Text": "도망치지 못했다!", "Face": "pout", "Hold": 0.9 } ] },
     { "Id": "enemy_attack", "Lines": [ { "Text": "{enemy}의 {attack}!", "Face": "surprised", "Hold": 0.5 } ] },

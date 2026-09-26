@@ -36,7 +36,7 @@ namespace GirlAdventure.View
         // command window
         GameObject cmdWin;
         readonly List<Text> cmdTexts = new List<Text>();
-        readonly Cmd[] cmdOrder = { Cmd.Fire, Cmd.Star, Cmd.Candy, Cmd.Run };
+        readonly Cmd[] cmdOrder = { Cmd.Fire, Cmd.Star, Cmd.Item, Cmd.Run };
         int cmdIndex;
         Cmd? chosenCmd;
 
@@ -72,6 +72,7 @@ namespace GirlAdventure.View
             BuildEnding();
             BuildTouchPad();
             BuildStatus();
+            statusPanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());   // 상태 창 위에 대화창·선택창이 뜨게
             BuildSwirl();
 
             flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));
@@ -190,7 +191,10 @@ namespace GirlAdventure.View
             switch (c)
             {
                 case Cmd.Star: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>MP {BattleSystem.StarCost}</color></size>";
-                case Cmd.Candy: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{P.Candy}</color></size>";
+                case Cmd.Item:
+                    int n = 0;
+                    foreach (var id in Items.Owned(P)) n += P.Count(id);
+                    return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{n}</color></size>";
                 default: return GameData.Skill(c).Name;
             }
         }

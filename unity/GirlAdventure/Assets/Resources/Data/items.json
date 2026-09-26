@@ -1,6 +1,8 @@
 {
   "Items": [
-    { "Id": "key", "Name": "기지 열쇠", "Desc": "젤리 기지의 문을 여는 반짝이는 열쇠" },
-    { "Id": "candy", "Name": "사탕", "Desc": "먹으면 HP가 회복되는 달콤한 사탕", "Price": 8 }
+    { "Id": "candy",  "Name": "사탕",      "Kind": "use", "Hp": 18, "Price": 8,  "Shops": "field,cave", "Desc": "먹으면 HP가 회복되는 달콤한 사탕" },
+    { "Id": "potion", "Name": "마법 물약", "Kind": "use", "Mp": 12, "Price": 15, "Shops": "field,cave", "Desc": "마시면 MP가 회복되는 반짝이는 물약" },
+    { "Id": "moon",   "Name": "달님 사탕", "Kind": "use", "Hp": 60, "Price": 30, "Shops": "cave",       "Desc": "HP가 아주 많이 회복되는 커다란 달 모양 사탕" },
+    { "Id": "key",    "Name": "기지 열쇠", "Kind": "key", "Desc": "젤리 기지의 문을 여는 반짝이는 열쇠" }
   ]
 }

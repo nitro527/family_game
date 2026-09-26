@@ -26,6 +26,7 @@ namespace GirlAdventure.EditorTools
             SaveTests();
             QuestTests();
             ShopTests();
+            ItemTests();
             MonsterTests();
             BalanceSimulation();
             BalanceSimulation2();
@@ -42,7 +43,7 @@ namespace GirlAdventure.EditorTools
         static readonly string[] TalkIds =
         {
             "intro", "continue", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
-            "candy", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
+            "item_hp", "item_mp", "item_noneed", "item_none", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
             "boss2_meet", "ch2_clear", "ending_card2",
@@ -79,7 +80,7 @@ namespace GirlAdventure.EditorTools
                 catch (Exception) { skillsOk = false; }
             }
             Check("skills.json has every command", skillsOk);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9) };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12) };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -208,6 +209,48 @@ namespace GirlAdventure.EditorTools
                     ok |= reach[sx + dx, sy + dy];
                 Check($"{m.Kind}: shop tile reachable", m.At(sx, sy) == 'M' && m.Blocked(sx, sy) && ok);
             }
+        }
+
+        /// <summary>도구(소모품): 데이터, 가게별 상품, 사용 규칙(가득이면 안 씀), 전투 "도구" 명령, 세이브.</summary>
+        static void ItemTests()
+        {
+            bool dataOk = GameData.Consumables.Count >= 3;
+            foreach (var d in GameData.Consumables)
+                dataOk &= !string.IsNullOrEmpty(d.Name) && (d.Hp > 0 || d.Mp > 0) && d.Price > 0 && !string.IsNullOrEmpty(d.Shops);
+            Check("items.json consumables valid", dataOk, $"n={GameData.Consumables.Count}");
+            var fieldGoods = Shop.Goods(MapKind.Field);
+            var caveGoods = Shop.Goods(MapKind.Cave);
+            Check("shop goods per map", fieldGoods.Contains("candy") && fieldGoods.Contains("potion") && !fieldGoods.Contains("moon")
+                  && caveGoods.Contains("moon") && caveGoods.Count <= 3 && !fieldGoods.Contains("key"), string.Join(",", caveGoods));
+
+            var p = PlayerState.NewGame("i");
+            Check("potion not owned", !Items.CanUse(p, "potion") && Items.Use(p, "potion") == (0, 0));
+            p.AddItem("potion", 2);
+            Check("potion unusable at full MP", !Items.CanUse(p, "potion") && p.Count("potion") == 2);
+            p.GainExp(PlayerState.NextExp(4));        // Lv5: 최대 MP 22 > 물약 12
+            p.Mp = 1;
+            var (hp, mp) = Items.Use(p, "potion");
+            Check("potion restores MP", hp == 0 && mp == GameData.Item("potion").Mp && p.Mp == 1 + mp && p.Count("potion") == 1, $"mp={p.Mp}");
+            p.Mp = p.MaxMp - 2;
+            (hp, mp) = Items.Use(p, "potion");
+            Check("potion capped at max", mp == 2 && p.Mp == p.MaxMp && p.Count("potion") == 0);
+            p.AddItem("moon", 20);
+            Check("bag max per item", p.Count("moon") == Items.BagMax);
+            Check("owned list in data order", string.Join(",", Items.Owned(p)) == "candy,moon");
+
+            var b = new BattleSystem(p, GameData.Normal[0], new System.Random(2));
+            Check("item cmd off when nothing needed", !b.CanUse(Cmd.Item));
+            p.Hp = 3;
+            var o = b.Act(Cmd.Item, "moon");
+            Check("battle item heals", !o.Failed && o.Item == "moon" && o.Heal == Math.Min(60, p.MaxHp - 3) && p.Hp == p.MaxHp && p.Count("moon") == Items.BagMax - 1);
+            Check("battle item needs id", b.Act(Cmd.Item).Failed);
+
+            p.AddItem("potion", 3);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("save keeps bag", q.Count("potion") == 3 && q.Count("moon") == Items.BagMax - 1 && q.Candy == p.Candy);
+            var bad = new SaveData { Name = "x", Lv = 1, Candy = 2, Bag = new[] { "zzz:5", "potion:99", "moon", "key:1" } };
+            var r = PlayerState.FromSave(bad);
+            Check("save bag sanitized", r.Count("zzz") == 0 && r.Count("potion") == Items.BagMax && r.Count("moon") == 0 && r.Count("key") == 0 && r.Candy == 2);
         }
 
         static void QuestTests()

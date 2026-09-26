@@ -34,7 +34,10 @@ namespace GirlAdventure.Sim
     public class ItemDef
     {
         public string Id, Name, Desc;
+        public string Kind;             // "use" 소모품(도구) / "key" 중요 아이템
+        public int Hp, Mp;              // 소모품: 회복량
         public int Price;               // 가게 가격 (0 이면 팔지 않음)
+        public string Shops;            // 파는 가게 "field,cave"
     }
 
     [Serializable]
@@ -71,13 +74,19 @@ namespace GirlAdventure.Sim
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
         static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
+        static readonly List<ItemDef> consumables = new List<ItemDef>();
 
         public static bool Loaded { get; private set; }
 
         public static void Set(EnemyTable enemies, SkillTable skillTable, DialogueTable dialogue, ItemTable itemTable)
         {
             items.Clear();
-            foreach (var it in itemTable.Items) items[it.Id] = it;
+            consumables.Clear();
+            foreach (var it in itemTable.Items)
+            {
+                items[it.Id] = it;
+                if (it.Kind == "use") consumables.Add(it);
+            }
             Normal = enemies.Normal;
             King = enemies.Boss;
             King.Boss = true;
@@ -111,6 +120,11 @@ namespace GirlAdventure.Sim
         public static string ItemName(string id) => items.TryGetValue(id, out var it) ? it.Name : id;
 
         public static bool HasItemDef(string id) => items.ContainsKey(id);
+
+        public static ItemDef Item(string id) => id != null && items.TryGetValue(id, out var it) ? it : null;
+
+        /// <summary>소모품(도구) 전부, 데이터 순서.</summary>
+        public static IReadOnlyList<ItemDef> Consumables => consumables;
 
         /// <summary>가게 가격 (데이터에 없거나 0 이면 팔지 않는 물건).</summary>
         public static int ItemPrice(string id) => items.TryGetValue(id, out var it) ? it.Price : 0;

@@ -18,7 +18,8 @@ namespace GirlAdventure.Sim
         public static readonly string[] Moves = { "tackle", "hop", "spin", "slam", "shard", "charge" };
     }
 
-    public enum Cmd { Fire, Star, Candy, Run }
+    /// <summary>Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).</summary>
+    public enum Cmd { Fire, Star, Candy, Run, Item }
 
     public struct PlayerOutcome
     {
@@ -28,6 +29,8 @@ namespace GirlAdventure.Sim
         public bool Escaped;
         public int Damage;
         public int Heal;
+        public int MpHeal;
+        public string Item;     // 쓴 도구 id (Candy/Item)
     }
 
     public struct EnemyOutcome
@@ -41,7 +44,7 @@ namespace GirlAdventure.Sim
     {
         public const double DodgeRate = 0.10;
         public static int StarCost => GameData.Skill(Cmd.Star).Mp;
-        public static int CandyHeal => GameData.Skill(Cmd.Candy).Heal;
+        public static int CandyHeal => GameData.Item(Shop.CandyId).Hp;
 
         public readonly PlayerState P;
         public readonly EnemyDef Def;
@@ -65,16 +68,19 @@ namespace GirlAdventure.Sim
             {
                 case Cmd.Star: return P.Mp >= StarCost;
                 case Cmd.Fire: return P.Mp >= GameData.Skill(c).Mp;
-                case Cmd.Candy: return P.Candy > 0 && P.Hp < P.MaxHp;
+                case Cmd.Candy: return Items.CanUse(P, Shop.CandyId);
+                case Cmd.Item: return Items.AnyUsable(P);
                 case Cmd.Run: return !Def.Boss;
                 default: return true;
             }
         }
 
-        public PlayerOutcome Act(Cmd c)
+        /// <summary>명령 실행. Item 은 item(도구 id)이 필요하다 (Candy 는 사탕).</summary>
+        public PlayerOutcome Act(Cmd c, string item = null)
         {
             var o = new PlayerOutcome { Cmd = c };
-            if (!CanUse(c)) { o.Failed = true; return o; }
+            if (c == Cmd.Candy) item = Shop.CandyId;
+            if (!CanUse(c) || ((c == Cmd.Candy || c == Cmd.Item) && !Items.CanUse(P, item))) { o.Failed = true; return o; }
             var s = GameData.Skill(c);
             P.Mp -= s.Mp;
             switch (c)
@@ -85,9 +91,9 @@ namespace GirlAdventure.Sim
                     o.Damage = P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand));
                     break;
                 case Cmd.Candy:
-                    P.Candy--;
-                    o.Heal = Math.Min(s.Heal, P.MaxHp - P.Hp);
-                    P.Hp += o.Heal;
+                case Cmd.Item:
+                    (o.Heal, o.MpHeal) = Items.Use(P, item);
+                    o.Item = item;
                     break;
                 case Cmd.Run:
                     o.Escaped = r.NextDouble() < s.Rate;

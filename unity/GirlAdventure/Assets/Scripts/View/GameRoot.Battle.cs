@@ -112,7 +112,14 @@ namespace GirlAdventure.View
             while (true)
             {
                 yield return AskCommand();
-                var o = battle.Act(chosenCmd.Value);
+                string item = null;
+                if (chosenCmd == Cmd.Item)
+                {
+                    yield return PickItem();
+                    if (pickedItem == null) continue;       // 그만두기 → 다시 명령 고르기
+                    item = pickedItem;
+                }
+                var o = battle.Act(chosenCmd.Value, item);
                 yield return PlayerTurn(o);
                 if (o.Escaped) { yield return EndBattle(); yield break; }
                 if (battle.EnemyDown) { yield return Victory(); yield break; }
@@ -153,13 +160,15 @@ namespace GirlAdventure.View
                     yield return Talk("star_hit", ("enemy", def.Name), ("dmg", o.Damage));
                     break;
                 case Cmd.Candy:
+                case Cmd.Item:
                     RefreshHud();
                     sfx.Play("heal");
+                    bool mp = o.MpHeal > 0 && o.Heal == 0;
                     for (int i = 0; i < 14; i++)
                         Spawn(starSprite, Px(HeroX + Random.Range(-70, 70), HeroY - 10), new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)),
-                              1.2f, .35f, new Color(1, .55f, .8f));
-                    Pop("+" + o.Heal, HeroX, 200, new Color32(125, 255, 154, 255));
-                    yield return Talk("candy", ("heal", o.Heal));
+                              1.2f, .35f, mp ? new Color(.45f, .75f, 1f) : new Color(1, .55f, .8f));
+                    Pop("+" + (mp ? o.MpHeal : o.Heal), HeroX, 200, mp ? new Color32(120, 190, 255, 255) : new Color32(125, 255, 154, 255));
+                    yield return ItemTalk(o.Item, o.Heal, o.MpHeal);
                     break;
                 case Cmd.Run:
                     if (o.Escaped)
