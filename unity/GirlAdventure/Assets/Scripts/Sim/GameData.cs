@@ -45,6 +45,23 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class ItemTable { public ItemDef[] Items; }
 
+    /// <summary>
+    /// 출현표 한 구역. 맵(field/cave)에서 조건에 맞는 구역 중 **마지막** 것을 쓴다.
+    /// 초원: 시작점에서 먼 정도(x+y) ≥ MinFar, 동굴: y ≤ MaxY (북쪽 깊은 곳).
+    /// Pool 은 적 이름 목록 (같은 이름을 여러 번 넣으면 더 자주 나온다).
+    /// </summary>
+    [Serializable]
+    public class EncounterZone
+    {
+        public string Map;
+        public int MinFar;
+        public int MaxY = 99;
+        public string[] Pool;
+    }
+
+    [Serializable]
+    public class EncounterTable { public EncounterZone[] Zones; }
+
     [Serializable]
     public class Line
     {
@@ -79,10 +96,11 @@ namespace GirlAdventure.Sim
         static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
         static readonly List<ItemDef> consumables = new List<ItemDef>();
         static readonly List<ItemDef> gear = new List<ItemDef>();
+        static readonly List<(EncounterZone zone, int[] pool)> zones = new List<(EncounterZone, int[])>();
 
         public static bool Loaded { get; private set; }
 
-        public static void Set(EnemyTable enemies, SkillTable skillTable, DialogueTable dialogue, ItemTable itemTable)
+        public static void Set(EnemyTable enemies, SkillTable skillTable, DialogueTable dialogue, ItemTable itemTable, EncounterTable encounters)
         {
             items.Clear();
             consumables.Clear();
@@ -106,6 +124,18 @@ namespace GirlAdventure.Sim
                 skills[(Cmd)Enum.Parse(typeof(Cmd), s.Cmd)] = s;
             talk.Clear();
             foreach (var e in dialogue.Entries) talk[e.Id] = e.Lines;
+            zones.Clear();
+            foreach (var z in encounters.Zones)
+            {
+                var list = z.Map == "cave" ? Cave : Normal;
+                var pool = new int[z.Pool.Length];
+                for (int i = 0; i < pool.Length; i++)
+                {
+                    pool[i] = Array.FindIndex(list, d => d.Name == z.Pool[i]);
+                    if (pool[i] < 0) throw new InvalidOperationException($"출현표({z.Map})에 모르는 적: {z.Pool[i]}");
+                }
+                zones.Add((z, pool));
+            }
             Loaded = true;
         }
 
@@ -117,6 +147,19 @@ namespace GirlAdventure.Sim
             foreach (var d in Cave) yield return d;
             yield return Guard;
             yield return General;
+        }
+
+        /// <summary>
+        /// 이 자리의 출현표 (적 인덱스 목록: 초원은 Normal, 동굴은 Cave). 맞는 구역이 없으면 첫 구역.
+        /// </summary>
+        public static int[] EncounterPool(MapKind kind, int x, int y)
+        {
+            string map = kind == MapKind.Cave ? "cave" : "field";
+            int[] found = null;
+            foreach (var (z, pool) in zones)
+                if (z.Map == map && (found == null || (x + y >= z.MinFar && y <= z.MaxY)))
+                    found = pool;
+            return found ?? new[] { 0 };
         }
 
         public static SkillDef Skill(Cmd c)

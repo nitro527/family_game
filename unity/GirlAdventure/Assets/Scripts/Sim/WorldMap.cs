@@ -162,18 +162,17 @@ namespace GirlAdventure.Sim
         public bool Safe(int x, int y) =>
             Kind == MapKind.Field ? x <= 8 && y <= 7 : At(x, y) == ':';
 
-        /// <summary>멀리 갈수록 강한 젤리가 나온다. GameData.Normal 인덱스를 돌려준다 (초원).</summary>
+        /// <summary>멀리 갈수록 강한 젤리가 나온다. GameData.Normal 인덱스를 돌려준다 (초원, 표는 encounters.json).</summary>
         public static int PickEnemyIndex(int x, int y, Random r)
         {
-            int far = x + y;
-            int[] pool = far > 34 ? new[] { 1, 2, 2 } : far > 20 ? new[] { 0, 1, 1, 2 } : new[] { 0, 0, 1 };
+            var pool = GameData.EncounterPool(MapKind.Field, x, y);
             return pool[r.Next(pool.Length)];
         }
 
-        /// <summary>동굴 젤리: 깊이(북쪽) 들어갈수록 수정 젤리가 많아진다. GameData.Cave 인덱스.</summary>
+        /// <summary>동굴 젤리: 깊이(북쪽) 들어갈수록 수정 젤리가 많아진다. GameData.Cave 인덱스 (표는 encounters.json).</summary>
         public static int PickCaveEnemyIndex(int x, int y, Random r)
         {
-            int[] pool = y <= 9 ? new[] { 0, 1, 1 } : new[] { 0, 0, 1 };
+            var pool = GameData.EncounterPool(MapKind.Cave, x, y);
             return pool[r.Next(pool.Length)];
         }
     }

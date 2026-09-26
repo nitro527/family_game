@@ -13,7 +13,8 @@ namespace GirlAdventure.View
                 Read<EnemyTable>("enemies"),
                 Read<SkillTable>("skills"),
                 Read<DialogueTable>("dialogue"),
-                Read<ItemTable>("items"));
+                Read<ItemTable>("items"),
+                Read<EncounterTable>("encounters"));
         }
 
         static T Read<T>(string name)

@@ -87,6 +87,10 @@ namespace GirlAdventure.EditorTools
                 catch (Exception) { skillsOk = false; }
             }
             Check("skills.json has every command", skillsOk);
+            string P(MapKind k, int x, int y) => string.Join(",", GameData.EncounterPool(k, x, y));
+            Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2"
+                  && P(MapKind.Cave, 5, 20) == "0,0,1" && P(MapKind.Cave, 12, 5) == "0,1,1",
+                  $"field={P(MapKind.Field, 3, 4)}|{P(MapKind.Field, 10, 11)}|{P(MapKind.Field, 20, 15)} cave={P(MapKind.Cave, 5, 20)}|{P(MapKind.Cave, 12, 5)}");
             var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
             foreach (var id in TalkIds)
             {
