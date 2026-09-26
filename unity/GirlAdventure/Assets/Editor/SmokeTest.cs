@@ -66,8 +66,10 @@ namespace GirlAdventure.EditorTools
             string badMove = "";
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())
-                    if (Array.IndexOf(EnemyDef.Moves, d.Move) < 0 || string.IsNullOrEmpty(d.Attack)) badMove += d.Name + " ";
-            Check("every enemy has move+attack", enemiesOk && badMove == "", badMove);
+                    if (Array.IndexOf(EnemyDef.Moves, d.Move) < 0 || string.IsNullOrEmpty(d.Attack) || Array.IndexOf(EnemyDef.Looks, d.Look ?? "") < 0) badMove += d.Name + " ";
+            foreach (var d in GameData.Cave)
+                if (string.IsNullOrEmpty(d.Look)) badMove += d.Name + "(동굴 모양 없음) ";
+            Check("every enemy has move+attack+look", enemiesOk && badMove == "", badMove);
             string noGold = "";
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())
