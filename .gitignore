@@ -14,3 +14,4 @@ unity/*.log
 사진/
 __pycache__/
 .autoimprove.lock
+assets/thirdparty/painterly_battle_backgrounds/

@@ -1,0 +1,14 @@
+# 외부 무료 에셋 (출처·라이선스)
+
+2026-09-26 사용자 승인 후 다운로드했어요. 원본 압축 해제본은 `assets/thirdparty/` 에 있어요.
+전투 배경은 80MB라 git에서는 제외했고, 게임에 실제로 쓰는 파일만 Unity 프로젝트로 복사해서 기록해요.
+
+| 폴더 | 에셋 | 출처 | 라이선스 | 크레딧 |
+|---|---|---|---|---|
+| `pipoya_world_tileset/` | PIPOYA FREE RPG World Tileset (48×48 · 40×40 · 32×32, 월드맵용) | https://pipoya.itch.io/pipoya-free-rpg-world-tileset-32x32-40x40-48x48 | 무료 · 상업 이용 가능 · 수정 가능 · **재배포 및 판매 금지** | 선택 (넣는다면: "Pipoya https://pipoya.itch.io/") |
+| `painterly_battle_backgrounds/` | Painterly Battle Backgrounds 무료판 (50장, 1920×1080, 동화풍. 제작자가 AI 보조로 만들었다고 밝힘) | https://kalponic-studio.itch.io/painterly-battle-backgrounds | 무료 · 상업 이용 가능 · 수정 가능 · **배경 단독으로 재판매·재배포 금지** | 요구 없음 |
+| `kenney_ui_rpg/` | Kenney UI Pack (RPG Expansion) 87개 PNG (창·버튼·바·화살표) | https://kenney.nl/assets/ui-pack-rpg-expansion | **CC0** (완전 자유) | 필요 없음 (감사 표기 권장) |
+
+## 사용 규칙
+- 게임 엔딩 크레딧에 세 출처를 적어요 (의무는 아니지만 예의).
+- 원본 에셋 파일만 따로 공유하거나 배포하지 않아요 (PIPOYA, Painterly 조건).
