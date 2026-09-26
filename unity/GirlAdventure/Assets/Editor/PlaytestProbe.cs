@@ -202,6 +202,25 @@ namespace GirlAdventure.EditorTools
             Shot("fountain");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
 
+            // 사탕 가게: 골드로 사탕 하나 사고 그만두기
+            G.DebugSetGold(20);
+            int candy0 = G.P.Candy;
+            G.DebugTeleport(WorldMap.FieldShop.x - 1, WorldMap.FieldShop.y, "right");
+            yield return .3f;
+            Shot("shop_front");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            yield return .2f;
+            Shot("shop_choice");
+            Keys.Press(KeyCode.Return);                // 사탕 사기
+            yield return .4f;
+            Shot("shop_bought");
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);                // 그만두기
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("shop: bought one candy", G.P.Candy == candy0 + 1 && G.P.Gold == 20 - Shop.CandyPrice && !G.Busy);
+
             // 보이는 몬스터: 필드에 돌아다니는 모습 → 앞 칸의 몬스터에게 걸어 들어가면 전투
             Expect("mobs spawned on field", G.MobCount >= FieldMonsters.StartCount);
             G.DebugMobs(true, false);                 // 이후 시나리오가 흔들리지 않게 멈춤

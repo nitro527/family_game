@@ -25,6 +25,7 @@ namespace GirlAdventure.EditorTools
             MusicTests();
             SaveTests();
             QuestTests();
+            ShopTests();
             MonsterTests();
             BalanceSimulation();
             BalanceSimulation2();
@@ -45,6 +46,7 @@ namespace GirlAdventure.EditorTools
             "ending_light", "ending_card",
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
             "boss2_meet", "ch2_clear", "ending_card2",
+            "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
         };
 
         static void DataTests()
@@ -65,6 +67,11 @@ namespace GirlAdventure.EditorTools
                 foreach (var d in GameData.AllEnemies())
                     if (Array.IndexOf(EnemyDef.Moves, d.Move) < 0 || string.IsNullOrEmpty(d.Attack)) badMove += d.Name + " ";
             Check("every enemy has move+attack", enemiesOk && badMove == "", badMove);
+            string noGold = "";
+            if (enemiesOk)
+                foreach (var d in GameData.AllEnemies())
+                    if (d.Gold <= 0) noGold += d.Name + " ";
+            Check("every enemy drops gold", enemiesOk && noGold == "", noGold);
             bool skillsOk = true;
             foreach (Cmd c in Enum.GetValues(typeof(Cmd)))
             {
@@ -72,7 +79,7 @@ namespace GirlAdventure.EditorTools
                 catch (Exception) { skillsOk = false; }
             }
             Check("skills.json has every command", skillsOk);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2) };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9) };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -156,17 +163,46 @@ namespace GirlAdventure.EditorTools
             var m = new WorldMap();
             var p = PlayerState.NewGame("서진");
             p.GainExp(PlayerState.NextExp(3));
-            p.Hp = 7; p.Mp = 2; p.Candy = 1; p.X = WorldMap.Gate.x; p.Y = WorldMap.Gate.y - 1; p.BossDown = true;
+            p.Hp = 7; p.Mp = 2; p.Candy = 1; p.Gold = 57; p.X = WorldMap.Gate.x; p.Y = WorldMap.Gate.y - 1; p.BossDown = true;
             var json = JsonUtility.ToJson(p.ToSave("t"));
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(json));
-            Check("save roundtrip", q.Name == "서진" && q.Lv == p.Lv && q.Exp == p.Exp && q.Hp == 7 && q.Mp == 2 && q.Candy == 1
+            Check("save roundtrip", q.Name == "서진" && q.Lv == p.Lv && q.Exp == p.Exp && q.Hp == 7 && q.Mp == 2 && q.Candy == 1 && q.Gold == 57
                   && q.X == p.X && q.Y == p.Y && q.BossDown && q.MaxHp == p.MaxHp && q.MaxMp == p.MaxMp && q.Atk == p.Atk,
                   $"lv={q.Lv} maxHp={q.MaxHp}/{p.MaxHp} atk={q.Atk}/{p.Atk}");
             // 이상한 값은 안전하게 고친다: 막힌 칸 → 시작점, HP 0 → 가득, 사탕 초과 → 최대치
-            var bad = new SaveData { Name = "", Lv = 0, Hp = 0, Mp = 999, Candy = 50, X = 0, Y = 0 };
+            var bad = new SaveData { Name = "", Lv = 0, Hp = 0, Mp = 999, Candy = 50, Gold = -5, X = 0, Y = 0 };
             var r = PlayerState.FromSave(bad);
-            Check("save sanitized", r.Lv == 1 && r.Hp == r.MaxHp && r.Mp == r.MaxMp && r.Candy == PlayerState.MaxCandy
+            Check("save sanitized", r.Lv == 1 && r.Hp == r.MaxHp && r.Mp == r.MaxMp && r.Candy == PlayerState.BagCandy && r.Gold == 0
                   && r.X == WorldMap.Start.x && r.Y == WorldMap.Start.y && r.Name == "첫째", $"pos=({r.X},{r.Y}) hp={r.Hp}");
+        }
+
+        /// <summary>사탕 가게: 골드로 사탕 사기, 가방 한도, 샘물은 산 사탕을 빼앗지 않음, 가게는 두 맵 모두 걸어서 닿는다.</summary>
+        static void ShopTests()
+        {
+            int price = Shop.CandyPrice;
+            Check("candy has price", price > 0 && GameData.ItemName(Shop.CandyId) == "사탕", $"price={price}");
+            var p = PlayerState.NewGame("t");
+            Check("new game: 0 gold", p.Gold == 0);
+            Check("no gold → can't buy", Shop.BuyCandy(p) == BuyResult.NoGold && p.Candy == PlayerState.MaxCandy);
+            p.GainGold(price * 10);
+            Check("buy candy", Shop.BuyCandy(p) == BuyResult.Bought && p.Gold == price * 9 && p.Candy == PlayerState.MaxCandy + 1);
+            while (Shop.BuyCandy(p) == BuyResult.Bought) { }
+            Check("bag limit", p.Candy == PlayerState.BagCandy && Shop.BuyCandy(p) == BuyResult.Full, $"candy={p.Candy} gold={p.Gold}");
+            p.RestoreAll();
+            Check("spring keeps bought candy", p.Candy == PlayerState.BagCandy);
+            p.Candy = 0; p.RestoreAll();
+            Check("spring refills to 3", p.Candy == PlayerState.MaxCandy);
+            p.GainGold(-999999);
+            Check("gold never negative", p.Gold == 0);
+            foreach (var m in new[] { new WorldMap(), WorldMap.Cave() })
+            {
+                var (sx, sy) = m.ShopPos;
+                var reach = Reach(m, p);
+                bool ok = false;
+                foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                    ok |= reach[sx + dx, sy + dy];
+                Check($"{m.Kind}: shop tile reachable", m.At(sx, sy) == 'M' && m.Blocked(sx, sy) && ok);
+            }
         }
 
         static void QuestTests()

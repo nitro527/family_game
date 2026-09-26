@@ -34,6 +34,7 @@ namespace GirlAdventure.Sim
     public class ItemDef
     {
         public string Id, Name, Desc;
+        public int Price;               // 가게 가격 (0 이면 팔지 않음)
     }
 
     [Serializable]
@@ -110,6 +111,9 @@ namespace GirlAdventure.Sim
         public static string ItemName(string id) => items.TryGetValue(id, out var it) ? it.Name : id;
 
         public static bool HasItemDef(string id) => items.ContainsKey(id);
+
+        /// <summary>가게 가격 (데이터에 없거나 0 이면 팔지 않는 물건).</summary>
+        public static int ItemPrice(string id) => items.TryGetValue(id, out var it) ? it.Price : 0;
 
         public static bool HasTalk(string id) => talk.ContainsKey(id);
 

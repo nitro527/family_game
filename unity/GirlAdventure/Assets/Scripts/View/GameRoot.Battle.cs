@@ -211,7 +211,9 @@ namespace GirlAdventure.View
             enemyLabel.text = "";
             yield return Talk("win", ("enemy", def.Name));
             int ups = P.GainExp(def.Exp);
-            yield return Talk("exp", ("exp", def.Exp));
+            P.GainGold(def.Gold);
+            sfx.Play("coin");
+            yield return Talk("exp", ("exp", def.Exp), ("gold", def.Gold));
             for (int i = 0; i < ups; i++)
             {
                 sfx.Play("lvup");

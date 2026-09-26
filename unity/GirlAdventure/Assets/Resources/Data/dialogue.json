@@ -9,7 +9,14 @@
     { "Id": "sign", "Lines": [
       { "Text": "표지판: \"킹 젤리의 성은 길을 따라 남동쪽! 풀숲에는 젤리들이 숨어 있어요.\"", "Face": "smile" } ] },
     { "Id": "fountain", "Lines": [
-      { "Text": "반짝이는 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 가득 채웠다!", "Face": "laugh" } ] },
+      { "Text": "반짝이는 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "shop_hello", "Lines": [
+      { "Text": "사탕 가게 아주머니: \"어서 오렴! 달콤한 사탕 하나에 {price}골드란다.\"", "Face": "smile" } ] },
+    { "Id": "shop_ask",     "Lines": [ { "Text": "사탕을 살까? (골드 {gold} · 사탕 ×{candy})", "Face": "smile" } ] },
+    { "Id": "shop_bought",  "Lines": [ { "Text": "사탕을 샀다! 달콤한 냄새가 난다~ (사탕 ×{candy})", "Face": "laugh", "Hold": 0.7 } ] },
+    { "Id": "shop_nogold",  "Lines": [ { "Text": "\"어머, 골드가 모자라는구나. 젤리를 물리치면 골드를 얻을 수 있단다.\"", "Face": "pout" } ] },
+    { "Id": "shop_full",    "Lines": [ { "Text": "\"가방이 사탕으로 꽉 찼구나! 사탕은 {max}개까지 들 수 있단다.\"", "Face": "surprised" } ] },
+    { "Id": "shop_bye",     "Lines": [ { "Text": "\"조심해서 다녀오렴! 또 오렴~\"", "Face": "smile", "Hold": 0.8 } ] },
     { "Id": "boss_gate", "Lines": [
       { "Text": "성문 앞에 거대한 그림자가… 킹 젤리다!", "Face": "surprised" } ] },
 
@@ -26,7 +33,7 @@
     { "Id": "dodge",        "Lines": [ { "Text": "{name:은/는} 살짝 피했다!", "Face": "laugh", "Hold": 0.8 } ] },
     { "Id": "hurt",         "Lines": [ { "Text": "{name:은/는} {dmg}의 피해를 입었다!", "Face": "cry", "Hold": 0.9 } ] },
     { "Id": "win",          "Lines": [ { "Text": "{enemy:을/를} 물리쳤다!", "Face": "laugh", "Hold": 1.0 } ] },
-    { "Id": "exp",          "Lines": [ { "Text": "경험치 {exp}을(를) 얻었다!", "Face": "laugh", "Hold": 0.8 } ] },
+    { "Id": "exp",          "Lines": [ { "Text": "경험치 {exp}과(와) {gold}골드를 얻었다!", "Face": "laugh", "Hold": 0.9 } ] },
     { "Id": "levelup",      "Lines": [ { "Text": "레벨이 올랐다! {name}의 레벨이 {lv}이(가) 되었다! 힘이 넘친다!", "Face": "laugh", "Hold": 1.5 } ] },
     { "Id": "defeat", "Lines": [
       { "Text": "{name:은/는} 쓰러지고 말았다…", "Face": "cry", "Hold": 1.4 },

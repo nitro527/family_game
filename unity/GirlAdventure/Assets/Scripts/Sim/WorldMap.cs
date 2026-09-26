@@ -7,19 +7,20 @@ namespace GirlAdventure.Sim
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
     /// 초원 — '.' 풀밭  ',' 수풀(인카운트↑)  'f' 꽃  '=' 길  'b' 다리  'w' 물  'T' 나무
-    ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)
+    ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'M' 사탕 가게
     /// 동굴 — '#' 바위벽  '_' 동굴 바닥(인카운트)  ':' 입구 바닥(안전)  'r' 바위기둥  'w' 지하 샘
-    ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리
+    ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'M' 사탕 가게
     /// </summary>
     public class WorldMap
     {
         public const int W = 36, H = 24;
         // 초원 (챕터 1)
-        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19);
+        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19), FieldShop = (7, 5);
         // 동굴 (챕터 2)
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
-                                                    Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3);
-        const string Blocking = "TwCFSHD#r";
+                                                    Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3),
+                                                    CaveShop = (8, 17);
+        const string Blocking = "TwCFSHD#rM";
 
         public readonly MapKind Kind;
         readonly char[,] tiles = new char[W, H];
@@ -27,6 +28,7 @@ namespace GirlAdventure.Sim
         public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : CaveStart;
         public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : CaveSpring;
         public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : CaveSign;
+        public (int x, int y) ShopPos => Kind == MapKind.Field ? FieldShop : CaveShop;
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
         public (int x, int y) RevivePoint => (Spring.x - 1, Spring.y + 1);
 
@@ -83,6 +85,7 @@ namespace GirlAdventure.Sim
                     if (tiles[x, y] != '=') Set(x, y, (x + y) % 5 != 0 ? '.' : 'f');
             Set(Fountain.x, Fountain.y, 'F');
             Set(Sign.x, Sign.y, 'S');
+            Set(FieldShop.x, FieldShop.y, 'M');
             // 성
             Fill(28, 19, 34, 22, 'C');
             for (int x = 27; x <= 35; x++)
@@ -124,6 +127,7 @@ namespace GirlAdventure.Sim
             m.Set(BossSpot.x, BossSpot.y, 'B');
             m.Set(CaveSpring.x, CaveSpring.y, 'F');
             m.Set(CaveSign.x, CaveSign.y, 'S');
+            m.Set(CaveShop.x, CaveShop.y, 'M');
             m.Set(Chest.x, Chest.y, 'H');
             return m;
         }

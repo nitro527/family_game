@@ -175,6 +175,7 @@ namespace GirlAdventure.View
 
             Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
             Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
+            CandyShop(R, WorldMap.FieldShop.x * T, WorldMap.FieldShop.y * T);
 
             // 나무: 위쪽부터 그려서 아래 나무가 위 나무를 살짝 덮게
             for (int y = 0; y < WorldMap.H; y++)
@@ -276,6 +277,52 @@ namespace GirlAdventure.View
             R.Rect(X + 11, Y + 19, 18, 2, H("#6B4020"));
         }
 
+        /// <summary>
+        /// 사탕 가게: 분홍 줄무늬 차양 아래 나무 계산대, 뒤에 가게 아주머니, 계산대 위에 사탕 병과 막대사탕.
+        /// 차양은 칸 위로 살짝 튀어나와 멀리서도 눈에 띈다.
+        /// </summary>
+        static void CandyShop(Raster R, float X, float Y)
+        {
+            Color32 wood = H("#A8743F"), woodL = H("#C9955A"), woodD = H("#6B4424"), pink = H("#FF86BE"), cream = H("#FFF4E8");
+            R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(0, 0, 0, 80));                                  // 발밑 그림자
+            R.Rect(X + 3, Y - 8, 5, 50, woodD);                                                          // 기둥
+            R.Rect(X + 40, Y - 8, 5, 50, woodD);
+            // 가게 아주머니 (계산대 뒤)
+            R.Rect(X + 14, Y + 18, 20, 12, H("#FF9FC8"));                                                // 앞치마
+            R.Rect(X + 12, Y + 18, 4, 10, H("#7FB8E8"));                                                 // 소매
+            R.Rect(X + 32, Y + 18, 4, 10, H("#7FB8E8"));
+            R.Circle(X + 24, Y + 6, 5, H("#7A4A2A"));                                                    // 머리 (틀어 올린 머리)
+            R.Circle(X + 24, Y + 12, 8, H("#7A4A2A"));
+            R.Circle(X + 24, Y + 13, 7, H("#F7D2B4"));                                                   // 얼굴
+            R.Rect(X + 17, Y + 7, 14, 4, H("#7A4A2A"));                                                  // 앞머리
+            R.Circle(X + 21, Y + 13, 1.1f, H("#3A2418"));
+            R.Circle(X + 27, Y + 13, 1.1f, H("#3A2418"));
+            R.Circle(X + 19, Y + 16, 1.8f, H("#FFA8B8", 180));                                          // 볼터치
+            R.Circle(X + 29, Y + 16, 1.8f, H("#FFA8B8", 180));
+            R.Line(X + 22.5f, Y + 17, X + 25.5f, Y + 17, 1f, H("#B0503A"));
+            // 계산대
+            R.Rect(X + 1, Y + 26, 46, 5, woodL);
+            R.Rect(X + 3, Y + 31, 42, 13, wood);
+            for (int i = 0; i < 4; i++) R.Rect(X + 12 + i * 10, Y + 31, 1.5f, 13, woodD);
+            R.Rect(X + 1, Y + 26, 46, 1.5f, H("#E8C28A"));
+            // 사탕 병 (오른쪽)
+            R.Ellipse(X + 37, Y + 20, 6.5f, 7, H("#BFE6FF", 170));
+            foreach (var (dx, dy, col) in new[] { (-2.5f, 2.5f, "#FF6B8A"), (2f, 3f, "#FFD84A"), (0f, -1f, "#7BD88F"), (-2f, -3f, "#B9A2FF"), (2.5f, -2f, "#FF9F6B") })
+                R.Circle(X + 37 + dx, Y + 20 + dy, 2f, H(col));
+            R.Rect(X + 32, Y + 12, 10, 3, H("#E0567A"));                                                 // 뚜껑
+            R.Ellipse(X + 35, Y + 17, 1.5f, 3, H("#FFFFFF", 200));                                       // 유리 반짝
+            // 막대사탕 (왼쪽)
+            R.Line(X + 10, Y + 26, X + 10, Y + 14, 1.5f, cream);
+            R.Circle(X + 10, Y + 12, 5.5f, pink);
+            R.Circle(X + 10, Y + 12, 3.5f, cream);
+            R.Circle(X + 10, Y + 12, 1.8f, pink);
+            // 줄무늬 차양 + 물결 아랫단
+            R.Rect(X - 2, Y - 16, 52, 3, woodD);
+            for (int i = 0; i < 6; i++) R.Rect(X - 2 + i * 8.7f, Y - 13, 8.7f, 11, i % 2 == 0 ? pink : cream);
+            for (int i = 0; i < 6; i++) R.Circle(X + 2.3f + i * 8.7f, Y - 2, 4.3f, i % 2 == 0 ? pink : cream);
+            R.Rect(X - 2, Y - 13, 52, 2, H("#FFFFFF", 110));                                            // 차양 윗면 빛
+        }
+
         // ------------------------------------------------------------------ 동굴
         const int FaceH = 26;       // 절벽면 높이 (px)
 
@@ -313,8 +360,8 @@ namespace GirlAdventure.View
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
-            var floor = Mask(m, "_:FSHDBrwC");
-            var safe = Mask(m, ":FS");
+            var floor = Mask(m, "_:FSHDBrwCM");
+            var safe = Mask(m, ":FSM");
             var water = Mask(m, "w");
             var deep = Erode(water);
             Color32 f0 = H("#4A4052"), f1 = H("#6A5D6E"), fSafe = H("#7A6A5A");
@@ -407,6 +454,7 @@ namespace GirlAdventure.View
 
             Fountain(R, WorldMap.CaveSpring.x * T, WorldMap.CaveSpring.y * T, true);
             Sign(R, WorldMap.CaveSign.x * T, WorldMap.CaveSign.y * T);
+            CandyShop(R, WorldMap.CaveShop.x * T, WorldMap.CaveShop.y * T);
             Painter.Chest(R, WorldMap.Chest.x * T, WorldMap.Chest.y * T, false);
             JellyBase(R, 23, 33, WorldMap.BaseDoor.x, WorldMap.BaseDoor.y);
             Throne(R, WorldMap.BossSpot.x * T, WorldMap.BossSpot.y * T);

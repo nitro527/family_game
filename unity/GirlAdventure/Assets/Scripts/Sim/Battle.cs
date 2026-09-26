@@ -9,6 +9,7 @@ namespace GirlAdventure.Sim
         public string Name;
         public string Color, Dark;          // #RRGGBB (View 에서 해석)
         public int Hp, Atk, Exp;
+        public int Gold;                    // 이기면 받는 골드
         public bool Boss;
         public string Move;                 // 공격 모션 (Moves 중 하나, View 가 연출)
         public string Attack;               // 공격 이름 (예: "몸통 박치기") → "{enemy}의 {attack}!"

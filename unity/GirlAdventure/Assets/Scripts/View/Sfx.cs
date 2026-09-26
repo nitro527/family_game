@@ -31,6 +31,7 @@ namespace GirlAdventure.View
             Add("chest", Wave.Square, .07f, .25f, 523, 659, 784, 1046, 1318);
             Add("unlock", Wave.Square, .05f, .22f, 220, 0, 330, 660);
             Add("start", Wave.Triangle, .12f, .30f, 392, 523, 659, 784);
+            Add("coin", Wave.Square, .05f, .16f, 988, 1318);
         }
 
         void Add(string name, Wave wave, float noteDur, float vol, params float[] freqs)

@@ -23,7 +23,7 @@ namespace GirlAdventure.View
         float endingShownAt;                // 엔딩 직후 연타로 바로 넘어가지 않게
 
         // HUD
-        Text hudName, hudHp, hudMp;
+        Text hudName, hudHp, hudMp, hudGold;
         Image hudHpBar, hudMpBar;
 
         // message window
@@ -65,6 +65,7 @@ namespace GirlAdventure.View
             BuildHud();
             BuildMessage();
             BuildCommands();
+            BuildChoice();
             BuildTitle();
             BuildCutin();
             BuildEnding();
@@ -82,10 +83,11 @@ namespace GirlAdventure.View
             var t = hudWin.transform;
             hudName = UIKit.Label(t, "Name", "", 16, 10, 230, 26, 20, TextAnchor.UpperLeft, UIKit.Gold);
             hudHp = UIKit.Label(t, "HP", "", 16, 36, 230, 24, 18);
+            hudGold = UIKit.Label(t, "Gold", "", 16, 36, 218, 24, 18, TextAnchor.UpperRight, UIKit.Gold);
             hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
             hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
             hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
-            hintLabel = UIKit.Label(ui, "Hint", "방향키로 이동 · 샘물에서 회복 · M 음악 크기", 560, 14, 386, 24, 15,
+            hintLabel = UIKit.Label(ui, "Hint", "방향키 이동 · 샘물 회복 · 가게에서 사탕 · M 음악", 560, 14, 386, 24, 15,
                 TextAnchor.UpperRight, new Color32(207, 214, 255, 255), true).gameObject;
         }
 
@@ -93,6 +95,7 @@ namespace GirlAdventure.View
         {
             hudName.text = $"{P.Name} · 마법사 Lv {P.Lv}";
             hudHp.text = $"HP {P.Hp}/{P.MaxHp}";
+            hudGold.text = $"{P.Gold} G";
             hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}" + (P.HasItem(Quest.KeyItem) ? "  <color=#F2C443>열쇠</color>" : "");
             hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
             hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;

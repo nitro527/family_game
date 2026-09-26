@@ -7,10 +7,11 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 2;        // 2: 챕터·아이템·연 상자 추가
+        public const int CurrentVersion = 3;        // 2: 챕터·아이템·연 상자, 3: 골드
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
+        public int Gold;
         public bool BossDown, Boss2Down;
         public int Chapter;
         public string[] Items, Opened;
@@ -21,6 +22,8 @@ namespace GirlAdventure.Sim
     public class PlayerState
     {
         public const int StartHp = 22, StartMp = 10, StartAtk = 5, MaxCandy = 3;
+        /// <summary>가방에 들어가는 사탕 최대 개수 (샘물은 MaxCandy 까지만 채워 주고, 더 필요하면 가게에서 산다).</summary>
+        public const int BagCandy = 9, MaxGold = 99999;
         public const int HpPerLevel = 6, MpPerLevel = 3, AtkPerLevel = 2;
 
         public string Name = "첫째";
@@ -30,6 +33,7 @@ namespace GirlAdventure.Sim
         public int Atk = StartAtk;
         public int Exp;
         public int Candy = MaxCandy;
+        public int Gold;
         public int X, Y;
         public bool BossDown;               // 킹 젤리 (챕터 1)
         public bool Boss2Down;              // 젤리 장군 (챕터 2)
@@ -70,7 +74,7 @@ namespace GirlAdventure.Sim
 
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
-            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, SavedAt = savedAt,
+            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, SavedAt = savedAt,
             Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(),
         };
 
@@ -89,7 +93,8 @@ namespace GirlAdventure.Sim
             p.Exp = Math.Max(lv > 1 ? NextExp(lv - 1) : 0, Math.Min(s.Exp, NextExp(lv) - 1));
             p.Hp = s.Hp <= 0 ? p.MaxHp : Math.Min(s.Hp, p.MaxHp);
             p.Mp = Math.Max(0, Math.Min(s.Mp, p.MaxMp));
-            p.Candy = Math.Max(0, Math.Min(s.Candy, MaxCandy));
+            p.Candy = Math.Max(0, Math.Min(s.Candy, BagCandy));
+            p.Gold = Math.Max(0, Math.Min(s.Gold, MaxGold));   // 옛 세이브(버전 2 이하)는 0
             p.BossDown = s.BossDown;
             p.Boss2Down = s.Boss2Down;
             p.Chapter = Math.Max(1, Math.Min(2, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1
@@ -105,12 +110,14 @@ namespace GirlAdventure.Sim
             return p;
         }
 
-        /// <summary>샘물: HP/MP/사탕 전부 회복.</summary>
+        /// <summary>샘물: HP/MP 전부 회복, 사탕은 MaxCandy 개까지 채운다 (가게에서 산 것은 그대로).</summary>
         public void RestoreAll()
         {
             Hp = MaxHp;
             Mp = MaxMp;
-            Candy = MaxCandy;
+            Candy = Math.Max(Candy, MaxCandy);
         }
+
+        public void GainGold(int amount) => Gold = Math.Max(0, Math.Min(MaxGold, Gold + amount));
     }
 }
