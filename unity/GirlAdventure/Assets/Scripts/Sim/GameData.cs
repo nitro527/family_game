@@ -91,6 +91,15 @@ namespace GirlAdventure.Sim
             Loaded = true;
         }
 
+        /// <summary>모든 적 (일반·보스·동굴·장군).</summary>
+        public static IEnumerable<EnemyDef> AllEnemies()
+        {
+            foreach (var d in Normal) yield return d;
+            yield return King;
+            foreach (var d in Cave) yield return d;
+            yield return General;
+        }
+
         public static SkillDef Skill(Cmd c)
         {
             if (!skills.TryGetValue(c, out var s)) throw new InvalidOperationException("스킬 데이터 없음: " + c);

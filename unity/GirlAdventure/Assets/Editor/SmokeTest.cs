@@ -59,6 +59,12 @@ namespace GirlAdventure.EditorTools
             if (enemiesOk)
                 enemiesOk &= GameData.Cave != null && GameData.Cave.Length >= 2 && GameData.General != null && GameData.General.Boss;
             Check("enemies.json valid", enemiesOk, $"normal={GameData.Normal?.Length} cave={GameData.Cave?.Length}");
+            // 모든 적이 연출 가능한 공격 모션과 공격 이름을 가진다
+            string badMove = "";
+            if (enemiesOk)
+                foreach (var d in GameData.AllEnemies())
+                    if (Array.IndexOf(EnemyDef.Moves, d.Move) < 0 || string.IsNullOrEmpty(d.Attack)) badMove += d.Name + " ";
+            Check("every enemy has move+attack", enemiesOk && badMove == "", badMove);
             bool skillsOk = true;
             foreach (Cmd c in Enum.GetValues(typeof(Cmd)))
             {
@@ -66,7 +72,7 @@ namespace GirlAdventure.EditorTools
                 catch (Exception) { skillsOk = false; }
             }
             Check("skills.json has every command", skillsOk);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2) };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2) };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);

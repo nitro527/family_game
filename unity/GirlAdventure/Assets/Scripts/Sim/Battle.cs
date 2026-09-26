@@ -10,6 +10,11 @@ namespace GirlAdventure.Sim
         public string Color, Dark;          // #RRGGBB (View 에서 해석)
         public int Hp, Atk, Exp;
         public bool Boss;
+        public string Move;                 // 공격 모션 (Moves 중 하나, View 가 연출)
+        public string Attack;               // 공격 이름 (예: "몸통 박치기") → "{enemy}의 {attack}!"
+
+        /// <summary>View 가 연출할 줄 아는 공격 모션.</summary>
+        public static readonly string[] Moves = { "tackle", "hop", "spin", "slam", "shard", "charge" };
     }
 
     public enum Cmd { Fire, Star, Candy, Run }

@@ -1,13 +1,13 @@
 {
   "Normal": [
-    { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 3, "Exp": 4 },
-    { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 12, "Atk": 4, "Exp": 6 },
-    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 18, "Atk": 6, "Exp": 10 }
+    { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 3, "Exp": 4,  "Move": "tackle", "Attack": "몸통 박치기" },
+    { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 12, "Atk": 4, "Exp": 6,  "Move": "hop",    "Attack": "통통 점프" },
+    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 18, "Atk": 6, "Exp": 10, "Move": "spin",   "Attack": "빙글빙글 회전" }
   ],
-  "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 120, "Atk": 10, "Exp": 50, "Boss": true },
+  "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 120, "Atk": 10, "Exp": 50, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아" },
   "Cave": [
-    { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16 },
-    { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22 }
+    { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16, "Move": "slam",  "Attack": "쿵쿵 누르기" },
+    { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22, "Move": "shard", "Attack": "수정 조각 날리기" }
   ],
-  "General": { "Name": "젤리 장군", "Color": "#FF9A3C", "Dark": "#C0602A", "Hp": 230, "Atk": 13, "Exp": 120, "Boss": true }
+  "General": { "Name": "젤리 장군", "Color": "#FF9A3C", "Dark": "#C0602A", "Hp": 230, "Atk": 13, "Exp": 120, "Boss": true, "Move": "charge", "Attack": "돌격" }
 }

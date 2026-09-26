@@ -13,3 +13,4 @@ unity/*.log
 # family photos stay local only
 사진/
 __pycache__/
+.autoimprove.lock

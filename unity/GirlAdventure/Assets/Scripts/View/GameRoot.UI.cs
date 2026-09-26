@@ -386,9 +386,9 @@ namespace GirlAdventure.View
         /// <summary>960×540 기준 좌표 (x, y) 에 떠오르는 숫자.</summary>
         void Pop(string text, float x, float y, Color color, int size = 44)
         {
-            var t = UIKit.Label(popLayer, "Pop", text, x - 100, y - 30, 200, 60, size, TextAnchor.MiddleCenter, color, true);
+            var t = UIKit.Label(popLayer, "Pop", text, x - 160, y - 30, 320, 60, size, TextAnchor.MiddleCenter, color, true);
             t.GetComponent<Outline>().effectDistance = new Vector2(3, -3);
-            pops.Add((t, 0, new Vector2(x - 100, -(y - 30))));
+            pops.Add((t, 0, new Vector2(x - 160, -(y - 30))));
         }
 
         void TickPops()

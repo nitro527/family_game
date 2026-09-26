@@ -22,9 +22,13 @@ namespace GirlAdventure.View
         float moveT = -1, walkT;
         WorldMap fieldMap, caveMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
+        readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
 
         // 보이는 몬스터
         FieldMonsters mobs;
+        readonly Dictionary<int, SpriteRenderer> mobAlerts = new Dictionary<int, SpriteRenderer>();
+        Sprite alertSprite;
+        public const int AlertDist = 3;         // 이 거리(칸) 안이면 몬스터 머리 위에 "!"
         readonly Dictionary<int, (SpriteRenderer body, SpriteRenderer shadow, float scale)> mobViews = new Dictionary<int, (SpriteRenderer, SpriteRenderer, float)>();
 
         void BuildField()
@@ -33,6 +37,12 @@ namespace GirlAdventure.View
             fieldMap = map;
             caveMap = WorldMap.Cave();
             mobs = new FieldMonsters(rng);
+            // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
+            foreach (var m in new[] { fieldMap, caveMap })
+            {
+                var mm = m;
+                mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm));
+            }
 
             mapSR = new GameObject("Map").AddComponent<SpriteRenderer>();
             mapSR.transform.SetParent(fieldRoot, false);
@@ -58,7 +68,6 @@ namespace GirlAdventure.View
             doorOpenSR = Prop("DoorOpen", MapPainter.OpenDoorTexture(), (WorldMap.BaseDoor.x, WorldMap.BaseDoor.y - 1));
             BuildFieldFx();
             BuildLighting();
-            mapSR.sprite = MapSprite(map);
             RebuildMapFx();
         }
 
@@ -78,9 +87,11 @@ namespace GirlAdventure.View
             if (!mapSprites.TryGetValue(m, out var s))
             {
                 float t0 = Time.realtimeSinceStartup;
-                s = Art.FromTexture(MapPainter.Render(m), new Vector2(0, 1), Painter.Tile);   // 1 타일 = 1 유닛
+                var raster = mapJobs.TryGetValue(m, out var job) ? job.Result : MapPainter.RenderRaster(m);   // 아직이면 기다린다
+                s = Art.FromTexture(raster.ToTexture(), new Vector2(0, 1), Painter.Tile);   // 1 타일 = 1 유닛
                 mapSprites[m] = s;
-                Debug.Log($"[Map] {m.Kind} 그리기 {(Time.realtimeSinceStartup - t0) * 1000:F0}ms");
+                mapJobs.Remove(m);
+                Debug.Log($"[Map] {m.Kind} 준비 대기 {(Time.realtimeSinceStartup - t0) * 1000:F0}ms");
             }
             return s;
         }
@@ -319,15 +330,56 @@ namespace GirlAdventure.View
                 v.body.flipX = m.X < m.FromX;
                 v.shadow.transform.localPosition = feet + new Vector3(0, .02f, 0);
                 v.body.color = mobs.Grace > 0 ? new Color(1, 1, 1, .55f + .45f * Mathf.Abs(Mathf.Sin(Time.time * 10))) : Color.white;
+
+                // 가까이 오면 "!" — 톡 튀어나왔다가 살짝 흔들린다
+                bool alert = Current == Mode.Field && mobs.Grace <= 0 && Mathf.Abs(m.X - P.X) + Mathf.Abs(m.Y - P.Y) <= AlertDist;
+                mobAlerts.TryGetValue(m.Id, out var mark);
+                if (alert && mark == null)
+                {
+                    mark = new GameObject("Alert").AddComponent<SpriteRenderer>();
+                    mark.transform.SetParent(fieldRoot, false);
+                    mark.sprite = alertSprite ??= Art.FromTexture(AlertTexture(), new Vector2(.5f, 0), 96);
+                    mark.sortingOrder = 8;
+                    mobAlerts[m.Id] = mark;
+                    alertBorn[m.Id] = Time.time;
+                    sfx.Play("select");
+                }
+                else if (!alert && mark != null) { Destroy(mark.gameObject); mobAlerts.Remove(m.Id); }
+                if (mark != null)
+                {
+                    float age = Time.time - alertBorn[m.Id];
+                    float pop = age < .15f ? age / .15f * 1.3f : Mathf.Lerp(1.3f, 1f, Mathf.Clamp01((age - .15f) / .15f));
+                    mark.transform.localScale = Vector3.one * pop;
+                    mark.transform.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(Time.time * 9) * 6);
+                    mark.transform.localPosition = feet + new Vector3(0, hop + MobHeight + .05f, 0);
+                }
             }
             var dead = new List<int>();
             foreach (var kv in mobViews) if (!alive.Contains(kv.Key)) dead.Add(kv.Key);
             foreach (var id in dead)
             {
+                if (mobAlerts.TryGetValue(id, out var mk)) { Destroy(mk.gameObject); mobAlerts.Remove(id); }
                 Destroy(mobViews[id].body.gameObject);
                 Destroy(mobViews[id].shadow.gameObject);
                 mobViews.Remove(id);
             }
+        }
+
+        readonly Dictionary<int, float> alertBorn = new Dictionary<int, float>();
+
+        public int AlertCount => mobAlerts.Count;
+
+        /// <summary>말풍선 속 빨간 "!".</summary>
+        static Texture2D AlertTexture()
+        {
+            var R = new Raster(48, 56);
+            R.Polygon(new[] { new Vector2(18, 40), new Vector2(24, 54), new Vector2(30, 40) }, Painter.Ink);
+            R.Circle(24, 24, 21, Painter.Ink);
+            R.Polygon(new[] { new Vector2(20, 38), new Vector2(24, 50), new Vector2(28, 38) }, new Color32(255, 255, 255, 255));
+            R.Circle(24, 24, 18.5f, new Color32(255, 255, 255, 255));
+            R.Polygon(new[] { new Vector2(20, 9), new Vector2(28, 9), new Vector2(26.5f, 30), new Vector2(21.5f, 30) }, new Color32(235, 60, 70, 255));
+            R.Circle(24, 36, 3.6f, new Color32(235, 60, 70, 255));
+            return R.ToTexture();
         }
 
         /// <summary>새로 생긴 몬스터: 땅에서 퐁 솟아나는 반짝임.</summary>

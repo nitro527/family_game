@@ -220,6 +220,20 @@ namespace GirlAdventure.View
 
         public void DebugSetEnemyHp(int hp) { if (battle != null) battle.EnemyHp = hp; }
 
+        public bool EnemyAppearing => enemyAppear < 1;
+        public bool HurtFlashing => hurtFlash > 0;
+
+        /// <summary>플레이테스트용: 지금 전투의 적을 def 모습으로 바꾸고 공격 모션 p 지점에서 멈춰 둔다 (null 이면 멈춤 해제).</summary>
+        public void DebugFreezeMove(EnemyDef def, float p)
+        {
+            if (def == null) { fxFrozen = false; moveP = 1; enemySR.sprite = JellySprite(battle.Def); return; }
+            enemySR.sprite = JellySprite(def);
+            moveName = def.Move;
+            moveP = p;
+            moveImpacted = true;
+            fxFrozen = true;
+        }
+
         public int MobCount => mobs.List.Count;
         public MapKind MapKind => map.Kind;
 

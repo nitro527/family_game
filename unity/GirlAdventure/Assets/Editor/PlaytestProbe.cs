@@ -213,6 +213,7 @@ namespace GirlAdventure.EditorTools
             G.DebugSpawnMob(9, 12, 1);
             yield return .3f;
             Shot("mob_ahead");
+            Expect("nearby mob shows '!'", G.AlertCount == 1);
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
             yield return .4f;
             Expect("walking into a mob starts battle", G.Current == GameRoot.Mode.Battle && G.MobCount == 0);
@@ -243,7 +244,21 @@ namespace GirlAdventure.EditorTools
             G.DebugBattle(false);
             yield return .3f;
             Shot("encounter_swirl");
+            yield return (Func<bool>)(() => G.EnemyAppearing);
+            yield return .55f;
+            Shot("enemy_appear");                     // 위에서 통 떨어지는 중
             yield return (Func<bool>)(() => G.CommandOpen);
+            Expect("enemy appear finished", !G.EnemyAppearing);
+
+            // 적마다 다른 공격 모션: 모든 적 모습으로 모션 중간을 멈춰서 찍는다
+            foreach (var d in GameData.AllEnemies())
+            {
+                G.DebugFreezeMove(d, d.Move == "slam" ? .45f : d.Move == "charge" ? .6f : d.Move == "shard" ? .5f : .4f);
+                yield return .2f;
+                Shot("move_" + d.Move + "_" + Array.IndexOf(EnemyDef.Moves, d.Move));
+            }
+            G.DebugFreezeMove(null, 1);
+            yield return .1f;
             G.DebugSetHp(4);
             yield return .2f;
             foreach (var x in Choose(2, "battle_candy_select")) yield return x;
@@ -264,12 +279,16 @@ namespace GirlAdventure.EditorTools
             G.DebugBattle(false);
             yield return (Func<bool>)(() => G.CommandOpen);
             G.DebugSetEnemyHp(9999);                   // 먼저 이겨 버리지 않게
-            bool sawDefeat = false, sawRevive = false;
+            bool sawDefeat = false, sawRevive = false, sawHurt = false;
             for (int i = 0; i < 30 && G.Current == GameRoot.Mode.Battle; i++)
             {
                 if (G.CommandOpen) { G.DebugSetHp(1); foreach (var x in Choose(0)) yield return x; }   // 매 턴 HP 1 → 반드시 쓰러진다
                 else Keys.Press(KeyCode.Z);
-                yield return .5f;
+                for (int j = 0; j < 10; j++)
+                {
+                    yield return .05f;
+                    if (!sawHurt && G.HurtFlashing) { sawHurt = true; Shot("hurt_flash"); }
+                }
                 if (!sawDefeat && G.MessageText.Contains("쓰러지")) { sawDefeat = true; Shot("defeat"); }
             }
             for (int i = 0; i < 20 && !(G.Current == GameRoot.Mode.Field && !G.Busy); i++)
@@ -280,6 +299,7 @@ namespace GirlAdventure.EditorTools
             }
             Shot("after_revive");
             Expect("defeat → revive at fountain", sawDefeat && G.P.X == 5 && G.P.Y == 4);
+            Expect("red flash when hurt", sawHurt);
             ExpectBgm("field");
 
             // 세이브 → 타이틀 → 이어하기
@@ -297,6 +317,9 @@ namespace GirlAdventure.EditorTools
 
             // 보스 → 엔딩
             G.DebugBattle(true);
+            yield return (Func<bool>)(() => G.EnemyAppearing);
+            yield return .5f;
+            Shot("boss_appear");                      // 땅에서 불쑥 커지는 중
             yield return (Func<bool>)(() => G.CommandOpen);
             Shot("boss_command");
             ExpectBgm("boss");

@@ -16,7 +16,10 @@ namespace GirlAdventure.View
         const int T = Painter.Tile;
         static readonly Color32 Ink = Painter.Ink;
 
-        public static Texture2D Render(WorldMap m) => m.Kind == MapKind.Cave ? Cave(m) : Field(m);
+        public static Texture2D Render(WorldMap m) => RenderRaster(m).ToTexture();
+
+        /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
+        public static Raster RenderRaster(WorldMap m) => m.Kind == MapKind.Cave ? Cave(m) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
         static float Hash(int x, int y, int s)
@@ -47,10 +50,13 @@ namespace GirlAdventure.View
         {
             float u = px / T - .5f, v = py / T - .5f;
             int x0 = Mathf.FloorToInt(u), y0 = Mathf.FloorToInt(v);
+            int xa = Mathf.Clamp(x0, 0, WorldMap.W - 1), xb = Mathf.Clamp(x0 + 1, 0, WorldMap.W - 1);
+            int ya = Mathf.Clamp(y0, 0, WorldMap.H - 1), yb = Mathf.Clamp(y0 + 1, 0, WorldMap.H - 1);
+            float a = mask[xa, ya], b = mask[xb, ya], c = mask[xa, yb], d = mask[xb, yb];
+            if (a == b && a == c && a == d) return a;                   // 빠른 길: 대부분의 픽셀은 경계가 아니다
             float fx = u - x0, fy = v - y0;
             fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
-            float M(int x, int y) => mask[Mathf.Clamp(x, 0, WorldMap.W - 1), Mathf.Clamp(y, 0, WorldMap.H - 1)];
-            return Mathf.Lerp(Mathf.Lerp(M(x0, y0), M(x0 + 1, y0), fx), Mathf.Lerp(M(x0, y0 + 1), M(x0 + 1, y0 + 1), fx), fy);
+            return Mathf.Lerp(Mathf.Lerp(a, b, fx), Mathf.Lerp(c, d, fx), fy);
         }
 
         static float[,] Mask(WorldMap m, string chars)
@@ -83,7 +89,7 @@ namespace GirlAdventure.View
         static Color32 H(string hex, byte a = 255) => Raster.Hex(hex, a);
 
         // ------------------------------------------------------------------ 초원
-        static Texture2D Field(WorldMap m)
+        static Raster Field(WorldMap m)
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
@@ -175,7 +181,7 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'T') Tree(R, x, y, x < 2 || y < 2 || x >= WorldMap.W - 2 || y >= WorldMap.H - 1);
             Painter.Castle(R);
-            return R.ToTexture();
+            return R;
         }
 
         static void Tuft(Raster R, float x, float y, Color32 dark, Color32 light)
@@ -303,7 +309,7 @@ namespace GirlAdventure.View
                         yield return (x, y);
         }
 
-        static Texture2D Cave(WorldMap m)
+        static Raster Cave(WorldMap m)
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
@@ -404,7 +410,7 @@ namespace GirlAdventure.View
             Painter.Chest(R, WorldMap.Chest.x * T, WorldMap.Chest.y * T, false);
             JellyBase(R, 23, 33, WorldMap.BaseDoor.x, WorldMap.BaseDoor.y);
             Throne(R, WorldMap.BossSpot.x * T, WorldMap.BossSpot.y * T);
-            return R.ToTexture();
+            return R;
         }
 
         static void Boulder(Raster R, float X, float Y, float v)

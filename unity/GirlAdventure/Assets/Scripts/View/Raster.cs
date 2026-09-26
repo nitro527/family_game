@@ -131,12 +131,12 @@ namespace GirlAdventure.View
             return tex;
         }
 
+        /// <summary>"#RRGGBB" → 색. Unity API 를 쓰지 않아 백그라운드 스레드에서도 안전.</summary>
         public static Color32 Hex(string hex, byte alpha = 255)
         {
-            ColorUtility.TryParseHtmlString(hex, out var c);
-            Color32 k = c;
-            k.a = alpha;
-            return k;
+            int o = hex[0] == '#' ? 1 : 0;
+            byte P(int i) => (byte)Convert.ToInt32(hex.Substring(o + i, 2), 16);
+            return new Color32(P(0), P(2), P(4), alpha);
         }
     }
 }

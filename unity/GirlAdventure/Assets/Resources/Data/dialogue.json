@@ -22,7 +22,7 @@
     { "Id": "candy",        "Lines": [ { "Text": "달콤한 사탕을 먹었다! HP가 {heal} 회복되었다.", "Face": "laugh", "Hold": 1.0 } ] },
     { "Id": "run_ok",       "Lines": [ { "Text": "{name:은/는} 재빨리 도망쳤다!", "Face": "surprised", "Hold": 0.9 } ] },
     { "Id": "run_fail",     "Lines": [ { "Text": "도망치지 못했다!", "Face": "pout", "Hold": 0.9 } ] },
-    { "Id": "enemy_attack", "Lines": [ { "Text": "{enemy}의 공격!", "Face": "surprised", "Hold": 0.5 } ] },
+    { "Id": "enemy_attack", "Lines": [ { "Text": "{enemy}의 {attack}!", "Face": "surprised", "Hold": 0.5 } ] },
     { "Id": "dodge",        "Lines": [ { "Text": "{name:은/는} 살짝 피했다!", "Face": "laugh", "Hold": 0.8 } ] },
     { "Id": "hurt",         "Lines": [ { "Text": "{name:은/는} {dmg}의 피해를 입었다!", "Face": "cry", "Hold": 0.9 } ] },
     { "Id": "win",          "Lines": [ { "Text": "{enemy:을/를} 물리쳤다!", "Face": "laugh", "Hold": 1.0 } ] },
