@@ -17,7 +17,8 @@ namespace GirlAdventure.View
         Image stExpBar, stHpBar, stMpBar, stFace;
         bool statusOpen, statusClicked, statusUse;
 
-        const float StW = 760, StH = 430, StX = (960 - StW) / 2, StY = (540 - StH) / 2;
+        // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다
+        const float StW = 760, StH = 384, StX = (960 - StW) / 2, StY = 8, RowY = 112, RowH = 40;
 
         void BuildStatus()
         {
@@ -28,34 +29,34 @@ namespace GirlAdventure.View
             btn.onClick.AddListener(() => statusClicked = true);
             var win = UIKit.Window(statusPanel.transform, "Window", StX, StY, StW, StH).transform;
 
-            var frame = UIKit.Img(win, "FaceFrame", UIKit.White, 24, 22, 92, 92, false);
+            var frame = UIKit.Img(win, "FaceFrame", UIKit.White, 24, 18, 84, 84, false);
             frame.color = Color.white;
-            stFace = UIKit.Img(frame.transform, "Face", Art.UI("face_smile"), 2, 2, 88, 88, false);
-            stHead = UIKit.Label(win, "Head", "", 132, 26, 250, 40, 30, TextAnchor.UpperLeft, UIKit.Gold, true);
-            UIKit.Label(win, "Class", "꼬마 마법사", 134, 70, 250, 30, 19, TextAnchor.UpperLeft, UIKit.Dim);
+            stFace = UIKit.Img(frame.transform, "Face", Art.UI("face_smile"), 2, 2, 80, 80, false);
+            stHead = UIKit.Label(win, "Head", "", 124, 20, 250, 40, 30, TextAnchor.UpperLeft, UIKit.Gold, true);
+            UIKit.Label(win, "Class", "꼬마 마법사", 126, 62, 250, 30, 19, TextAnchor.UpperLeft, UIKit.Dim);
 
-            // 왼쪽: 능력치 (이름 칸 / 값 칸). 줄마다 44px
+            // 왼쪽: 능력치 (이름 칸 / 값 칸). 줄마다 RowH
             string[] names = { "레벨", "HP", "MP", "공격력", "골드" };
             for (int i = 0; i < names.Length; i++)
-                UIKit.Label(win, "N" + i, names[i], 30, 128 + i * 44, 110, 30, 22, TextAnchor.UpperLeft, UIKit.Dim);
-            stLeftVals = UIKit.Label(win, "Vals", "", 140, 128, 230, 44 * names.Length, 22, TextAnchor.UpperLeft);
+                UIKit.Label(win, "N" + i, names[i], 30, RowY + i * RowH, 110, 30, 22, TextAnchor.UpperLeft, UIKit.Dim);
+            stLeftVals = UIKit.Label(win, "Vals", "", 140, RowY, 230, RowH * names.Length, 22, TextAnchor.UpperLeft);
             stLeftVals.supportRichText = true;
-            stHpBar = UIKit.Bar(win, "HPBar", 142, 128 + 44 + 30, 200, 6, new Color32(86, 212, 106, 255));
-            stMpBar = UIKit.Bar(win, "MPBar", 142, 128 + 88 + 30, 200, 6, new Color32(90, 168, 255, 255));
+            stHpBar = UIKit.Bar(win, "HPBar", 142, RowY + RowH + 28, 200, 6, new Color32(86, 212, 106, 255));
+            stMpBar = UIKit.Bar(win, "MPBar", 142, RowY + 2 * RowH + 28, 200, 6, new Color32(90, 168, 255, 255));
 
             // 경험치 막대
-            stExpText = UIKit.Label(win, "ExpText", "", 30, 352, 350, 28, 19, TextAnchor.UpperLeft);
+            stExpText = UIKit.Label(win, "ExpText", "", 30, RowY + 5 * RowH + 4, 350, 28, 19, TextAnchor.UpperLeft);
             stExpText.supportRichText = true;
-            stExpBar = UIKit.Bar(win, "ExpBar", 32, 384, 330, 12, UIKit.Gold);
+            stExpBar = UIKit.Bar(win, "ExpBar", 32, RowY + 5 * RowH + 34, 330, 12, UIKit.Gold);
 
             // 오른쪽: 주문 · 가방 · 지금 할 일
             var line = UIKit.Img(win, "Line", UIKit.White, 392, 24, 2, StH - 48, false);
             line.color = new Color(1, 1, 1, .18f);
-            stRight = UIKit.Label(win, "Right", "", 414, 24, StW - 434, StH - 90, 20, TextAnchor.UpperLeft);
+            stRight = UIKit.Label(win, "Right", "", 414, 20, StW - 434, StH - 78, 19, TextAnchor.UpperLeft);
             stRight.supportRichText = true;
-            var use = UIKit.Button(win, "UseItem", "도구 쓰기", 414, StH - 62, 150, 44, 20, new Color32(110, 190, 255, 255));
+            var use = UIKit.Button(win, "UseItem", "도구 쓰기", 414, StH - 54, 140, 40, 19, new Color32(150, 200, 255, 255));
             use.onClick.AddListener(() => statusUse = true);
-            UIKit.Label(win, "Close", "Z 도구 · Esc 닫기", 574, StH - 50, StW - 590, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
+            UIKit.Label(win, "Close", "Z 도구 · Esc 닫기", 564, StH - 44, StW - 590, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
             statusPanel.SetActive(false);
         }
 
@@ -96,7 +97,7 @@ namespace GirlAdventure.View
 
         Text[] stRows;
 
-        /// <summary>값 칸: 이름 칸과 같은 44px 간격으로 한 줄씩 (줄 간격 계산에 기대지 않게 줄마다 Label).</summary>
+        /// <summary>값 칸: 이름 칸과 같은 RowH 간격으로 한 줄씩 (줄 간격 계산에 기대지 않게 줄마다 Label).</summary>
         void SetRows(string[] vals)
         {
             if (stRows == null)
@@ -104,7 +105,7 @@ namespace GirlAdventure.View
                 stRows = new Text[vals.Length];
                 for (int i = 0; i < vals.Length; i++)
                 {
-                    stRows[i] = UIKit.Label(stLeftVals.transform, "V" + i, "", 0, i * 44, 230, 30, 22, TextAnchor.UpperLeft);
+                    stRows[i] = UIKit.Label(stLeftVals.transform, "V" + i, "", 0, i * RowH, 230, 30, 22, TextAnchor.UpperLeft);
                     stRows[i].supportRichText = true;
                 }
             }
