@@ -93,7 +93,7 @@ namespace GirlAdventure.Sim
             return 0;
         }
 
-        /// <summary>멀리 갈수록 강한 젤리가 나온다. EnemyDef.Normal 인덱스를 돌려준다.</summary>
+        /// <summary>멀리 갈수록 강한 젤리가 나온다. GameData.Normal 인덱스를 돌려준다.</summary>
         public static int PickEnemyIndex(int x, int y, Random r)
         {
             int far = x + y;

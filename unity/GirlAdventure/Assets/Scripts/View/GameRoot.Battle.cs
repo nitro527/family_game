@@ -93,7 +93,7 @@ namespace GirlAdventure.View
             enemyLabel.text = def.Name;
             RefreshHud();
 
-            yield return Say($"{Josa.With(def.Name, "이/가")} 나타났다!", "surprised", 1.1f);
+            yield return Talk("appear", ("enemy", def.Name));
             while (true)
             {
                 yield return AskCommand();
@@ -114,28 +114,28 @@ namespace GirlAdventure.View
             {
                 case Cmd.Fire:
                     pose = "cast"; heroLunge = 1;
-                    yield return Say($"{P.Name}의 리본 파이어!", "cast", .45f);
+                    yield return Talk("fire_cast", ("skill", GameData.Skill(Cmd.Fire).Name));
                     sfx.Play("fire");
                     yield return Fireball();
                     if (o.Missed)
                     {
                         pose = "ready"; sfx.Play("miss");
-                        yield return Say("앗, 빗나갔다!", "pout", .9f);
+                        yield return Talk("fire_miss");
                         break;
                     }
                     HitEnemy(o.Damage, false);
                     RefreshHud();
-                    yield return Say($"{def.Name}에게 {o.Damage}의 피해!", "cast", .8f);
+                    yield return Talk("fire_hit", ("enemy", def.Name), ("dmg", o.Damage));
                     break;
                 case Cmd.Star:
                     pose = "cast";
                     RefreshHud();
-                    yield return Say($"{P.Name}의 필살 주문…", "cast", .55f);
+                    yield return Talk("star_cast");
                     yield return CutinRoutine();
                     sfx.Play("star");
                     yield return StarStorm();
                     HitEnemy(o.Damage, true);
-                    yield return Say($"별빛이 쏟아진다! {def.Name}에게 {o.Damage}의 피해!", "laugh", 1f);
+                    yield return Talk("star_hit", ("enemy", def.Name), ("dmg", o.Damage));
                     break;
                 case Cmd.Candy:
                     RefreshHud();
@@ -144,15 +144,15 @@ namespace GirlAdventure.View
                         Spawn(starSprite, Px(HeroX + Random.Range(-70, 70), HeroY - 10), new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)),
                               1.2f, .35f, new Color(1, .55f, .8f));
                     Pop("+" + o.Heal, HeroX, 200, new Color32(125, 255, 154, 255));
-                    yield return Say($"달콤한 사탕을 먹었다! HP가 {o.Heal} 회복되었다.", "laugh", 1f);
+                    yield return Talk("candy", ("heal", o.Heal));
                     break;
                 case Cmd.Run:
                     if (o.Escaped)
                     {
                         sfx.Play("run");
-                        yield return Say($"{Josa.With(P.Name, "은/는")} 재빨리 도망쳤다!", "surprised", .9f);
+                        yield return Talk("run_ok");
                     }
-                    else yield return Say("도망치지 못했다!", "pout", .9f);
+                    else yield return Talk("run_fail");
                     break;
             }
             pose = "ready";
@@ -170,18 +170,18 @@ namespace GirlAdventure.View
         {
             yield return new WaitForSeconds(.25f);
             enemyLunge = 1;
-            yield return Say($"{battle.Def.Name}의 공격!", "surprised", .5f);
+            yield return Talk("enemy_attack", ("enemy", battle.Def.Name));
             var e = battle.EnemyAct();
             if (e.Dodged)
             {
-                yield return Say($"{Josa.With(P.Name, "은/는")} 살짝 피했다!", "laugh", .8f);
+                yield return Talk("dodge");
                 yield break;
             }
             sfx.Play("hurt");
             pose = "damage"; heroShake = .35f;
             RefreshHud();
             Pop(e.Damage.ToString(), HeroX, 220, new Color32(255, 107, 107, 255));
-            yield return Say($"{Josa.With(P.Name, "은/는")} {e.Damage}의 피해를 입었다!", "cry", .9f);
+            yield return Talk("hurt", ("dmg", e.Damage));
             pose = "ready";
         }
 
@@ -193,14 +193,14 @@ namespace GirlAdventure.View
             sfx.Play("win");
             pose = "victory";
             enemyLabel.text = "";
-            yield return Say($"{Josa.With(def.Name, "을/를")} 물리쳤다!", "laugh", 1f);
+            yield return Talk("win", ("enemy", def.Name));
             int ups = P.GainExp(def.Exp);
-            yield return Say($"경험치 {def.Exp}을(를) 얻었다!", "laugh", .8f);
+            yield return Talk("exp", ("exp", def.Exp));
             for (int i = 0; i < ups; i++)
             {
                 sfx.Play("lvup");
                 RefreshHud();
-                yield return Say($"레벨이 올랐다! {P.Name}의 레벨이 {P.Lv - ups + i + 1}이(가) 되었다! 힘이 넘친다!", "laugh", 1.5f);
+                yield return Talk("levelup", ("lv", P.Lv - ups + i + 1));
             }
             RefreshHud();
             if (def.Boss)
@@ -217,8 +217,7 @@ namespace GirlAdventure.View
         {
             pose = "damage";
             bgm.Stop();
-            yield return Say($"{Josa.With(P.Name, "은/는")} 쓰러지고 말았다…", "cry", 1.4f);
-            yield return Say("…그때, 멀리서 엄마 아빠의 응원 소리가 들렸다! 힘을 내!", "surprised", 1.6f);
+            yield return Talk("defeat");
             P.Hp = P.MaxHp; P.Mp = P.MaxMp;
             P.X = WorldMap.Fountain.x - 1; P.Y = WorldMap.Fountain.y + 1;
             facing = "down";
@@ -227,7 +226,7 @@ namespace GirlAdventure.View
             EnterField();
             busy = true;
             sfx.Play("heal");
-            yield return Say($"{Josa.With(P.Name, "은/는")} 샘물 곁에서 다시 일어났다!", "laugh", 1.3f);
+            yield return Talk("revive");
             HideMessage();
             busy = false;
         }

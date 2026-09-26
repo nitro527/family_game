@@ -6,6 +6,7 @@
 - 가족(특히 딸) 기반 드래곤 퀘스트 풍 캐릭터 에셋 + Unity 미니 RPG "꼬마 마법사 첫째의 모험"
 - Unity 6 (6000.5.3f1) 프로젝트: `unity/GirlAdventure` — 코드 우선 구조
   - `Assets/Scripts/Sim/` 순수 규칙, `Assets/Scripts/View/` 화면·연출, `Assets/Editor/` 자동화
+- 게임 데이터(적·명령 수치·대사): `unity/GirlAdventure/Assets/Resources/Data/*.json` — 대사 수정은 코드 말고 여기서
 - 에셋 원본: `assets/characters/gen/girl/` → Unity 반영: `python tools/prepare_unity_art.py`
 - 사용자는 한국어로 소통, 폴더가 지저분한 걸 싫어함 (임시 파일은 끝나면 정리)
 

@@ -30,6 +30,7 @@ namespace GirlAdventure.View
             Instance = this;
             Application.targetFrameRate = 60;
             UIKit.Init();
+            DataLoader.Load();
             cam = Camera.main;
             if (cam == null) cam = new GameObject("Main Camera", typeof(Camera)).GetComponent<Camera>();
             cam.orthographic = true;
@@ -90,16 +91,14 @@ namespace GirlAdventure.View
         {
             EnterField();
             busy = true;
-            yield return Say($"옛날 옛적, 별빛 마을에 꼬마 마법사 {Josa.With(P.Name, "이/가")} 살았어요.", "smile");
-            yield return Say("어느 밤, 성에 사는 킹 젤리가 밤하늘의 별빛을 몽땅 훔쳐 갔어요!", "surprised");
-            yield return Say($"{Josa.With(P.Name, "은/는")} 별 지팡이를 꼭 쥐고 성으로 떠났어요. 가자!", "cast");
+            yield return Talk("intro");
             HideMessage();
             busy = false;
         }
 
         IEnumerator EndingRoutine()
         {
-            yield return Say("킹 젤리가 품고 있던 별빛이 밤하늘로 돌아간다…!", "surprised", 1.5f);
+            yield return Talk("ending_light");
             HideMessage();
             Current = Mode.Ending;
             ShowEnding();
@@ -134,7 +133,7 @@ namespace GirlAdventure.View
             StopAllCoroutines();
             HideMessage();
             if (boss && P.Lv < 5) P.GainExp(PlayerState.NextExp(4) - P.Exp);   // 보스 테스트는 최소 Lv5 로
-            StartCoroutine(BattleRoutine(boss ? EnemyDef.King : EnemyDef.Normal[1]));
+            StartCoroutine(BattleRoutine(boss ? GameData.King : GameData.Normal[1]));
         }
 
         public void DebugTeleport(int x, int y, string face = "down")

@@ -150,7 +150,7 @@ namespace GirlAdventure.View
             if (stepsSinceBattle > 4 && rng.NextDouble() < map.EncounterRate(P.X, P.Y))
             {
                 stepsSinceBattle = 0;
-                StartCoroutine(BattleRoutine(EnemyDef.Normal[WorldMap.PickEnemyIndex(P.X, P.Y, rng)]));
+                StartCoroutine(BattleRoutine(GameData.Normal[WorldMap.PickEnemyIndex(P.X, P.Y, rng)]));
             }
         }
 
@@ -161,7 +161,7 @@ namespace GirlAdventure.View
             P.RestoreAll();
             RefreshHud();
             sfx.Play("heal");
-            yield return Say("반짝이는 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 가득 채웠다!", "laugh");
+            yield return Talk("fountain");
             HideMessage();
             busy = false;
         }
@@ -170,7 +170,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Say("표지판: \"킹 젤리의 성은 길을 따라 남동쪽! 풀숲에는 젤리들이 숨어 있어요.\"", "smile");
+            yield return Talk("sign");
             HideMessage();
             busy = false;
         }
@@ -178,8 +178,8 @@ namespace GirlAdventure.View
         IEnumerator BossGateRoutine()
         {
             busy = true;
-            yield return Say("성문 앞에 거대한 그림자가… 킹 젤리다!", "surprised");
-            yield return BattleRoutine(EnemyDef.King);
+            yield return Talk("boss_gate");
+            yield return BattleRoutine(GameData.King);
         }
     }
 }

@@ -138,6 +138,21 @@ namespace GirlAdventure.View
             }
         }
 
+        /// <summary>dialogue.json 의 대사 묶음(id)을 차례로 말한다. {name} 은 자동으로 채운다.</summary>
+        IEnumerator Talk(string id, params (string key, object val)[] vars)
+        {
+            foreach (var l in GameData.Talk(id))
+                yield return Say(FillText(l.Text, vars), string.IsNullOrEmpty(l.Face) ? "smile" : l.Face, l.Hold);
+        }
+
+        string FillText(string tmpl, (string key, object val)[] vars)
+        {
+            var all = new (string, object)[vars.Length + 1];
+            all[0] = ("name", P.Name);
+            vars.CopyTo(all, 1);
+            return GameData.Fill(tmpl, all);
+        }
+
         // ------------------------------------------------------------------ commands
         void BuildCommands()
         {
@@ -160,10 +175,9 @@ namespace GirlAdventure.View
         {
             switch (c)
             {
-                case Cmd.Fire: return "리본 파이어";
-                case Cmd.Star: return $"별빛 폭풍 <size=15><color=#9AA3C7>MP {BattleSystem.StarCost}</color></size>";
-                case Cmd.Candy: return $"사탕 먹기 <size=15><color=#9AA3C7>×{P.Candy}</color></size>";
-                default: return "도망가기";
+                case Cmd.Star: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>MP {BattleSystem.StarCost}</color></size>";
+                case Cmd.Candy: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{P.Candy}</color></size>";
+                default: return GameData.Skill(c).Name;
             }
         }
 
@@ -268,7 +282,7 @@ namespace GirlAdventure.View
             cutinPanel = UIKit.Stretch(ui, "Cutin").gameObject;
             UIKit.Fill(cutinPanel.transform, "Bg", new Color32(34, 14, 70, 245));
             cutinArt = UIKit.Img(cutinPanel.transform, "Art", Art.UI("art_ultimate"), 250, -40, 460, 640, true);
-            cutinText = UIKit.Label(cutinPanel.transform, "Text", "별빛 폭풍!!", 0, 430, 960, 90, 64, TextAnchor.MiddleCenter,
+            cutinText = UIKit.Label(cutinPanel.transform, "Text", GameData.Skill(Cmd.Star).Name + "!!", 0, 430, 960, 90, 64, TextAnchor.MiddleCenter,
                 new Color32(255, 240, 250, 255), true);
             var o = cutinText.gameObject.AddComponent<Outline>();
             o.effectColor = new Color32(255, 110, 210, 200);
@@ -329,7 +343,7 @@ namespace GirlAdventure.View
             hudWin.SetActive(false);
             hintLabel.SetActive(false);
             enemyLabel.text = "";
-            endText.text = $"꼬마 마법사 <color=#F2C443>{P.Name}</color>의 활약으로\n밤하늘에 별빛이 다시 반짝이기 시작했어요!\n\n최종 레벨 {P.Lv}\n<color=#F2C443>'별빛 마법사'</color>의 칭호를 얻었다!";
+            endText.text = FillText(GameData.Talk("ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
             endingPanel.SetActive(true);
         }
 

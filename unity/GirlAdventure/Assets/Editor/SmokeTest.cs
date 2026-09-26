@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GirlAdventure.Sim;
+using GirlAdventure.View;
 using UnityEngine;
 
 namespace GirlAdventure.EditorTools
@@ -16,6 +17,7 @@ namespace GirlAdventure.EditorTools
         public static void RunAll()
         {
             fails = 0;
+            DataTests();
             MapTests();
             ProgressionTests();
             BattleRuleTests();
@@ -29,6 +31,47 @@ namespace GirlAdventure.EditorTools
         {
             if (!ok) fails++;
             Debug.Log($"[{(ok ? "PASS" : "FAIL")}] {name} {detail}");
+        }
+
+        /// <summary>코드가 부르는 대사 id 목록 — 새 대사를 코드에서 쓰면 여기에도 추가.</summary>
+        static readonly string[] TalkIds =
+        {
+            "intro", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
+            "candy", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
+            "ending_light", "ending_card",
+        };
+
+        static void DataTests()
+        {
+            try { DataLoader.Load(true); }
+            catch (Exception e) { Check("data loads", false, e.Message); return; }
+            Check("data loads", GameData.Loaded);
+            bool enemiesOk = GameData.Normal != null && GameData.Normal.Length >= 3 && GameData.King != null && GameData.King.Boss;
+            if (enemiesOk)
+                foreach (var d in GameData.Normal)
+                    enemiesOk &= !string.IsNullOrEmpty(d.Name) && d.Hp > 0 && d.Atk > 0 && d.Exp > 0 && !d.Boss && d.Color?.Length == 7;
+            Check("enemies.json valid", enemiesOk, $"normal={GameData.Normal?.Length}");
+            bool skillsOk = true;
+            foreach (Cmd c in Enum.GetValues(typeof(Cmd)))
+            {
+                try { skillsOk &= !string.IsNullOrEmpty(GameData.Skill(c).Name); }
+                catch (Exception) { skillsOk = false; }
+            }
+            Check("skills.json has every command", skillsOk);
+            var vars = new (string, object)[] { ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2) };
+            foreach (var id in TalkIds)
+            {
+                bool ok = GameData.HasTalk(id);
+                string sample = "";
+                if (ok)
+                    foreach (var l in GameData.Talk(id))
+                    {
+                        sample = GameData.Fill(l.Text, vars);
+                        ok &= !string.IsNullOrEmpty(l.Text) && !sample.Contains("{") && l.Hold >= 0;
+                    }
+                Check($"dialogue {id}", ok, sample);
+            }
+            Check("fill josa", GameData.Fill("{name:이/가} {enemy:을/를} {x}", ("name", "첫째"), ("enemy", "킹 젤리")) == "첫째가 킹 젤리를 {x}");
         }
 
         static void MapTests()
@@ -74,11 +117,11 @@ namespace GirlAdventure.EditorTools
         static void BattleRuleTests()
         {
             var p = PlayerState.NewGame("테스트");
-            var b = new BattleSystem(p, EnemyDef.Normal[0], new System.Random(1));
+            var b = new BattleSystem(p, GameData.Normal[0], new System.Random(1));
             Check("candy disabled at full hp", !b.CanUse(Cmd.Candy));
             p.Mp = 5;
             Check("star needs mp", !b.CanUse(Cmd.Star) && b.Act(Cmd.Star).Failed && p.Mp == 5);
-            var boss = new BattleSystem(p, EnemyDef.King, new System.Random(1));
+            var boss = new BattleSystem(p, GameData.King, new System.Random(1));
             Check("no running from boss", !boss.CanUse(Cmd.Run));
             p.Mp = 20;
             var o = b.Act(Cmd.Star);
@@ -131,13 +174,13 @@ namespace GirlAdventure.EditorTools
                 while (p.Lv < 5 && battles < 200)
                 {
                     int far = p.Lv >= 3 ? 40 : p.Lv >= 2 ? 25 : 10;
-                    var def = EnemyDef.Normal[WorldMap.PickEnemyIndex(far, 0, r)];
+                    var def = GameData.Normal[WorldMap.PickEnemyIndex(far, 0, r)];
                     if (!Fight(p, def, r)) { deaths++; p.RestoreAll(); }
                     battles++;
                     if (p.Hp < p.MaxHp / 3) p.RestoreAll();
                 }
                 p.RestoreAll();
-                bool won = Fight(p, EnemyDef.King, r);
+                bool won = Fight(p, GameData.King, r);
                 if (won) bossWins++;
                 totalBattles += battles;
                 totalDeaths += deaths;
