@@ -516,7 +516,7 @@ namespace GirlAdventure.EditorTools
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                Check($"bgm {name} loops cleanly", lead == 64 && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
+                Check($"bgm {name} loops cleanly", (lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;
                 bool finite = true;

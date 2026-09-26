@@ -13,10 +13,14 @@ namespace GirlAdventure.Sim
         public string Name;
         public int Bpm;
         public bool SoftLead;       // true 면 선율을 삼각파로 (부드러운 곡)
+        public bool NoEcho;         // true 면 선율 메아리 채널을 끈다
         public string Lead, Bass, Drums;
     }
 
-    /// <summary>칩튠 BGM 악보 모음 + 합성기. 모든 곡은 8마디(4/4)로 끝과 처음이 이어지게 반복된다.</summary>
+    /// <summary>
+    /// 칩튠 BGM 악보 모음 + 합성기. 곡은 8마디 또는 16마디(A-B, 4/4)로 끝과 처음이 이어지게 반복된다.
+    /// 선율은 16분음표 뒤에 작고 가는 소리로 한 번 더 울려(메아리 채널) 패미컴 곡처럼 풍성하게 들린다.
+    /// </summary>
     public static class Music
     {
         public static readonly Song[] Songs =
@@ -33,11 +37,17 @@ namespace GirlAdventure.Sim
             new Song
             {
                 Name = "field", Bpm = 112,
+                // A (8마디, 다장조) → B (8마디, 가단조로 살짝 흐렸다가 솔로 끝나 A 로 돌아간다)
                 Lead = "C5.2 E5.2 G5.3 E5 | F5.2 A5.2 G5.4 | E5.2 C5.2 D5.2 E5.2 | D5.6 R.2 |" +
-                       "C5.2 E5.2 G5.3 C6 | A5.2 F5.2 G5.4 | E5.2 D5.2 C5.2 D5.2 | C5.6 R.2",
+                       "C5.2 E5.2 G5.3 C6 | A5.2 F5.2 G5.4 | E5.2 D5.2 C5.2 D5.2 | C5.6 R.2 |" +
+                       "A5.2 G5.2 E5.2 C5.2 | F5.2 E5.2 D5.4 | G5.2 E5.2 C6.3 B5 | A5.6 R.2 |" +
+                       "A5.2 G5.2 E5.2 G5.2 | F5.2 A5.2 C6.4 | B5.2 A5.2 G5.2 F5.2 | G5.6 R.2",
                 Bass = "C3.2 G3.2 C3.2 G3.2 | F2.2 C3.2 G2.2 D3.2 | C3.2 G3.2 A2.2 E3.2 | G2.2 D3.2 G2.2 B2.2 |" +
-                       "C3.2 G3.2 C3.2 G3.2 | F2.2 C3.2 G2.2 D3.2 | C3.2 G3.2 G2.2 B2.2 | C3.2 G2.2 C3.4",
-                Drums = "k.h.s.h.k.h.s.h.k.h.s.h.k.h.shhh" + "k.h.s.h.k.h.s.h.k.h.s.h.k.hks.s.",
+                       "C3.2 G3.2 C3.2 G3.2 | F2.2 C3.2 G2.2 D3.2 | C3.2 G3.2 G2.2 B2.2 | C3.2 G2.2 C3.4 |" +
+                       "A2.2 E3.2 A2.2 E3.2 | F2.2 C3.2 G2.2 D3.2 | C3.2 G3.2 E3.2 G3.2 | F2.2 C3.2 F2.2 A2.2 |" +
+                       "A2.2 E3.2 A2.2 C3.2 | F2.2 C3.2 F2.2 A2.2 | G2.2 D3.2 G2.2 B2.2 | G2.2 D3.2 G2.4",
+                Drums = "k.h.s.h.k.h.s.h.k.h.s.h.k.h.shhh" + "k.h.s.h.k.h.s.h.k.h.s.h.k.hks.s." +
+                        "k.hhs.h.k.hhs.h.k.hhs.h.k.h.shhh" + "k.hhs.h.k.hhs.h.k.hhs.h.kks.ssss",
             },
             new Song
             {
@@ -126,16 +136,20 @@ namespace GirlAdventure.Sim
             int total = Steps(s.Lead) * stepLen;
             var buf = new float[total];
             Voice(buf, Parse(s.Lead), stepLen, rate, s.SoftLead ? 2 : 0, s.SoftLead ? .20f : .10f);
+            if (!s.NoEcho) Voice(buf, Parse(s.Lead), stepLen, rate, s.SoftLead ? 2 : 3, s.SoftLead ? .07f : .035f, stepLen / 2);   // 메아리
             Voice(buf, Parse(s.Bass), stepLen, rate, 1, .20f);
             Drums(buf, s.Drums, stepLen, rate);
             for (int i = 0; i < total; i++) buf[i] = Math.Max(-1f, Math.Min(1f, buf[i]));
             return buf;
         }
 
-        /// <summary>wave: 0 사각파(25% 듀티), 1 삼각파(베이스), 2 삼각파+비브라토(부드러운 선율).</summary>
-        static void Voice(float[] buf, List<(double freq, int len)> notes, int stepLen, int rate, int wave, float vol)
+        /// <summary>
+        /// wave: 0 사각파(25% 듀티), 1 삼각파(베이스), 2 삼각파+비브라토(부드러운 선율), 3 가는 사각파(12.5%, 메아리).
+        /// offset 만큼 늦게 시작하고, 곡 끝을 넘친 소리는 처음으로 감아 넣어 반복 이음새가 끊기지 않게 한다.
+        /// </summary>
+        static void Voice(float[] buf, List<(double freq, int len)> notes, int stepLen, int rate, int wave, float vol, int offset = 0)
         {
-            int pos = 0;
+            int pos = offset;
             foreach (var (f, len) in notes)
             {
                 int n = len * stepLen;
@@ -143,16 +157,16 @@ namespace GirlAdventure.Sim
                 {
                     int gate = (int)(n * .88f);                       // 음 사이에 살짝 틈 → 또박또박
                     double ph = 0;
-                    for (int i = 0; i < n && pos + i < buf.Length; i++)
+                    for (int i = 0; i < n; i++)
                     {
                         double t = i / (double)rate;
                         double ff = wave == 2 ? f * (1 + .004 * Math.Sin(t * 2 * Math.PI * 5.5)) : f;
                         ph = (ph + ff / rate) % 1.0;
-                        float s = wave == 0 ? (ph < .25 ? 1f : -1f) : (float)(1 - 4 * Math.Abs(ph - .5));
+                        float s = wave == 0 ? (ph < .25 ? 1f : -1f) : wave == 3 ? (ph < .125 ? 1f : -1f) : (float)(1 - 4 * Math.Abs(ph - .5));
                         float env = i < rate * .004 ? i / (rate * .004f)                       // 어택
                                   : i < gate ? 1f - .25f * i / gate                            // 살짝 감쇠
                                   : Math.Max(0, .75f * (1 - (i - gate) / (float)(n - gate)));  // 릴리스
-                        buf[pos + i] += s * env * vol;
+                        buf[(pos + i) % buf.Length] += s * env * vol;
                     }
                 }
                 pos += n;
