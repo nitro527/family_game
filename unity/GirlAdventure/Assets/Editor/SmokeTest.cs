@@ -431,6 +431,20 @@ namespace GirlAdventure.EditorTools
             Check("mob walks into nearby player", got == target);
             mm.Grace = 2;
             Check("grace blocks contact", mm.Tick(.05f, target.X, target.Y) == null);
+            // 주인공이 훨씬 강하면(Timid) 가까운 몬스터가 다가오지 않고 멀어진다
+            var tm = new FieldMonsters(new System.Random(4)) { Timid = true };
+            tm.Reset(f, 3, 4, 0);
+            var shy = tm.Spawn(tx, ty, 0);
+            shy.Wait = 0;
+            FieldMonster hit2 = null;
+            int far = 0;
+            for (int i = 0; i < 4000 && hit2 == null; i++)
+            {
+                hit2 = tm.Tick(.05f, tx, ty + 1);
+                far = Math.Max(far, Math.Abs(shy.X - tx) + Math.Abs(shy.Y - (ty + 1)));
+            }
+            Check("timid mob keeps away", hit2 == null && far >= 4, $"maxDist={far}");
+            Check("timid levels", FieldMonsters.TimidLevel(MapKind.Field) > 5 && FieldMonsters.TimidLevel(MapKind.Cave) > 8);
         }
 
         /// <summary>챕터 2: 킹 젤리를 깬 수준(Lv6)에서 동굴 젤리로 Lv8 까지 → 젤리 장군.</summary>

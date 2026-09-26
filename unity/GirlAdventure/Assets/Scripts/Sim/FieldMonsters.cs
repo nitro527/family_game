@@ -27,6 +27,11 @@ namespace GirlAdventure.Sim
         public WorldMap Map { get; private set; }
         public float Grace;             // 전투 직후 잠깐은 부딪혀도 전투가 안 난다
         public bool Paused;             // 플레이테스트용: 생성·이동 멈춤
+        /// <summary>주인공이 이 맵에 비해 훨씬 강하면 true: 몬스터가 다가오지 않고 도망간다 (DQ 심볼). 부딪히러 가면 싸울 수는 있다.</summary>
+        public bool Timid;
+
+        /// <summary>이 레벨 이상이면 그 맵 몬스터가 겁먹고 도망간다 (초원: 킹 젤리를 깬 뒤 조금 더, 동굴: 장군을 깬 뒤 조금 더).</summary>
+        public static int TimidLevel(MapKind kind) => kind == MapKind.Cave ? 11 : 7;
         readonly Random r;
         float spawnTimer;
         int nextId;
@@ -82,7 +87,7 @@ namespace GirlAdventure.Sim
 
         /// <summary>
         /// 시간을 dt 만큼 흘린다. 주인공(px,py)과 부딪힌 몬스터가 있으면 돌려준다.
-        /// 가까우면(4칸) 가끔 주인공 쪽으로 다가온다.
+        /// 가까우면(4칸) 가끔 주인공 쪽으로 다가온다 (Timid 면 반대로 멀어진다).
         /// </summary>
         public FieldMonster Tick(float dt, int px, int py)
         {
@@ -103,9 +108,12 @@ namespace GirlAdventure.Sim
                 m.Wait = 1.2f + (float)r.NextDouble() * 1.6f;
                 int dist = Math.Abs(m.X - px) + Math.Abs(m.Y - py);
                 int dx = 0, dy = 0;
-                if (dist <= 4 && Grace <= 0 && r.NextDouble() < .45)
+                if (dist <= 4 && (Timid || Grace <= 0) && r.NextDouble() < (Timid ? .8 : .45))
                 {
-                    if (Math.Abs(px - m.X) > Math.Abs(py - m.Y)) dx = Math.Sign(px - m.X); else dy = Math.Sign(py - m.Y);
+                    int sx = Math.Sign(px - m.X), sy = Math.Sign(py - m.Y);
+                    if (Timid) { sx = -sx; sy = -sy; if (sx == 0 && sy == 0) sx = 1; }
+                    if (Math.Abs(px - m.X) > Math.Abs(py - m.Y)) dx = sx; else dy = sy;
+                    if (dx == 0 && dy == 0) dx = sx != 0 ? sx : 1;
                 }
                 else
                 {
@@ -116,6 +124,7 @@ namespace GirlAdventure.Sim
                 }
                 int nx = m.X + dx, ny = m.Y + dy;
                 bool toPlayer = nx == px && ny == py;
+                if (toPlayer && Timid) continue;            // 겁먹은 몬스터는 스스로 부딪히지 않는다
                 if (!Habitat(nx, ny) || (!toPlayer && At(nx, ny) != null)) continue;   // 안전지대의 주인공은 못 건드린다
                 if (toPlayer && Grace > 0) continue;
                 m.FromX = m.X; m.FromY = m.Y;

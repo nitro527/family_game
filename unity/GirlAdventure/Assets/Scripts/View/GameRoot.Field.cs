@@ -247,6 +247,7 @@ namespace GirlAdventure.View
             }
             if (!busy && Current == Mode.Field)
             {
+                mobs.Timid = P.Lv >= FieldMonsters.TimidLevel(map.Kind);     // 훨씬 강해지면 젤리들이 도망간다
                 var hit = mobs.Tick(Time.deltaTime, P.X, P.Y);
                 if (hit != null) StartMobBattle(hit);
             }
