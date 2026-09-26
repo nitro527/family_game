@@ -491,6 +491,47 @@ namespace GirlAdventure.EditorTools
             Expect("continue restores progress", G.Current == GameRoot.Mode.Field && G.P.Lv == savedLv && G.P.X == savedX && G.P.Y == savedY);
             ExpectBgm("field");
 
+            // 세이브 3칸: 3번 칸에도 저장 → 이어하기에서 칸 고르기
+            G.DebugSaveTo(2);
+            G.DebugToTitle();
+            yield return .5f;
+            Keys.Press(KeyCode.Return);
+            yield return .4f;
+            Expect("continue with 2 saves opens slot picker", G.SlotPickerOpen);
+            Shot("slot_load");
+            Keys.Press(KeyCode.Return);                 // 기본 = 마지막으로 저장한 3번 칸
+            yield return 1.2f;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("continue from slot 3", G.Current == GameRoot.Mode.Field && G.CurrentSlot == 2 && G.P.Lv == savedLv);
+            // 새로 시작: 칸 고르기 → 그만두기 / 찬 칸은 덮어쓰기 확인(기본 그만두기)
+            G.DebugToTitle();
+            yield return .5f;
+            Keys.Press(KeyCode.UpArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);
+            yield return .4f;
+            Expect("new game with saves opens slot picker", G.SlotPickerOpen);
+            Shot("slot_new");
+            Keys.Press(KeyCode.Escape);
+            yield return .4f;
+            Expect("slot picker cancel stays on title", G.Current == GameRoot.Mode.Title && !G.Busy);
+            Keys.Press(KeyCode.Return);
+            yield return .4f;
+            Keys.Press(KeyCode.UpArrow); yield return .15f;    // 2번(빈 칸) → 1번(찬 칸)
+            Keys.Press(KeyCode.Return);
+            yield return .4f;
+            Shot("slot_overwrite");
+            Expect("overwrite asks first", G.MessageText.Contains("지우고"));
+            Keys.Press(KeyCode.Return);                 // 기본 = 그만두기
+            yield return .4f;
+            Expect("overwrite cancel keeps title", G.Current == GameRoot.Mode.Title && !G.Busy);
+            Keys.Press(KeyCode.DownArrow); yield return .15f;  // 이어하기로
+            Keys.Press(KeyCode.Return);
+            yield return .4f;
+            Keys.Press(KeyCode.Return);
+            yield return 1.2f;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("back to field after slot tests", G.Current == GameRoot.Mode.Field && G.P.Lv == savedLv);
+
             // 보스 → 엔딩
             G.DebugBattle(true);
             yield return (Func<bool>)(() => G.EnemyAppearing);

@@ -76,6 +76,7 @@ namespace GirlAdventure.View
             BuildTouchPad();
             BuildStatus();
             statusPanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());   // 상태 창 위에 대화창·선택창이 뜨게
+            titlePanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());    // 타이틀 위에도 (세이브 칸 고르기)
             BuildSwirl();
 
             flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));
@@ -310,7 +311,7 @@ namespace GirlAdventure.View
             startLbl.text = (titleIndex == 0 ? "▶ " : "") + "모험 시작!";
             startLbl.color = titleIndex == 0 ? (Color)UIKit.Gold : Color.white;
             if (s == null) return;
-            continueLbl.text = (titleIndex == 1 ? "▶ " : "") + $"이어하기 <size=17>Lv {s.Lv}</size>";
+            continueLbl.text = (titleIndex == 1 ? "▶ " : "") + $"이어하기 <size=17>Lv {s.Lv}{(SaveStore.Count > 1 ? $" 외 {SaveStore.Count - 1}" : "")}</size>";
             continueLbl.color = titleIndex == 1 ? (Color)UIKit.Gold : Color.white;
         }
 
@@ -326,7 +327,7 @@ namespace GirlAdventure.View
             enemyLabel.text = "";
             HideMessage();
             nameInput.text = PlayerPrefs.GetString("girlName", "첫째");
-            bool canContinue = SaveStore.Exists;
+            bool canContinue = SaveStore.AnyExists;
             continueBtn.gameObject.SetActive(canContinue);
             titleIndex = canContinue ? 1 : 0;       // 세이브가 있으면 "이어하기" 가 기본 (실수로 덮어쓰지 않게)
             RenderTitle();

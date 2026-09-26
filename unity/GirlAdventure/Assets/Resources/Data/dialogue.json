@@ -4,6 +4,9 @@
       { "Text": "옛날 옛적, 별빛 마을에 꼬마 마법사 {name:이/가} 살았어요.", "Face": "smile" },
       { "Text": "어느 밤, 성에 사는 킹 젤리가 밤하늘의 별빛을 몽땅 훔쳐 갔어요!", "Face": "surprised" },
       { "Text": "{name:은/는} 별 지팡이를 꼭 쥐고 성으로 떠났어요. 가자!", "Face": "cast" } ] },
+    { "Id": "slot_new", "Lines": [ { "Text": "새 모험을 어느 모험 책에 적을까?" } ] },
+    { "Id": "slot_load", "Lines": [ { "Text": "어느 모험 책을 펼칠까?" } ] },
+    { "Id": "slot_overwrite", "Lines": [ { "Text": "{slot}번 책에는 이미 모험이 적혀 있어.\n지우고 새로 시작할까?" } ] },
     { "Id": "continue", "Lines": [
       { "Text": "{name:은/는} 다시 모험을 떠났어요! 지금 레벨은 {lv}!", "Face": "smile", "Hold": 1.2 } ] },
     { "Id": "sign", "Lines": [

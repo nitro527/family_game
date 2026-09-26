@@ -56,6 +56,7 @@ namespace GirlAdventure.View
             switch (Current)
             {
                 case Mode.Title:
+                    if (busy) break;            // 세이브 칸 고르는 중
                     if (continueBtn.gameObject.activeSelf && (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.DownArrow)))
                     {
                         titleIndex = 1 - titleIndex;
@@ -95,8 +96,32 @@ namespace GirlAdventure.View
         // ------------------------------------------------------------------ flow
         void StartGame()
         {
-            if (Current != Mode.Title) return;
+            if (Current != Mode.Title || busy) return;
             confirmFrame = Time.frameCount;
+            StartCoroutine(NewGameRoutine());
+        }
+
+        /// <summary>세이브가 하나라도 있으면 어느 칸에 쓸지 고르고, 찬 칸이면 덮어쓸지 묻는다.</summary>
+        IEnumerator NewGameRoutine()
+        {
+            int slot = 0;
+            if (SaveStore.AnyExists)
+            {
+                busy = true;
+                yield return AskSlot("slot_new", false);
+                slot = pickedSlot;
+                if (slot >= 0 && SaveStore.Peek(slot) != null)
+                {
+                    msgText.text = FillText(GameData.Talk("slot_overwrite")[0].Text, new (string, object)[] { ("slot", slot + 1) });
+                    choiceIndex = 1;                                        // 기본은 "그만두기" (실수로 지우지 않게)
+                    yield return Choose("지우고 새로 시작", "그만두기");
+                    if (choicePicked != 0) slot = -1;
+                }
+                HideMessage();
+                busy = false;
+                if (slot < 0) { RenderTitle(); yield break; }
+            }
+            SaveStore.Slot = slot;
             P = PlayerState.NewGame(nameInput.text);
             PlayerPrefs.SetString("girlName", P.Name);
             sfx.Play("start");
@@ -105,9 +130,27 @@ namespace GirlAdventure.View
 
         void ContinueGame()
         {
-            var s = SaveStore.Peek();
-            if (Current != Mode.Title || s == null) return;
+            if (Current != Mode.Title || busy || !SaveStore.AnyExists) return;
             confirmFrame = Time.frameCount;
+            StartCoroutine(LoadRoutine());
+        }
+
+        /// <summary>세이브가 두 칸 이상이면 어느 칸을 이어할지 고른다.</summary>
+        IEnumerator LoadRoutine()
+        {
+            int slot = SaveStore.LastSlot;
+            if (SaveStore.Count > 1)
+            {
+                busy = true;
+                yield return AskSlot("slot_load", true);
+                slot = pickedSlot;
+                HideMessage();
+                busy = false;
+                if (slot < 0) { RenderTitle(); yield break; }
+            }
+            var s = SaveStore.Peek(slot);
+            if (s == null) yield break;
+            SaveStore.Slot = slot;
             P = PlayerState.FromSave(s);
             facing = "down";
             sfx.Play("start");
