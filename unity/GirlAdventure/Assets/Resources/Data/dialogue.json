@@ -54,6 +54,10 @@
       { "Text": "{name:은/는} 별 지팡이를 꼭 쥐고 어두운 동굴로 들어갔어요. 챕터 2, 모험 시작!", "Face": "cast" } ] },
     { "Id": "sign_ch2", "Lines": [
       { "Text": "표지판: \"젤리 기지는 동굴 동쪽 끝! 열쇠는 서쪽 굴 끝 보물상자에 있다는 소문이…\"", "Face": "smile" } ] },
+    { "Id": "guard_meet", "Lines": [
+      { "Text": "보물상자 옆의 커다란 바위가 들썩… 바위가 아니라 젤리였다!", "Face": "surprised" },
+      { "Text": "\"이 상자는 젤리 장군님의 보물이다! 절대 못 가져간다, 쿵쿵!\"", "Face": "pout" } ] },
+    { "Id": "guard_down",   "Lines": [ { "Text": "바위 대장 젤리가 데굴데굴 굴러 달아났다! 이제 보물상자를 열 수 있다!", "Face": "laugh", "Hold": 1.2 } ] },
     { "Id": "chest_sealed", "Lines": [ { "Text": "낡은 보물상자다. 아직은 꿈쩍도 하지 않는다.", "Face": "pout" } ] },
     { "Id": "chest_open",   "Lines": [ { "Text": "보물상자를 열었다! {item:을/를} 손에 넣었다!", "Face": "laugh", "Hold": 1.4 } ] },
     { "Id": "chest_empty",  "Lines": [ { "Text": "보물상자는 이미 비어 있다.", "Face": "smile" } ] },

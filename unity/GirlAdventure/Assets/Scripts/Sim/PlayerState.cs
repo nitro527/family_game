@@ -7,12 +7,13 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 5;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비
+        public const int CurrentVersion = 6;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
         public int Gold;
         public bool BossDown, Boss2Down;
+        public bool GuardDown;          // 버전 6: 챕터 2 중간 보스
         public int Chapter;
         public string[] Items, Opened;
         public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
@@ -43,6 +44,7 @@ namespace GirlAdventure.Sim
         public int X, Y;
         public bool BossDown;               // 킹 젤리 (챕터 1)
         public bool Boss2Down;              // 젤리 장군 (챕터 2)
+        public bool GuardDown;              // 바위 대장 젤리 (챕터 2 중간 보스)
         public int Chapter = 1;
         public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
@@ -110,7 +112,7 @@ namespace GirlAdventure.Sim
 
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
-            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, SavedAt = savedAt,
+            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, SavedAt = savedAt,
             Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
         };
@@ -142,6 +144,8 @@ namespace GirlAdventure.Sim
             p.Gold = Math.Max(0, Math.Min(s.Gold, MaxGold));   // 옛 세이브(버전 2 이하)는 0
             p.BossDown = s.BossDown;
             p.Boss2Down = s.Boss2Down;
+            // 옛 세이브(버전 5 이하)에서 이미 열쇠를 얻었으면 지킴이는 쓰러진 것으로 친다
+            p.GuardDown = s.GuardDown || (s.Items != null && System.Array.IndexOf(s.Items, Quest.KeyItem) >= 0);
             p.Chapter = Math.Max(1, Math.Min(2, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1
             if (s.Items != null) p.Items.AddRange(s.Items);
             if (s.Opened != null) p.Opened.AddRange(s.Opened);

@@ -11,6 +11,7 @@ namespace GirlAdventure.Sim
         public EnemyDef[] Normal;       // 초원 (챕터 1)
         public EnemyDef Boss;           // 킹 젤리
         public EnemyDef[] Cave;         // 동굴 (챕터 2)
+        public EnemyDef Guard;          // 바위 대장 젤리 (챕터 2 중간 보스, 보물상자 지킴이)
         public EnemyDef General;        // 젤리 장군
     }
 
@@ -71,6 +72,7 @@ namespace GirlAdventure.Sim
         public static EnemyDef[] Normal { get; private set; }
         public static EnemyDef King { get; private set; }
         public static EnemyDef[] Cave { get; private set; }
+        public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
@@ -95,6 +97,8 @@ namespace GirlAdventure.Sim
             King = enemies.Boss;
             King.Boss = true;
             Cave = enemies.Cave;
+            Guard = enemies.Guard;
+            Guard.Boss = true;
             General = enemies.General;
             General.Boss = true;
             skills.Clear();
@@ -105,12 +109,13 @@ namespace GirlAdventure.Sim
             Loaded = true;
         }
 
-        /// <summary>모든 적 (일반·보스·동굴·장군).</summary>
+        /// <summary>모든 적 (일반·보스·동굴·지킴이·장군).</summary>
         public static IEnumerable<EnemyDef> AllEnemies()
         {
             foreach (var d in Normal) yield return d;
             yield return King;
             foreach (var d in Cave) yield return d;
+            yield return Guard;
             yield return General;
         }
 

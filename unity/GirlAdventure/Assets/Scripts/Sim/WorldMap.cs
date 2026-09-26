@@ -10,6 +10,7 @@ namespace GirlAdventure.Sim
     ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'M' 사탕 가게
     /// 동굴 — '#' 바위벽  '_' 동굴 바닥(인카운트)  ':' 입구 바닥(안전)  'r' 바위기둥  'w' 지하 샘
     ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'M' 사탕 가게
+    ///        (보물상자 바로 옆 GuardSpot 에는 바위 대장 젤리가 버티고 있다 — 타일이 아니라 Quest 규칙)
     /// </summary>
     public class WorldMap
     {
@@ -19,7 +20,7 @@ namespace GirlAdventure.Sim
         // 동굴 (챕터 2)
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
                                                     Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3),
-                                                    CaveShop = (8, 17);
+                                                    CaveShop = (8, 17), GuardSpot = (2, 8);
         const string Blocking = "TwCFSHD#rM";
 
         public readonly MapKind Kind;

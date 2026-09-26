@@ -50,7 +50,7 @@ namespace GirlAdventure.EditorTools
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
             "boss2_meet", "ch2_clear", "ending_card2",
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
-            "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none",
+            "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
         };
 
         static void DataTests()
@@ -63,7 +63,8 @@ namespace GirlAdventure.EditorTools
                 foreach (var d in GameData.Normal)
                     enemiesOk &= !string.IsNullOrEmpty(d.Name) && d.Hp > 0 && d.Atk > 0 && d.Exp > 0 && !d.Boss && d.Color?.Length == 7;
             if (enemiesOk)
-                enemiesOk &= GameData.Cave != null && GameData.Cave.Length >= 2 && GameData.General != null && GameData.General.Boss;
+                enemiesOk &= GameData.Cave != null && GameData.Cave.Length >= 2 && GameData.General != null && GameData.General.Boss
+                             && GameData.Guard != null && GameData.Guard.Boss;
             Check("enemies.json valid", enemiesOk, $"normal={GameData.Normal?.Length} cave={GameData.Cave?.Length}");
             // 모든 적이 연출 가능한 공격 모션과 공격 이름을 가진다
             string badMove = "";
@@ -358,6 +359,17 @@ namespace GirlAdventure.EditorTools
             Quest.StartChapter2(p);
             Check("chapter2 starts at cave entrance", p.Chapter == 2 && (p.X, p.Y) == WorldMap.CaveStart && p.BossDown);
             Check("door locked without key", Quest.TryBaseDoor(p) == DoorResult.Locked && !Quest.DoorOpen(p));
+            // 보물상자 지킴이: 살아 있으면 상자가 안 열리고 그 자리는 못 지나간다. 옆 칸까지는 걸어갈 수 있다
+            var g = WorldMap.GuardSpot;
+            var withGuard = Reach(m, p);
+            bool guardNear = false;
+            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                guardNear |= withGuard[g.x + dx, g.y + dy];
+            Check("cave: guard spot is floor next to chest", m.At(g.x, g.y) == '_' && Math.Abs(g.x - WorldMap.Chest.x) + Math.Abs(g.y - WorldMap.Chest.y) == 1);
+            Check("guard blocks its spot, reachable beside", Quest.GuardAt(m, p, g.x, g.y) && !withGuard[g.x, g.y] && guardNear);
+            Check("chest guarded until guard down", Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Guarded && !p.HasItem(Quest.KeyItem) && p.Opened.Count == 0);
+            p.GuardDown = true;
+            Check("guard gone after win", !Quest.GuardAt(m, p, g.x, g.y) && Reach(m, p)[g.x, g.y]);
             var r = Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out var item);
             Check("chest gives key once", r == ChestResult.Got && item == Quest.KeyItem && p.HasItem(Quest.KeyItem)
                   && Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Empty && p.Items.Count == 1);
@@ -365,7 +377,10 @@ namespace GirlAdventure.EditorTools
             Check("cave: boss reachable after door", Reach(m, p)[WorldMap.BossSpot.x, WorldMap.BossSpot.y]);
             p.X = WorldMap.BossSpot.x; p.Y = WorldMap.BossSpot.y + 1;   // 기지 안에서 저장
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
-            Check("save keeps chapter, items, spot in base", q.Chapter == 2 && q.HasItem(Quest.KeyItem) && Quest.DoorOpen(q) && q.X == p.X && q.Y == p.Y);
+            Check("save keeps chapter, items, spot in base", q.Chapter == 2 && q.HasItem(Quest.KeyItem) && Quest.DoorOpen(q) && q.X == p.X && q.Y == p.Y && q.GuardDown);
+            var v5 = PlayerState.FromSave(new SaveData { Name = "a", Lv = 7, Chapter = 2, Items = new[] { Quest.KeyItem } });
+            var v5b = PlayerState.FromSave(new SaveData { Name = "a", Lv = 7, Chapter = 2 });
+            Check("old save with key → guard already down", v5.GuardDown && !v5b.GuardDown);
             var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":1,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
             Check("old save → chapter 1", old.Chapter == 1 && old.Items.Count == 0 && old.Lv == 3 && old.X == 3);
             var ch2Bad = new SaveData { Name = "a", Lv = 7, Chapter = 2, X = 0, Y = 0 };
@@ -437,6 +452,21 @@ namespace GirlAdventure.EditorTools
                 battles += b;
             }
             float rate = wins / (float)runs;
+            if (!gear)
+            {
+                // 중간 보스: 동굴에 막 들어온 Lv7 (장비 없음)로 바위 대장 젤리
+                int gw = 0;
+                for (int run = 0; run < runs; run++)
+                {
+                    var p = PlayerState.NewGame("sim");
+                    p.GainExp(PlayerState.NextExp(6));
+                    if (Fight(p, GameData.Guard, r)) gw++;
+                }
+                float gr = gw / (float)runs;
+                Debug.Log($"[BALANCE2] guardWinRate@Lv7={gr:P1}");
+                Check("guard beatable at Lv7", gr >= .7f, $"winRate={gr:P0}");
+                Check("guard not trivial at Lv7", gr <= .995f, $"winRate={gr:P0}");
+            }
             Debug.Log($"[BALANCE2{(gear ? " +cave gear" : "")}] avgBattlesLv6to8={battles / (float)runs:F1} generalWinRate@Lv8={rate:P1}");
             if (gear) return rate;     // 장비를 다 산 경우는 기록만 (쉬워지는 건 의도)
             Check("general beatable at Lv8", rate >= .6f, $"winRate={rate:P0}");

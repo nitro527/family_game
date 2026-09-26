@@ -272,14 +272,19 @@ namespace GirlAdventure.View
                 yield return Talk("levelup", ("lv", P.Lv - ups + i + 1));
             }
             RefreshHud();
-            if (def == GameData.General)
+            if (def == GameData.Guard)
+            {
+                P.GuardDown = true;             // 보물상자를 열 수 있게 된다 (EndBattle → EnterField 가 지킴이 그림을 치우고 저장)
+                yield return Talk("guard_down");
+            }
+            else if (def == GameData.General)
             {
                 P.Boss2Down = true;
                 LeaveBattleStage();
                 yield return Chapter2ClearRoutine();
                 yield break;
             }
-            if (def.Boss)
+            else if (def == GameData.King)
             {
                 P.BossDown = true;
                 LeaveBattleStage();

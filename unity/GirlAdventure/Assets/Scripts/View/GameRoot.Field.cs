@@ -14,7 +14,8 @@ namespace GirlAdventure.View
         const float StepTime = .17f, FieldCharHeight = 1.75f, MobHeight = 1.15f;
 
         Transform fieldRoot;
-        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR;
+        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR;
+        const float GuardHeight = 1.6f;         // 보물상자 지킴이는 보통 젤리보다 크게
         Sprite[] sideFrames;
         Sprite frontSprite, backSprite;
         string facing = "down";
@@ -109,12 +110,51 @@ namespace GirlAdventure.View
             SyncMobViews();
         }
 
-        /// <summary>연 상자·열린 문 그림.</summary>
+        /// <summary>연 상자·열린 문·보물상자 지킴이 그림.</summary>
         void RefreshQuestProps()
         {
             bool cave = map.Kind == MapKind.Cave;
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
+            bool guard = cave && Quest.GuardAlive(P);
+            if (guard && guardSR == null)
+            {
+                guardShadowSR = new GameObject("GuardShadow").AddComponent<SpriteRenderer>();
+                guardShadowSR.transform.SetParent(fieldRoot, false);
+                guardShadowSR.sprite = shadowSR.sprite;
+                guardShadowSR.color = new Color(0, 0, 0, .45f);
+                guardShadowSR.transform.localScale = new Vector3(1.2f, .34f, 1);
+                guardShadowSR.sortingOrder = 1;
+                guardSR = new GameObject("Guard").AddComponent<SpriteRenderer>();
+                guardSR.transform.SetParent(fieldRoot, false);
+                guardSR.sprite = JellySprite(GameData.Guard);
+                guardSR.sortingOrder = 2;
+            }
+            if (guardSR != null) { guardSR.enabled = guardShadowSR.enabled = guard; TickGuard(); }
+        }
+
+        /// <summary>지킴이: 제자리에서 느릿느릿 숨 쉬듯 출렁인다.</summary>
+        void TickGuard()
+        {
+            if (guardSR == null || !guardSR.enabled) return;
+            var feet = FeetAt(WorldMap.GuardSpot.x, WorldMap.GuardSpot.y);
+            float s = GuardHeight / Mathf.Max(.01f, guardSR.sprite.bounds.size.y);     // sprite.bounds 는 크기 조절 전 값
+            float squash = 1 + Mathf.Sin(Time.time * 2.2f) * .06f;
+            guardSR.transform.localScale = new Vector3(s * (2 - squash), s * squash, 1);
+            guardSR.transform.localPosition = feet;
+            guardShadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
+        }
+
+        /// <summary>프로브용: 지킴이가 알맞은 크기로 보이나.</summary>
+        public bool GuardVisible => guardSR != null && guardSR.enabled && guardSR.bounds.size.y > GuardHeight * .8f && guardSR.bounds.size.y < GuardHeight * 1.2f;
+
+        /// <summary>보물상자 지킴이와 싸운다 (상자나 지킴이에게 부딪혔을 때).</summary>
+        IEnumerator GuardRoutine()
+        {
+            busy = true;
+            moveT = -1;
+            yield return Talk("guard_meet");
+            yield return BattleRoutine(GameData.Guard);
         }
 
         IEnumerator ChestRoutine(int x, int y)
@@ -122,6 +162,7 @@ namespace GirlAdventure.View
             if (busy) yield break;
             busy = true;
             var r = Quest.OpenChest(P, x, y, out var item);
+            if (r == ChestResult.Guarded) { yield return GuardRoutine(); yield break; }
             if (r == ChestResult.Got)
             {
                 sfx.Play("chest");
@@ -210,6 +251,7 @@ namespace GirlAdventure.View
                 if (hit != null) StartMobBattle(hit);
             }
             SyncMobViews();
+            TickGuard();
             UpdatePlayerVisual();
             TickFieldFx();
             TickLighting();
@@ -222,6 +264,7 @@ namespace GirlAdventure.View
             int nx = P.X + dx, ny = P.Y + dy;
             var mob = mobs.At(nx, ny);
             if (mob != null && mobs.Grace <= 0) { StartMobBattle(mob); return; }
+            if (Quest.GuardAt(map, P, nx, ny)) { if (!busy) StartCoroutine(GuardRoutine()); return; }
             if (!Quest.Walkable(map, P, nx, ny))
             {
                 if (Keys.AnyDown) sfx.Play("bump");
