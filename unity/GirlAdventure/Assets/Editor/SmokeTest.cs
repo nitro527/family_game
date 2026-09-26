@@ -24,6 +24,7 @@ namespace GirlAdventure.EditorTools
             JosaTests();
             MusicTests();
             SaveTests();
+            QuestTests();
             BalanceSimulation();
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
@@ -40,6 +41,7 @@ namespace GirlAdventure.EditorTools
             "intro", "continue", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
             "candy", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
+            "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
         };
 
         static void DataTests()
@@ -59,7 +61,7 @@ namespace GirlAdventure.EditorTools
                 catch (Exception) { skillsOk = false; }
             }
             Check("skills.json has every command", skillsOk);
-            var vars = new (string, object)[] { ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2) };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2) };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -154,6 +156,56 @@ namespace GirlAdventure.EditorTools
             var r = PlayerState.FromSave(bad, m);
             Check("save sanitized", r.Lv == 1 && r.Hp == r.MaxHp && r.Mp == r.MaxMp && r.Candy == PlayerState.MaxCandy
                   && r.X == WorldMap.Start.x && r.Y == WorldMap.Start.y && r.Name == "첫째", $"pos=({r.X},{r.Y}) hp={r.Hp}");
+        }
+
+        static void QuestTests()
+        {
+            var m = new WorldMap();
+            Check("chest & door tiles", m.At(WorldMap.Chest.x, WorldMap.Chest.y) == 'H' && m.At(WorldMap.BaseDoor.x, WorldMap.BaseDoor.y) == 'D');
+            Check("key item has data", GameData.HasItemDef(Quest.KeyItem), GameData.ItemName(Quest.KeyItem));
+            // 상자와 문 앞 칸까지 걸어갈 수 있어야 한다
+            var seen = Reach(m);
+            bool chestReach = false, doorReach = seen[WorldMap.BaseDoor.x, WorldMap.BaseDoor.y + 1];
+            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                chestReach |= seen[WorldMap.Chest.x + dx, WorldMap.Chest.y + dy];
+            Check("chest reachable", chestReach);
+            Check("base door reachable", doorReach);
+
+            var p = PlayerState.NewGame("t");
+            Check("chapter1: chest sealed", Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Sealed && !p.HasItem(Quest.KeyItem));
+            Check("chapter1: door sealed", Quest.TryBaseDoor(p) == DoorResult.Sealed);
+            p.BossDown = true;
+            Quest.StartChapter2(p);
+            Check("chapter2 starts at village", p.Chapter == 2 && p.X == WorldMap.Start.x && p.Y == WorldMap.Start.y && p.BossDown);
+            Check("door locked without key", Quest.TryBaseDoor(p) == DoorResult.Locked);
+            var r = Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out var item);
+            Check("chest gives key once", r == ChestResult.Got && item == Quest.KeyItem && p.HasItem(Quest.KeyItem)
+                  && Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Empty && p.Items.Count == 1);
+            Check("door opens with key", Quest.TryBaseDoor(p) == DoorResult.Opened);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())), m);
+            Check("save keeps chapter & items", q.Chapter == 2 && q.HasItem(Quest.KeyItem) && q.Opened.Count == 1);
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":1,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"), m);
+            Check("old save → chapter 1", old.Chapter == 1 && old.Items.Count == 0 && old.Lv == 3);
+        }
+
+        static bool[,] Reach(WorldMap m)
+        {
+            var seen = new bool[WorldMap.W, WorldMap.H];
+            var q = new Queue<(int, int)>();
+            q.Enqueue(WorldMap.Start);
+            seen[WorldMap.Start.x, WorldMap.Start.y] = true;
+            while (q.Count > 0)
+            {
+                var (x, y) = q.Dequeue();
+                foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= WorldMap.W || ny >= WorldMap.H || seen[nx, ny] || m.Blocked(nx, ny)) continue;
+                    seen[nx, ny] = true;
+                    q.Enqueue((nx, ny));
+                }
+            }
+            return seen;
         }
 
         static void MusicTests()

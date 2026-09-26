@@ -18,6 +18,8 @@ namespace GirlAdventure.View
         int titleIndex;                     // 0 모험 시작, 1 이어하기
         Image heroTitleImg, flashImg, cutinArt;
         Text cutinText, endText;
+        Button nextChapterBtn;
+        float endingShownAt;                // 엔딩 직후 연타로 바로 넘어가지 않게
 
         // HUD
         Text hudName, hudHp, hudMp;
@@ -89,7 +91,7 @@ namespace GirlAdventure.View
         {
             hudName.text = $"{P.Name} · 마법사 Lv {P.Lv}";
             hudHp.text = $"HP {P.Hp}/{P.MaxHp}";
-            hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}";
+            hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}" + (P.HasItem(Quest.KeyItem) ? "  <color=#F2C443>열쇠</color>" : "");
             hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
             hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;
         }
@@ -360,6 +362,8 @@ namespace GirlAdventure.View
             endText.supportRichText = true;
             var again = UIKit.Button(t, "Again", "처음부터 다시", 430, 390, 250, 60, 24, new Color32(150, 110, 255, 255));
             again.onClick.AddListener(ShowTitle);
+            nextChapterBtn = UIKit.Button(t, "Chapter2", "▶ 챕터 2 시작!", 430, 462, 250, 56, 24, new Color32(110, 190, 255, 255));
+            nextChapterBtn.onClick.AddListener(StartChapter2);
             endingPanel.SetActive(false);
         }
 
@@ -369,6 +373,8 @@ namespace GirlAdventure.View
             hintLabel.SetActive(false);
             enemyLabel.text = "";
             endText.text = FillText(GameData.Talk("ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
+            nextChapterBtn.gameObject.SetActive(P.Chapter == 1);
+            endingShownAt = Time.time;
             endingPanel.SetActive(true);
         }
 

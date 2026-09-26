@@ -12,7 +12,8 @@ namespace GirlAdventure.View
             GameData.Set(
                 Read<EnemyTable>("enemies"),
                 Read<SkillTable>("skills"),
-                Read<DialogueTable>("dialogue"));
+                Read<DialogueTable>("dialogue"),
+                Read<ItemTable>("items"));
         }
 
         static T Read<T>(string name)

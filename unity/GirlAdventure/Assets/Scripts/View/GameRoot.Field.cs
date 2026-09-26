@@ -42,6 +42,55 @@ namespace GirlAdventure.View
             backSprite = Art.Get("walk_back", FieldCharHeight);
             playerSR.sprite = frontSprite;
             BuildFieldFx();
+
+            chestOpenSR = new GameObject("ChestOpen").AddComponent<SpriteRenderer>();
+            chestOpenSR.transform.SetParent(fieldRoot, false);
+            chestOpenSR.sprite = Art.FromTexture(Painter.ChestTexture(true), new Vector2(0, 1), Painter.Tile);
+            chestOpenSR.transform.localPosition = new Vector3(WorldMap.Chest.x, -WorldMap.Chest.y, 0);
+            chestOpenSR.sortingOrder = 1;
+            chestOpenSR.enabled = false;
+        }
+
+        SpriteRenderer chestOpenSR;
+
+        /// <summary>연 상자는 열린 그림으로 덮는다.</summary>
+        void RefreshQuestProps() =>
+            chestOpenSR.enabled = P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
+
+        IEnumerator ChestRoutine(int x, int y)
+        {
+            if (busy) yield break;
+            busy = true;
+            var r = Quest.OpenChest(P, x, y, out var item);
+            if (r == ChestResult.Got)
+            {
+                sfx.Play("chest");
+                RefreshQuestProps();
+                var c = FeetAt(x, y) + new Vector3(0, .6f, 0);
+                for (int i = 0; i < 10; i++)
+                    SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
+                AutoSave();
+                RefreshHud();
+                yield return Talk("chest_open", ("item", GameData.ItemName(item)));
+            }
+            else yield return Talk(r == ChestResult.Empty ? "chest_empty" : "chest_sealed");
+            HideMessage();
+            busy = false;
+        }
+
+        IEnumerator DoorRoutine()
+        {
+            if (busy) yield break;
+            busy = true;
+            var r = Quest.TryBaseDoor(P);
+            if (r == DoorResult.Opened)
+            {
+                sfx.Play("unlock");
+                yield return Talk("door_open", ("item", GameData.ItemName(Quest.KeyItem)));
+            }
+            else yield return Talk(r == DoorResult.Locked ? "door_locked" : "door_sealed");
+            HideMessage();
+            busy = false;
         }
 
         /// <summary>타일 좌표 → 발밑 월드 좌표.</summary>
@@ -59,6 +108,7 @@ namespace GirlAdventure.View
             RefreshHud();
             moveT = -1;
             UpdatePlayerVisual();
+            RefreshQuestProps();
             bgm.Play("field");
             AutoSave();
         }
@@ -104,6 +154,8 @@ namespace GirlAdventure.View
                 char c = map.At(nx, ny);
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
+                else if (c == 'H') StartCoroutine(ChestRoutine(nx, ny));
+                else if (c == 'D') StartCoroutine(DoorRoutine());
                 return;
             }
             moveFrom = new Vector2Int(P.X, P.Y);
@@ -175,7 +227,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk("sign");
+            yield return Talk(P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }

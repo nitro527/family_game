@@ -253,6 +253,7 @@ namespace GirlAdventure.EditorTools
             // 패배 → 부활
             G.DebugBattle(false);
             yield return (Func<bool>)(() => G.CommandOpen);
+            G.DebugSetEnemyHp(9999);                   // 먼저 이겨 버리지 않게
             bool sawDefeat = false, sawRevive = false;
             for (int i = 0; i < 30 && G.Current == GameRoot.Mode.Battle; i++)
             {
@@ -294,6 +295,38 @@ namespace GirlAdventure.EditorTools
             yield return 1f;
             Shot("ending");
             ExpectBgm("ending");
+
+            // 챕터 2: 엔딩에서 Enter → 챕터 2 시작 → 잠긴 문 → 보물상자(열쇠) → 문 열기
+            Keys.Press(KeyCode.Z);                     // 엔딩 직후 연타는 무시돼야 한다
+            yield return .2f;
+            Expect("ending ignores instant mash", G.Current == GameRoot.Mode.Ending);
+            yield return .8f;
+            Keys.Press(KeyCode.Return);
+            yield return 1.2f;
+            Shot("ch2_intro");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("chapter 2 started", G.P.Chapter == 2 && G.Current == GameRoot.Mode.Field);
+            G.DebugTeleport(31, 4, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return 1.3f;
+            Shot("door_locked");
+            Expect("door locked without key", G.MessageText.Contains("잠겨"));
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugTeleport(4, 19, "left");
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            yield return 1.4f;
+            Shot("chest_open");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("got key from chest", G.P.HasItem("key"));
+            G.DebugTeleport(31, 4, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return 1.3f;
+            Shot("door_open");
+            Expect("door opens with key", G.MessageText.Contains("열렸다"));
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
         }
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>

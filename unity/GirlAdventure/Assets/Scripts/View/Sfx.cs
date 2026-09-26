@@ -28,6 +28,8 @@ namespace GirlAdventure.View
             Add("lvup", Wave.Triangle, .10f, .35f, 659, 784, 1046, 1318, 1568);
             Add("miss", Wave.Triangle, .09f, .25f, 300, 200);
             Add("run", Wave.Square, .05f, .15f, 500, 400, 300, 200);
+            Add("chest", Wave.Square, .07f, .25f, 523, 659, 784, 1046, 1318);
+            Add("unlock", Wave.Square, .05f, .22f, 220, 0, 330, 660);
             Add("start", Wave.Triangle, .12f, .30f, 392, 523, 659, 784);
         }
 

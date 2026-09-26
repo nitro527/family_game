@@ -29,6 +29,15 @@ namespace GirlAdventure.Sim
     public class SkillTable { public SkillDef[] Skills; }
 
     [Serializable]
+    public class ItemDef
+    {
+        public string Id, Name, Desc;
+    }
+
+    [Serializable]
+    public class ItemTable { public ItemDef[] Items; }
+
+    [Serializable]
     public class Line
     {
         public string Text;
@@ -56,11 +65,14 @@ namespace GirlAdventure.Sim
         public static EnemyDef King { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
+        static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
 
         public static bool Loaded { get; private set; }
 
-        public static void Set(EnemyTable enemies, SkillTable skillTable, DialogueTable dialogue)
+        public static void Set(EnemyTable enemies, SkillTable skillTable, DialogueTable dialogue, ItemTable itemTable)
         {
+            items.Clear();
+            foreach (var it in itemTable.Items) items[it.Id] = it;
             Normal = enemies.Normal;
             King = enemies.Boss;
             King.Boss = true;
@@ -77,6 +89,11 @@ namespace GirlAdventure.Sim
             if (!skills.TryGetValue(c, out var s)) throw new InvalidOperationException("스킬 데이터 없음: " + c);
             return s;
         }
+
+        /// <summary>아이템 이름 (데이터에 없으면 id 그대로).</summary>
+        public static string ItemName(string id) => items.TryGetValue(id, out var it) ? it.Name : id;
+
+        public static bool HasItemDef(string id) => items.ContainsKey(id);
 
         public static bool HasTalk(string id) => talk.ContainsKey(id);
 

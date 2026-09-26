@@ -87,8 +87,70 @@ namespace GirlAdventure.View
                 R.Rect(X + 11, Y + 18, 18, 2, Raster.Hex("#6B4020"));
             }
             Castle(R);
+            JellyBase(R);
+            Chest(R, WorldMap.Chest.x * Tile, WorldMap.Chest.y * Tile, false);
             return R.ToTexture();
         }
+
+        /// <summary>보물상자 (open=true 면 뚜껑이 열리고 안이 반짝인다). (x, y) 는 타일 왼쪽 위 px.</summary>
+        public static void Chest(Raster R, float x, float y, bool open)
+        {
+            Color32 wood = Raster.Hex("#B8742E"), dark = Raster.Hex("#7A4518"), gold = Raster.Hex("#FFD84A");
+            R.Rect(x + 5, y + 20, 38, 24, Ink);
+            R.Rect(x + 7, y + 22, 34, 20, wood);
+            R.Rect(x + 7, y + 30, 34, 3, dark);
+            if (open)
+            {
+                R.Rect(x + 7, y + 20, 34, 5, Raster.Hex("#2A1808"));                // 안쪽 그림자
+                R.Rect(x + 5, y + 4, 38, 16, Ink);                                   // 젖혀진 뚜껑
+                R.Rect(x + 7, y + 6, 34, 12, wood);
+                R.Rect(x + 7, y + 11, 34, 2, dark);
+                R.Circle(x + 24, y + 22, 3, Raster.Hex("#FFF6B0"));
+            }
+            else
+            {
+                R.Ellipse(x + 24, y + 20, 19, 9, Ink);                               // 둥근 뚜껑
+                R.Ellipse(x + 24, y + 20, 17, 7, wood);
+                R.Rect(x + 7, y + 20, 34, 3, dark);
+                R.Rect(x + 21, y + 22, 6, 8, gold);                                  // 자물쇠
+                R.Rect(x + 23, y + 25, 2, 3, Ink);
+            }
+            R.Rect(x + 7, y + 22, 3, 20, gold);
+            R.Rect(x + 38, y + 22, 3, 20, gold);
+        }
+
+        public static Texture2D ChestTexture(bool open)
+        {
+            var R = new Raster(Tile, Tile);
+            Chest(R, 0, 0, open);
+            return R.ToTexture();
+        }
+
+        /// <summary>챕터 2 젤리 기지: 초록빛 요새 벽 + 젤리 문장 + 철문 (WorldMap 'C' 두 줄과 'D').</summary>
+        static void JellyBase(Raster R)
+        {
+            float X = 28 * Tile, Y = 2 * Tile, w = 7 * Tile, h = 2 * Tile;
+            Color32 wall = Raster.Hex("#5E7A5A"), seam = Raster.Hex("#445A40"), top = Raster.Hex("#7FA36F");
+            R.Rect(X - 2, Y - 20, w + 4, h + 20, Ink);
+            R.Rect(X, Y - 18, w, h + 18, wall);
+            for (int i = 0; i < 7; i++) R.Rect(X + 6 + i * 48, Y - 30, 32, 14, top);  // 성가퀴
+            for (float yy = Y; yy < Y + h; yy += 20) R.Rect(X, yy, w, 2, seam);
+            var d = BaseDoorPx();
+            // 젤리 문장
+            float cx = d.x + 24;
+            R.Ellipse(cx, Y + 16, 16, 13, Ink);
+            R.Ellipse(cx, Y + 16, 14, 11, Raster.Hex("#5FD07A"));
+            R.Circle(cx - 5, Y + 14, 2, Ink);
+            R.Circle(cx + 5, Y + 14, 2, Ink);
+            // 철문
+            R.Rect(d.x + 4, d.y + 2, 40, 46, Ink);
+            R.Rect(d.x + 6, d.y + 4, 36, 44, Raster.Hex("#6B6F80"));
+            for (int i = 0; i < 4; i++) R.Rect(d.x + 10 + i * 9, d.y + 4, 3, 44, Raster.Hex("#4A4E5E"));
+            R.Circle(d.x + 24, d.y + 28, 5, Raster.Hex("#FFD84A"));
+            R.Rect(d.x + 23, d.y + 28, 2, 6, Ink);
+        }
+
+        static Vector2 BaseDoorPx() => new Vector2(WorldMap.BaseDoor.x * Tile, WorldMap.BaseDoor.y * Tile);
 
         static void Flower(Raster R, float x, float y, string col)
         {

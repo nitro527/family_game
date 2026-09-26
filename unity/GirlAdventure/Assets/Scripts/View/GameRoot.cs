@@ -70,6 +70,9 @@ namespace GirlAdventure.View
                     TickTitle();
                     break;
                 case Mode.Field: TickField(); break;
+                case Mode.Ending:
+                    if (P.Chapter == 1 && Time.time - endingShownAt > 1.5f && (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter) || Keys.Down(KeyCode.Z))) StartChapter2();
+                    break;
                 case Mode.Battle: TickBattle(); break;
             }
             TickPops();
@@ -114,6 +117,25 @@ namespace GirlAdventure.View
             EnterField();
             busy = true;
             yield return Talk("continue", ("lv", P.Lv));
+            HideMessage();
+            busy = false;
+        }
+
+        void StartChapter2()
+        {
+            if (Current != Mode.Ending || P.Chapter != 1) return;
+            confirmFrame = Time.frameCount;
+            Quest.StartChapter2(P);
+            facing = "down";
+            sfx.Play("start");
+            StartCoroutine(Chapter2Routine());
+        }
+
+        IEnumerator Chapter2Routine()
+        {
+            EnterField();
+            busy = true;
+            yield return Talk("ch2_intro");
             HideMessage();
             busy = false;
         }
@@ -183,6 +205,8 @@ namespace GirlAdventure.View
             P.X = x; P.Y = y; facing = face; moveT = -1;
             UpdatePlayerVisual();
         }
+
+        public void DebugSetEnemyHp(int hp) { if (battle != null) battle.EnemyHp = hp; }
 
         public void DebugDeleteSave() => SaveStore.Delete();
 

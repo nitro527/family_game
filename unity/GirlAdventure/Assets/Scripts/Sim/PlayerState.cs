@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
@@ -6,11 +7,13 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;        // 2: 챕터·아이템·연 상자 추가
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
         public bool BossDown;
+        public int Chapter;
+        public string[] Items, Opened;
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
@@ -29,6 +32,11 @@ namespace GirlAdventure.Sim
         public int Candy = MaxCandy;
         public int X, Y;
         public bool BossDown;
+        public int Chapter = 1;
+        public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
+        public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
+
+        public bool HasItem(string id) => Items.Contains(id);
 
         /// <summary>다음 레벨까지 필요한 누적 경험치.</summary>
         public static int NextExp(int lv) => 5 * lv * (lv + 1);
@@ -62,6 +70,7 @@ namespace GirlAdventure.Sim
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
             Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, X = X, Y = Y, BossDown = BossDown, SavedAt = savedAt,
+            Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(),
         };
 
         /// <summary>
@@ -81,6 +90,9 @@ namespace GirlAdventure.Sim
             p.Mp = Math.Max(0, Math.Min(s.Mp, p.MaxMp));
             p.Candy = Math.Max(0, Math.Min(s.Candy, MaxCandy));
             p.BossDown = s.BossDown;
+            p.Chapter = Math.Max(1, Math.Min(2, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1
+            if (s.Items != null) p.Items.AddRange(s.Items);
+            if (s.Opened != null) p.Opened.AddRange(s.Opened);
             if (!map.Blocked(s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)
             {
                 p.X = s.X;

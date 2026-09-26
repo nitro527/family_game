@@ -5,13 +5,14 @@ namespace GirlAdventure.Sim
     /// <summary>
     /// 필드 맵 (시드 고정 절차 생성). 타일 문자:
     /// '.' 풀밭  ',' 수풀(인카운트↑)  'f' 꽃  '=' 길  'b' 다리  'w' 물  'T' 나무
-    /// 'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(보스)
+    /// 'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(보스)  'H' 보물상자  'D' 젤리 기지 문 (챕터 2)
     /// </summary>
     public class WorldMap
     {
         public const int W = 36, H = 24;
-        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19);
-        const string Blocking = "TwCFS";
+        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19),
+                                                    Chest = (3, 19), BaseDoor = (31, 3);
+        const string Blocking = "TwCFSHD";
 
         readonly char[,] tiles = new char[W, H];
 
@@ -74,6 +75,19 @@ namespace GirlAdventure.Sim
             for (int x = 27; x <= 35; x++)
                 if (tiles[x, 18] == 'T' || tiles[x, 18] == 'w') Set(x, 18, '.');
             Set(Gate.x, Gate.y, 'G');
+
+            // 챕터 2: 남서쪽 구석의 보물상자
+            for (int y = 18; y <= 20; y++)          // 맨 아래 줄은 대화창에 가려서 두 칸 위에
+                for (int x = 2; x <= 5; x++)
+                    if (tiles[x, y] != 'w') Set(x, y, '.');
+            Set(Chest.x, Chest.y, 'H');
+            // 챕터 2: 북동쪽 젤리 기지 — 성벽 두 줄 + 문, 길(22,5)에서 문 앞까지 샛길
+            for (int y = 2; y <= 3; y++)
+                for (int x = 28; x <= 34; x++)
+                    Set(x, y, 'C');
+            Set(BaseDoor.x, BaseDoor.y, 'D');
+            for (int x = 22; x <= 33; x++)
+                if (tiles[x, 4] != 'w') Set(x, 4, x <= BaseDoor.x ? '=' : '.');
         }
 
         void Set(int x, int y, char c)
