@@ -56,7 +56,17 @@ namespace GirlAdventure.View
             switch (Current)
             {
                 case Mode.Title:
-                    if (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter)) StartGame();
+                    if (continueBtn.gameObject.activeSelf && (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.DownArrow)))
+                    {
+                        titleIndex = 1 - titleIndex;
+                        sfx.Play("select");
+                        RenderTitle();
+                    }
+                    if (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter))
+                    {
+                        if (titleIndex == 1) ContinueGame();
+                        else StartGame();
+                    }
                     TickTitle();
                     break;
                 case Mode.Field: TickField(); break;
@@ -87,6 +97,34 @@ namespace GirlAdventure.View
             StartCoroutine(IntroRoutine());
         }
 
+        void ContinueGame()
+        {
+            var s = SaveStore.Peek();
+            if (Current != Mode.Title || s == null) return;
+            confirmFrame = Time.frameCount;
+            P = PlayerState.FromSave(s, map);
+            facing = "down";
+            sfx.Play("start");
+            StartCoroutine(ContinueRoutine());
+        }
+
+        IEnumerator ContinueRoutine()
+        {
+            EnterField();
+            busy = true;
+            yield return Talk("continue", ("lv", P.Lv));
+            HideMessage();
+            busy = false;
+        }
+
+        /// <summary>자동 저장: 필드로 돌아올 때, 샘물, 엔딩, 창 닫을 때.</summary>
+        void AutoSave() => SaveStore.Save(P);
+
+        void OnApplicationQuit()
+        {
+            if (Current == Mode.Field && !busy) AutoSave();
+        }
+
         IEnumerator IntroRoutine()
         {
             EnterField();
@@ -100,6 +138,7 @@ namespace GirlAdventure.View
         {
             yield return Talk("ending_light");
             HideMessage();
+            AutoSave();
             Current = Mode.Ending;
             ShowEnding();
             bgm.Play("ending");
@@ -112,6 +151,8 @@ namespace GirlAdventure.View
         public bool CommandOpen => cmdWin != null && cmdWin.activeSelf;
         public int CommandIndex => cmdIndex;
         public string BgmName => bgm.Current;
+        public bool CanContinue => continueBtn.gameObject.activeSelf;
+        public int TitleIndex => titleIndex;
         public int BgmLevel => bgm.LevelPercent;
         public string MessageText => msgWin != null && msgWin.gameObject.activeSelf ? msgText.text : "";
 
@@ -140,6 +181,15 @@ namespace GirlAdventure.View
         {
             P.X = x; P.Y = y; facing = face; moveT = -1;
             UpdatePlayerVisual();
+        }
+
+        public void DebugDeleteSave() => SaveStore.Delete();
+
+        public void DebugToTitle()
+        {
+            StopAllCoroutines();
+            busy = false;
+            ShowTitle();
         }
 
         public void DebugSetHp(int hp) { P.Hp = Mathf.Clamp(hp, 1, P.MaxHp); RefreshHud(); }

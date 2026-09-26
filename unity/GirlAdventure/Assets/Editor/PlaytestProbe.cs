@@ -70,6 +70,12 @@ namespace GirlAdventure.EditorTools
 
         static void Log(string s) => Debug.Log($"PT: {s} | {G.DebugState()}");
 
+        static void Expect(string what, bool ok)
+        {
+            if (!ok) fails++;
+            Log($"CHECK {(ok ? "OK" : "FAIL")} {what}");
+        }
+
         /// <summary>기대한 배경음악이 나오는지 확인 (틀리면 실패로 센다).</summary>
         static void ExpectBgm(string name)
         {
@@ -118,6 +124,10 @@ namespace GirlAdventure.EditorTools
         static IEnumerator Scenario()
         {
             yield return 2f;
+            G.DebugDeleteSave();                      // 새 게임부터 (에디터 PlayerPrefs 만 지움)
+            G.DebugToTitle();
+            yield return .3f;
+            Expect("title has no continue without save", !G.CanContinue && G.TitleIndex == 0);
             Shot("title");
             ExpectBgm("title");
             // 음량 4단계를 한 바퀴 돌려 원래대로
@@ -211,17 +221,35 @@ namespace GirlAdventure.EditorTools
             // 패배 → 부활
             G.DebugBattle(false);
             yield return (Func<bool>)(() => G.CommandOpen);
-            G.DebugSetHp(1);
-            for (int i = 0; i < 12 && G.Current == GameRoot.Mode.Battle; i++)
+            bool sawDefeat = false, sawRevive = false;
+            for (int i = 0; i < 30 && G.Current == GameRoot.Mode.Battle; i++)
             {
-                if (G.CommandOpen) { foreach (var x in Choose(0)) yield return x; }
+                if (G.CommandOpen) { G.DebugSetHp(1); foreach (var x in Choose(0)) yield return x; }   // 매 턴 HP 1 → 반드시 쓰러진다
                 else Keys.Press(KeyCode.Z);
                 yield return .5f;
-                if (G.MessageText.Contains("쓰러지")) Shot("defeat");
-                if (G.MessageText.Contains("다시 일어났다")) Shot("revive");
+                if (!sawDefeat && G.MessageText.Contains("쓰러지")) { sawDefeat = true; Shot("defeat"); }
             }
-            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            for (int i = 0; i < 20 && !(G.Current == GameRoot.Mode.Field && !G.Busy); i++)
+            {
+                if (!sawRevive && G.MessageText.Contains("다시 일어났다")) { sawRevive = true; Shot("revive"); }
+                Keys.Press(KeyCode.Z);
+                yield return .3f;
+            }
             Shot("after_revive");
+            Expect("defeat → revive at fountain", sawDefeat && G.P.X == 5 && G.P.Y == 4);
+            ExpectBgm("field");
+
+            // 세이브 → 타이틀 → 이어하기
+            int savedLv = G.P.Lv, savedX = G.P.X, savedY = G.P.Y;
+            G.DebugToTitle();
+            yield return .5f;
+            Expect("title offers continue", G.CanContinue && G.TitleIndex == 1);
+            Shot("title_continue");
+            Keys.Press(KeyCode.Return);
+            yield return 1.2f;
+            Shot("continue_msg");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("continue restores progress", G.Current == GameRoot.Mode.Field && G.P.Lv == savedLv && G.P.X == savedX && G.P.Y == savedY);
             ExpectBgm("field");
 
             // 보스 → 엔딩

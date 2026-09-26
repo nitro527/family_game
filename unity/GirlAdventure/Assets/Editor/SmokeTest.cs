@@ -23,6 +23,7 @@ namespace GirlAdventure.EditorTools
             BattleRuleTests();
             JosaTests();
             MusicTests();
+            SaveTests();
             BalanceSimulation();
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
@@ -36,7 +37,7 @@ namespace GirlAdventure.EditorTools
         /// <summary>코드가 부르는 대사 id 목록 — 새 대사를 코드에서 쓰면 여기에도 추가.</summary>
         static readonly string[] TalkIds =
         {
-            "intro", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
+            "intro", "continue", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
             "candy", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
         };
@@ -135,6 +136,24 @@ namespace GirlAdventure.EditorTools
         {
             Check("josa 이/가", Josa.With("첫째", "이/가") == "첫째가" && Josa.With("젤리", "을/를") == "젤리를" && Josa.With("킹 젤리", "이/가") == "킹 젤리가");
             Check("josa batchim", Josa.With("서진", "은/는") == "서진은");
+        }
+
+        static void SaveTests()
+        {
+            var m = new WorldMap();
+            var p = PlayerState.NewGame("서진");
+            p.GainExp(PlayerState.NextExp(3));
+            p.Hp = 7; p.Mp = 2; p.Candy = 1; p.X = WorldMap.Gate.x; p.Y = WorldMap.Gate.y - 1; p.BossDown = true;
+            var json = JsonUtility.ToJson(p.ToSave("t"));
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(json), m);
+            Check("save roundtrip", q.Name == "서진" && q.Lv == p.Lv && q.Exp == p.Exp && q.Hp == 7 && q.Mp == 2 && q.Candy == 1
+                  && q.X == p.X && q.Y == p.Y && q.BossDown && q.MaxHp == p.MaxHp && q.MaxMp == p.MaxMp && q.Atk == p.Atk,
+                  $"lv={q.Lv} maxHp={q.MaxHp}/{p.MaxHp} atk={q.Atk}/{p.Atk}");
+            // 이상한 값은 안전하게 고친다: 막힌 칸 → 시작점, HP 0 → 가득, 사탕 초과 → 최대치
+            var bad = new SaveData { Name = "", Lv = 0, Hp = 0, Mp = 999, Candy = 50, X = 0, Y = 0 };
+            var r = PlayerState.FromSave(bad, m);
+            Check("save sanitized", r.Lv == 1 && r.Hp == r.MaxHp && r.Mp == r.MaxMp && r.Candy == PlayerState.MaxCandy
+                  && r.X == WorldMap.Start.x && r.Y == WorldMap.Start.y && r.Name == "첫째", $"pos=({r.X},{r.Y}) hp={r.Hp}");
         }
 
         static void MusicTests()

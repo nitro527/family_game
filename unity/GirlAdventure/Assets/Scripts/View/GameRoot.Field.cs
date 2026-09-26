@@ -59,6 +59,7 @@ namespace GirlAdventure.View
             moveT = -1;
             UpdatePlayerVisual();
             bgm.Play("field");
+            AutoSave();
         }
 
         string HeldDir()
@@ -159,6 +160,7 @@ namespace GirlAdventure.View
             if (busy) yield break;
             busy = true;
             P.RestoreAll();
+            AutoSave();
             RefreshHud();
             sfx.Play("heal");
             yield return Talk("fountain");

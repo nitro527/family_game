@@ -1,5 +1,19 @@
+using System;
+
 namespace GirlAdventure.Sim
 {
+    /// <summary>세이브 파일 한 칸의 모양 (JSON). 능력치는 레벨에서 다시 계산하므로 저장하지 않는다.</summary>
+    [Serializable]
+    public class SaveData
+    {
+        public const int CurrentVersion = 1;
+        public int Version = CurrentVersion;
+        public string Name;
+        public int Lv, Exp, Hp, Mp, Candy, X, Y;
+        public bool BossDown;
+        public string SavedAt;          // 표시용 (예: "09-26 14:30")
+    }
+
     /// <summary>주인공(첫째)의 능력치와 진행 상태. UnityEngine 의존 없음.</summary>
     public class PlayerState
     {
@@ -43,6 +57,36 @@ namespace GirlAdventure.Sim
                 ups++;
             }
             return ups;
+        }
+
+        public SaveData ToSave(string savedAt = "") => new SaveData
+        {
+            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, X = X, Y = Y, BossDown = BossDown, SavedAt = savedAt,
+        };
+
+        /// <summary>
+        /// 세이브에서 복원. 최대 HP/MP/공격력은 레벨로 다시 계산하고, 값이 이상하면 안전한 값으로 고친다
+        /// (막힌 칸이면 시작 지점, HP 0 이면 가득).
+        /// </summary>
+        public static PlayerState FromSave(SaveData s, WorldMap map)
+        {
+            var p = NewGame(s.Name);
+            int lv = Math.Max(1, Math.Min(99, s.Lv));
+            p.Lv = lv;
+            p.MaxHp = StartHp + HpPerLevel * (lv - 1);
+            p.MaxMp = StartMp + MpPerLevel * (lv - 1);
+            p.Atk = StartAtk + AtkPerLevel * (lv - 1);
+            p.Exp = Math.Max(lv > 1 ? NextExp(lv - 1) : 0, Math.Min(s.Exp, NextExp(lv) - 1));
+            p.Hp = s.Hp <= 0 ? p.MaxHp : Math.Min(s.Hp, p.MaxHp);
+            p.Mp = Math.Max(0, Math.Min(s.Mp, p.MaxMp));
+            p.Candy = Math.Max(0, Math.Min(s.Candy, MaxCandy));
+            p.BossDown = s.BossDown;
+            if (!map.Blocked(s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)
+            {
+                p.X = s.X;
+                p.Y = s.Y;
+            }
+            return p;
         }
 
         /// <summary>샘물: HP/MP/사탕 전부 회복.</summary>

@@ -13,6 +13,9 @@ namespace GirlAdventure.View
         Transform ui;
         GameObject titlePanel, endingPanel, cutinPanel, hudWin, hintLabel;
         InputField nameInput;
+        Button continueBtn;
+        Text startLbl, continueLbl;
+        int titleIndex;                     // 0 모험 시작, 1 이어하기
         Image heroTitleImg, flashImg, cutinArt;
         Text cutinText, endText;
 
@@ -252,6 +255,21 @@ namespace GirlAdventure.View
 
             var start = UIKit.Button(t, "Start", "모험 시작!", 60, 372, 240, 62, 26, new Color32(150, 110, 255, 255));
             start.onClick.AddListener(StartGame);
+            startLbl = start.GetComponentInChildren<Text>();
+            continueBtn = UIKit.Button(t, "Continue", "이어하기", 60, 446, 240, 56, 24, new Color32(110, 190, 255, 255));
+            continueBtn.onClick.AddListener(ContinueGame);
+            continueLbl = continueBtn.GetComponentInChildren<Text>();
+        }
+
+        /// <summary>타이틀 버튼 커서 표시 (선택된 쪽에 ▶ 와 금색).</summary>
+        void RenderTitle()
+        {
+            var s = SaveStore.Peek();
+            startLbl.text = (titleIndex == 0 ? "▶ " : "") + "모험 시작!";
+            startLbl.color = titleIndex == 0 ? (Color)UIKit.Gold : Color.white;
+            if (s == null) return;
+            continueLbl.text = (titleIndex == 1 ? "▶ " : "") + $"이어하기 <size=17>Lv {s.Lv}</size>";
+            continueLbl.color = titleIndex == 1 ? (Color)UIKit.Gold : Color.white;
         }
 
         void ShowTitle()
@@ -266,6 +284,10 @@ namespace GirlAdventure.View
             enemyLabel.text = "";
             HideMessage();
             nameInput.text = PlayerPrefs.GetString("girlName", "첫째");
+            bool canContinue = SaveStore.Exists;
+            continueBtn.gameObject.SetActive(canContinue);
+            titleIndex = canContinue ? 1 : 0;       // 세이브가 있으면 "이어하기" 가 기본 (실수로 덮어쓰지 않게)
+            RenderTitle();
             cam.transform.position = new Vector3(-100, 0, -10);   // 월드는 안 보이게
             bgm.Play("title");
         }

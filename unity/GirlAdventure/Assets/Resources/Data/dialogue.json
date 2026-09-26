@@ -4,6 +4,8 @@
       { "Text": "옛날 옛적, 별빛 마을에 꼬마 마법사 {name:이/가} 살았어요.", "Face": "smile" },
       { "Text": "어느 밤, 성에 사는 킹 젤리가 밤하늘의 별빛을 몽땅 훔쳐 갔어요!", "Face": "surprised" },
       { "Text": "{name:은/는} 별 지팡이를 꼭 쥐고 성으로 떠났어요. 가자!", "Face": "cast" } ] },
+    { "Id": "continue", "Lines": [
+      { "Text": "{name:은/는} 다시 모험을 떠났어요! 지금 레벨은 {lv}!", "Face": "smile", "Hold": 1.2 } ] },
     { "Id": "sign", "Lines": [
       { "Text": "표지판: \"킹 젤리의 성은 길을 따라 남동쪽! 풀숲에는 젤리들이 숨어 있어요.\"", "Face": "smile" } ] },
     { "Id": "fountain", "Lines": [
