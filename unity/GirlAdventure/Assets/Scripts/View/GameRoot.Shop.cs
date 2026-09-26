@@ -40,6 +40,7 @@ namespace GirlAdventure.View
             {
                 bool on = i < choiceItems.Length;
                 choiceTexts[i].gameObject.SetActive(on);
+                choiceTexts[i].fontSize = Settings.ChoiceFontSize;
                 if (on) choiceTexts[i].text = (i == choiceIndex ? "<color=#F2C443>▶</color> " : "    ") + choiceItems[i];
             }
         }

@@ -136,7 +136,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>
-        /// 설정: 고를 때마다 값이 한 단계씩 바뀐다 (음악 100→60→30→0, 효과음 같음, 글자 속도 느리게→보통→빠르게, 번쩍임 켬/끔).
+        /// 설정: 고를 때마다 값이 한 단계씩 바뀐다 (음악 100→60→30→0, 효과음 같음, 글자 속도 느리게→보통→빠르게, 번쩍임 켬/끔, 글자 크기 보통/크게).
         /// 바꾼 뒤 바로 들어 보거나 볼 수 있게 소리·문장으로 알려 준다.
         /// </summary>
         IEnumerator OptionsRoutine()
@@ -152,16 +152,19 @@ namespace GirlAdventure.View
                     $"효과음  <color=#F2C443>{Settings.SfxPercent}%</color>",
                     $"글자 속도  <color=#F2C443>{Settings.TextSpeedName}</color>",
                     $"화면 번쩍임  <color=#F2C443>{(Settings.Flash ? "켬" : "끔")}</color>",
+                    $"글자 크기  <color=#F2C443>{(Settings.BigText ? "크게" : "보통")}</color>",
                     "닫기");
                 int picked = choicePicked;
-                if (picked >= 4) break;
+                if (picked >= 5) break;
                 if (picked == 0) bgm.CycleVolume();
                 else if (picked == 1) Settings.CycleSfx();
                 else if (picked == 2) Settings.CycleTextSpeed();
-                else Settings.ToggleFlash();
+                else if (picked == 3) Settings.ToggleFlash();
+                else Settings.ToggleBigText();
                 PlayerPrefs.Save();
                 sfx.Play("select");
                 if (picked == 2) yield return Say($"이 빠르기로 말할게요! ({Settings.TextSpeedName})", "laugh", .6f);
+                if (picked == 4) yield return Say($"글씨를 이 크기로 보여 줄게요! ({(Settings.BigText ? "크게" : "보통")})", "laugh", .6f);
                 choiceIndex = picked;
             }
         }

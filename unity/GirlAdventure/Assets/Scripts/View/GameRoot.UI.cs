@@ -136,6 +136,7 @@ namespace GirlAdventure.View
             msgTop = Current == Mode.Field && !statusOpen && PlayerFeetScreenY() > MsgBottomY - 6;
             msgWin.anchoredPosition = new Vector2(16, -(msgTop ? MsgTopY : MsgBottomY));
             msgWin.gameObject.SetActive(true);
+            msgText.fontSize = Settings.MessageFontSize;
             float w = narrow ? MsgNarrowW : MsgW;
             msgWin.sizeDelta = new Vector2(w, 128);
             msgText.rectTransform.sizeDelta = new Vector2(w - 150, 106);
@@ -157,6 +158,7 @@ namespace GirlAdventure.View
 
         // ---- 프로브용
         public bool MessageAtTop => msgWin != null && msgWin.gameObject.activeSelf && msgTop;
+        public int MessageFontSize => msgText.fontSize;
         public void DebugShowMessage(string text) { ShowMessageWindow(false); SetFace("smile"); msgText.text = text; }
         public void DebugHideMessage() => HideMessage();
 

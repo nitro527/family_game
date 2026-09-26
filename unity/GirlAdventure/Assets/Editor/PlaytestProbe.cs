@@ -391,6 +391,16 @@ namespace GirlAdventure.EditorTools
             G.DebugShowMessage("가운데에 있으면 대화창은 아래에 있어요.");
             yield return .1f;
             Expect("message stays down normally", !G.MessageAtTop && G.MessageText != "");
+            // 글자 크기 옵션: 크게로 바꾸면 대화창 글씨가 커진다 (3줄 문장이 창 안에 들어가는지 촬영)
+            Settings.ToggleBigText();
+            G.DebugShowMessage("글자 크기를 크게 하면 이렇게 보여요.\n두 번째 줄도 잘 보이나요?\n세 번째 줄까지 창 안에 들어가요.");
+            yield return .1f;
+            Shot("message_big_text");
+            Expect("big text option enlarges message", G.MessageFontSize == 26);
+            Settings.ToggleBigText();
+            G.DebugShowMessage("가운데에 있으면 대화창은 아래에 있어요.");
+            yield return .1f;
+            Expect("text size back to normal", G.MessageFontSize == 23);
             G.DebugHideMessage();
             G.DebugTeleport(16, 10, "right");
             yield return .6f;

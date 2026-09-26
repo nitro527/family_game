@@ -3,7 +3,7 @@ using UnityEngine;
 namespace GirlAdventure.View
 {
     /// <summary>
-    /// 접근성 설정 (PlayerPrefs 에 저장): 효과음 음량, 대사 글자 속도, 전투 화면 번쩍임·흔들림.
+    /// 접근성 설정 (PlayerPrefs 에 저장): 효과음 음량, 대사 글자 속도, 전투 화면 번쩍임·흔들림, 글자 크기.
     /// 배경음악 음량은 Bgm 이 따로 갖고 있다 ("bgmVol").
     /// </summary>
     public static class Settings
@@ -40,6 +40,18 @@ namespace GirlAdventure.View
             private set => PlayerPrefs.SetInt("flashOn", value ? 1 : 0);
         }
 
+        /// <summary>대화창·선택창 글씨를 크게 (23→26, 22→25).</summary>
+        public static bool BigText
+        {
+            get => PlayerPrefs.GetInt("bigText", 0) != 0;
+            private set => PlayerPrefs.SetInt("bigText", value ? 1 : 0);
+        }
+
+        public static int MessageFontSize => BigText ? 26 : 23;
+        public static int ChoiceFontSize => BigText ? 25 : 22;
+
+        public static void ToggleBigText() => BigText = !BigText;
+
         public static void CycleSfx() => SfxLevel = (SfxLevel + 1) % SfxLevels.Length;
         public static void CycleTextSpeed() => TextSpeed = (TextSpeed + 1) % SpeedNames.Length;
         public static void ToggleFlash() => Flash = !Flash;
@@ -50,6 +62,7 @@ namespace GirlAdventure.View
             PlayerPrefs.DeleteKey("sfxVol");
             PlayerPrefs.DeleteKey("textSpeed");
             PlayerPrefs.DeleteKey("flashOn");
+            PlayerPrefs.DeleteKey("bigText");
         }
     }
 }
