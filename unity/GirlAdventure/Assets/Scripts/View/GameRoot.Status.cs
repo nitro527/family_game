@@ -16,7 +16,7 @@ namespace GirlAdventure.View
         GameObject statusPanel;
         Text stHead, stLeftVals, stMid, stRight, stExpText;
         Image stExpBar, stHpBar, stMpBar, stFace;
-        bool statusOpen, statusClicked, statusUse, statusGear;
+        bool statusOpen, statusClicked, statusUse, statusGear, statusOptions;
 
         // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다.
         // 세 칸: 왼쪽 능력치 / 가운데 장비·주문 / 오른쪽 가방·지금 할 일
@@ -65,7 +65,9 @@ namespace GirlAdventure.View
             use.onClick.AddListener(() => statusUse = true);
             var gear = UIKit.Button(win, "Gear", "장비 바꾸기", MidX + 152, StH - 54, 150, 40, 19, new Color32(255, 214, 120, 255));
             gear.onClick.AddListener(() => statusGear = true);
-            UIKit.Label(win, "Close", "Z 메뉴 · Esc 닫기", RightX, StH - 44, StW - RightX - 24, 26, 16, TextAnchor.UpperRight, UIKit.Dim);
+            var opt = UIKit.Button(win, "Options", "설정", MidX + 314, StH - 54, 90, 40, 19, new Color32(190, 190, 215, 255));
+            opt.onClick.AddListener(() => statusOptions = true);
+            UIKit.Label(win, "Close", "Z 메뉴\nEsc 닫기", MidX + 414, StH - 56, StW - MidX - 434, 48, 15, TextAnchor.MiddleRight, UIKit.Dim);
             statusPanel.SetActive(false);
         }
 
@@ -133,6 +135,37 @@ namespace GirlAdventure.View
             for (int i = 0; i < vals.Length; i++) stRows[i].text = vals[i];
         }
 
+        /// <summary>
+        /// 설정: 고를 때마다 값이 한 단계씩 바뀐다 (음악 100→60→30→0, 효과음 같음, 글자 속도 느리게→보통→빠르게, 번쩍임 켬/끔).
+        /// 바꾼 뒤 바로 들어 보거나 볼 수 있게 소리·문장으로 알려 준다.
+        /// </summary>
+        IEnumerator OptionsRoutine()
+        {
+            choiceIndex = 0;
+            while (true)
+            {
+                ShowMessageWindow(true);
+                SetFace("smile");
+                msgText.text = "고를 때마다 바뀌어요. (Esc 닫기)";
+                yield return Choose(
+                    $"음악 소리  <color=#F2C443>{bgm.LevelPercent}%</color>",
+                    $"효과음  <color=#F2C443>{Settings.SfxPercent}%</color>",
+                    $"글자 속도  <color=#F2C443>{Settings.TextSpeedName}</color>",
+                    $"화면 번쩍임  <color=#F2C443>{(Settings.Flash ? "켬" : "끔")}</color>",
+                    "닫기");
+                int picked = choicePicked;
+                if (picked >= 4) break;
+                if (picked == 0) bgm.CycleVolume();
+                else if (picked == 1) Settings.CycleSfx();
+                else if (picked == 2) Settings.CycleTextSpeed();
+                else Settings.ToggleFlash();
+                PlayerPrefs.Save();
+                sfx.Play("select");
+                if (picked == 2) yield return Say($"이 빠르기로 말할게요! ({Settings.TextSpeedName})", "laugh", .6f);
+                choiceIndex = picked;
+            }
+        }
+
         /// <summary>진행 상황에 맞는 한 줄 목표 (5살도 길을 잃지 않게).</summary>
         string Goal()
         {
@@ -151,22 +184,32 @@ namespace GirlAdventure.View
             RenderStatus();
             statusPanel.SetActive(true);
             sfx.Play("select");
-            statusClicked = statusUse = statusGear = false;
+            statusClicked = statusUse = statusGear = statusOptions = false;
             yield return null;                  // 여는 입력으로 바로 닫히지 않게
             while (true)
             {
-                if (!statusUse && !statusGear && ConfirmDown())
+                if (!statusUse && !statusGear && !statusOptions && ConfirmDown())
                 {
                     // 키보드·패드: 작은 메뉴에서 고른다 (버튼은 바로)
                     ShowMessageWindow(true);
                     SetFace("smile");
                     msgText.text = "무엇을 할까?";
                     choiceIndex = 0;
-                    yield return Choose("도구 쓰기", "장비 바꾸기", "닫기");
+                    yield return Choose("도구 쓰기", "장비 바꾸기", "설정", "닫기");
                     HideMessage();
-                    if (choicePicked == 2) break;
+                    if (choicePicked == 3) break;
                     statusUse = choicePicked == 0;
                     statusGear = choicePicked == 1;
+                    statusOptions = choicePicked == 2;
+                }
+                if (statusOptions)
+                {
+                    statusOptions = false;
+                    yield return OptionsRoutine();
+                    HideMessage();
+                    statusClicked = false;
+                    yield return null;
+                    continue;
                 }
                 if (statusGear)
                 {

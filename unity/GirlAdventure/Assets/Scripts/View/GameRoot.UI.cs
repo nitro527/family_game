@@ -142,10 +142,10 @@ namespace GirlAdventure.View
             {
                 msgText.text = text.Substring(0, i);
                 if (ConfirmDown()) { msgText.text = text; break; }
-                yield return new WaitForSeconds(.032f);
+                yield return new WaitForSeconds(Settings.CharTime);     // 설정: 글자 속도
             }
             msgText.text = text + " <color=#F2C443>▼</color>";
-            float wait = hold > 0 ? hold : Mathf.Min(2.6f, .9f + text.Length * .03f);
+            float wait = (hold > 0 ? hold : Mathf.Min(2.6f, .9f + text.Length * .03f)) * Settings.HoldMul;
             for (float t = 0; t < wait; t += Time.deltaTime)
             {
                 if (ConfirmDown()) break;

@@ -381,11 +381,11 @@ namespace GirlAdventure.View
             if (hurtFlash > 0)
             {
                 if (!fxFrozen) hurtFlash = Mathf.Max(0, hurtFlash - dt);
-                flashImg.color = new Color(1, .1f, .1f, .45f * hurtFlash / HurtFlashTime);
+                flashImg.color = new Color(1, .1f, .1f, Settings.Flash ? .45f * hurtFlash / HurtFlashTime : 0);   // 설정에서 끌 수 있다
             }
             if (battleRoot.gameObject.activeSelf)          // 소용돌이 전환 중(아직 필드)에는 카메라를 건드리지 않는다
             {
-                var shake = camShake > 0 ? (Vector3)(Random.insideUnitCircle * camShake * .5f) : Vector3.zero;
+                var shake = camShake > 0 && Settings.Flash ? (Vector3)(Random.insideUnitCircle * camShake * .5f) : Vector3.zero;
                 cam.transform.position = Stage + new Vector3(0, 0, -10) + shake;
             }
             if (!fxFrozen) camShake = Mathf.Max(0, camShake - dt);

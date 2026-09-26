@@ -60,7 +60,7 @@ namespace GirlAdventure.View
 
         public void Play(string name)
         {
-            if (clips.TryGetValue(name, out var c)) src.PlayOneShot(c);
+            if (clips.TryGetValue(name, out var c) && Settings.SfxVolume > 0) src.PlayOneShot(c, Settings.SfxVolume);
         }
     }
 }

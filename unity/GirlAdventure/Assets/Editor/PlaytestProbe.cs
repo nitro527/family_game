@@ -127,6 +127,7 @@ namespace GirlAdventure.EditorTools
         {
             yield return 2f;
             G.DebugDeleteSave();                      // 새 게임부터 (에디터 PlayerPrefs 만 지움)
+            Settings.ResetDefaults();                 // 지난 실행이 설정을 바꾼 채 멈췄어도 기본값에서 시작
             G.DebugToTitle();
             yield return .3f;
             Expect("title has no continue without save", !G.CanContinue && G.TitleIndex == 0);
@@ -312,6 +313,37 @@ namespace GirlAdventure.EditorTools
             yield return .3f;
             Shot("status_after_gear");
             Expect("status still open after gear", G.StatusOpen);
+            // 설정: 메뉴 → 설정 → 효과음·글자 속도·번쩍임을 한 단계씩 바꾸고, 끝나면 처음 값으로 되돌린다
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            for (int k = 0; k < 2; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Keys.Press(KeyCode.Return);                // 설정
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            int sfx0 = Settings.SfxPercent, speed0 = Settings.TextSpeed;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);                // 효과음
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);                // 글자 속도 (예시 문장이 나온다)
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return);                // 화면 번쩍임
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Shot("status_options");
+            Expect("options: sfx, text speed, flash changed", Settings.SfxPercent != sfx0 && Settings.TextSpeed != speed0 && !Settings.Flash);
+            Keys.Press(KeyCode.Escape);                // 설정 닫기
+            yield return (Func<bool>)(() => G.MessageText == "");
+            yield return .3f;
+            Expect("status still open after options", G.StatusOpen);
+            Settings.ResetDefaults();
+            Expect("options reset", Settings.Flash && Settings.SfxPercent == 100 && Settings.TextSpeed == 1);
             Keys.Press(KeyCode.Escape);
             yield return .3f;
             Expect("status closes with Esc", !G.StatusOpen && !G.Busy);
