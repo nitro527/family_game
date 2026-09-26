@@ -133,19 +133,88 @@ namespace GirlAdventure.View
                 guardSR.sprite = JellySprite(GameData.Guard);
                 guardSR.sortingOrder = 2;
             }
-            if (guardSR != null) { guardSR.enabled = guardShadowSR.enabled = guard; TickGuard(); }
+            // 방금 쓰러뜨렸으면 (그림이 켜진 채 죽음) 바로 치우지 않고 굴러 달아나는 연출을 기다린다 (EndBattle 이 재생)
+            if (guardSR != null && guardSR.enabled && !guard && cave && Current == Mode.Field) guardRollPending = true;
+            else if (guardSR != null) { guardSR.enabled = guardShadowSR.enabled = guard; TickGuard(); }
         }
 
         /// <summary>지킴이: 제자리에서 느릿느릿 숨 쉬듯 출렁인다.</summary>
         void TickGuard()
         {
-            if (guardSR == null || !guardSR.enabled) return;
+            bool near = guardSR != null && guardSR.enabled && !guardRollPending && !guardRolling && Current == Mode.Field
+                        && Mathf.Abs(P.X - WorldMap.GuardSpot.x) + Mathf.Abs(P.Y - WorldMap.GuardSpot.y) <= GuardAlertDist;
+            if (guardAlert != null && !near) { Destroy(guardAlert.gameObject); guardAlert = null; }
+            if (guardSR == null || !guardSR.enabled || guardRollPending || guardRolling) return;
             var feet = FeetAt(WorldMap.GuardSpot.x, WorldMap.GuardSpot.y);
             float s = GuardHeight / Mathf.Max(.01f, guardSR.sprite.bounds.size.y);     // sprite.bounds 는 크기 조절 전 값
             float squash = 1 + Mathf.Sin(Time.time * 2.2f) * .06f;
+            // 가까이 오면 "!" 를 띄우고 부르르 떤다 (덤빌 준비)
+            float shake = near ? Mathf.Sin(Time.time * 42) * .05f : 0;
+            if (near && guardAlert == null)
+            {
+                guardAlert = new GameObject("GuardAlert").AddComponent<SpriteRenderer>();
+                guardAlert.transform.SetParent(fieldRoot, false);
+                guardAlert.sprite = alertSprite ??= Art.FromTexture(AlertTexture(), new Vector2(.5f, 0), 96);
+                guardAlert.sortingOrder = 8;
+                guardAlertBorn = Time.time;
+                sfx.Play("select");
+            }
+            if (guardAlert != null)
+            {
+                float age = Time.time - guardAlertBorn;
+                guardAlert.transform.localScale = Vector3.one * 1.2f * (age < .15f ? age / .15f * 1.3f : Mathf.Lerp(1.3f, 1f, Mathf.Clamp01((age - .15f) / .15f)));
+                guardAlert.transform.localPosition = feet + new Vector3(0, GuardHeight + .05f, 0);
+            }
             guardSR.transform.localScale = new Vector3(s * (2 - squash), s * squash, 1);
-            guardSR.transform.localPosition = feet;
+            guardSR.transform.localPosition = feet + new Vector3(shake, 0, 0);
+            guardSR.transform.localRotation = Quaternion.identity;
+            guardSR.color = Color.white;
             guardShadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
+        }
+
+        public bool GuardAlerted => guardAlert != null;
+        const int GuardAlertDist = 2;
+        SpriteRenderer guardAlert;
+        float guardAlertBorn;
+        bool guardRollPending, guardRolling;
+
+        /// <summary>쓰러진 지킴이가 데굴데굴 두 바퀴 굴러 남쪽으로 달아나며 사라진다 (1.3초, 흙먼지).</summary>
+        IEnumerator GuardRollAway()
+        {
+            guardRollPending = false;
+            if (guardSR == null) yield break;
+            guardRolling = true;
+            var from = FeetAt(WorldMap.GuardSpot.x, WorldMap.GuardSpot.y);
+            float s = GuardHeight / Mathf.Max(.01f, guardSR.sprite.bounds.size.y);
+            sfx.Play("mv_spin");
+            const float dur = 1.3f;
+            float dustT = 0;
+            for (float t = 0; t < dur; t += Time.deltaTime)
+            {
+                float k = t / dur, e = k * k;
+                var pos = from + new Vector3(Mathf.Sin(k * 6) * .15f, -3.2f * e, -.03f * e);
+                // 그림 기준점이 발밑이라, 몸 가운데를 축으로 돌도록 위치를 보정한다
+                var rot = Quaternion.Euler(0, 0, -720 * e);
+                var mid = new Vector3(0, GuardHeight * (1 - .25f * k) * .5f, 0);
+                guardSR.transform.localPosition = pos + mid - rot * mid;
+                guardSR.transform.localRotation = rot;
+                guardSR.transform.localScale = Vector3.one * s * (1 - .25f * k);
+                guardSR.color = new Color(1, 1, 1, Mathf.Clamp01((1 - k) / .4f));
+                guardShadowSR.transform.localPosition = pos + new Vector3(0, .02f, 0);
+                guardShadowSR.color = new Color(0, 0, 0, .45f * (1 - k));
+                if ((dustT -= Time.deltaTime) <= 0)
+                {
+                    dustT = .08f;
+                    SpawnField(puffSprite, pos + new Vector3(Random.Range(-.3f, .3f), .1f, 0), new Vector3(Random.Range(-.3f, .3f), Random.Range(.2f, .5f)),
+                               .5f, Random.Range(.25f, .4f), new Color(.75f, .68f, .6f, .7f));
+                }
+                yield return null;
+            }
+            guardSR.enabled = guardShadowSR.enabled = false;
+            guardSR.transform.localRotation = Quaternion.identity;
+            guardSR.color = Color.white;
+            guardShadowSR.color = new Color(0, 0, 0, .45f);
+            guardRolling = false;
         }
 
         /// <summary>프로브용: 지킴이가 알맞은 크기로 보이나.</summary>

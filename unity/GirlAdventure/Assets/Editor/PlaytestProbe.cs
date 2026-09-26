@@ -617,12 +617,16 @@ namespace GirlAdventure.EditorTools
             yield return .5f;
             Shot("chest_guard");
             Expect("guard stands by the chest", G.GuardVisible);
+            Expect("guard alerts when near", G.GuardAlerted);
             Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             Expect("guard battle starts at chest", G.Current == GameRoot.Mode.Battle && G.BgmName == "boss" && !G.P.HasItem("key"));
             Shot("guard_battle");
             G.DebugSetEnemyHp(25);
             foreach (var x in FightUntilOver(true)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field)) yield return x;
+            yield return .8f;
+            Shot("guard_roll_away");
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             Expect("guard down, back in cave (no ending)", G.P.GuardDown && G.Current == GameRoot.Mode.Field && G.P.Chapter == 2 && !G.P.Boss2Down && !G.GuardVisible);
             G.DebugTeleport(4, 8, "left");

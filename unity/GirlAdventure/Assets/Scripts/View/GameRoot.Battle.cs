@@ -339,6 +339,7 @@ namespace GirlAdventure.View
             LeaveBattleStage();
             EnterField();
             HideMessage();
+            if (guardRollPending) yield return GuardRollAway();
             busy = false;
         }
 
