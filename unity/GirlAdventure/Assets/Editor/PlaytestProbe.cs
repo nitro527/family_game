@@ -141,6 +141,23 @@ namespace GirlAdventure.EditorTools
             if (G.BgmLevel == vol0) { fails++; Log("BGM VOLUME FAIL (M 키로 안 바뀜)"); }
             for (int i = 0; i < 3; i++) { Keys.Press(KeyCode.M); yield return .2f; }
             if (G.BgmLevel != vol0) { fails++; Log("BGM VOLUME FAIL (한 바퀴 뒤 원래대로 안 돌아옴)"); }
+            // 타이틀 설정: ↓ → 설정 → 효과음 한 번 바꾸고 → 되돌리기 → 닫기
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Expect("title cursor reaches settings", G.TitleIndex == 2);
+            Keys.Press(KeyCode.Return);
+            yield return .4f;
+            Expect("title opens settings", G.Busy && G.MessageText.Contains("고를 때마다"));
+            int titleSfx0 = Settings.SfxPercent;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Keys.Press(KeyCode.Return); yield return .3f;
+            Shot("title_settings");
+            Expect("title settings change sfx", Settings.SfxPercent != titleSfx0);
+            for (int i = 0; i < 3 && Settings.SfxPercent != titleSfx0; i++) { Keys.Press(KeyCode.Return); yield return .3f; }
+            Keys.Press(KeyCode.Escape);
+            yield return .4f;
+            Expect("title settings close", G.Current == GameRoot.Mode.Title && !G.Busy && Settings.SfxPercent == titleSfx0);
+            Keys.Press(KeyCode.UpArrow); yield return .15f;
+            Expect("title cursor back to start", G.TitleIndex == 0);
             yield return .5f;
             Keys.Press(KeyCode.Return);
             yield return 1.2f;
@@ -150,7 +167,8 @@ namespace GirlAdventure.EditorTools
             Shot("field_start");
             ExpectBgm("field");
 
-            // 네 방향 걷기 — 방향별 캐릭터 크기 비교
+            // 네 방향 걷기 — 방향별 캐릭터 크기 비교 (몬스터가 다가와 전투가 끼어들면 걷기 검사가 흔들려서 멈춤)
+            G.DebugMobs(true, false);
             foreach (var x in Walk(KeyCode.RightArrow, "right", .5f, true)) yield return x;
             Shot("idle_right");
             foreach (var x in Walk(KeyCode.DownArrow, "down", .4f, true)) yield return x;

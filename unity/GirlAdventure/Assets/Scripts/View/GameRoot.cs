@@ -57,15 +57,20 @@ namespace GirlAdventure.View
             {
                 case Mode.Title:
                     if (busy) break;            // 세이브 칸 고르는 중
-                    if (continueBtn.gameObject.activeSelf && (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.DownArrow)))
+                    bool up = Keys.Down(KeyCode.UpArrow), down = Keys.Down(KeyCode.DownArrow);
+                    if (up || down)
                     {
-                        titleIndex = 1 - titleIndex;
+                        // 고를 수 있는 것: 모험 시작(0), 이어하기(1, 세이브 있을 때), 설정(2)
+                        var opts = continueBtn.gameObject.activeSelf ? new[] { 0, 1, 2 } : new[] { 0, 2 };
+                        int k = System.Array.IndexOf(opts, titleIndex);
+                        titleIndex = opts[(k + (down ? 1 : opts.Length - 1)) % opts.Length];
                         sfx.Play("select");
                         RenderTitle();
                     }
                     if (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter))
                     {
                         if (titleIndex == 1) ContinueGame();
+                        else if (titleIndex == 2) OpenTitleOptions();
                         else StartGame();
                     }
                     TickTitle();

@@ -14,7 +14,7 @@ namespace GirlAdventure.View
         GameObject titlePanel, endingPanel, cutinPanel, hudWin, hintLabel;
         InputField nameInput;
         Button continueBtn;
-        Text startLbl, continueLbl;
+        Text startLbl, continueLbl, optionsLbl;
         int titleIndex;                     // 0 모험 시작, 1 이어하기
         Image heroTitleImg, flashImg, cutinArt;
         Text cutinText, endText;
@@ -302,6 +302,28 @@ namespace GirlAdventure.View
             continueBtn = UIKit.Button(t, "Continue", "이어하기", 60, 446, 240, 56, 24, new Color32(110, 190, 255, 255));
             continueBtn.onClick.AddListener(ContinueGame);
             continueLbl = continueBtn.GetComponentInChildren<Text>();
+            var opt = UIKit.Button(t, "Options", "설정", 312, 446, 100, 56, 22, new Color32(190, 190, 215, 255));
+            opt.onClick.AddListener(OpenTitleOptions);
+            optionsLbl = opt.GetComponentInChildren<Text>();
+        }
+
+        /// <summary>타이틀에서 설정 열기 (게임 중 상태 창의 설정과 같은 화면).</summary>
+        void OpenTitleOptions()
+        {
+            if (Current != Mode.Title || busy) return;
+            confirmFrame = Time.frameCount;
+            titleIndex = 2;
+            RenderTitle();
+            StartCoroutine(TitleOptionsRoutine());
+        }
+
+        IEnumerator TitleOptionsRoutine()
+        {
+            busy = true;
+            yield return OptionsRoutine();
+            HideMessage();
+            busy = false;
+            RenderTitle();
         }
 
         /// <summary>타이틀 버튼 커서 표시 (선택된 쪽에 ▶ 와 금색).</summary>
@@ -310,6 +332,8 @@ namespace GirlAdventure.View
             var s = SaveStore.Peek();
             startLbl.text = (titleIndex == 0 ? "▶ " : "") + "모험 시작!";
             startLbl.color = titleIndex == 0 ? (Color)UIKit.Gold : Color.white;
+            optionsLbl.text = (titleIndex == 2 ? "▶ " : "") + "설정";
+            optionsLbl.color = titleIndex == 2 ? (Color)UIKit.Gold : Color.white;
             if (s == null) return;
             continueLbl.text = (titleIndex == 1 ? "▶ " : "") + $"이어하기 <size=17>Lv {s.Lv}{(SaveStore.Count > 1 ? $" 외 {SaveStore.Count - 1}" : "")}</size>";
             continueLbl.color = titleIndex == 1 ? (Color)UIKit.Gold : Color.white;
@@ -329,6 +353,7 @@ namespace GirlAdventure.View
             nameInput.text = PlayerPrefs.GetString("girlName", "첫째");
             bool canContinue = SaveStore.AnyExists;
             continueBtn.gameObject.SetActive(canContinue);
+            ((RectTransform)optionsLbl.transform.parent).anchoredPosition = new Vector2(canContinue ? 312 : 60, -446);   // 이어하기가 없으면 그 자리에
             titleIndex = canContinue ? 1 : 0;       // 세이브가 있으면 "이어하기" 가 기본 (실수로 덮어쓰지 않게)
             RenderTitle();
             cam.transform.position = new Vector3(-100, 0, -10);   // 월드는 안 보이게
