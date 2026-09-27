@@ -7,7 +7,7 @@ namespace GirlAdventure.EditorTools
     /// 외부 에셋 그림의 가져오기 설정.
     ///  - Resources/Battle: 전투 배경(1280×720)을 원래 크기 그대로 (기본 설정이면 2의 거듭제곱으로 늘려져 16:9 가 깨진다)
     ///  - Resources/UI: Kenney UI 조각 (막대·버튼, 9-slice 로 늘림)
-    ///  - Resources/Monsters: 몬스터 도감 그림(높이 360). 필드에선 아주 작게 줄어드니 밉맵 켬
+    ///  - Resources/Monsters: 몬스터 도감 그림(높이 512). 필드에선 아주 작게 줄어드니 밉맵 켬
     ///  - Resources/Tiles: PIPOYA 타일. 맵을 백그라운드에서 그리려고 픽셀을 읽으므로 읽기 가능 + 무압축 + 도트 그대로
     /// </summary>
     public class BattleArtImporter : AssetPostprocessor

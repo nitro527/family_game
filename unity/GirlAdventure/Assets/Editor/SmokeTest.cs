@@ -75,7 +75,7 @@ namespace GirlAdventure.EditorTools
             foreach (var d in GameData.Cave)
                 if (string.IsNullOrEmpty(d.Look)) badMove += d.Name + "(동굴 모양 없음) ";
             Check("every enemy has move+attack+look", enemiesOk && badMove == "", badMove);
-            // 도감 그림(B-5): Art 가 있으면 Resources/Monsters 에 그림이 있고 원래 크기(높이 360) 그대로 들어와야 함
+            // 도감 그림(B-5): Art 가 있으면 Resources/Monsters 에 그림이 있고 원래 크기(높이 512) 그대로 들어와야 함
             string badArt = "";
             int arts = 0;
             if (enemiesOk)
@@ -84,7 +84,7 @@ namespace GirlAdventure.EditorTools
                     if (string.IsNullOrEmpty(d.Art)) continue;
                     arts++;
                     var t = Resources.Load<Texture2D>("Monsters/" + d.Art);
-                    if (t == null || t.height != 360) badArt += $"{d.Name}({d.Art}:{(t == null ? "없음" : t.width + "x" + t.height)}) ";
+                    if (t == null || t.height != 512) badArt += $"{d.Name}({d.Art}:{(t == null ? "없음" : t.width + "x" + t.height)}) ";
                 }
             Check("monster art loads", badArt == "" && arts >= 1, $"arts={arts} {badArt}");
             // 전투 배경 그림: 맵 기본(meadow/cave) + 적이 정한 것 모두 1280×720 으로 들어와야 함 (NPOT 늘림 없음)

@@ -96,7 +96,7 @@ def main():
 
 MONSTER_CUT = os.path.join(ROOT, 'assets', 'monsters', 'cut')
 MONSTER_OUT = os.path.join(ROOT, 'unity', 'GirlAdventure', 'Assets', 'Resources', 'Monsters')
-MONSTER_H = 360           # 몬스터 그림 높이 (px). 화면 크기는 Unity 쪽(ArtUnits)에서 정함
+MONSTER_H = 512           # 몬스터 그림 높이 (px). 화면 크기는 Unity 쪽(ArtUnits)에서 정함
 
 
 def monsters():
