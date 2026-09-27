@@ -103,6 +103,12 @@ namespace GirlAdventure.EditorTools
             Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2"
                   && P(MapKind.Cave, 5, 20) == "0,0,1" && P(MapKind.Cave, 12, 5) == "0,1,1",
                   $"field={P(MapKind.Field, 3, 4)}|{P(MapKind.Field, 10, 11)}|{P(MapKind.Field, 20, 15)} cave={P(MapKind.Cave, 5, 20)}|{P(MapKind.Cave, 12, 5)}");
+            // 딸의 노트: 젤리 색 = 난이도 (파랑 쉬움 < 초록 중간 < 분홍 어려움), 시작 근처엔 분홍이 안 나옴
+            var nm = GameData.Normal;
+            Check("jelly color = difficulty", nm.Length == 3 && nm[0].Name == "파랑 젤리" && nm[1].Name == "초록 젤리" && nm[2].Name == "분홍 젤리"
+                  && nm[0].Hp < nm[1].Hp && nm[1].Hp < nm[2].Hp && nm[0].Atk < nm[1].Atk && nm[1].Atk < nm[2].Atk
+                  && !P(MapKind.Field, 3, 4).Contains("2"),
+                  $"{nm[0].Name}/{nm[1].Name}/{nm[2].Name}");
             var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
             foreach (var id in TalkIds)
             {

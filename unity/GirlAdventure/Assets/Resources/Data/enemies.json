@@ -1,8 +1,8 @@
 {
   "Normal": [
     { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 3, "Exp": 4,  "Gold": 3,  "Move": "tackle", "Attack": "몸통 박치기" },
-    { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 12, "Atk": 4, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프" },
-    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 18, "Atk": 6, "Exp": 10, "Gold": 7, "Move": "spin",   "Attack": "빙글빙글 회전" }
+    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 12, "Atk": 4, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프" },
+    { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 18, "Atk": 6, "Exp": 10, "Gold": 7, "Move": "spin",   "Attack": "빙글빙글 회전" }
   ],
   "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 10, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss" },
   "Cave": [
