@@ -97,26 +97,26 @@ SETS = {
             skill='별빛 폭풍', text='모든 적에게 4 피해.\n아군 마법사가 있으면 +2.', accent=(170, 60, 150))),
     ],
     'boy': [
-        ('boy_portrait.png', 'boy_card_unit.png', dict(
+        ('boy_card.png', 'boy_card_unit.png', dict(
             title='지훈', subtitle='꼬마 용사 · Lv 1', kind='유닛 · 용사', cost=3,
             skill='용사의 칼', text='공격할 때:\n피해 +1.', atk=3, hp=3, accent=(50, 110, 190))),
-        ('boy_card.png', 'boy_card_lightning.png', dict(
+        ('boy_card_ultimate.png', 'boy_card_lightning.png', dict(
             title='번개 베기', subtitle='지훈의 필살기', kind='필살기', cost=6,
             skill='번개 베기', text='적 하나에게 5 피해.\n누나가 있으면 +1.', accent=(200, 150, 30))),
     ],
     'mom': [
-        ('mom_portrait.png', 'mom_card_unit.png', dict(
+        ('mom_card.png', 'mom_card_unit.png', dict(
             title='엄마', subtitle='현자 · Lv 1', kind='유닛 · 현자', cost=4,
             skill='따뜻한 손', text='턴 끝: 아군 하나의\nHP를 2 회복.', atk=1, hp=4, accent=(140, 90, 200))),
-        ('mom_card.png', 'mom_card_light.png', dict(
+        ('mom_card_ultimate.png', 'mom_card_light.png', dict(
             title='엄마의 빛', subtitle='엄마의 필살 주문', kind='필살 주문', cost=6,
             skill='엄마의 빛', text='아군 모두의 HP를\n4 회복.', accent=(200, 160, 50))),
     ],
     'dad': [
-        ('dad_portrait.png', 'dad_card_unit.png', dict(
+        ('dad_card.png', 'dad_card_unit.png', dict(
             title='아빠', subtitle='기사 · Lv 1', kind='유닛 · 기사', cost=4,
             skill='든든한 방패', text='아군 대신\n공격을 받는다.', atk=2, hp=6, accent=(60, 90, 170))),
-        ('dad_card.png', 'dad_card_shield.png', dict(
+        ('dad_card_ultimate.png', 'dad_card_shield.png', dict(
             title='아빠의 방패', subtitle='아빠의 필살기', kind='필살기', cost=6,
             skill='사자 방패', text='이번 턴 아군이 받는\n피해를 모두 막는다.', accent=(210, 160, 40))),
     ],
