@@ -69,8 +69,10 @@ assets/characters/
     <who>_walk.png         걷기 시트
     <who>_portrait.png     초상화
     <who>_card.png         카드 그림
-    (girl 만) icons/ poses/ cards/ — 시트를 잘라 만든 파일
-  overviews/<who 또는 묶음>.jpg   한 장 요약 이미지
+    <who>_main_transparent.png, <who>_walk_side.gif, icons/, poses/  — 시트를 잘라 자동 생성
+    (girl 만) <who>_turnaround.png, cards/, girl_card_ultimate.png
+  gen/family/            family_title.png(타이틀 키아트), family_party.png(파티 단체)
+  overviews/<who>.jpg, family.jpg   한 장 요약 이미지 — python tools/build_character_set.py (자르기+요약 한 번에)
 ```
 - 파일 이름은 `<who>_<종류>.png` 로만. **확정본만 남기고** 버린 시안(_v1, _v2 등)은 지워요 (필요하면 git 기록에 있음).
 - 다시 뽑으면 같은 이름으로 덮어써요.
