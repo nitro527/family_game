@@ -96,12 +96,7 @@ namespace GirlAdventure.View
             t.verticalOverflow = VerticalWrapMode.Overflow;
             t.lineSpacing = 1.1f;
             t.raycastTarget = false;
-            if (outline)
-            {
-                var o = t.gameObject.AddComponent<Outline>();
-                o.effectColor = new Color(0, 0, 0, .9f);
-                o.effectDistance = new Vector2(2, -2);
-            }
+            if (outline) TextRim.Add(t, new Color(0, 0, 0, .85f), 1.1f);   // 얇은 8방향 테두리 (예전 Outline 은 글자가 겹쳐 보였음)
             return t;
         }
 

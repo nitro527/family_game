@@ -380,10 +380,8 @@ namespace GirlAdventure.View
             UIKit.Fill(cutinPanel.transform, "Bg", new Color32(34, 14, 70, 245));
             cutinArt = UIKit.Img(cutinPanel.transform, "Art", Art.UI("art_ultimate"), 250, -40, 460, 640, true);
             cutinText = UIKit.Label(cutinPanel.transform, "Text", GameData.Skill(Cmd.Star).Name + "!!", 0, 430, 960, 90, 64, TextAnchor.MiddleCenter,
-                new Color32(255, 240, 250, 255), true);
-            var o = cutinText.gameObject.AddComponent<Outline>();
-            o.effectColor = new Color32(255, 110, 210, 200);
-            o.effectDistance = new Vector2(4, -4);
+                new Color32(255, 240, 250, 255));
+            TextRim.Add(cutinText, new Color32(150, 40, 130, 255), 2.2f);
             cutinPanel.SetActive(false);
         }
 
@@ -458,7 +456,7 @@ namespace GirlAdventure.View
         void Pop(string text, float x, float y, Color color, int size = 44)
         {
             var t = UIKit.Label(popLayer, "Pop", text, x - 160, y - 30, 320, 60, size, TextAnchor.MiddleCenter, color, true);
-            t.GetComponent<Outline>().effectDistance = new Vector2(3, -3);
+            t.GetComponent<TextRim>().effectDistance = new Vector2(1.6f, 1.6f);
             pops.Add((t, 0, new Vector2(x - 160, -(y - 30))));
         }
 
