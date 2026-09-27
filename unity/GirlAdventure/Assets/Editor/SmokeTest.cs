@@ -100,20 +100,32 @@ namespace GirlAdventure.EditorTools
             }
             Check("skills.json has every command", skillsOk);
             string P(MapKind k, int x, int y) => string.Join(",", GameData.EncounterPool(k, x, y));
-            Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2"
-                  && P(MapKind.Cave, 5, 20) == "0,0,1,2" && P(MapKind.Cave, 12, 5) == "0,1,2,2",
+            Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2,3,4"
+                  && P(MapKind.Cave, 5, 20) == "0,0,1,2" && P(MapKind.Cave, 12, 5) == "0,1,2,2,3",
                   $"field={P(MapKind.Field, 3, 4)}|{P(MapKind.Field, 10, 11)}|{P(MapKind.Field, 20, 15)} cave={P(MapKind.Cave, 5, 20)}|{P(MapKind.Cave, 12, 5)}");
             // 딸의 노트: 젤리 색 = 난이도 (파랑 쉬움 < 초록 중간 < 분홍 어려움), 시작 근처엔 분홍이 안 나옴
-            var nm = GameData.Normal;
+            var nm = Array.FindAll(GameData.Normal, d => d.Tier < 2);
             Check("jelly color = difficulty", nm.Length == 3 && nm[0].Name == "파랑 젤리" && nm[1].Name == "초록 젤리" && nm[2].Name == "분홍 젤리"
                   && nm[0].Hp < nm[1].Hp && nm[1].Hp < nm[2].Hp && nm[0].Atk < nm[1].Atk && nm[1].Atk < nm[2].Atk
                   && !P(MapKind.Field, 3, 4).Contains("2"),
                   $"{nm[0].Name}/{nm[1].Name}/{nm[2].Name}");
             // 딸의 노트: 동굴은 돌 < 광물(세모 결정) < 수정 순서로 세다
-            var cv = GameData.Cave;
+            var cv = Array.FindAll(GameData.Cave, d => d.Tier < 2);
             Check("cave rock < ore < crystal", cv.Length == 3 && cv[0].Look == "rock" && cv[1].Look == "ore" && cv[2].Look == "crystal"
                   && cv[0].Hp < cv[1].Hp && cv[1].Hp < cv[2].Hp && cv[0].Atk < cv[1].Atk && cv[1].Atk < cv[2].Atk,
                   string.Join("/", Array.ConvertAll(cv, d => d.Name)));
+            // 딸의 노트 "2단 젤리": 큰 ○○ 젤리는 같은 색 1단보다 세고, 성(시작)에서 가까운 곳엔 안 나오고 먼 곳에만
+            string badTier = "";
+            foreach (var d in GameData.AllEnemies())
+            {
+                if (d.Tier < 2) continue;
+                var small = new List<EnemyDef>(GameData.AllEnemies()).Find(e => e.Tier < 2 && "큰 " + e.Name == d.Name);
+                if (small == null || small.Color != d.Color || small.Look != d.Look || d.Hp <= small.Hp || d.Atk < small.Atk || d.Exp <= small.Exp || d.Size <= 1) badTier += d.Name + " ";
+            }
+            bool nearSmall = true;
+            foreach (int i in GameData.EncounterPool(MapKind.Field, 3, 4)) nearSmall &= GameData.Normal[i].Tier < 2;
+            foreach (int i in GameData.EncounterPool(MapKind.Field, 10, 11)) nearSmall &= GameData.Normal[i].Tier < 2;
+            Check("big jelly = stronger same color, far only", badTier == "" && nearSmall && GameData.Normal[GameData.EncounterPool(MapKind.Field, 20, 15)[4]].Tier == 2, badTier);
             var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
             foreach (var id in TalkIds)
             {

@@ -625,6 +625,20 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
 
+            // 2단 "큰 돌멩이 젤리" (딸의 노트): 필드에서 옆 칸 작은 젤리보다 크게 보이고, 전투에서도 크게
+            G.DebugMobs(true, true);
+            G.DebugTeleport(15, 19, "right");
+            G.DebugSpawnMob(16, 19, 3);
+            G.DebugSpawnMob(14, 18, 0);
+            yield return .4f;
+            Shot("cave_big_jelly_field");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return (Func<bool>)(() => G.CommandOpen);
+            Expect("big jelly battle", G.BattleEnemy != null && G.BattleEnemy.Tier == 2 && G.BattleEnemy.Name.StartsWith("큰 "));
+            Shot("cave_big_jelly_battle");
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+
             G.DebugTeleport(28, 9, "up");
             yield return .3f;
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);

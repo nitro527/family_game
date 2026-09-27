@@ -447,13 +447,13 @@ namespace GirlAdventure.View
                     body.transform.SetParent(fieldRoot, false);
                     body.sprite = JellySprite(def);
                     body.sortingOrder = 2;
-                    float s = MobHeight / Mathf.Max(.01f, body.sprite.bounds.size.y);
+                    float s = MobHeight / Mathf.Max(.01f, body.sprite.bounds.size.y) * def.Size;
                     body.transform.localScale = Vector3.one * s;
                     var sh = new GameObject("MobShadow").AddComponent<SpriteRenderer>();
                     sh.transform.SetParent(fieldRoot, false);
                     sh.sprite = shadowSR.sprite;
                     sh.color = new Color(0, 0, 0, .4f);
-                    sh.transform.localScale = new Vector3(.8f, .26f, 1);
+                    sh.transform.localScale = new Vector3(.8f, .26f, 1) * def.Size;
                     sh.sortingOrder = 1;
                     v = (body, sh, s);
                     mobViews[m.Id] = v;

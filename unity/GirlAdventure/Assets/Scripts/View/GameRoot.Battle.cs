@@ -24,6 +24,7 @@ namespace GirlAdventure.View
         readonly List<Fx> fx = new List<Fx>();
 
         BattleSystem battle;
+        public EnemyDef BattleEnemy => battle?.Def;   // 프로브용: 지금 싸우는 적
         string pose = "ready";
         float heroShake, heroLunge, enemyShake, enemyBlink, enemyAlpha = 1, battleT;
         bool enemyFading;
@@ -116,13 +117,13 @@ namespace GirlAdventure.View
             bgSR.sprite = Backdrop(def);
             bgm.Play(def.Boss ? "boss" : "battle");
             enemySR.sprite = JellySprite(def);
-            enemySR.transform.localScale = Vector3.one * (def.Boss ? 1.75f : 1.05f);
+            enemySR.transform.localScale = Vector3.one * (def.Boss ? 1.75f : 1.05f) * def.Size;
             enemyAlpha = 1; enemyFading = false; enemyBlink = enemyShake = heroShake = heroLunge = hurtFlash = camShake = 0;
             moveP = 1; fxFrozen = false;
             enemyAppear = def.Boss ? -.45f : -.65f;   // 음수 = 소용돌이가 걷힐 때(.35초)까지 숨어서 기다림
             if (def.Boss) camShake = .45f;      // 보스는 땅이 울리며 솟아오른다
             pose = "ready";
-            enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -18 : -160);
+            enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -18 : -160 + (def.Size - 1) * 1.05f * 203);   // 큰 젤리는 머리가 높아 이름표도 위로
             enemyLabel.text = def.Name;
             enemyHpShown = 1;
             RefreshHud();
@@ -377,7 +378,7 @@ namespace GirlAdventure.View
             bool boss = battle != null && battle.Def.Boss;
             float esx = enemyShake > 0 ? Random.Range(-1f, 1f) * enemyShake : 0;
             float squash = Mathf.Sin(battleT * 5.5f) * .05f;
-            float baseScale = boss ? 1.75f : 1.05f;
+            float baseScale = (boss ? 1.75f : 1.05f) * (battle != null ? battle.Def.Size : 1);
             var m = MoveOffset(moveP, moveName);
             var a = AppearOffset(enemyAppear, boss);
             enemySR.transform.position = Px(EnemyX, EnemyY) + new Vector3(esx + m.x, m.y + a.y, 0);
