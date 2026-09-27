@@ -289,6 +289,8 @@ namespace GirlAdventure.View
             Well(R, WorldMap.Well.x * T, WorldMap.Well.y * T);
             Sign(R, WorldMap.VillageSign.x * T, WorldMap.VillageSign.y * T);
             foreach (var (hx, hy, roof) in WorldMap.Houses) House(R, hx * T, hy * T, roof);
+            var inn = WorldMap.Houses[WorldMap.InnHouse];
+            InnSign(R, inn.x * T + 3 * T / 2f, inn.y * T + 48);
             if (t != null)
                 for (int y = 0; y < WorldMap.H; y++)
                     for (int x = 0; x < WorldMap.W; x++)
@@ -329,6 +331,16 @@ namespace GirlAdventure.View
                 R.Rect(wx, Y + 61, 24, 2, H("#5A3A24"));
                 R.Rect(wx + 2, Y + 54, 7, 5, H("#FFF6D0"));
             }
+        }
+
+        /// <summary>여관 간판: 문 위에 매단 나무판 + 노란 초승달 + 작은 별 (밤에 쉬는 곳).</summary>
+        static void InnSign(Raster R, float cx, float y)
+        {
+            R.Rect(cx - 19, y - 2, 38, 18, H("#4A2E18"));
+            R.Rect(cx - 17, y, 34, 14, H("#2E2A5A"));
+            R.Circle(cx - 5, y + 7, 5.5f, H("#FFE27A"));
+            R.Circle(cx - 2.5f, y + 5.5f, 4.5f, H("#2E2A5A"));
+            Star(R, cx + 8, y + 7, 3.5f, H("#FFF4C8"));
         }
 
         /// <summary>돌 우물: 둥근 돌벽 + 나무 지붕 + 도르래 줄. 물에 별빛이 비친다.</summary>

@@ -46,7 +46,7 @@ namespace GirlAdventure.EditorTools
         /// <summary>코드가 부르는 대사 id 목록 — 새 대사를 코드에서 쓰면 여기에도 추가.</summary>
         static readonly string[] TalkIds =
         {
-            "intro", "continue", "npc_chief", "npc_chief_after", "npc_kid", "npc_kid_after", "sign_village", "village_enter", "npc_guide", "npc_guide_after", "npc_tips", "npc_tips_after", "slot_new", "slot_load", "slot_overwrite", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
+            "intro", "continue", "npc_chief", "npc_chief_after", "npc_kid", "npc_kid_after", "sign_village", "village_enter", "inn_hello", "inn_nogold", "inn_morning", "inn_bye", "npc_guide", "npc_guide_after", "npc_tips", "npc_tips_after", "slot_new", "slot_load", "slot_overwrite", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
             "item_hp", "item_mp", "item_noneed", "item_none", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
@@ -294,6 +294,19 @@ namespace GirlAdventure.EditorTools
             var s2 = p.ToSave(); s2.Chapter = 2;
             var q2 = PlayerState.FromSave(s2);
             var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":6,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
+            // 여관: 10G 내고 HP·MP 가득, 골드가 모자라면 아무 일 없음
+            var guest = PlayerState.NewGame("g");
+            guest.GainGold(Inn.Price + 3);
+            guest.Hp = 1; guest.Mp = 0;
+            bool stayed = Inn.Stay(guest);
+            var poor = PlayerState.NewGame("p");
+            poor.GainGold(Inn.Price - 1);
+            poor.Hp = 1;
+            bool poorStayed = Inn.Stay(poor);
+            NpcDef keeper = null;
+            foreach (var n in Npcs.On(MapKind.Village)) if (n.Inn) keeper = n;
+            Check("inn stay rules", stayed && guest.Gold == 3 && guest.Hp == guest.MaxHp && guest.Mp == guest.MaxMp && !poorStayed && poor.Gold == Inn.Price - 1 && poor.Hp == 1
+                  && keeper != null && vr[keeper.X, keeper.Y + 1], $"gold={guest.Gold} keeper={keeper?.Id}");
             Check("save keeps village position", q.InVillage && q.X == p.X && q.Y == p.Y && !q2.InVillage && !old.InVillage && (old.X, old.Y) == (3, 4),
                   $"q={q.InVillage}({q.X},{q.Y}) ch2={q2.InVillage} old={old.InVillage}");
             var tiles = FieldTiles.Load();

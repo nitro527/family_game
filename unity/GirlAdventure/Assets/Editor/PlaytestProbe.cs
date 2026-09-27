@@ -456,6 +456,20 @@ namespace GirlAdventure.EditorTools
             Shot("village_chief_talk");
             Expect("village chief talks", G.MessageText.Contains("촌장 젤리"));
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            // 여관 (백로그 39): 다친 채로 묵으면 10G 내고 밤 → 아침에 가득
+            G.P.Hp = 3;
+            int innGold = G.P.Gold;
+            G.DebugTeleport(25, 8, "left");            // 옆에서 말을 건다 (아래에서 걸면 주인공 머리가 주인을 가림)
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Shot("inn_ask");
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.InnNight);
+            yield return .6f;
+            Shot("inn_night");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("inn heals for 10G", G.P.Hp == G.P.MaxHp && G.P.Gold == innGold - Inn.Price);
             G.DebugTeleport(WorldMap.VillageStart.x, WorldMap.VillageStart.y, "down");
             yield return .3f;
             Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);

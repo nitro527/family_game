@@ -28,6 +28,7 @@ namespace GirlAdventure.Sim
                                                     Well = (18, 10), VillageSign = (20, 18);
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
+        public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
         const string Blocking = "TwCFSHD#rMNhux";
 
         public readonly MapKind Kind;

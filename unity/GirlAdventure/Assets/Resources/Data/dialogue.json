@@ -14,6 +14,10 @@
     { "Id": "npc_chief_after", "Lines": [ { "Text": "촌장 젤리: 별빛이 돌아왔구나! {name:은/는} 우리 마을의 영웅이란다." } ] },
     { "Id": "npc_kid", "Lines": [ { "Text": "꼬마 젤리: 우물 속을 들여다보면 별이 반짝반짝해! 진짜야!" } ] },
     { "Id": "npc_kid_after", "Lines": [ { "Text": "꼬마 젤리: 나도 크면 {name}처럼 멋진 마법사가 될 거야!" } ] },
+    { "Id": "inn_hello", "Lines": [ { "Text": "여관 주인 젤리: 어서 오세요, 별빛 여관이에요! 하룻밤 {price}G 에 푹 쉬어 가실래요?" } ] },
+    { "Id": "inn_nogold", "Lines": [ { "Text": "여관 주인 젤리: 어머, 골드가 조금 모자라네요. (가진 골드 {gold}G)", "Face": "surprised" } ] },
+    { "Id": "inn_morning", "Lines": [ { "Text": "짹짹, 아침이다! 푹 자서 HP와 MP가 모두 회복되었다! 모험도 저장했어요.", "Face": "laugh" } ] },
+    { "Id": "inn_bye", "Lines": [ { "Text": "여관 주인 젤리: 또 놀러 오세요~" } ] },
     { "Id": "sign_village", "Lines": [
       { "Text": "표지판: \"여기는 별빛 마을. 아래로 나가면 초원이에요.\"", "Face": "smile" } ] },
     { "Id": "village_enter", "Lines": [

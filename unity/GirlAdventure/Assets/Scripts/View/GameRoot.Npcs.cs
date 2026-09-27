@@ -67,6 +67,7 @@ namespace GirlAdventure.View
             npcHopT = .4f;
             sfx.Play("select");
             faceOverride = JellySprite(NpcLook(n));
+            if (n.Inn) { yield return InnTalk(); faceOverride = null; talkingNpc = null; HideMessage(); busy = false; yield break; }
             yield return Talk(Npcs.TalkId(n, P), ("name", P.Name));
             faceOverride = null;
             talkingNpc = null;
@@ -74,7 +75,32 @@ namespace GirlAdventure.View
             busy = false;
         }
 
+        /// <summary>여관: 묵을까? → 골드 내고 밤(화면 어둡게 + 자장가) → 아침에 회복·저장.</summary>
+        IEnumerator InnTalk()
+        {
+            yield return Talk("inn_hello", ("price", Inn.Price));
+            choiceIndex = 0;                            // 기본 = 묵는다
+            yield return Choose($"묵는다 ({Inn.Price}G)", "그만두기");
+            if (choicePicked != 0) { yield return Talk("inn_bye"); yield break; }
+            if (!Inn.Stay(P)) { yield return Talk("inn_nogold", ("gold", P.Gold)); yield break; }
+            HideMessage();
+            RefreshHud();
+            yield return Fade(0, .92f, .8f);
+            sfx.Play("lullaby");
+            innNight = true;
+            yield return new WaitForSeconds(2.4f);
+            innNight = false;
+            yield return Fade(.92f, 0, .8f);
+            HideSwirl();
+            sfx.Play("heal");
+            AutoSave();
+            yield return Talk("inn_morning");
+        }
+
+        bool innNight;
+
         // ---- 프로브용
+        public bool InnNight => innNight;
         public int NpcCount => npcViews.Count;
         public bool TalkingToNpc => talkingNpc != null;
     }

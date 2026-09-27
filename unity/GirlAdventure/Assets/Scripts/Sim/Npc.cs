@@ -15,6 +15,7 @@ namespace GirlAdventure.Sim
         public int X, Y;
         public string Color, Dark, Look;    // 겉모습 (EnemyDef.Looks 중 하나)
         public string Talk, TalkAfter;
+        public bool Inn;                    // 여관 주인: 말 걸면 묵을지 묻는다 (Sim.Inn)
 
         public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : MapKind.Field;
 

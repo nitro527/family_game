@@ -24,6 +24,7 @@ namespace GirlAdventure.View
             Add("hurt", Wave.Saw, .07f, .25f, 140, 100, 70);
             Add("star", Wave.Triangle, .07f, .35f, 1046, 1318, 1568, 2093, 1568, 2093, 2637);
             Add("heal", Wave.Triangle, .09f, .30f, 523, 659, 784, 1046);
+            Add("lullaby", Wave.Triangle, .26f, .22f, 392, 330, 392, 330, 294, 330, 262, 0, 196);   // 여관 자장가 (솔미솔미 레미도)
             Add("win", Wave.Square, .11f, .22f, 523, 523, 523, 698, 0, 880, 1046);
             Add("lvup", Wave.Triangle, .10f, .35f, 659, 784, 1046, 1318, 1568);
             Add("miss", Wave.Triangle, .09f, .25f, 300, 200);
