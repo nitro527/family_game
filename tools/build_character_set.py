@@ -142,7 +142,7 @@ def overview(who):
 
 
 def family(out):
-    f = ImageFont.truetype(FONT, 34)
+    f = ImageFont.truetype(FB, 34)
     a = Image.open(os.path.join(GEN, 'family', 'family_title.png')).convert('RGB')
     b = Image.open(os.path.join(GEN, 'family', 'family_party.png')).convert('RGB')
     h = 600
