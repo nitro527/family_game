@@ -476,7 +476,10 @@ namespace GirlAdventure.View
             mobs.Remove(m);
             SyncMobViews();
             moveT = -1;
-            StartCoroutine(BattleRoutine(def));
+            // 구역 무리 확률로 동료가 따라붙는다 (부딪힌 젤리가 맨 앞). 시작 근처는 늘 한 마리
+            var defs = NoGroups ? new List<EnemyDef> { def } : GameData.RollEncounter(map.Kind, P.X, P.Y, rng);
+            defs[0] = def;
+            StartCoroutine(BattleRoutine(defs));
         }
 
         /// <summary>Sim 의 몬스터 목록과 화면의 젤리 스프라이트를 맞추고, 통통 튀며 걷게 한다.</summary>
