@@ -32,7 +32,11 @@ def copy_image(path):
     p = k32.GlobalLock(h)
     ctypes.memmove(p, data, len(data))
     k32.GlobalUnlock(h)
-    if not u32.OpenClipboard(None):
+    for _ in range(20):                 # another app may hold the clipboard for a moment
+        if u32.OpenClipboard(None):
+            break
+        k32.Sleep(250)
+    else:
         raise SystemExit('clipboard busy')
     try:
         u32.EmptyClipboard()
