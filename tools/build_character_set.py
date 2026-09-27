@@ -36,7 +36,7 @@ SPEC = {
     'dad': dict(title='아빠 · 기사',
                 expr=['smile', 'laugh', 'serious', 'surprised', 'cry', 'thumbsup'],
                 battle=(['guard', 'attack', 'damage', 'victory'], [2, 2]),
-                walk=(['side1', 'side2', 'side3', 'front', 'back'], [3, 2])),
+                walk=(['side1', 'side2', 'side3', 'side4', 'front', 'back'], [4, 2])),
 }
 
 
