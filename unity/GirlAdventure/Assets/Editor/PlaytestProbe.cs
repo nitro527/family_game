@@ -535,8 +535,10 @@ namespace GirlAdventure.EditorTools
             Expect("enemy hp bar shown", G.EnemyHpVisible && G.EnemyHpShown > .99f);
             ExpectBgm("battle");
             foreach (var x in Choose(0)) yield return x;    // 리본 파이어
-            yield return .65f;
+            yield return (Func<bool>)(() => G.SpellFx == "fire");
+            yield return .22f;
             Shot("battle_fireball");
+            Expect("fireball fx plays", G.SpellFx == "fire" || G.FxCount > 10);
             yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
             if (G.CommandOpen) { Shot("enemy_hp_after_hit"); Log($"ENEMY HP shown={G.EnemyHpShown:F2}"); }
             yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
@@ -550,8 +552,10 @@ namespace GirlAdventure.EditorTools
                 Keys.Press(KeyCode.Return);                     // 별빛 폭풍 (목록 맨 위)
                 yield return 1.0f;
                 Shot("battle_cutin");
-                yield return 1.3f;
+                yield return (Func<bool>)(() => G.SpellFx == "star");
+                yield return .4f;
                 Shot("battle_starstorm");
+                Expect("star storm meteors", G.SpellFx == "star" && G.FxCount > 30);
             }
             foreach (var x in FightUntilOver(false)) yield return x;
             Shot("after_battle_field");
@@ -727,8 +731,10 @@ namespace GirlAdventure.EditorTools
             Keys.Press(KeyCode.DownArrow); yield return .15f;
             Shot("battle_heal_select");
             Keys.Press(KeyCode.Return);
-            yield return .9f;
+            yield return (Func<bool>)(() => G.SpellFx == "heal");
+            yield return .45f;
             Shot("battle_heal");
+            Expect("heal pillar plays", G.SpellFx == "heal" && G.FxCount > 5);
             Log($"HEAL hp {healHp0}->{G.P.Hp} mp {healMp0}->{G.P.Mp}");
             Expect("heal spell restores hp for mp", G.P.Lv >= 4 && G.P.Hp > healHp0 && G.P.Mp == healMp0 - GameData.Skill(Cmd.Heal).Mp);
             G.DebugSetHp(G.P.MaxHp);                  // 힐 확인용으로 깎은 HP 는 되돌린다 (보스전 결과가 운에 달리지 않게)

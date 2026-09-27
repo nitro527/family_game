@@ -278,9 +278,8 @@ namespace GirlAdventure.View
                     RefreshHud();
                     yield return Talk("fire_cast", ("skill", GameData.Skill(Cmd.Heal).Name));
                     sfx.Play("heal");
-                    for (int i = 0; i < 22; i++)                // 발밑에서 반짝이는 빛 알갱이가 솟아오른다
-                        Spawn(starSprite, Px(HeroX + Random.Range(-60, 60), HeroY + Random.Range(-40, 30)), new Vector3(Random.Range(-.15f, .15f), Random.Range(1.8f, 3.2f)),
-                              1.0f + Random.Range(0, .5f), .3f, new Color(1f, .95f, .55f));
+                    pose = "victory";                           // 두 팔 벌려 빛을 받는다 (불꽃 지팡이 자세 말고)
+                    yield return HealPillar();
                     Pop("+" + o.Heal, HeroX, 200, new Color32(125, 255, 154, 255));
                     yield return Talk("heal_done", ("heal", o.Heal));
                     break;
@@ -756,8 +755,13 @@ namespace GirlAdventure.View
             Pop("LEVEL UP!", HeroX + 20, 205, UIKit.Gold, 50);
         }
 
+        /// <summary>프로브용: 지금 재생 중인 주문 이펙트 ("fire" / "star" / "heal", 없으면 null).</summary>
+        public string SpellFx { get; private set; }
+        public int FxCount => fx.Count;
+
         IEnumerator Fireball(int target)
         {
+            SpellFx = "fire";
             Vector3 from = Px(300, 250), to = Px(FoeX(Mathf.Max(0, target)) - 10, EnemyY - 50);
             var core = NewSR("Fireball", 6);
             core.sprite = glowSprite;
@@ -770,17 +774,63 @@ namespace GirlAdventure.View
                 core.transform.position = p;
                 Spawn(glowSprite, p, new Vector3(Random.Range(-.5f, .5f), Random.Range(-.3f, .6f)), .3f, Random.Range(.5f, .9f),
                       new Color(1f, Random.Range(.3f, .6f), .1f, .9f));
+                // 불꽃 꼬리: 뒤로 흩날리는 불똥(빙글빙글 도는 작은 별)과 꺼져 가는 연기
+                var back = (from - to).normalized;
+                for (int j = 0; j < 2; j++)
+                    Spawn(starSprite, p + (Vector3)Random.insideUnitCircle * .2f, back * Random.Range(1.5f, 3f) + new Vector3(0, Random.Range(-.4f, 1.2f)),
+                          Random.Range(.3f, .5f), Random.Range(.16f, .28f), Random.value < .5f ? new Color(1f, .95f, .5f) : new Color(1f, .55f, .2f), Random.Range(-600, 600));
+                if (Random.value < .35f)
+                    Spawn(glowSprite, p, back * .6f + new Vector3(0, .8f), .5f, Random.Range(.3f, .5f), new Color(.45f, .3f, .3f, .35f));
+                core.transform.localScale = Vector3.one * (1.1f + Mathf.Sin(t * 60) * .12f);   // 일렁이는 불덩이
                 yield return null;
             }
             Destroy(core.gameObject);
             for (int i = 0; i < 16; i++)
                 Spawn(glowSprite, to, Random.insideUnitCircle * 4, .4f, .6f, new Color(1f, .5f, .15f, .9f));
+            for (int i = 0; i < 12; i++)                   // 사방으로 튀는 불똥
+            {
+                float a = i / 12f * Mathf.PI * 2;
+                Spawn(starSprite, to, new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3f, 5f) + new Vector3(0, 1f), .45f, .3f, new Color(1f, .8f, .3f), 480);
+            }
+            Spawn(glowSprite, to, Vector3.zero, .25f, 2.6f, new Color(1f, .9f, .6f, .8f));   // 번쩍
+            SpellFx = null;
+        }
+
+        /// <summary>반짝 힐: 하늘에서 빛기둥이 내려와 주인공을 감싸고, 빛 알갱이가 머리 위에서 내려앉는다 (대화창에 안 가림).</summary>
+        IEnumerator HealPillar()
+        {
+            SpellFx = "heal";
+            var top = Px(HeroX, 150);                              // HUD 창 아래에서부터 내려앉게
+            var mid = Px(HeroX, HeroY - HeroHeightPx * .5f);          // 가장 밝은 곳이 몸 가운데
+            var pillar = Spawn(glowSprite, mid, Vector3.zero, 1.5f, 1, new Color(1f, .97f, .7f, .55f));
+            var core = Spawn(glowSprite, mid, Vector3.zero, 1.5f, 1, new Color(1f, 1f, 1f, .45f));
+            for (float t = 0; t < .9f; t += Time.deltaTime)
+            {
+                float k = Mathf.Clamp01(t / .3f);                       // 위에서 아래로 쭉 내려오며 넓어진다
+                pillar.transform.localScale = new Vector3(4.2f + Mathf.Sin(t * 20) * .2f, 12f * k, 1);
+                core.transform.localScale = new Vector3(1.7f, 12f * k, 1);
+                if (Random.value < .7f)
+                    Spawn(starSprite, top + new Vector3(Random.Range(-1.3f, 1.3f), -Random.Range(0, 1.5f)), new Vector3(Random.Range(-.1f, .1f), -Random.Range(2.5f, 4f)),
+                          .9f, Random.Range(.2f, .34f), Random.value < .6f ? new Color(1f, .95f, .55f) : new Color(.7f, 1f, .8f), Random.Range(-200, 200));
+                yield return null;
+            }
+            var chest = Px(HeroX, HeroY - HeroHeightPx * .55f);
+            for (int i = 0; i < 14; i++)                                // 몸에서 반짝 퍼지는 빛
+            {
+                float a = i / 14f * Mathf.PI * 2;
+                Spawn(starSprite, chest, new Vector3(Mathf.Cos(a), Mathf.Sin(a) * .7f) * 2.4f, .6f, .3f, new Color(.75f, 1f, .8f), 300);
+            }
+            yield return new WaitForSeconds(.25f);
+            SpellFx = null;
         }
 
         IEnumerator StarStorm()
         {
+            SpellFx = "star";
             float x0 = FoeX(0) - 130, x1 = FoeX(battle.Foes.Count - 1) + 130;     // 무리면 모두의 머리 위로
-            int count = GroupBattle ? 70 : 46;
+            for (int m = 0; m < (GroupBattle ? 6 : 4); m++)
+                StartCoroutine(Meteor(Random.Range(x0 + 60, x1 - 60), m * .14f));
+            int count = GroupBattle ? 50 : 32;
             for (int i = 0; i < count; i++)
             {
                 var col = Random.value < .5f ? new Color(1f, .85f, .3f) : new Color(1f, .62f, .82f);
@@ -788,6 +838,37 @@ namespace GirlAdventure.View
                       1.2f, Random.Range(.4f, .75f), col, Random.Range(-360, 360));
             }
             yield return new WaitForSeconds(1.1f);
+            SpellFx = null;
+        }
+
+        /// <summary>별똥별 하나: 오른쪽 위 하늘에서 긴 빛 꼬리를 끌며 적 쪽으로 비스듬히 떨어져 반짝 터진다.</summary>
+        IEnumerator Meteor(float targetX, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            Vector3 to = Px(targetX, EnemyY - Random.Range(20, 90)), from = to + new Vector3(Random.Range(2.5f, 4f), 7.5f, 0);
+            var head = NewSR("Meteor", 6);
+            head.sprite = starSprite;
+            var col = Random.value < .5f ? new Color(1f, .9f, .45f) : new Color(1f, .7f, .9f);
+            head.color = col;
+            const float dur = .42f;
+            for (float t = 0; t < dur; t += Time.deltaTime)
+            {
+                float k = t / dur;
+                var p = Vector3.Lerp(from, to, k * k);
+                head.transform.position = p;
+                head.transform.localScale = Vector3.one * .7f;
+                head.transform.Rotate(0, 0, 900 * Time.deltaTime);
+                Spawn(glowSprite, p, Vector3.zero, .35f, .55f, new Color(col.r, col.g, col.b, .7f));           // 빛 꼬리
+                Spawn(starSprite, p, new Vector3(Random.Range(-.4f, .4f), Random.Range(-.2f, .4f)), .4f, .16f, Color.white, 300);
+                yield return null;
+            }
+            Destroy(head.gameObject);
+            Spawn(glowSprite, to, Vector3.zero, .3f, 1.8f, new Color(1f, 1f, .85f, .85f));
+            for (int i = 0; i < 8; i++)
+            {
+                float a = i / 8f * Mathf.PI * 2;
+                Spawn(starSprite, to, new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 3f, .4f, .26f, col, 360);
+            }
         }
     }
 }
