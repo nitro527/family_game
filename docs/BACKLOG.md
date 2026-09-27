@@ -87,6 +87,7 @@ B. **딸의 아이디어 노트 (2026-09-27, docs/ideas/daughter_note_01.md)** �
 49. [ ] **아들 용사 합류 c (View)**: 합류 컷신(대사, 표정 얼굴), 필드에서 딸 뒤를 따라 걷기(대열), 전투 화면 2인 배치·명령창 차례대로·HP/MP 2줄 HUD. 프로브로 챕터 3 시작 확인
 50. [ ] **챕터 3 시작**: 딸 노트의 숲 지역부터 (B-4). 엄마·아빠 합류 시점은 나중에 사용자와 정함 🙋
 ## 사용자 확인 필요 🙋
+- 🙋 (2026-09-27 10:07) 자동 개선 중에 다른 세션이 `assets/monsters/`, `docs/monsters/`, `tools/monster_catalog.py` 를 만들고 있었음 → 자동 회차는 커밋하지 않고 그대로 둠(추적 안 됨). 이 그림들로 게임 속 광물·큰 젤리 겉모습을 바꿀지 정해 주세요
 - ✅ (2026-09-27 완료) 엄마 현자·아빠 기사 에셋 세트: main/expressions/battle/walk/portrait/card (assets/characters/gen/mom, dad). 다음: 게임 파티 합류(M5) 때 poses 분할·투명화(tools/postprocess.py)해서 Unity로
 - 🙋 카드 게임 규칙 정하기 (BACKLOG 10): 덱 몇 장, 코스트(MP?) 방식, 한 턴에 몇 장, 딸 카드 2장 외 어떤 카드
 - 🙋 픽셀 폰트(갈무리, OFL 무료) 다운로드해서 DQ 느낌 강화 → 다운로드 허락 필요
