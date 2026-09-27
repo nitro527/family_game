@@ -111,7 +111,6 @@ B. **딸의 아이디어 노트 (2026-09-27, docs/ideas/daughter_note_01.md)** �
   1. boy·mom·dad 일반 카드 그림 새로 (지금 <who>_card.png 는 필살기 장면 → <who>_card_ultimate.png 로 이름 바꾸고, 서진처럼 일반 카드 그림 추가, card_mockup SETS 갱신)
   2. 아빠 걷기 시트 옆모습 4프레임으로 다시
   3. 파티 단체 그림 family_party.png 다시 (서진 드레스 별무늬 제거, 공식 디자인 기준)
-- 🙋 (2026-09-27 10:07) 자동 개선 중에 다른 세션이 `assets/monsters/`, `docs/monsters/`, `tools/monster_catalog.py` 를 만들고 있었음 → 자동 회차는 커밋하지 않고 그대로 둠(추적 안 됨). 이 그림들로 게임 속 광물·큰 젤리 겉모습을 바꿀지 정해 주세요
 - ✅ (2026-09-27 완료) 엄마 현자·아빠 기사 에셋 세트: main/expressions/battle/walk/portrait/card (assets/characters/gen/mom, dad). 다음: 게임 파티 합류(M5) 때 poses 분할·투명화(tools/postprocess.py)해서 Unity로
 - 🙋 카드 게임 규칙 정하기 (BACKLOG 10): 덱 몇 장, 코스트(MP?) 방식, 한 턴에 몇 장, 딸 카드 2장 외 어떤 카드
 - 🙋 픽셀 폰트(갈무리, OFL 무료) 다운로드해서 DQ 느낌 강화 → 다운로드 허락 필요
