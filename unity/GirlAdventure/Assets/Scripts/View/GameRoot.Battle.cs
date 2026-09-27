@@ -16,7 +16,17 @@ namespace GirlAdventure.View
         const float HeroHeightPx = 275, HeroX = 215, HeroY = 428, EnemyX = 560, EnemyY = 345;
 
         Transform battleRoot;
-        SpriteRenderer bgSR, enemySR, heroSR;
+        SpriteRenderer bgSR, heroSR;
+        // 적 1~3마리 (몬스터 무리). 한 마리 전투는 0번 칸만 쓴다
+        readonly SpriteRenderer[] foeSR = new SpriteRenderer[BattleSystem.MaxFoes];
+        SpriteRenderer enemySR => foeSR[0];
+        readonly float[] foeShake = new float[BattleSystem.MaxFoes], foeBlink = new float[BattleSystem.MaxFoes], foeAlpha = { 1, 1, 1 };
+        readonly bool[] foeFading = new bool[BattleSystem.MaxFoes];
+        int movingFoe;                      // 지금 공격 모션 중인 적
+        int targetMark = -1;                // 대상 고르는 중: ▼ 표시할 적
+        bool pickingTarget;
+        List<int> targetOrder = new List<int>();
+        int pickedTarget = -1;
         Sprite bgNormal, bgBoss, bgCave, bgCaveBoss, glowSprite, starSprite;
         readonly Dictionary<EnemyDef, Sprite> jellySprites = new Dictionary<EnemyDef, Sprite>();
         readonly Dictionary<string, Sprite> backdrops = new Dictionary<string, Sprite>();
@@ -26,8 +36,7 @@ namespace GirlAdventure.View
         BattleSystem battle;
         public EnemyDef BattleEnemy => battle?.Def;   // 프로브용: 지금 싸우는 적
         string pose = "ready";
-        float heroShake, heroLunge, enemyShake, enemyBlink, enemyAlpha = 1, battleT;
-        bool enemyFading;
+        float heroShake, heroLunge, battleT;
         // 연출 상태: 적 등장(0→1), 적 공격 모션(0→1), 피격 빨간 번쩍임, 카메라 흔들림
         float enemyAppear = 1, moveP = 1, moveDur = .6f, hurtFlash, camShake;
         string moveName = "tackle";
@@ -54,7 +63,7 @@ namespace GirlAdventure.View
             bgCaveBoss = Art.FromTexture(Painter.CaveBattleBackground(true), new Vector2(.5f, .5f), 48);
             bgSR = NewSR("Background", 0);
             bgSR.transform.position = Px(480, 270);
-            enemySR = NewSR("Enemy", 2);
+            for (int i = 0; i < foeSR.Length; i++) foeSR[i] = NewSR("Enemy" + i, 2);
             heroSR = NewSR("Heroine", 3);
             foreach (var p in new[] { "ready", "cast", "damage", "victory" })
                 poses[p] = Art.Get("battle_" + p, HeroHeightPx / 48f);
@@ -119,11 +128,42 @@ namespace GirlAdventure.View
         float HeadUnits(EnemyDef def) => UsesArt(def) ? ArtUnits * (1 - ArtFeet) - .2f : JellyHeadUnits;   // -.2: 스크린샷으로 맞춘 이름표 간격
 
         // ------------------------------------------------------------------ main loop
-        IEnumerator BattleRoutine(EnemyDef def)
+        /// <summary>적 칸 i 의 무대 x (한 마리: 가운데 오른쪽, 두 마리·세 마리: 나란히).</summary>
+        float FoeX(int i)
+        {
+            int n = battle != null ? battle.Foes.Count : 1;
+            return n <= 1 ? EnemyX : n == 2 ? (i == 0 ? 470 : 690) : 430 + i * 165;
+        }
+
+        /// <summary>적 칸 i 의 크기 (보스 1.75, 큰 젤리 ×1.3, 무리일수록 조금 작게).</summary>
+        float FoeScale(int i)
+        {
+            if (battle == null) return 1.05f;
+            var d = battle.Foes[i].Def;
+            int n = battle.Foes.Count;
+            return (d.Boss ? 1.75f : 1.05f) * d.Size * (n >= 3 ? .78f : n == 2 ? .9f : 1f);
+        }
+
+        /// <summary>같은 젤리가 여럿이면 "파랑 젤리 A/B/C" (DQ 식).</summary>
+        string FoeName(int i)
+        {
+            string name = battle.Foes[i].Def.Name;
+            int same = 0, idx = 0;
+            for (int j = 0; j < battle.Foes.Count; j++)
+                if (battle.Foes[j].Def.Name == name) { if (j < i) idx++; same++; }
+            return same > 1 ? $"{name} {(char)('A' + idx)}" : name;
+        }
+
+        bool GroupBattle => battle != null && battle.Foes.Count > 1;
+
+        IEnumerator BattleRoutine(EnemyDef def) => BattleRoutine(new List<EnemyDef> { def });
+
+        IEnumerator BattleRoutine(List<EnemyDef> defs)
         {
             busy = true;
             Current = Mode.Battle;
-            battle = new BattleSystem(P, def, rng);
+            var def = defs[0];
+            battle = new BattleSystem(P, defs, rng);
             sfx.Play("encounter");
             yield return SwirlIn(def.Boss);
 
@@ -133,21 +173,31 @@ namespace GirlAdventure.View
             cam.transform.position = Stage + new Vector3(0, 0, -10);
             bgSR.sprite = Backdrop(def);
             bgm.Play(def.Boss ? "boss" : "battle");
-            enemySR.sprite = JellySprite(def);
-            enemySR.transform.localScale = Vector3.one * (def.Boss ? 1.75f : 1.05f) * def.Size;
-            enemyAlpha = 1; enemyFading = false; enemyBlink = enemyShake = heroShake = heroLunge = hurtFlash = camShake = 0;
+            for (int i = 0; i < foeSR.Length; i++)
+            {
+                bool on = i < defs.Count;
+                foeSR[i].gameObject.SetActive(on);
+                foeAlpha[i] = 1; foeFading[i] = false; foeShake[i] = foeBlink[i] = 0;
+                if (!on) continue;
+                foeSR[i].sprite = JellySprite(defs[i]);
+                foeSR[i].transform.localScale = Vector3.one * FoeScale(i);
+            }
+            heroShake = heroLunge = hurtFlash = camShake = 0;
+            movingFoe = 0; targetMark = -1; pickingTarget = false;
             moveP = 1; fxFrozen = false;
             enemyAppear = def.Boss ? -.45f : -.65f;   // 음수 = 소용돌이가 걷힐 때(.35초)까지 숨어서 기다림
             if (def.Boss) camShake = .45f;      // 보스는 땅이 울리며 솟아오른다
             pose = "ready";
             // 큰 젤리·도감 그림은 머리가 높아 이름표도 위로 (코드 젤리 머리 높이 기준, 1 단위 ≈ 88.6px)
             enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -18 : -160 + (HeadUnits(def) * def.Size - JellyHeadUnits) * 1.05f * 88.6f);
-            enemyLabel.text = def.Name;
+            enemyLabel.text = GroupBattle ? "" : def.Name;         // 무리는 적마다 작은 이름표 (GroupTags)
+            for (int i = 0; i < groupTags.Length; i++) { groupTags[i].text = GroupBattle && i < defs.Count ? FoeName(i) : ""; groupShown[i] = 1; }
             enemyHpShown = 1;
             RefreshHud();
             StartCoroutine(SwirlOut());
 
-            yield return Talk("appear", ("enemy", def.Name));
+            if (GroupBattle) yield return Talk("appear_group", ("enemy", def.Name), ("count", defs.Count));
+            else yield return Talk("appear", ("enemy", def.Name));
             while (true)
             {
                 yield return AskCommand();
@@ -164,10 +214,26 @@ namespace GirlAdventure.View
                     if (pickedItem == null) continue;       // 그만두기 → 다시 명령 고르기
                     item = pickedItem;
                 }
-                var o = battle.Act(chosenCmd.Value, item);
+                int target = -1;
+                if (chosenCmd == Cmd.Fire && battle.AliveCount > 1)
+                {
+                    yield return PickTarget();
+                    if (pickedTarget < 0) continue;         // 그만두기 → 다시 명령 고르기
+                    target = pickedTarget;
+                }
+                var o = battle.Act(chosenCmd.Value, item, target);
                 yield return PlayerTurn(o);
                 if (o.Escaped) { yield return EndBattle(); yield break; }
                 if (battle.EnemyDown) { yield return Victory(); yield break; }
+                // 무리 중 쓰러진 적은 사라지고 이름표도 지운다
+                for (int i = 0; i < battle.Foes.Count; i++)
+                    if (battle.Foes[i].Down && !foeFading[i])
+                    {
+                        foeFading[i] = true;
+                        groupTags[i].text = "";
+                        sfx.Play("win");
+                        yield return Talk("win", ("enemy", FoeName(i)));
+                    }
                 if (o.Failed) continue;
                 yield return EnemyTurn();
                 if (battle.PlayerDown) { yield return Defeat(); yield break; }
@@ -183,16 +249,16 @@ namespace GirlAdventure.View
                     pose = "cast"; heroLunge = 1;
                     yield return Talk("fire_cast", ("skill", GameData.Skill(Cmd.Fire).Name));
                     sfx.Play("fire");
-                    yield return Fireball();
+                    yield return Fireball(o.Target);
                     if (o.Missed)
                     {
                         pose = "ready"; sfx.Play("miss");
                         yield return Talk("fire_miss");
                         break;
                     }
-                    HitEnemy(o.Damage, false);
+                    HitFoe(o.Target, o.Damage, false);
                     RefreshHud();
-                    yield return Talk("fire_hit", ("enemy", def.Name), ("dmg", o.Damage));
+                    yield return Talk("fire_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
                     break;
                 case Cmd.Star:
                     pose = "cast";
@@ -201,8 +267,10 @@ namespace GirlAdventure.View
                     yield return CutinRoutine();
                     sfx.Play("star");
                     yield return StarStorm();
-                    HitEnemy(o.Damage, true);
-                    yield return Talk("star_hit", ("enemy", def.Name), ("dmg", o.Damage));
+                    for (int i = 0; i < battle.Foes.Count; i++)
+                        if (o.Damages != null && o.Damages[i] > 0) HitFoe(i, o.Damages[i], true);
+                    if (GroupBattle) yield return Talk("star_hit_all");
+                    else yield return Talk("star_hit", ("enemy", def.Name), ("dmg", o.Damage));
                     break;
                 case Cmd.Heal:
                     pose = "cast";
@@ -274,25 +342,123 @@ namespace GirlAdventure.View
             enemyTagGroup.alpha = Mathf.MoveTowards(enemyTagGroup.alpha, hide ? 0 : 1, Time.deltaTime * 6);
         }
 
-        public bool EnemyHpVisible => enemyHpBar != null && enemyHpBar.transform.parent.gameObject.activeSelf;
-        public float EnemyHpShown => enemyHpShown;
+        // ---- 무리 전투: 적마다 작은 이름표 + 체력 막대 (머리 위를 따라다님), 대상 고를 때 ▼
+        readonly Text[] groupTags = new Text[BattleSystem.MaxFoes];
+        readonly Image[] groupBars = new Image[BattleSystem.MaxFoes];
+        readonly CanvasGroup[] groupGroups = new CanvasGroup[BattleSystem.MaxFoes];
+        readonly float[] groupShown = { 1, 1, 1 };
+        Text targetArrow;
 
-        void HitEnemy(int dmg, bool big)
+        void BuildGroupTags()
         {
-            sfx.Play("hit");
-            enemyShake = big ? .55f : .3f;
-            enemyBlink = .4f;
-            Pop(dmg.ToString(), 560, battle.Def.Boss ? 170 : 230, big ? UIKit.Gold : Color.white, big ? 56 : 44);
+            for (int i = 0; i < groupTags.Length; i++)
+            {
+                groupTags[i] = UIKit.Label(ui, "FoeTag" + i, "", 0, 0, 200, 30, 20, TextAnchor.MiddleCenter, Color.white, true);
+                groupBars[i] = UIKit.Bar(groupTags[i].transform, "Hp", 30, 30, 140, 8, new Color32(86, 212, 106, 255));
+                groupGroups[i] = groupTags[i].gameObject.AddComponent<CanvasGroup>();
+                groupGroups[i].blocksRaycasts = false;
+            }
+            targetArrow = UIKit.Label(ui, "TargetArrow", "▼", 0, 0, 60, 40, 34, TextAnchor.MiddleCenter, UIKit.Gold, true);
+            targetArrow.gameObject.SetActive(false);
         }
 
+        /// <summary>적 i 의 머리 위 화면 위치 (캔버스 좌표계의 스크린 px).</summary>
+        Vector3 FoeHeadScreen(int i)
+        {
+            var d = battle.Foes[i].Def;
+            var head = Px(FoeX(i), EnemyY) + new Vector3(0, HeadUnits(d) * FoeScale(i), 0);
+            return cam.WorldToScreenPoint(head);
+        }
+
+        void TickGroupTags()
+        {
+            bool on = Current == Mode.Battle && GroupBattle && battleRoot.gameObject.activeSelf;
+            float sf = ui.GetComponent<Canvas>().scaleFactor;
+            for (int i = 0; i < groupTags.Length; i++)
+            {
+                bool show = on && i < battle.Foes.Count && groupTags[i].text != "";
+                if (groupTags[i].gameObject.activeSelf != show) groupTags[i].gameObject.SetActive(show);
+                if (!show) continue;
+                var f = battle.Foes[i];
+                var s = FoeHeadScreen(i);
+                groupTags[i].rectTransform.position = s + new Vector3(-100 * sf, 52 * sf, 0);     // 기준점 왼쪽 위
+                groupShown[i] = Mathf.MoveTowards(groupShown[i], Mathf.Clamp01(f.Hp / (float)Mathf.Max(1, f.Def.Hp)), Time.deltaTime * .9f);
+                groupBars[i].fillAmount = groupShown[i];
+                groupBars[i].color = groupShown[i] > .5f ? new Color32(86, 212, 106, 255) : groupShown[i] > .25f ? new Color32(242, 196, 67, 255) : new Color32(255, 96, 96, 255);
+                groupTags[i].color = i == targetMark ? (Color)UIKit.Gold : Color.white;
+                bool hide = (moveP < 1 && i == movingFoe) || enemyAppear < 1;
+                groupGroups[i].alpha = Mathf.MoveTowards(groupGroups[i].alpha, hide ? 0 : 1, Time.deltaTime * 6);
+            }
+            bool arrow = on && targetMark >= 0;
+            if (targetArrow.gameObject.activeSelf != arrow) targetArrow.gameObject.SetActive(arrow);
+            if (arrow)
+            {
+                float bob = Mathf.Abs(Mathf.Sin(Time.time * 6)) * 6 * sf;
+                targetArrow.rectTransform.position = FoeHeadScreen(targetMark) + new Vector3(-30 * sf, 96 * sf + bob, 0);
+            }
+        }
+
+        public bool EnemyHpVisible => enemyHpBar != null && enemyHpBar.transform.parent.gameObject.activeSelf;
+        public int FoeCount => battle != null ? battle.Foes.Count : 0;
+        public int FoesAlive => battle != null ? battle.AliveCount : 0;
+        public bool TargetArrowShown => targetArrow != null && targetArrow.gameObject.activeSelf;
+        public bool GroupTagsShown => groupTags[0] != null && groupTags[0].gameObject.activeSelf;
+        public float EnemyHpShown => enemyHpShown;
+
+        void HitFoe(int i, int dmg, bool big)
+        {
+            if (i < 0) i = 0;
+            sfx.Play("hit");
+            foeShake[i] = big ? .55f : .3f;
+            foeBlink[i] = .4f;
+            Pop(dmg.ToString(), FoeX(i), battle.Foes[i].Def.Boss ? 170 : 230, big ? UIKit.Gold : Color.white, big ? 56 : 44);
+        }
+
+        /// <summary>리본 파이어 대상 고르기: 살아 있는 적 목록 (고르는 동안 그 적 머리 위에 ▼). 그만두기면 pickedTarget = -1.</summary>
+        IEnumerator PickTarget()
+        {
+            pickedTarget = -1;
+            targetOrder = new List<int>();
+            for (int i = 0; i < battle.Foes.Count; i++) if (!battle.Foes[i].Down) targetOrder.Add(i);
+            var labels = new string[targetOrder.Count + 1];
+            for (int k = 0; k < targetOrder.Count; k++)
+            {
+                var f = battle.Foes[targetOrder[k]];
+                labels[k] = $"{FoeName(targetOrder[k])} <size=15><color=#9AA3C7>HP {f.Hp}</color></size>";
+            }
+            labels[targetOrder.Count] = "그만두기";
+            ShowMessageWindow(true);
+            SetFace("smile");
+            msgText.text = "어느 젤리를 노릴까?";
+            choiceIndex = 0;
+            pickingTarget = true;
+            yield return Choose(labels);
+            pickingTarget = false;
+            targetMark = -1;
+            if (choicePicked < targetOrder.Count) { sfx.Play("select"); pickedTarget = targetOrder[choicePicked]; }
+        }
+
+        /// <summary>적 차례: 살아 있는 적이 차례대로 한 번씩 (주인공이 쓰러지면 멈춤).</summary>
         IEnumerator EnemyTurn()
         {
+            for (int i = 0; i < battle.Foes.Count; i++)
+            {
+                if (battle.Foes[i].Down || battle.PlayerDown) continue;
+                yield return FoeAttack(i);
+            }
+        }
+
+        IEnumerator FoeAttack(int i)
+        {
+            var d = battle.Foes[i].Def;
+            while (moveP < 1) yield return null;       // 앞 적의 모션이 끝난 뒤
             yield return new WaitForSeconds(.25f);
-            StartMove(battle.Def.Move);
+            movingFoe = i;
+            StartMove(d.Move);
             sfx.Play("mv_" + moveName);             // 모션마다 다른 소리
             if (moveName == "shard") StartCoroutine(ShardVolley());
-            yield return Talk("enemy_attack", ("enemy", battle.Def.Name), ("attack", battle.Def.Attack ?? "공격"));
-            var e = battle.EnemyAct();
+            yield return Talk("enemy_attack", ("enemy", FoeName(i)), ("attack", d.Attack ?? "공격"));
+            var e = battle.EnemyAct(i);
             if (e.Dodged)
             {
                 yield return Talk("dodge");
@@ -301,7 +467,7 @@ namespace GirlAdventure.View
             sfx.Play("hurt");
             pose = "damage"; heroShake = .35f;
             hurtFlash = HurtFlashTime;           // 화면 빨간 번쩍임
-            camShake = Mathf.Max(camShake, battle.Def.Boss ? .3f : .15f);
+            camShake = Mathf.Max(camShake, d.Boss ? .3f : .15f);
             RefreshHud();
             Pop(e.Damage.ToString(), HeroX, 220, new Color32(255, 107, 107, 255));
             yield return Talk("hurt", ("dmg", e.Damage));
@@ -311,16 +477,19 @@ namespace GirlAdventure.View
         IEnumerator Victory()
         {
             var def = battle.Def;
-            enemyFading = true;
+            for (int i = 0; i < foeFading.Length; i++) foeFading[i] = true;
             bgm.Stop();                // DQ 처럼 승리 팡파르만 들리게
             sfx.Play("win");
             pose = "victory";
             enemyLabel.text = "";
-            yield return Talk("win", ("enemy", def.Name));
-            int ups = P.GainExp(def.Exp);
-            P.GainGold(def.Gold);
+            foreach (var t in groupTags) t.text = "";
+            if (GroupBattle) yield return Talk("win_group");
+            else yield return Talk("win", ("enemy", def.Name));
+            int exp = battle.TotalExp, gold = battle.TotalGold;   // 무리는 합계
+            int ups = P.GainExp(exp);
+            P.GainGold(gold);
             sfx.Play("coin");
-            yield return Talk("exp", ("exp", def.Exp), ("gold", def.Gold));
+            yield return Talk("exp", ("exp", exp), ("gold", gold));
             for (int i = 0; i < ups; i++)
             {
                 sfx.Play("lvup");
@@ -387,6 +556,8 @@ namespace GirlAdventure.View
             battleRoot.gameObject.SetActive(false);
             fieldRoot.gameObject.SetActive(true);
             enemyLabel.text = "";
+            foreach (var t in groupTags) t.text = "";
+            targetMark = -1; pickingTarget = false;
             cmdWin.SetActive(false);
             HideSwirl();
             foreach (var f in fx) if (f.sr) Destroy(f.sr.gameObject);
@@ -409,17 +580,29 @@ namespace GirlAdventure.View
             heroShake = Mathf.Max(0, heroShake - dt);
             heroLunge = Mathf.Max(0, heroLunge - dt * 4);
 
-            // 적
-            bool boss = battle != null && battle.Def.Boss;
-            float esx = enemyShake > 0 ? Random.Range(-1f, 1f) * enemyShake : 0;
-            float squash = Mathf.Sin(battleT * 5.5f) * .05f;
-            float baseScale = (boss ? 1.75f : 1.05f) * (battle != null ? battle.Def.Size : 1);
-            var m = MoveOffset(moveP, moveName);
+            // 적 (1~3마리): 모션은 공격 중인 적(movingFoe)만, 등장은 다 같이
+            bool boss = battle != null && battle.Boss;
+            int nFoes = battle != null ? battle.Foes.Count : 1;
             var a = AppearOffset(enemyAppear, boss);
-            enemySR.transform.position = Px(EnemyX, EnemyY) + new Vector3(esx + m.x, m.y + a.y, 0);
-            enemySR.transform.localScale = new Vector3(baseScale * (1 + squash + m.z) * a.x, baseScale * (1 - squash - m.z) * a.x, 1);
-            enemySR.transform.localRotation = Quaternion.Euler(0, 0, m.w);
-            enemyShake = Mathf.Max(0, enemyShake - dt);
+            float appearAlpha = Mathf.Clamp01(enemyAppear * 2.5f);
+            for (int i = 0; i < nFoes; i++)
+            {
+                var sr = foeSR[i];
+                float esx = foeShake[i] > 0 ? Random.Range(-1f, 1f) * foeShake[i] : 0;
+                float squash = Mathf.Sin(battleT * 5.5f + i * 1.7f) * .05f;
+                float baseScale = FoeScale(i);
+                var m = i == movingFoe ? MoveOffset(moveP, moveName) : Vector4.zero;
+                sr.transform.position = Px(FoeX(i), EnemyY) + new Vector3(esx + m.x, m.y + a.y, 0);
+                sr.transform.localScale = new Vector3(baseScale * (1 + squash + m.z) * a.x, baseScale * (1 - squash - m.z) * a.x, 1);
+                sr.transform.localRotation = Quaternion.Euler(0, 0, m.w);
+                sr.sortingOrder = i == movingFoe && moveP < 1 ? 4 : 2;     // 덤벼드는 적은 주인공 앞으로
+                foeShake[i] = Mathf.Max(0, foeShake[i] - dt);
+                if (foeFading[i]) foeAlpha[i] = Mathf.Max(0, foeAlpha[i] - dt * 2.5f);
+                foeBlink[i] = Mathf.Max(0, foeBlink[i] - dt);
+                bool hidden = foeBlink[i] > 0 && (int)(foeBlink[i] * 20) % 2 == 0;
+                sr.color = new Color(1, 1, 1, hidden ? 0 : foeAlpha[i] * appearAlpha);
+            }
+            targetMark = pickingTarget && choiceIndex < targetOrder.Count ? targetOrder[choiceIndex] : -1;
             if (!fxFrozen)
             {
                 if (moveP < 1)
@@ -429,11 +612,6 @@ namespace GirlAdventure.View
                 }
                 enemyAppear = Mathf.Min(1, enemyAppear + dt / (boss ? .8f : .55f));
             }
-            if (enemyFading) enemyAlpha = Mathf.Max(0, enemyAlpha - dt * 2.5f);
-            enemyBlink = Mathf.Max(0, enemyBlink - dt);
-            bool hidden = enemyBlink > 0 && (int)(enemyBlink * 20) % 2 == 0;
-            float appearAlpha = Mathf.Clamp01(enemyAppear * 2.5f);
-            enemySR.color = new Color(1, 1, 1, hidden ? 0 : enemyAlpha * appearAlpha);
 
             // 피격 빨간 번쩍임 + 카메라 흔들림
             if (hurtFlash > 0)
@@ -501,7 +679,7 @@ namespace GirlAdventure.View
             moveImpacted = false;
             if (moveName == "charge")                            // 뒷걸음질하며 흙먼지
                 for (int i = 0; i < 10; i++)
-                    Spawn(glowSprite, Px(EnemyX + 40, EnemyY + 60), new Vector3(Random.Range(.5f, 2f), Random.Range(.1f, .8f)), .5f,
+                    Spawn(glowSprite, Px(FoeX(movingFoe) + 40, EnemyY + 60), new Vector3(Random.Range(.5f, 2f), Random.Range(.1f, .8f)), .5f,
                           Random.Range(.3f, .6f), new Color(.8f, .7f, .55f, .6f));
         }
 
@@ -541,9 +719,9 @@ namespace GirlAdventure.View
         {
             if (moveName != "slam" && moveName != "charge") return;
             sfx.Play("thud");
-            camShake = Mathf.Max(camShake, battle != null && battle.Def.Boss ? .4f : .22f);
+            camShake = Mathf.Max(camShake, battle != null && battle.Boss ? .4f : .22f);
             for (int i = 0; i < 12; i++)
-                Spawn(glowSprite, Px(EnemyX - 60, EnemyY + 70), new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(.2f, 1.4f)), .45f,
+                Spawn(glowSprite, Px(FoeX(movingFoe) - 60, EnemyY + 70), new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(.2f, 1.4f)), .45f,
                       Random.Range(.3f, .6f), new Color(.85f, .75f, .6f, .7f));
         }
 
@@ -553,7 +731,7 @@ namespace GirlAdventure.View
             Vector3 to = Px(HeroX + 20, HeroY - 110);
             for (int i = 0; i < 6; i++)
             {
-                var from = Px(EnemyX - 30, EnemyY - 40 + Random.Range(-40, 40));
+                var from = Px(FoeX(movingFoe) - 30, EnemyY - 40 + Random.Range(-40, 40));
                 var vel = (to - from) / .35f + new Vector3(0, Random.Range(-1.5f, 1.5f));
                 Spawn(starSprite, from, vel, .38f, .45f, new Color(.55f, .95f, 1f), 540);
                 yield return new WaitForSeconds(.05f);
@@ -577,9 +755,9 @@ namespace GirlAdventure.View
             Pop("LEVEL UP!", HeroX + 20, 205, UIKit.Gold, 50);
         }
 
-        IEnumerator Fireball()
+        IEnumerator Fireball(int target)
         {
-            Vector3 from = Px(300, 250), to = Px(EnemyX - 10, EnemyY - 50);
+            Vector3 from = Px(300, 250), to = Px(FoeX(Mathf.Max(0, target)) - 10, EnemyY - 50);
             var core = NewSR("Fireball", 6);
             core.sprite = glowSprite;
             core.color = new Color(1f, .85f, .4f);
@@ -600,10 +778,12 @@ namespace GirlAdventure.View
 
         IEnumerator StarStorm()
         {
-            for (int i = 0; i < 46; i++)
+            float x0 = FoeX(0) - 130, x1 = FoeX(battle.Foes.Count - 1) + 130;     // 무리면 모두의 머리 위로
+            int count = GroupBattle ? 70 : 46;
+            for (int i = 0; i < count; i++)
             {
                 var col = Random.value < .5f ? new Color(1f, .85f, .3f) : new Color(1f, .62f, .82f);
-                Spawn(starSprite, Px(EnemyX - 130 + Random.Range(0, 260), -40 - Random.Range(0, 300)), new Vector3(Random.Range(-.6f, .6f), -Random.Range(9f, 14f)),
+                Spawn(starSprite, Px(Random.Range(x0, x1), -40 - Random.Range(0, 300)), new Vector3(Random.Range(-.6f, .6f), -Random.Range(9f, 14f)),
                       1.2f, Random.Range(.4f, .75f), col, Random.Range(-360, 360));
             }
             yield return new WaitForSeconds(1.1f);

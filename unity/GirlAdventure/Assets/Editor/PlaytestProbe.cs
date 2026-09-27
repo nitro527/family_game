@@ -128,6 +128,7 @@ namespace GirlAdventure.EditorTools
         static IEnumerator Scenario()
         {
             yield return 2f;
+            G.NoGroups = true;                        // 필드 전투는 늘 한 마리 (무리는 아래에서 따로 검사)
             G.DebugDeleteSave();                      // 새 게임부터 (에디터 PlayerPrefs 만 지움)
             Settings.ResetDefaults();                 // 지난 실행이 설정을 바꾼 채 멈췄어도 기본값에서 시작
             G.DebugToTitle();
@@ -525,6 +526,36 @@ namespace GirlAdventure.EditorTools
             Shot("after_battle_field");
             Expect("enemy hp bar hidden in field", !G.EnemyHpVisible);
             ExpectBgm("field");
+
+            // 몬스터 무리 (백로그 44): 파랑 젤리 3마리 — 대상 고르기 ▼, 별빛 폭풍 전체, 경험치 합계
+            G.DebugSetHp(G.P.MaxHp);
+            int groupExp0 = G.P.Exp;
+            G.DebugGroupBattle(3, 0);
+            yield return (Func<bool>)(() => G.CommandOpen);
+            yield return .3f;
+            Shot("group_battle");
+            Expect("group of 3 on stage", G.FoeCount == 3 && G.GroupTagsShown && !G.EnemyHpVisible);
+            foreach (var x in Choose(0)) yield return x;       // 리본 파이어 → 대상 고르기
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            Keys.Press(KeyCode.DownArrow); yield return .25f;
+            Shot("group_target");
+            Expect("target list + arrow", G.TargetArrowShown && G.ChoiceCount == 4);
+            Keys.Press(KeyCode.Return);
+            yield return .7f;
+            Shot("group_fire");
+            yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
+            if (G.CommandOpen)
+            {
+                G.DebugSetMp(G.P.MaxMp);
+                foreach (var x in Choose(1)) yield return x;    // 주문 → 별빛 폭풍 (모두에게)
+                yield return (Func<bool>)(() => G.ChoiceOpen);
+                Keys.Press(KeyCode.Return);
+                yield return 2.0f;
+                Shot("group_starstorm");
+            }
+            foreach (var x in FightUntilOver(false)) yield return x;
+            Log($"GROUP exp {groupExp0}->{G.P.Exp}");
+            Expect("group win gives total exp", G.Current == GameRoot.Mode.Field && G.P.Exp == groupExp0 + 3 * GameData.Normal[0].Exp);
 
             // 사탕 / 도망 (들어갈 때 소용돌이 전환도 찍는다)
             G.DebugBattle(false);

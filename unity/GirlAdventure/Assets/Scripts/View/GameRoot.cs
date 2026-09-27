@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using GirlAdventure.Sim;
 using UnityEngine;
 
@@ -83,6 +84,7 @@ namespace GirlAdventure.View
             }
             TickPops();
             TickEnemyHp();
+            TickGroupTags();
             TickTouchPad();
             if (vignette != null && Current != Mode.Field) vignette.enabled = false;
         }
@@ -261,6 +263,19 @@ namespace GirlAdventure.View
             if (boss && P.Lv < 5) P.GainExp(PlayerState.NextExp(4) - P.Exp);   // 보스 테스트는 최소 Lv5 로
             StartCoroutine(BattleRoutine(boss ? GameData.King : GameData.Normal[1]));
         }
+
+        /// <summary>플레이테스트용: 초원 젤리 무리와 싸운다 (Normal[idx] 를 n 마리).</summary>
+        public void DebugGroupBattle(int n, int idx = 0)
+        {
+            StopAllCoroutines();
+            HideMessage();
+            var defs = new List<EnemyDef>();
+            for (int i = 0; i < n; i++) defs.Add(GameData.Normal[idx]);
+            StartCoroutine(BattleRoutine(defs));
+        }
+
+        /// <summary>플레이테스트용: true 면 필드 몬스터와 부딪혀도 늘 한 마리 (무리 확률 무시).</summary>
+        public bool NoGroups;
 
         public void DebugTeleport(int x, int y, string face = "down")
         {

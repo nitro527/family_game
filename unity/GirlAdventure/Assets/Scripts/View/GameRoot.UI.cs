@@ -65,6 +65,7 @@ namespace GirlAdventure.View
             popLayer = UIKit.Stretch(ui, "Pops");
             enemyLabel = UIKit.Label(ui, "EnemyName", "", 460, 0, 400, 40, 26, TextAnchor.MiddleCenter, Color.white, true);
             BuildEnemyHp();
+            BuildGroupTags();
 
             BuildHud();
             BuildMessage();
