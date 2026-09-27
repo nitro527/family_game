@@ -1,38 +1,38 @@
 {
- "_about": "몬스터 도감 — 딸의 아이디어를 미리 그림으로 만들어 두는 목록. 새 몬스터는 여기에 한 줄 추가하고 python tools/monster_catalog.py 로 자르기·도감 이미지 갱신. sheet=Gemini 원본(assets/monsters/gen), slot=원본 안에서 몇 번째 그림(왼→오, 위→아래), cols=그림 줄마다 몇 마리, ingame=enemies.json 이름(게임에 들어갔으면)",
+ "_about": "몬스터 도감 — 딸의 아이디어를 미리 그림으로 만들어 두는 목록. 파일 이름 규칙: 모두 몬스터 id 기준. sheets = assets/monsters/gen/<안에 든 몬스터 id들>.png (Gemini 원본, 한 장에 여러 마리) : 줄마다 몇 마리. cut/<id>.png = 투명 배경 한 마리 (자동 생성), sketches/<id>.png = 딸 스케치. slot = 원본 안 순서(왼→오, 위→아래). ingame = enemies.json 이름. 추가 후 python tools/monster_catalog.py",
  "sheets": {
-  "jelly_blue/jelly_blue_v1.png": [
+  "jelly_blue.png": [
    1
   ],
-  "jelly_colors/jelly_green_pink_v1.png": [
+  "jelly_green_pink.png": [
    2
   ],
-  "jelly_grow/jelly_lv2_lv3_v1.png": [
+  "jelly_big_king.png": [
    2
   ],
-  "cave/cave_rock_ore_crystal_v1.png": [
+  "cave_rock_ore_amber_crystal.png": [
    2,
    2
   ],
-  "desert/desert_cowboy_cactus_v1.png": [
+  "desert_cowboy_cactus.png": [
    2
   ],
-  "forest/forest_tree_bug_v1.png": [
+  "forest_tree_bug.png": [
    2
   ],
-  "castle/castle_soldier_v1.png": [
+  "castle_soldier.png": [
    1
   ],
-  "spirits/spirits_elements_v1.png": [
+  "spirit_fire_water_wind_nature.png": [
    4
   ],
-  "note2/yeti_greatking_v1.png": [
+  "yeti_jelly_great_king.png": [
    2
   ],
-  "note2/mystery_orb_v2_nobar.png": [
+  "mystery_orb.png": [
    1
   ],
-  "note2/fusion_obsidian_v1.png": [
+  "element_fusion.png": [
    1
   ]
  },
@@ -42,10 +42,10 @@
    "name": "파랑 젤리",
    "region": "초원",
    "tier": "쉬움",
-   "sheet": "jelly_blue/jelly_blue_v1.png",
+   "sheet": "jelly_blue.png",
    "slot": 1,
    "idea": "daughter_note_01",
-   "sketch": "jelly_1.png",
+   "sketch": "jelly_blue.png",
    "ingame": "파랑 젤리",
    "desc": "제일 처음 만나는 젤리. 말랑말랑 겁이 많아요."
   },
@@ -54,7 +54,7 @@
    "name": "초록 젤리",
    "region": "초원",
    "tier": "중간",
-   "sheet": "jelly_colors/jelly_green_pink_v1.png",
+   "sheet": "jelly_green_pink.png",
    "slot": 1,
    "idea": "daughter_note_01",
    "sketch": null,
@@ -66,7 +66,7 @@
    "name": "핑크 젤리",
    "region": "초원",
    "tier": "어려움",
-   "sheet": "jelly_colors/jelly_green_pink_v1.png",
+   "sheet": "jelly_green_pink.png",
    "slot": 2,
    "idea": "daughter_note_01",
    "sketch": null,
@@ -78,10 +78,10 @@
    "name": "큰 파랑 젤리",
    "region": "초원 먼 곳",
    "tier": "2단",
-   "sheet": "jelly_grow/jelly_lv2_lv3_v1.png",
+   "sheet": "jelly_big_king.png",
    "slot": 1,
    "idea": "daughter_note_01",
-   "sketch": "jelly_2.png",
+   "sketch": "jelly_big.png",
    "ingame": null,
    "desc": "파랑 젤리가 쑥쑥 자란 2단 젤리."
   },
@@ -90,10 +90,10 @@
    "name": "킹 젤리",
    "region": "젤리 성",
    "tier": "3단·보스",
-   "sheet": "jelly_grow/jelly_lv2_lv3_v1.png",
+   "sheet": "jelly_big_king.png",
    "slot": 2,
    "idea": "daughter_note_01",
-   "sketch": "jelly_3_king.png",
+   "sketch": "jelly_king.png",
    "ingame": "킹 젤리",
    "desc": "왕관을 쓴 3단 젤리. 젤리 나라의 왕이에요."
   },
@@ -102,10 +102,10 @@
    "name": "돌멩이 젤리",
    "region": "동굴",
    "tier": "쉬움",
-   "sheet": "cave/cave_rock_ore_crystal_v1.png",
+   "sheet": "cave_rock_ore_amber_crystal.png",
    "slot": 1,
    "idea": "daughter_note_01",
-   "sketch": "rock.png",
+   "sketch": "cave_rock.png",
    "ingame": "돌멩이 젤리",
    "desc": "돌 껍데기를 쓴 졸린 젤리. 단단해요."
   },
@@ -114,10 +114,10 @@
    "name": "광물 젤리",
    "region": "동굴",
    "tier": "중간",
-   "sheet": "cave/cave_rock_ore_crystal_v1.png",
+   "sheet": "cave_rock_ore_amber_crystal.png",
    "slot": 2,
    "idea": "daughter_note_01",
-   "sketch": "ore.png",
+   "sketch": "cave_ore.png",
    "ingame": "광물 젤리",
    "desc": "반짝이는 금·보라 광물이 콕콕 박힌 젤리."
   },
@@ -126,7 +126,7 @@
    "name": "호박 젤리",
    "region": "동굴",
    "tier": "중간",
-   "sheet": "cave/cave_rock_ore_crystal_v1.png",
+   "sheet": "cave_rock_ore_amber_crystal.png",
    "slot": 3,
    "idea": null,
    "sketch": null,
@@ -138,10 +138,10 @@
    "name": "수정 젤리",
    "region": "동굴",
    "tier": "어려움",
-   "sheet": "cave/cave_rock_ore_crystal_v1.png",
+   "sheet": "cave_rock_ore_amber_crystal.png",
    "slot": 4,
    "idea": "daughter_note_01",
-   "sketch": "crystal.png",
+   "sketch": "cave_crystal.png",
    "ingame": "수정 젤리",
    "desc": "뾰족한 수정이 자라는 차가운 젤리."
   },
@@ -150,10 +150,10 @@
    "name": "카우보이 젤리",
    "region": "사막",
    "tier": "중간",
-   "sheet": "desert/desert_cowboy_cactus_v1.png",
+   "sheet": "desert_cowboy_cactus.png",
    "slot": 1,
    "idea": "daughter_note_01",
-   "sketch": "cowboy.png",
+   "sketch": "desert_cowboy.png",
    "ingame": null,
    "desc": "올가미 밧줄을 빙빙 돌리는 사막의 젤리. 윙크!"
   },
@@ -162,10 +162,10 @@
    "name": "선인장 젤리",
    "region": "사막",
    "tier": "중간",
-   "sheet": "desert/desert_cowboy_cactus_v1.png",
+   "sheet": "desert_cowboy_cactus.png",
    "slot": 2,
    "idea": "daughter_note_01",
-   "sketch": "cactus.png",
+   "sketch": "desert_cactus.png",
    "ingame": null,
    "desc": "가시가 따끔따끔. 머리에 분홍 꽃이 피었어요."
   },
@@ -174,10 +174,10 @@
    "name": "나무 젤리",
    "region": "숲",
    "tier": "중간",
-   "sheet": "forest/forest_tree_bug_v1.png",
+   "sheet": "forest_tree_bug.png",
    "slot": 1,
    "idea": "daughter_note_01",
-   "sketch": "tree.png",
+   "sketch": "forest_tree.png",
    "ingame": null,
    "desc": "나뭇가지가 자라는 느긋한 젤리. 머리에 새 둥지!"
   },
@@ -186,10 +186,10 @@
    "name": "벌레 젤리",
    "region": "숲",
    "tier": "쉬움",
-   "sheet": "forest/forest_tree_bug_v1.png",
+   "sheet": "forest_tree_bug.png",
    "slot": 2,
    "idea": "daughter_note_01",
-   "sketch": "bug.png",
+   "sketch": "forest_bug.png",
    "ingame": null,
    "desc": "무당벌레 등껍질에 날개가 붕붕. 신나는 젤리."
   },
@@ -198,10 +198,10 @@
    "name": "군인 젤리",
    "region": "적의 성",
    "tier": "어려움",
-   "sheet": "castle/castle_soldier_v1.png",
+   "sheet": "castle_soldier.png",
    "slot": 1,
    "idea": "daughter_note_01",
-   "sketch": "soldier.png",
+   "sketch": "castle_soldier.png",
    "ingame": null,
    "desc": "투구를 쓰고 삼지창을 든 성의 경비병."
   },
@@ -210,10 +210,10 @@
    "name": "이단 킹 젤리",
    "region": "젤리 성",
    "tier": "보스",
-   "sheet": "note2/yeti_greatking_v1.png",
+   "sheet": "yeti_jelly_great_king.png",
    "slot": 2,
    "idea": "daughter_note_02",
-   "sketch": "n2_king2.png",
+   "sketch": "jelly_great_king.png",
    "ingame": null,
    "desc": "킹 젤리보다 더더더 세대요! 근육 젤리 왕."
   },
@@ -222,10 +222,10 @@
    "name": "예티",
    "region": "?",
    "tier": "?",
-   "sheet": "note2/yeti_greatking_v1.png",
+   "sheet": "yeti_jelly_great_king.png",
    "slot": 1,
    "idea": "daughter_note_02",
-   "sketch": "n2_yeti.png",
+   "sketch": "yeti.png",
    "ingame": null,
    "desc": "복슬복슬 눈 괴물. 이름은 아직 고민 중!"
   },
@@ -234,10 +234,10 @@
    "name": "정체불명 보라 구슬",
    "region": "?",
    "tier": "최강?",
-   "sheet": "note2/mystery_orb_v2_nobar.png",
+   "sheet": "mystery_orb.png",
    "slot": 1,
    "idea": "daughter_note_02",
-   "sketch": "n2_shadow_orb.png",
+   "sketch": "mystery_orb.png",
    "ingame": null,
    "desc": "아무도 몰라요. 4원소 합체보다 더 세요!",
    "secret": "정체는 딸도 모름. 보라색, 4원소 합체보다 강함. 위 막대기는 체력바라 그림에서 뺌. 가운데 눈은 무서워서 뺌"
@@ -247,10 +247,10 @@
    "name": "4원소 합체",
    "region": "?",
    "tier": "비밀 보스",
-   "sheet": "note2/fusion_obsidian_v1.png",
+   "sheet": "element_fusion.png",
    "slot": 1,
    "idea": "daughter_note_02",
-   "sketch": "n2_shadow_beast.png",
+   "sketch": "element_fusion.png",
    "ingame": null,
    "desc": "흑요석 몸에 불·물·바람·자연 보석이 박혔어요!",
    "secret": "처음엔 ??? (정체불명)으로 나오고 나중에 4원소 합체로 밝혀짐. 정령 모습이 아니라 흑요석 같은 돌에 4원소가 박힌 모습 (딸 설정)"
@@ -261,10 +261,10 @@
    "region": "우리팀",
    "tier": "원소",
    "kind": "ally",
-   "sheet": "spirits/spirits_elements_v1.png",
+   "sheet": "spirit_fire_water_wind_nature.png",
    "slot": 1,
    "idea": "daughter_note_02",
-   "sketch": "n2_fire.png",
+   "sketch": "spirit_fire.png",
    "ingame": null,
    "desc": "네 가지 원소 중 하나. 뜨거운 장난꾸러기."
   },
@@ -274,10 +274,10 @@
    "region": "우리팀",
    "tier": "원소",
    "kind": "ally",
-   "sheet": "spirits/spirits_elements_v1.png",
+   "sheet": "spirit_fire_water_wind_nature.png",
    "slot": 2,
    "idea": "daughter_note_02",
-   "sketch": "n2_water.png",
+   "sketch": "spirit_water.png",
    "ingame": null,
    "desc": "네 가지 원소 중 하나. 늘 웃는 물방울."
   },
@@ -287,10 +287,10 @@
    "region": "우리팀",
    "tier": "원소",
    "kind": "ally",
-   "sheet": "spirits/spirits_elements_v1.png",
+   "sheet": "spirit_fire_water_wind_nature.png",
    "slot": 3,
    "idea": "daughter_note_02",
-   "sketch": "n2_wind.png",
+   "sketch": "spirit_wind.png",
    "ingame": null,
    "desc": "네 가지 원소 중 하나. 휘잉~ 소용돌이."
   },
@@ -300,10 +300,10 @@
    "region": "우리팀",
    "tier": "원소",
    "kind": "ally",
-   "sheet": "spirits/spirits_elements_v1.png",
+   "sheet": "spirit_fire_water_wind_nature.png",
    "slot": 4,
    "idea": "daughter_note_02",
-   "sketch": "n2_nature.png",
+   "sketch": "spirit_nature.png",
    "ingame": null,
    "desc": "네 가지 원소 중 하나. 새싹이 쏙."
   }

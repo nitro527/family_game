@@ -58,16 +58,22 @@ friendly and heroic mood. Plain white background, full color, no text, no waterm
 뽑은 이미지를 `assets/characters/gen/<id>/` 에 넣어주면:
 배경 제거 → 크기 규격화 → 카드/RPG 규격 에셋 정리 → 도트 스프라이트 재제작
 
-## 저장 규칙
+## 저장 규칙 (2026-09-27 정리)
 
 ```
-assets/characters/gen/
-  dad/   dad_main.png  dad_turnaround.png  dad_expressions.png  dad_card.png  dad_icon.png
-  mom/   ...
-  girl/  ...
-  boy/   ...
+assets/characters/
+  gen/<who>/            who = girl · boy · mom · dad
+    <who>_main.png         확정 메인 그림
+    <who>_expressions.png  표정 시트
+    <who>_battle.png       전투 포즈 시트
+    <who>_walk.png         걷기 시트
+    <who>_portrait.png     초상화
+    <who>_card.png         카드 그림
+    (girl 만) icons/ poses/ cards/ — 시트를 잘라 만든 파일
+  overviews/<who 또는 묶음>.jpg   한 장 요약 이미지
 ```
-버전이 여러 개면 `dad_main_v2.png` 처럼 뒤에 붙이기.
+- 파일 이름은 `<who>_<종류>.png` 로만. **확정본만 남기고** 버린 시안(_v1, _v2 등)은 지워요 (필요하면 git 기록에 있음).
+- 다시 뽑으면 같은 이름으로 덮어써요.
 
 ## 하루 20장 예산 예시
 

@@ -9,16 +9,16 @@
 |---|---|
 | `docs/monsters/monsters.json` | **도감 목록 (기준 파일)**: 이름·지역·난이도·한 줄 설명·원본 그림·딸 스케치·게임에 들어갔는지 |
 | `docs/monsters/dogam.jpg` | 한눈에 보는 도감 (자동 생성) |
-| `assets/monsters/gen/<지역>/` | Gemini 원본 그림 (여러 마리가 한 장에 있기도 함) |
+| `assets/monsters/gen/<id들>.png` | Gemini 원본 그림 (이름 = 안에 든 몬스터 id, 여러 마리가 한 장에 있기도 함) |
 | `assets/monsters/cut/<id>.png` | 한 마리씩 자른 투명 배경 PNG (자동 생성) — 게임에 넣을 때 이걸 씀 |
-| `assets/monsters/sketches/` | 딸의 원래 스케치 조각 |
+| `assets/monsters/sketches/<id>.png` | 딸의 원래 스케치 조각 (id 와 같은 이름) |
 
 ## 새 몬스터 추가하는 법
 1. 딸의 노트를 `docs/ideas/daughter_note_NN.jpg` 로 저장하고, 몬스터 부분을 `assets/monsters/sketches/` 에 잘라 둠
-2. Gemini (새 채팅, 이미지 만들기): **기준 그림 `assets/monsters/gen/jelly_blue/jelly_blue_v1.png`** + 딸 스케치를 붙여 넣고
+2. Gemini (새 채팅, 이미지 만들기): **기준 그림 `assets/monsters/gen/jelly_blue.png`** + 딸 스케치를 붙여 넣고
    "Image 1 is our finished JRPG monster 'blue jelly' - keep EXACTLY this art style ... Image 2 is my 7-year-old daughter's drawing of ..." (지난 프롬프트는 이 문서 아래)
    - 2~3마리를 한 장에 "well separated with lots of white space", "plain pure white background" 로 뽑으면 한 번에 여러 마리
-3. 원본을 `assets/monsters/gen/<지역>/` 에 넣고 `monsters.json` 의 `sheets`(줄마다 몇 마리)와 `monsters` 에 한 줄씩 추가
+3. 원본을 `assets/monsters/gen/<안에 든 몬스터 id들>.png` (예: `desert_cowboy_cactus.png`) 로 저장하고, 스케치는 `sketches/<id>.png`, `monsters.json` 의 `sheets`(줄마다 몇 마리)와 `monsters` 에 한 줄씩 추가
 4. `python tools/monster_catalog.py` → 자르기 + 도감 이미지 갱신
 
 ## 게임에 넣을 때

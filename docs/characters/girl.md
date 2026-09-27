@@ -50,7 +50,7 @@
 | `girl_portrait.png` | 대화창용 상반신 초상화 (1024²) | 손 흔들며 미소 |
 | `girl_card_ultimate.png` | 필살기 카드 일러스트 "별빛 폭풍" | 보름달·마법진·별 폭풍 |
 | `cards/girl_card_unit.png`, `cards/girl_card_starlight.png` | 카드 게임 목업 (750×1050, 투명 모서리) | `tools/card_mockup.py` — 스탯/문구는 임시 |
-| `girl_assets_overview.jpg` | 전체 에셋 한 장 요약 | |
+| `assets/characters/overviews/girl.jpg` | 전체 에셋 한 장 요약 | |
 
 > SD 재시도 아이디어: 확정본을 올리지 말고 표정 시트의 얼굴 아이콘을 올려 "chibi 2-head-tall mascot"로 요청하거나, 먼저 텍스트로만 2등신을 만들고 두 번째 턴에 확정본을 참고시키기.
 > 파생 에셋 요령: **새 대화 + 확정본 1장만 업로드** + "copy the original exactly: (특징 나열)" 로 요청해야 그림체가 안 흔들림.
