@@ -577,7 +577,7 @@ namespace GirlAdventure.View
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
-            var floor = Mask(m, "_:FSHDBrwCM");
+            var floor = Mask(m, "_:FSHDBrwCMo");
             var safe = Mask(m, ":FSM");
             var water = Mask(m, "w");
             var deep = Erode(water);

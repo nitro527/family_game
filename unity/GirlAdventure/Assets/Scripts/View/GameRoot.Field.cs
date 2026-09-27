@@ -7,7 +7,7 @@ namespace GirlAdventure.View
 {
     /// <summary>
     /// 필드: 맵(챕터 1 초원 / 챕터 2 동굴), 격자 이동, 보이는 몬스터(심볼 인카운트),
-    /// 샘물/표지판/사탕 가게/보물상자/기지 문/보스 이벤트.
+    /// 샘물/표지판/사탕 가게/보물상자/기지 문/수상한 구멍/보스 이벤트.
     /// </summary>
     public partial class GameRoot
     {
@@ -114,6 +114,7 @@ namespace GirlAdventure.View
             RebuildMapFx();
             RebuildLights();
             RebuildNpcs();
+            RebuildHoles();
             mobs.Reset(map, P.X, P.Y);
             SyncMobViews();
         }
@@ -122,6 +123,7 @@ namespace GirlAdventure.View
         void RefreshQuestProps()
         {
             bool cave = map.Kind == MapKind.Cave;
+            RefreshHoles();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
             bool guard = cave && Quest.GuardAlive(P);
@@ -382,6 +384,7 @@ namespace GirlAdventure.View
             SyncMobViews();
             TickGuard();
             TickNpcs();
+            TickHoles();
             UpdatePlayerVisual();
             TickFieldFx();
             TickLighting();
@@ -403,6 +406,7 @@ namespace GirlAdventure.View
                 else if (c == 'S') StartCoroutine(SignRoutine());
                 else if (c == 'H') StartCoroutine(ChestRoutine(nx, ny));
                 else if (c == 'D') StartCoroutine(DoorRoutine());
+                else if (c == 'o') StartCoroutine(HoleRoutine(nx, ny));
                 else if (c == 'M') StartCoroutine(ShopRoutine());
                 else if (c == 'N') { var npc = Npcs.At(map.Kind, nx, ny); if (npc != null) StartCoroutine(NpcRoutine(npc)); }
                 return;

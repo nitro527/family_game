@@ -93,6 +93,10 @@
     { "Id": "chest_sealed", "Lines": [ { "Text": "낡은 보물상자다. 아직은 꿈쩍도 하지 않는다.", "Face": "pout" } ] },
     { "Id": "chest_open",   "Lines": [ { "Text": "보물상자를 열었다! {item:을/를} 손에 넣었다!", "Face": "laugh", "Hold": 1.4 } ] },
     { "Id": "chest_empty",  "Lines": [ { "Text": "보물상자는 이미 비어 있다.", "Face": "smile" } ] },
+    { "Id": "hole_look",    "Lines": [ { "Text": "수상한 구멍이다. 살짝 들여다봤다…", "Face": "surprised" } ] },
+    { "Id": "hole_candy",   "Lines": [ { "Text": "구멍 속에 사탕이 있다! 사탕을 {count}개 주웠다!", "Face": "laugh", "Hold": 1.2 } ] },
+    { "Id": "hole_monster", "Lines": [ { "Text": "앗, 이단 괴물이다! {enemy:이/가} 구멍에서 튀어나왔다!", "Face": "surprised" } ] },
+    { "Id": "hole_empty",   "Lines": [ { "Text": "텅 빈 구멍이다. 이제 아무것도 없다.", "Face": "smile" } ] },
     { "Id": "door_sealed",  "Lines": [ { "Text": "커다란 철문이 굳게 닫혀 있다…", "Face": "surprised" } ] },
     { "Id": "door_locked",  "Lines": [ { "Text": "젤리 기지의 문이 잠겨 있다! 열쇠가 있으면 열 수 있을 텐데…", "Face": "pout" } ] },
     { "Id": "door_open", "Lines": [

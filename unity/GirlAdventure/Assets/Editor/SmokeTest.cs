@@ -27,6 +27,7 @@ namespace GirlAdventure.EditorTools
             MusicTests();
             SaveTests();
             QuestTests();
+            HoleTests();
             ShopTests();
             ItemTests();
             GearTests();
@@ -62,6 +63,7 @@ namespace GirlAdventure.EditorTools
             "boss2_meet", "ch2_clear", "ending_card2",
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
+            "hole_look", "hole_candy", "hole_monster", "hole_empty",
         };
 
         static void DataTests()
@@ -672,6 +674,62 @@ namespace GirlAdventure.EditorTools
         {
             foreach (var id in Shop.Goods(kind))
                 if (Equipment.IsGear(id)) { p.Gear.Add(id); Equipment.Equip(p, id); }
+        }
+
+        /// <summary>수상한 구멍 (B-7): 초원·동굴에 놓이고, 길을 막지 않고, 사탕 또는 2단 괴물, 한 번만, 세이브.</summary>
+        static void HoleTests()
+        {
+            var f = new WorldMap();
+            Npcs.Place(f);
+            var c = WorldMap.Cave();
+            Npcs.Place(c);
+            var v = WorldMap.Village();
+            string bad = "";
+            foreach (var (m, want) in new[] { (f, 4), (c, 3) })
+            {
+                var from = m.SpawnPoint;
+                var reach = Reach(m, from);
+                if (m.Holes.Count != want) bad += $"{m.Kind} count {m.Holes.Count} ";
+                foreach (var (x, y) in m.Holes)
+                {
+                    bool side = false;
+                    foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) side |= reach[x + dx, y + dy];
+                    if (m.At(x, y) != 'o' || !m.Blocked(x, y) || !side || m.Safe(x, y)) bad += $"{m.Kind}({x},{y}) ";
+                }
+            }
+            Check("holes placed on floor, reachable", bad == "", bad);
+            // 구멍을 놓아도 중요한 곳까지 여전히 갈 수 있다
+            var fr = Reach(f, WorldMap.Start);
+            bool caveOk = false;
+            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) caveOk |= Reach(c, WorldMap.CaveStart)[WorldMap.Chest.x + dx, WorldMap.Chest.y + dy];
+            Check("holes keep paths open", fr[WorldMap.Gate.x, WorldMap.Gate.y] && fr[WorldMap.VillageGate.x, WorldMap.VillageGate.y] && caveOk
+                  && Reach(c, WorldMap.CaveStart)[WorldMap.BaseDoor.x, WorldMap.BaseDoor.y + 1]);
+            Check("no holes in village", v.Holes.Count == 0);
+            Check("hole monster is tier 2", Holes.BigMonster(MapKind.Field).Tier == 2 && Holes.BigMonster(MapKind.Cave).Tier == 2,
+                  $"{Holes.BigMonster(MapKind.Field).Name}/{Holes.BigMonster(MapKind.Cave).Name}");
+
+            // 들여다보기: 한 번만, 결과는 사탕(가방 +2) 또는 2단 괴물. 여러 판 굴리면 둘 다 나온다
+            int candy = 0, monster = 0;
+            bool once = true, candyOk = true;
+            var rnd = new System.Random(3);
+            for (int i = 0; i < 200; i++)
+            {
+                var q = PlayerState.NewGame("t");
+                q.Candy = 0;
+                var (hx, hy) = f.Holes[i % f.Holes.Count];
+                var r = Holes.Look(q, f, hx, hy, rnd.NextDouble(), out var def);
+                if (r == HoleResult.Candy) { candy++; candyOk &= q.Candy == Holes.CandyGain && def == null; }
+                else if (r == HoleResult.Monster) { monster++; candyOk &= def != null && def.Tier == 2 && q.Candy == 0; }
+                once &= r != HoleResult.Empty && Holes.Looked(q, MapKind.Field, hx, hy) && Holes.Look(q, f, hx, hy, rnd.NextDouble(), out _) == HoleResult.Empty;
+            }
+            Check("hole: candy or big monster, once", once && candyOk && candy > 80 && monster > 40, $"candy {candy} monster {monster}");
+            Check("hole: not a hole → empty", Holes.Look(PlayerState.NewGame("t"), f, WorldMap.Start.x, WorldMap.Start.y, 0, out _) == HoleResult.Empty);
+            // 같은 좌표라도 초원 구멍과 동굴 구멍은 따로 센다, 세이브에 남는다
+            var s = PlayerState.NewGame("t");
+            var (fx, fy) = f.Holes[0];
+            Holes.Look(s, f, fx, fy, 0, out _);
+            var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(s.ToSave())));
+            Check("hole: saved per map", Holes.Looked(back, MapKind.Field, fx, fy) && !Holes.Looked(back, MapKind.Cave, fx, fy));
         }
 
         static void QuestTests()

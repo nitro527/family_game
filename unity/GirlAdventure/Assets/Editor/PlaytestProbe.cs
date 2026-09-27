@@ -191,6 +191,10 @@ namespace GirlAdventure.EditorTools
             yield return .6f;
             Shot("field_water");
             Expect($"flowers are sway sprites (n={G.FlowerCount} tilt={G.FlowerTilt:F2})", G.FlowerCount > 10 && Mathf.Abs(G.FlowerTilt) > .01f);
+            // 수상한 구멍 (B-7): 초원에 4개, 보랏빛 기운이 올라오는 모습만 촬영 (들여다보기는 동굴에서 검사)
+            Expect($"field has holes (n={G.HoleCount})", G.HoleCount == 4);
+            var fh = G.DebugHoleApproach(true);
+            if (fh.dir != null) { G.DebugTeleport(fh.x, fh.y, fh.dir); yield return 1.2f; Shot("field_hole"); }
             // 마을 사람: 밀짚모자 젤리 아래에서 위로 부딪히면 말을 건다 (초상화도 젤리)
             Expect($"npcs on field (n={G.NpcCount})", G.NpcCount == 2);
             G.DebugTeleport(7, 3, "up");
@@ -760,6 +764,58 @@ namespace GirlAdventure.EditorTools
             Shot("cave_big_jelly_battle");
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+
+            // 수상한 구멍 (B-7, 서진이 노트 3): 사탕 → 2단 괴물 → 빈 구멍
+            Expect("cave has holes", G.HoleCount == 3);
+            foreach (var (roll, what) in new[] { (0.0, "candy"), (.99, "monster") })
+            {
+                var h = G.DebugHoleApproach(true);
+                Expect($"hole approachable ({what})", h.dir != null);
+                if (h.dir == null) break;
+                G.DebugMobs(true, true);
+                G.DebugTeleport(h.x, h.y, h.dir);
+                G.DebugHoleRoll = roll;
+                yield return .4f;
+                Shot("hole_" + what + "_before");
+                int holeCandy0 = G.P.Candy;
+                var key = h.dir == "up" ? KeyCode.UpArrow : h.dir == "down" ? KeyCode.DownArrow : h.dir == "left" ? KeyCode.LeftArrow : KeyCode.RightArrow;
+                Keys.Hold(key, true); yield return .15f; Keys.Hold(key, false);
+                if (what == "candy")
+                {
+                    yield return .6f;
+                    foreach (var x in SkipTalk(() => G.MessageText.Contains("사탕"))) yield return x;
+                    yield return .5f;
+                    Shot("hole_candy");
+                    Expect("hole gives candy", G.P.Candy == Math.Min(PlayerState.BagCandy, holeCandy0 + Holes.CandyGain));
+                    foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+                }
+                else
+                {
+                    yield return .6f;
+                    foreach (var x in SkipTalk(() => G.MessageText.Contains("이단 괴물"))) yield return x;
+                    yield return .3f;
+                    Shot("hole_monster");
+                    foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+                    Expect("hole monster battle is tier 2", G.Current == GameRoot.Mode.Battle && G.BattleEnemy != null && G.BattleEnemy.Tier == 2);
+                    Shot("hole_monster_battle");
+                    foreach (var x in FightUntilOver(false)) yield return x;
+                    foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+                }
+            }
+            G.DebugHoleRoll = -1;
+            var used = G.DebugHoleApproach(false);
+            Expect("looked hole approachable", used.dir != null);
+            if (used.dir != null)
+            {
+                G.DebugTeleport(used.x, used.y, used.dir);
+                yield return .3f;
+                var key = used.dir == "up" ? KeyCode.UpArrow : used.dir == "down" ? KeyCode.DownArrow : used.dir == "left" ? KeyCode.LeftArrow : KeyCode.RightArrow;
+                Keys.Hold(key, true); yield return .15f; Keys.Hold(key, false);
+                yield return 1.0f;
+                Shot("hole_empty");
+                Expect("looked hole is empty", G.MessageText.Contains("텅 빈"));
+                foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            }
 
             G.DebugTeleport(28, 9, "up");
             yield return .3f;

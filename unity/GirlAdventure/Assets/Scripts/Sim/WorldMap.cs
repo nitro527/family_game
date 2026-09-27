@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
@@ -12,6 +13,7 @@ namespace GirlAdventure.Sim
     ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'M' 사탕 가게
     ///        (보물상자 바로 옆 GuardSpot 에는 바위 대장 젤리가 버티고 있다 — 타일이 아니라 Quest 규칙)
     ///        초원의 'V' = 별빛 마을 입구 (밟으면 마을로)
+    ///        초원·동굴 'o' = 수상한 구멍 (부딪혀 들여다보면 사탕 또는 2단 괴물, Holes)
     /// 마을 — '.' 풀밭 'f' 꽃 '=' 길 'T' 숲 'h' 집 'u' 우물 'x' 울타리 'S' 표지판 'M' 사탕 가게 'E' 출구(밟으면 초원으로) 'N' 마을 사람
     /// </summary>
     public class WorldMap
@@ -30,9 +32,11 @@ namespace GirlAdventure.Sim
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
         public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
-        const string Blocking = "TwCFSHD#rMNhux";
+        const string Blocking = "TwCFSHD#rMNhuxo";
 
         public readonly MapKind Kind;
+        /// <summary>이 맵의 수상한 구멍 칸 (초원·동굴).</summary>
+        public List<(int x, int y)> Holes { get; private set; } = new List<(int x, int y)>();
         readonly char[,] tiles = new char[W, H];
 
         public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : CaveStart;
@@ -107,6 +111,7 @@ namespace GirlAdventure.Sim
             // 마을 입구: 공터 오른쪽 위 (왼쪽 위는 HUD 창에 가려서). 공터에서 입구까지 작은 길
             for (int x = 8; x <= VillageGate.x; x++) Set(x, VillageGate.y + 1, '=');
             Set(VillageGate.x, VillageGate.y, 'V');
+            Holes = Sim.Holes.Place(this, (x, y) => Set(x, y, 'o'));
         }
 
         /// <summary>
@@ -176,6 +181,7 @@ namespace GirlAdventure.Sim
             m.Set(CaveSign.x, CaveSign.y, 'S');
             m.Set(CaveShop.x, CaveShop.y, 'M');
             m.Set(Chest.x, Chest.y, 'H');
+            m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));
             return m;
         }
 

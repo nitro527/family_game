@@ -323,6 +323,14 @@ namespace GirlAdventure.View
         /// <summary>프로브용: 사방 r 칸이 모두 그냥 땅(풀·수풀·꽃·길·다리)인 첫 칸. 걷기 검사가 가게·사람에 부딪히지 않게.</summary>
         public Vector2Int DebugOpenSpot(int r)
         {
+            // 사방 r 칸이 트인 곳이 없으면 r 을 줄여 가며 찾는다 (예전엔 없으면 제자리 → 시작 공터 표지판에 부딪히곤 했다)
+            for (; r >= 2; r--)
+                if (OpenSpot(r) is Vector2Int v) return v;
+            return new Vector2Int(P.X, P.Y);
+        }
+
+        Vector2Int? OpenSpot(int r)
+        {
             for (int y = r; y < WorldMap.H - r; y++)
                 for (int x = r; x < WorldMap.W - r; x++)
                 {
@@ -332,7 +340,7 @@ namespace GirlAdventure.View
                             ok = ".,f=b".IndexOf(map.At(x + dx, y + dy)) >= 0;
                     if (ok) return new Vector2Int(x, y);
                 }
-            return new Vector2Int(P.X, P.Y);
+            return null;
         }
 
         /// <summary>프로브용: 주인공 가까이(맨해튼 거리 r 이하) 몬스터를 멀리 옮김 (수는 그대로). 멈춘 몬스터가 걷는 길 위에 있으면 전투가 끼어들어서.</summary>

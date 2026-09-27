@@ -32,6 +32,7 @@ namespace GirlAdventure.View
             Add("chest", Wave.Square, .07f, .25f, 523, 659, 784, 1046, 1318);
             Add("unlock", Wave.Square, .05f, .22f, 220, 0, 330, 660);
             Add("start", Wave.Triangle, .12f, .30f, 392, 523, 659, 784);
+            Add("peek", Wave.Triangle, .07f, .22f, 660, 494, 370, 277);           // 수상한 구멍 들여다보기 (쑤욱 내려가는 소리)
             Add("coin", Wave.Square, .05f, .16f, 988, 1318);
             // 적 공격 모션마다 다른 소리 ("mv_" + EnemyDef.Moves), 쿵 누르기·돌격은 부딪힐 때 "thud" 도
             Add("mv_tackle", Wave.Square, .05f, .20f, 220, 160, 120);            // 퉁
