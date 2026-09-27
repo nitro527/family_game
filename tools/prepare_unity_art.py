@@ -7,6 +7,7 @@ natural bob is kept.
 
 usage: python tools/prepare_unity_art.py            (딸 그림 전부)
        python tools/prepare_unity_art.py monsters   (몬스터 도감 그림 중 enemies.json 의 "Art" 가 가리키는 것만)
+       python tools/prepare_unity_art.py boy        (동생 지훈 → Resources/Boy, 백로그 47)
 """
 import glob
 import json
@@ -116,5 +117,73 @@ def monsters():
         print(f'{a:15s} {im.size}')
 
 
+BOY_SRC = os.path.join(ROOT, 'assets', 'characters', 'gen', 'boy')
+BOY_OUT = os.path.join(ROOT, 'unity', 'GirlAdventure', 'Assets', 'Resources', 'Boy')
+BOY_SCALE = .92           # 동생은 누나보다 조금 작게 (걷기·전투 모두)
+
+
+def keep_main(im):
+    """포즈 칸에 옆 그림 조각(방패 끝 등)이 딸려 들어온 경우: 큰 덩어리만 남기고 작은 떨어진 조각은 지운다."""
+    a = im.getchannel('A').point(lambda v: 255 if v > 40 else 0)
+    w, h = a.size
+    px = a.load()
+    seen = [[False] * h for _ in range(w)]
+    blobs = []
+    for sx in range(w):
+        for sy in range(h):
+            if px[sx, sy] == 0 or seen[sx][sy]:
+                continue
+            stack, pts = [(sx, sy)], []
+            seen[sx][sy] = True
+            while stack:
+                x, y = stack.pop()
+                pts.append((x, y))
+                for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                    if 0 <= nx < w and 0 <= ny < h and not seen[nx][ny] and px[nx, ny]:
+                        seen[nx][ny] = True
+                        stack.append((nx, ny))
+            blobs.append(pts)
+    biggest = max(len(b) for b in blobs)
+    out = im.copy()
+    op = out.load()
+    for b in blobs:
+        if len(b) < biggest * .03:                      # 몸의 3% 안 되는 떨어진 조각
+            for x, y in b:
+                op[x, y] = (0, 0, 0, 0)
+    return out
+
+
+def boy():
+    """동생(지훈) 그림: 걷기 옆 4장·앞·뒤, 전투 대기·공격·피격·승리, 표정 6개, 전신. 딸과 같은 크기 규칙에 BOY_SCALE."""
+    os.makedirs(BOY_OUT, exist_ok=True)
+    P = os.path.join(BOY_SRC, 'poses')
+    load = lambda n: keep_main(Image.open(os.path.join(P, f'boy_{n}.png')).convert('RGBA'))
+    wh = round(WALK_FIG_H * BOY_SCALE)
+    side = [load(f'walk_side{i}') for i in range(1, 5)]
+    walk = normalize_group(side, wh) + normalize_group([load('walk_front')], wh) + normalize_group([load('walk_back')], wh)
+    names = ['walk_side1', 'walk_side2', 'walk_side3', 'walk_side4', 'walk_front', 'walk_back']
+    for n, im in zip(names, place(walk)):
+        im.save(os.path.join(BOY_OUT, n + '.png'), optimize=True)
+    battle_names = ['ready', 'attack', 'damage', 'victory']
+    battle = [load(f'battle_{n}') for n in battle_names]
+    s = BATTLE_FIG_H * BOY_SCALE / (bbox(battle[0])[3] - bbox(battle[0])[1])
+    cuts = []
+    for im in battle:
+        c = im.crop(bbox(im))
+        cuts.append(c.resize((round(c.width * s), round(c.height * s)), Image.LANCZOS))
+    for n, im in zip(battle_names, place(cuts)):
+        im.save(os.path.join(BOY_OUT, f'battle_{n}.png'), optimize=True)
+    for p in sorted(glob.glob(os.path.join(BOY_SRC, 'icons', '*.png'))):
+        name = os.path.basename(p).split('_', 2)[2]
+        Image.open(p).convert('RGB').resize((256, 256), Image.LANCZOS).save(os.path.join(BOY_OUT, 'face_' + name), optimize=True)
+    hero = Image.open(os.path.join(BOY_SRC, 'boy_main_transparent.png')).convert('RGBA')
+    hero.resize((round(hero.width * 1000 / hero.height), 1000), Image.LANCZOS).save(os.path.join(BOY_OUT, 'hero.png'), optimize=True)
+    for n in names + [f'battle_{b}' for b in battle_names]:
+        im = Image.open(os.path.join(BOY_OUT, n + '.png'))
+        b = bbox(im)
+        print(f'{n:15s} canvas={im.size} figH={b[3] - b[1]} bottomGap={im.height - b[3]}')
+
+
 if __name__ == '__main__':
-    monsters() if sys.argv[1:] == ['monsters'] else main()
+    arg = sys.argv[1:]
+    monsters() if arg == ['monsters'] else boy() if arg == ['boy'] else main()

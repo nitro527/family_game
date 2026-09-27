@@ -29,6 +29,7 @@ namespace GirlAdventure.EditorTools
             QuestTests();
             HoleTests();
             BestiaryTests();
+            BoyArtTests();
             ShopTests();
             ItemTests();
             GearTests();
@@ -678,6 +679,29 @@ namespace GirlAdventure.EditorTools
         }
 
         /// <summary>몬스터 도감 (45): 만남·쓰러뜨림 기록, 칭호, 세이브, 설명.</summary>
+        /// <summary>동생 지훈 그림 (백로그 47): 합류(48·49) 때 쓸 그림이 다 들어왔고, 누나보다 조금 작고, 발이 바닥에 붙어 있다.</summary>
+        static void BoyArtTests()
+        {
+            string missing = "", bad = "";
+            var names = new[] { "walk_side1", "walk_side2", "walk_side3", "walk_side4", "walk_front", "walk_back", "battle_ready", "battle_attack", "battle_damage", "battle_victory",
+                                "face_smile", "face_laugh", "face_angry", "face_surprised", "face_cry", "face_determined", "hero" };
+            foreach (var n in names)
+            {
+                var t = Resources.Load<Texture2D>("Boy/" + n);
+                if (t == null) { missing += n + " "; continue; }
+                var imp = (UnityEditor.TextureImporter)UnityEditor.AssetImporter.GetAtPath($"Assets/Resources/Boy/{n}.png");
+                if (imp == null || imp.npotScale != UnityEditor.TextureImporterNPOTScale.None) bad += n + "(npot) ";
+            }
+            Check("boy art imported", missing == "" && bad == "", missing + bad);
+            var boyWalk = Resources.Load<Texture2D>("Boy/walk_side1");
+            var girlWalk = Resources.Load<Texture2D>("Girl/walk_side1");
+            var boyBattle = Resources.Load<Texture2D>("Boy/battle_ready");
+            var girlBattle = Resources.Load<Texture2D>("Girl/battle_ready");
+            Check("boy a bit smaller than sister", boyWalk != null && girlWalk != null && boyBattle != null && girlBattle != null
+                  && boyWalk.height < girlWalk.height && boyWalk.height > girlWalk.height * .85f && boyBattle.height < girlBattle.height,
+                  $"walk {boyWalk?.height}/{girlWalk?.height} battle {boyBattle?.height}/{girlBattle?.height}");
+        }
+
         static void BestiaryTests()
         {
             var all = Bestiary.Entries;

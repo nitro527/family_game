@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GirlAdventure.View
 {
-    /// <summary>Resources/Girl 의 캐릭터 이미지를 스프라이트로 로드·캐시한다.</summary>
+    /// <summary>Resources/Girl 의 캐릭터 이미지를 스프라이트로 로드·캐시한다. "Boy/..." 처럼 폴더를 붙이면 그 폴더(동생 지훈)에서.</summary>
     public static class Art
     {
         static readonly Dictionary<string, Sprite> cache = new Dictionary<string, Sprite>();
@@ -16,10 +16,11 @@ namespace GirlAdventure.View
         {
             string key = $"{name}|{heightUnits}|{bottomPivot}";
             if (cache.TryGetValue(key, out var s)) return s;
-            var tex = Resources.Load<Texture2D>("Girl/" + name);
+            string path = name.Contains("/") ? name : "Girl/" + name;
+            var tex = Resources.Load<Texture2D>(path);
             if (tex == null)
             {
-                Debug.LogError($"[Art] missing Resources/Girl/{name}");
+                Debug.LogError($"[Art] missing Resources/{path}");
                 return null;
             }
             tex.filterMode = FilterMode.Bilinear;
