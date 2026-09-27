@@ -16,7 +16,7 @@
 ## 새 몬스터 추가하는 법
 1. 딸의 노트를 `docs/ideas/daughter_note_NN.jpg` 로 저장하고, 몬스터 부분을 `assets/monsters/sketches/` 에 잘라 둠
 2. Gemini (새 채팅, 이미지 만들기): **기준 그림 `assets/monsters/gen/jelly_blue/jelly_blue_v1.png`** + 딸 스케치를 붙여 넣고
-   "Image 1 is our finished JRPG monster 'blue jelly' - keep EXACTLY this art style ... Image 2 is my 5-year-old daughter's drawing of ..." (지난 프롬프트는 이 문서 아래)
+   "Image 1 is our finished JRPG monster 'blue jelly' - keep EXACTLY this art style ... Image 2 is my 7-year-old daughter's drawing of ..." (지난 프롬프트는 이 문서 아래)
    - 2~3마리를 한 장에 "well separated with lots of white space", "plain pure white background" 로 뽑으면 한 번에 여러 마리
 3. 원본을 `assets/monsters/gen/<지역>/` 에 넣고 `monsters.json` 의 `sheets`(줄마다 몇 마리)와 `monsters` 에 한 줄씩 추가
 4. `python tools/monster_catalog.py` → 자르기 + 도감 이미지 갱신
