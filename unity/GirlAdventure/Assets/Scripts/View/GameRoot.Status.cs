@@ -7,7 +7,7 @@ namespace GirlAdventure.View
 {
     /// <summary>
     /// 상태 창: 필드에서 Esc (패드 Y/Back, 터치 "메뉴") → 레벨·다음 레벨까지 경험치·HP·MP·공격력·골드,
-    /// 방어력, 가운데 장비·주문, 오른쪽 가방·지금 할 일. Z/Enter 메뉴(또는 "도구 쓰기"·"장비 바꾸기" 버튼)로
+    /// 방어력, 가운데 장비·주문, 오른쪽 가방·지금 할 일. Z/Enter 메뉴(또는 "도구 쓰기"·"장비 바꾸기"·"도감" 버튼)로
     /// 도구 사용·장비 바꾸기, Esc·바깥 클릭으로 닫는다.
     /// 열려 있는 동안 몬스터도 멈춘다(busy).
     /// </summary>
@@ -16,7 +16,7 @@ namespace GirlAdventure.View
         GameObject statusPanel;
         Text stHead, stLeftVals, stMid, stRight, stExpText;
         Image stExpBar, stHpBar, stMpBar, stFace;
-        bool statusOpen, statusClicked, statusUse, statusGear, statusOptions;
+        bool statusOpen, statusClicked, statusUse, statusGear, statusOptions, statusBook;
 
         // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다.
         // 세 칸: 왼쪽 능력치 / 가운데 장비·주문 / 오른쪽 가방·지금 할 일
@@ -61,13 +61,15 @@ namespace GirlAdventure.View
             stMid.supportRichText = true;
             stRight = UIKit.Label(win, "Right", "", RightX, 20, StW - RightX - 20, StH - 78, 19, TextAnchor.UpperLeft);
             stRight.supportRichText = true;
-            var use = UIKit.Button(win, "UseItem", "도구 쓰기", MidX, StH - 54, 140, 40, 19, new Color32(150, 200, 255, 255));
+            var use = UIKit.Button(win, "UseItem", "도구 쓰기", MidX, StH - 54, 118, 40, 19, new Color32(150, 200, 255, 255));
             use.onClick.AddListener(() => statusUse = true);
-            var gear = UIKit.Button(win, "Gear", "장비 바꾸기", MidX + 152, StH - 54, 150, 40, 19, new Color32(255, 214, 120, 255));
+            var gear = UIKit.Button(win, "Gear", "장비 바꾸기", MidX + 126, StH - 54, 130, 40, 19, new Color32(255, 214, 120, 255));
             gear.onClick.AddListener(() => statusGear = true);
-            var opt = UIKit.Button(win, "Options", "설정", MidX + 314, StH - 54, 90, 40, 19, new Color32(190, 190, 215, 255));
+            var book = UIKit.Button(win, "Book", "도감", MidX + 264, StH - 54, 80, 40, 19, new Color32(150, 230, 160, 255));
+            book.onClick.AddListener(() => statusBook = true);
+            var opt = UIKit.Button(win, "Options", "설정", MidX + 352, StH - 54, 76, 40, 19, new Color32(190, 190, 215, 255));
             opt.onClick.AddListener(() => statusOptions = true);
-            UIKit.Label(win, "Close", "Z 메뉴\nEsc 닫기", MidX + 414, StH - 56, StW - MidX - 434, 48, 15, TextAnchor.MiddleRight, UIKit.Dim);
+            UIKit.Label(win, "Close", "Z 메뉴\nEsc 닫기", MidX + 436, StH - 56, StW - MidX - 452, 48, 14, TextAnchor.MiddleRight, UIKit.Dim);
             statusPanel.SetActive(false);
         }
 
@@ -187,23 +189,32 @@ namespace GirlAdventure.View
             RenderStatus();
             statusPanel.SetActive(true);
             sfx.Play("select");
-            statusClicked = statusUse = statusGear = statusOptions = false;
+            statusClicked = statusUse = statusGear = statusOptions = statusBook = false;
             yield return null;                  // 여는 입력으로 바로 닫히지 않게
             while (true)
             {
-                if (!statusUse && !statusGear && !statusOptions && ConfirmDown())
+                if (!statusUse && !statusGear && !statusOptions && !statusBook && ConfirmDown())
                 {
                     // 키보드·패드: 작은 메뉴에서 고른다 (버튼은 바로)
                     ShowMessageWindow(true);
                     SetFace("smile");
                     msgText.text = "무엇을 할까?";
                     choiceIndex = 0;
-                    yield return Choose("도구 쓰기", "장비 바꾸기", "설정", "닫기");
+                    yield return Choose("도구 쓰기", "장비 바꾸기", "도감", "설정", "닫기");
                     HideMessage();
-                    if (choicePicked == 3) break;
+                    if (choicePicked == 4) break;
                     statusUse = choicePicked == 0;
                     statusGear = choicePicked == 1;
-                    statusOptions = choicePicked == 2;
+                    statusBook = choicePicked == 2;
+                    statusOptions = choicePicked == 3;
+                }
+                if (statusBook)
+                {
+                    statusBook = false;
+                    yield return BookRoutine();
+                    statusClicked = false;
+                    yield return null;
+                    continue;
                 }
                 if (statusOptions)
                 {

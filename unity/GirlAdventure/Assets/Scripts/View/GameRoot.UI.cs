@@ -78,6 +78,8 @@ namespace GirlAdventure.View
             BuildStatus();
             statusPanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());   // 상태 창 위에 대화창·선택창이 뜨게
             titlePanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());    // 타이틀 위에도 (세이브 칸 고르기)
+            BuildBook();
+            bookPanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());     // 도감은 상태 창 위에
             BuildSwirl();
 
             flashImg = UIKit.Fill(ui, "Flash", new Color(1, 1, 1, 0));

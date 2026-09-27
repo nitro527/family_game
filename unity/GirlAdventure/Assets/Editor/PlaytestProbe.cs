@@ -371,7 +371,7 @@ namespace GirlAdventure.EditorTools
             Keys.Press(KeyCode.Return);
             yield return (Func<bool>)(() => G.ChoiceOpen);
             yield return .2f;
-            for (int k = 0; k < 2; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            for (int k = 0; k < 3; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
             Keys.Press(KeyCode.Return);                // 설정
             yield return .3f;
             yield return (Func<bool>)(() => G.ChoiceOpen);
@@ -398,6 +398,33 @@ namespace GirlAdventure.EditorTools
             Expect("status still open after options", G.StatusOpen);
             Settings.ResetDefaults();
             Expect("options reset", Settings.Flash && Settings.SfxPercent == 100 && Settings.TextSpeed == 1);
+            // 몬스터 도감 (45): 메뉴 → 도감. 만난 젤리는 그림·이름, 못 만난 젤리는 그림자·???, 다 잡으면 칭호
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            for (int k = 0; k < 2; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Keys.Press(KeyCode.Return);                // 도감
+            yield return .4f;
+            Shot("book");
+            Log("BOOK " + G.BookText);
+            Expect("book opens from status menu (no battle yet → all hidden)", G.BookOpen && G.BookText.Contains("몬스터 도감") && G.BookText.Contains("만남 0"));
+            Keys.Press(KeyCode.RightArrow); yield return .15f;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;       // 여섯째 칸 (킹 젤리 — 아직 못 만남)
+            yield return .2f;
+            Shot("book_unseen");
+            Expect("book: unseen entry hidden", G.BookText.Contains("???") && G.BookText.Contains("아직 못 만났어요"));
+            var beaten0 = new List<string>(G.P.Beaten);
+            var seen0 = new List<string>(G.P.Seen);
+            foreach (var d in Bestiary.Entries) Bestiary.Beat(G.P, d);
+            G.DebugBookSelect(5);
+            yield return .2f;
+            Shot("book_complete");
+            Expect("book: all beaten → title", G.BookText.Contains(Bestiary.Title) && G.BookText.Contains("★ 쓰러뜨렸어요"));
+            G.P.Beaten.Clear(); G.P.Beaten.AddRange(beaten0);
+            G.P.Seen.Clear(); G.P.Seen.AddRange(seen0);
+            Keys.Press(KeyCode.Escape);
+            yield return .3f;
+            Expect("book closes back to status", !G.BookOpen && G.StatusOpen);
             Keys.Press(KeyCode.Escape);
             yield return .3f;
             Expect("status closes with Esc", !G.StatusOpen && !G.Busy);
@@ -528,6 +555,8 @@ namespace GirlAdventure.EditorTools
             }
             foreach (var x in FightUntilOver(false)) yield return x;
             Shot("after_battle_field");
+            Expect($"book records the battle (seen {Bestiary.SeenCount(G.P)} beaten {Bestiary.BeatenCount(G.P)})",
+                   Bestiary.BeatenCount(G.P) >= 1 && Bestiary.SeenCount(G.P) >= Bestiary.BeatenCount(G.P));
             Expect("enemy hp bar hidden in field", !G.EnemyHpVisible);
             ExpectBgm("field");
 

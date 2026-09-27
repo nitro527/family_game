@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 7;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안
+        public const int CurrentVersion = 8;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -19,6 +19,7 @@ namespace GirlAdventure.Sim
         public string[] Items, Opened;
         public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
         public string[] Gear, Equipped; // 가진 장비 id, 장착한 장비 id
+        public string[] Seen, Beaten;   // 버전 8: 도감 — 만난/쓰러뜨린 적 이름
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
@@ -55,6 +56,8 @@ namespace GirlAdventure.Sim
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
         public List<string> Gear = new List<string>();      // 가진 장비 id
         public Dictionary<string, string> Equipped = new Dictionary<string, string>();   // 부위 → 장착한 장비 id
+        public List<string> Seen = new List<string>();      // 도감: 만난 적 이름
+        public List<string> Beaten = new List<string>();    // 도감: 쓰러뜨린 적 이름
 
         public bool HasItem(string id) => Items.Contains(id);
 
@@ -120,6 +123,7 @@ namespace GirlAdventure.Sim
             Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, SavedAt = savedAt,
             Chapter = Chapter, InVillage = InVillage, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
+            Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),
         };
 
         string[] BagEntries()
@@ -167,6 +171,8 @@ namespace GirlAdventure.Sim
                     if (!p.Gear.Contains(id) && (!GameData.Loaded || Equipment.IsGear(id))) p.Gear.Add(id);
             if (s.Equipped != null && GameData.Loaded)
                 foreach (var id in s.Equipped) Equipment.Equip(p, id);    // 가진 장비만 장착된다
+            Bestiary.Load(p.Seen, s.Seen);     // 옛 세이브(버전 7 이하)는 빈 도감
+            Bestiary.Load(p.Beaten, s.Beaten);
             p.InVillage = s.InVillage && p.Chapter <= 1;
             var map = WorldMap.ForPlayer(p.Chapter, p.InVillage);
             (p.X, p.Y) = map.SpawnPoint;

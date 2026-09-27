@@ -164,6 +164,7 @@ namespace GirlAdventure.View
             Current = Mode.Battle;
             var def = defs[0];
             battle = new BattleSystem(P, defs, rng);
+            foreach (var d in defs) Bestiary.Meet(P, d);     // 도감: 만났다
             sfx.Play("encounter");
             yield return SwirlIn(def.Boss);
 
@@ -479,6 +480,8 @@ namespace GirlAdventure.View
             if (GroupBattle) yield return Talk("win_group");
             else yield return Talk("win", ("enemy", def.Name));
             int exp = battle.TotalExp, gold = battle.TotalGold;   // 무리는 합계
+            bool wasComplete = Bestiary.Complete(P);
+            foreach (var f in battle.Foes) Bestiary.Beat(P, f.Def);     // 도감: 쓰러뜨렸다
             int ups = P.GainExp(exp);
             P.GainGold(gold);
             sfx.Play("coin");
@@ -491,6 +494,11 @@ namespace GirlAdventure.View
                 yield return Talk("levelup", ("lv", P.Lv - ups + i + 1));
             }
             RefreshHud();
+            if (!wasComplete && Bestiary.Complete(P))
+            {
+                sfx.Play("lvup");
+                yield return Talk("book_complete", ("count", Bestiary.Total), ("item", Bestiary.Title));
+            }
             if (def == GameData.Guard)
             {
                 P.GuardDown = true;             // 보물상자를 열 수 있게 된다 (EndBattle → EnterField 가 지킴이 그림을 치우고 저장)

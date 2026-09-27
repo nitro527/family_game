@@ -1,18 +1,18 @@
 {
   "Normal": [
-    { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 3, "Exp": 4,  "Gold": 3,  "Move": "tackle", "Attack": "몸통 박치기", "Art": "jelly_blue" },
-    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 12, "Atk": 4, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프", "Art": "jelly_green" },
-    { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 18, "Atk": 6, "Exp": 10, "Gold": 7, "Move": "spin",   "Attack": "빙글빙글 회전", "Art": "jelly_pink" },
-    { "Name": "큰 초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 19, "Atk": 6, "Exp": 11, "Gold": 9,  "Move": "hop",    "Attack": "쿵쿵 점프", "Tier": 2, "Art": "jelly_green" },
-    { "Name": "큰 분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 27, "Atk": 8, "Exp": 17, "Gold": 13, "Move": "spin",   "Attack": "왕 빙글빙글 회전", "Tier": 2, "Art": "jelly_pink" }
+    { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 3, "Exp": 4,  "Gold": 3,  "Move": "tackle", "Attack": "몸통 박치기", "Art": "jelly_blue", "Desc": "제일 처음 만나는 젤리. 말랑말랑 겁이 많아요." },
+    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 12, "Atk": 4, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프", "Art": "jelly_green", "Desc": "장난꾸러기 젤리. 통통 뛰어올라 부딪혀요." },
+    { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 18, "Atk": 6, "Exp": 10, "Gold": 7, "Move": "spin",   "Attack": "빙글빙글 회전", "Art": "jelly_pink", "Desc": "화가 잔뜩 난 젤리. 셋 중에 제일 세요!" },
+    { "Name": "큰 초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 19, "Atk": 6, "Exp": 11, "Gold": 9,  "Move": "hop",    "Attack": "쿵쿵 점프", "Tier": 2, "Art": "jelly_green", "Desc": "초록 젤리가 크게 자란 2단 젤리. 쿵쿵 점프가 아파요." },
+    { "Name": "큰 분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 27, "Atk": 8, "Exp": 17, "Gold": 13, "Move": "spin",   "Attack": "왕 빙글빙글 회전", "Tier": 2, "Art": "jelly_pink", "Desc": "분홍 젤리가 크게 자란 2단 젤리. 성에서 먼 곳에 살아요." }
   ],
-  "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 10, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss", "Art": "jelly_king" },
+  "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 10, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss", "Art": "jelly_king", "Desc": "왕관을 쓴 3단 젤리. 젤리 나라의 왕이에요." },
   "Cave": [
-    { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16, "Gold": 10, "Move": "slam",  "Attack": "쿵쿵 누르기", "Look": "rock", "Art": "cave_rock" },
-    { "Name": "광물 젤리",   "Color": "#9C88C8", "Dark": "#5E4C8A", "Hp": 29, "Atk": 10, "Exp": 19, "Gold": 18, "Move": "spin",  "Attack": "반짝반짝 회전", "Look": "ore", "Art": "cave_ore" },
-    { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22, "Gold": 13, "Move": "shard", "Attack": "수정 조각 날리기", "Look": "crystal", "Art": "cave_crystal" },
-    { "Name": "큰 돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 38, "Atk": 11, "Exp": 24, "Gold": 16, "Move": "slam",  "Attack": "쿵쾅쿵쾅 누르기", "Look": "rock", "Tier": 2, "Art": "cave_rock" }
+    { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16, "Gold": 10, "Move": "slam",  "Attack": "쿵쿵 누르기", "Look": "rock", "Art": "cave_rock", "Desc": "돌 껍데기를 쓴 졸린 젤리. 단단해요." },
+    { "Name": "광물 젤리",   "Color": "#9C88C8", "Dark": "#5E4C8A", "Hp": 29, "Atk": 10, "Exp": 19, "Gold": 18, "Move": "spin",  "Attack": "반짝반짝 회전", "Look": "ore", "Art": "cave_ore", "Desc": "반짝이는 금·보라 광물이 콕콕 박힌 젤리." },
+    { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22, "Gold": 13, "Move": "shard", "Attack": "수정 조각 날리기", "Look": "crystal", "Art": "cave_crystal", "Desc": "뾰족한 수정이 자라는 차가운 젤리." },
+    { "Name": "큰 돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 38, "Atk": 11, "Exp": 24, "Gold": 16, "Move": "slam",  "Attack": "쿵쾅쿵쾅 누르기", "Look": "rock", "Tier": 2, "Art": "cave_rock", "Desc": "돌멩이 젤리가 크게 자란 2단 젤리. 동굴 깊은 곳에 살아요." }
   ],
-  "Guard": { "Name": "바위 대장 젤리", "Color": "#8C7B6B", "Dark": "#54483E", "Hp": 170, "Atk": 13, "Exp": 45, "Gold": 40, "Boss": true, "Move": "slam", "Attack": "바위 굴리기", "Look": "rock", "Backdrop": "cave_guard" },
-  "General": { "Name": "젤리 장군", "Color": "#FF9A3C", "Dark": "#C0602A", "Hp": 240, "Atk": 13, "Exp": 120, "Gold": 150, "Boss": true, "Move": "charge", "Attack": "돌격", "Look": "general", "Backdrop": "cave_boss" }
+  "Guard": { "Name": "바위 대장 젤리", "Color": "#8C7B6B", "Dark": "#54483E", "Hp": 170, "Atk": 13, "Exp": 45, "Gold": 40, "Boss": true, "Move": "slam", "Attack": "바위 굴리기", "Look": "rock", "Backdrop": "cave_guard", "Desc": "젤리 장군의 보물상자를 지키는 바위 같은 젤리. 쿵쿵!" },
+  "General": { "Name": "젤리 장군", "Color": "#FF9A3C", "Dark": "#C0602A", "Hp": 240, "Atk": 13, "Exp": 120, "Gold": 150, "Boss": true, "Move": "charge", "Attack": "돌격", "Look": "general", "Backdrop": "cave_boss", "Desc": "동굴 젤리 기지의 대장. 뿔 투구를 쓰고 돌격해요." }
 }

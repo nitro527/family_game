@@ -28,6 +28,7 @@ namespace GirlAdventure.EditorTools
             SaveTests();
             QuestTests();
             HoleTests();
+            BestiaryTests();
             ShopTests();
             ItemTests();
             GearTests();
@@ -63,7 +64,7 @@ namespace GirlAdventure.EditorTools
             "boss2_meet", "ch2_clear", "ending_card2",
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
-            "hole_look", "hole_candy", "hole_monster", "hole_empty",
+            "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
         };
 
         static void DataTests()
@@ -674,6 +675,29 @@ namespace GirlAdventure.EditorTools
         {
             foreach (var id in Shop.Goods(kind))
                 if (Equipment.IsGear(id)) { p.Gear.Add(id); Equipment.Equip(p, id); }
+        }
+
+        /// <summary>몬스터 도감 (45): 만남·쓰러뜨림 기록, 칭호, 세이브, 설명.</summary>
+        static void BestiaryTests()
+        {
+            var all = Bestiary.Entries;
+            string noDesc = "";
+            foreach (var d in all) if (string.IsNullOrEmpty(d.Desc)) noDesc += d.Name + " ";
+            Check("book: every enemy has a description", noDesc == "" && all.Count == Bestiary.Total && all.Count >= 12, noDesc);
+            var p = PlayerState.NewGame("t");
+            Check("book: new game empty", Bestiary.SeenCount(p) == 0 && Bestiary.BeatenCount(p) == 0 && !Bestiary.Complete(p));
+            Bestiary.Meet(p, GameData.Normal[0]);
+            Bestiary.Meet(p, GameData.Normal[0]);
+            Bestiary.Beat(p, GameData.King);
+            Check("book: meet/beat counted once, beat implies seen", Bestiary.SeenCount(p) == 2 && Bestiary.BeatenCount(p) == 1
+                  && Bestiary.Seen(p, GameData.King) && !Bestiary.Beaten(p, GameData.Normal[0]));
+            foreach (var d in all) Bestiary.Beat(p, d);
+            Check("book: all beaten → title", Bestiary.Complete(p) && Bestiary.BeatenCount(p) == Bestiary.Total);
+            var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("book: saved", Bestiary.Complete(back) && back.Seen.Count == Bestiary.Total);
+            var odd = PlayerState.FromSave(new SaveData { Name = "a", Lv = 3, Seen = new[] { "없는 젤리", "파랑 젤리", "파랑 젤리" } });
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":7,\"Name\":\"a\",\"Lv\":3}"));
+            Check("book: unknown names dropped, old save empty", odd.Seen.Count == 1 && old.Seen.Count == 0 && old.Beaten.Count == 0);
         }
 
         /// <summary>수상한 구멍 (B-7): 초원·동굴에 놓이고, 길을 막지 않고, 사탕 또는 2단 괴물, 한 번만, 세이브.</summary>
