@@ -231,6 +231,38 @@ namespace GirlAdventure.View
             }
         }
 
+        Cmd? pickedSpell;
+
+        /// <summary>전투 "주문" 목록: 배운 주문만, MP 표시, 지금 못 쓰면 흐리게. 그만두기면 pickedSpell = null.</summary>
+        IEnumerator PickSpell()
+        {
+            pickedSpell = null;
+            choiceIndex = 0;
+            while (true)
+            {
+                var known = new List<Cmd>();
+                foreach (var c in BattleSystem.Spells) if (BattleSystem.Knows(P, c)) known.Add(c);
+                var labels = new string[known.Count + 1];
+                for (int i = 0; i < known.Count; i++)
+                {
+                    var s = GameData.Skill(known[i]);
+                    string mp = $"<size=15><color=#9AA3C7>MP {s.Mp}</color></size>";
+                    labels[i] = battle.CanUse(known[i]) ? $"{s.Name} {mp}" : $"<color=#80808C>{s.Name}</color> {mp}";
+                }
+                labels[known.Count] = "그만두기";
+                ShowMessageWindow(true);
+                SetFace("smile");
+                msgText.text = "어떤 주문을 외울까?";
+                yield return Choose(labels);
+                if (choicePicked >= known.Count) yield break;
+                var pick = known[choicePicked];
+                if (battle.CanUse(pick)) { sfx.Play("select"); pickedSpell = pick; yield break; }
+                sfx.Play("miss");
+                bool fullHp = pick == Cmd.Heal && P.Mp >= GameData.Skill(pick).Mp;
+                yield return Talk(fullHp ? "spell_noneed" : "spell_nomp", ("skill", GameData.Skill(pick).Name));
+            }
+        }
+
         /// <summary>도구를 쓴 뒤 대사 (HP·MP 회복량).</summary>
         IEnumerator ItemTalk(string id, int hp, int mp)
         {
@@ -241,6 +273,7 @@ namespace GirlAdventure.View
 
         // ---- 프로브용
         public bool ChoiceOpen => choiceWin != null && choiceWin.activeSelf;
+        public int ChoiceCount => choiceItems?.Length ?? 0;
         public bool HasSfx(string name) => sfx != null && sfx.Has(name);
         public void DebugSetGold(int g) { P.Gold = g; RefreshHud(); }
         public void DebugSetMp(int mp) { P.Mp = Mathf.Clamp(mp, 0, P.MaxMp); RefreshHud(); }

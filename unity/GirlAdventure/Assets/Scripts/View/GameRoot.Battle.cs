@@ -152,6 +152,12 @@ namespace GirlAdventure.View
             {
                 yield return AskCommand();
                 string item = null;
+                if (chosenCmd == Cmd.Spell)
+                {
+                    yield return PickSpell();
+                    if (pickedSpell == null) continue;      // 그만두기 → 다시 명령 고르기
+                    chosenCmd = pickedSpell;
+                }
                 if (chosenCmd == Cmd.Item)
                 {
                     yield return PickItem();
@@ -197,6 +203,17 @@ namespace GirlAdventure.View
                     yield return StarStorm();
                     HitEnemy(o.Damage, true);
                     yield return Talk("star_hit", ("enemy", def.Name), ("dmg", o.Damage));
+                    break;
+                case Cmd.Heal:
+                    pose = "cast";
+                    RefreshHud();
+                    yield return Talk("fire_cast", ("skill", GameData.Skill(Cmd.Heal).Name));
+                    sfx.Play("heal");
+                    for (int i = 0; i < 22; i++)                // 발밑에서 반짝이는 빛 알갱이가 솟아오른다
+                        Spawn(starSprite, Px(HeroX + Random.Range(-60, 60), HeroY + Random.Range(-40, 30)), new Vector3(Random.Range(-.15f, .15f), Random.Range(1.8f, 3.2f)),
+                              1.0f + Random.Range(0, .5f), .3f, new Color(1f, .95f, .55f));
+                    Pop("+" + o.Heal, HeroX, 200, new Color32(125, 255, 154, 255));
+                    yield return Talk("heal_done", ("heal", o.Heal));
                     break;
                 case Cmd.Candy:
                 case Cmd.Item:

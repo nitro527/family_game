@@ -26,8 +26,11 @@ namespace GirlAdventure.Sim
         public static readonly string[] Moves = { "tackle", "hop", "spin", "slam", "shard", "charge" };
     }
 
-    /// <summary>Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).</summary>
-    public enum Cmd { Fire, Star, Candy, Run, Item }
+    /// <summary>
+    /// Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).
+    /// Spell 은 "주문" 목록을 여는 명령 (실제로 쓰는 것은 Star·Heal).
+    /// </summary>
+    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell }
 
     public struct PlayerOutcome
     {
@@ -53,6 +56,11 @@ namespace GirlAdventure.Sim
         public const double DodgeRate = 0.10;
         public static int StarCost => GameData.Skill(Cmd.Star).Mp;
         public static int CandyHeal => GameData.Item(Shop.CandyId).Hp;
+        /// <summary>"주문" 목록에 나오는 주문 (순서대로). 배우는 레벨은 skills.json 의 Lv.</summary>
+        public static readonly Cmd[] Spells = { Cmd.Star, Cmd.Heal };
+
+        /// <summary>이 레벨에서 배운 주문인가.</summary>
+        public static bool Knows(PlayerState p, Cmd c) => p.Lv >= GameData.Skill(c).Lv;
 
         public readonly PlayerState P;
         public readonly EnemyDef Def;
@@ -76,6 +84,10 @@ namespace GirlAdventure.Sim
             {
                 case Cmd.Star: return P.Mp >= StarCost;
                 case Cmd.Fire: return P.Mp >= GameData.Skill(c).Mp;
+                case Cmd.Heal: return Knows(P, c) && P.Mp >= GameData.Skill(c).Mp && P.Hp < P.MaxHp;
+                case Cmd.Spell:
+                    foreach (var s in Spells) if (CanUse(s)) return true;
+                    return false;
                 case Cmd.Candy: return Items.CanUse(P, Shop.CandyId);
                 case Cmd.Item: return Items.AnyUsable(P);
                 case Cmd.Run: return !Def.Boss;
@@ -88,7 +100,7 @@ namespace GirlAdventure.Sim
         {
             var o = new PlayerOutcome { Cmd = c };
             if (c == Cmd.Candy) item = Shop.CandyId;
-            if (!CanUse(c) || ((c == Cmd.Candy || c == Cmd.Item) && !Items.CanUse(P, item))) { o.Failed = true; return o; }
+            if (c == Cmd.Spell || !CanUse(c) || ((c == Cmd.Candy || c == Cmd.Item) && !Items.CanUse(P, item))) { o.Failed = true; return o; }
             var s = GameData.Skill(c);
             P.Mp -= s.Mp;
             switch (c)
@@ -97,6 +109,11 @@ namespace GirlAdventure.Sim
                 case Cmd.Star:
                     if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; break; }
                     o.Damage = P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand));
+                    break;
+                case Cmd.Heal:
+                    int before = P.Hp;
+                    P.Hp = Math.Min(P.MaxHp, P.Hp + s.Heal + r.Next(0, Math.Max(1, s.Rand)));
+                    o.Heal = P.Hp - before;
                     break;
                 case Cmd.Candy:
                 case Cmd.Item:

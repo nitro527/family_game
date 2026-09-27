@@ -104,7 +104,7 @@ namespace GirlAdventure.EditorTools
             }
         }
 
-        /// <summary>명령창에서 idx 번째(0 파이어,1 별빛,2 도구,3 도망)로 커서를 옮겨 결정.</summary>
+        /// <summary>명령창에서 idx 번째(0 파이어,1 주문,2 도구,3 도망)로 커서를 옮겨 결정.</summary>
         static IEnumerable Choose(int idx, string shotBeforeConfirm = null)
         {
             for (int k = 0; k < 4 && G.CommandIndex != idx; k++) { Keys.Press(KeyCode.DownArrow); yield return .12f; }
@@ -510,7 +510,12 @@ namespace GirlAdventure.EditorTools
             yield return (Func<bool>)(() => G.CommandOpen || G.Current == GameRoot.Mode.Field);
             if (G.CommandOpen)
             {
-                foreach (var x in Choose(1)) yield return x;    // 별빛 폭풍
+                foreach (var x in Choose(1)) yield return x;    // 주문 → 목록
+                yield return (Func<bool>)(() => G.ChoiceOpen);
+                yield return .2f;
+                Shot("battle_spell_list");
+                Expect("spell list: only star at Lv1", G.ChoiceCount == 2);
+                Keys.Press(KeyCode.Return);                     // 별빛 폭풍 (목록 맨 위)
                 yield return 1.0f;
                 Shot("battle_cutin");
                 yield return 1.3f;
@@ -649,6 +654,19 @@ namespace GirlAdventure.EditorTools
             yield return (Func<bool>)(() => G.CommandOpen);
             Shot("boss_command");
             ExpectBgm("boss");
+            // 반짝 힐 (백로그 42, Lv4 에 배움): 다친 채로 주문 → 목록 두 번째
+            G.DebugSetHp(G.P.MaxHp / 3);
+            int healHp0 = G.P.Hp, healMp0 = G.P.Mp;
+            foreach (var x in Choose(1)) yield return x;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            Shot("battle_heal_select");
+            Keys.Press(KeyCode.Return);
+            yield return .9f;
+            Shot("battle_heal");
+            Log($"HEAL hp {healHp0}->{G.P.Hp} mp {healMp0}->{G.P.Mp}");
+            Expect("heal spell restores hp for mp", G.P.Lv >= 4 && G.P.Hp > healHp0 && G.P.Mp == healMp0 - GameData.Skill(Cmd.Heal).Mp);
             foreach (var x in FightUntilOver(true)) yield return x;
             yield return (Func<bool>)(() => G.Current == GameRoot.Mode.Ending);
             yield return 1f;
@@ -778,6 +796,11 @@ namespace GirlAdventure.EditorTools
                 {
                     int pick = G.P.Hp <= G.P.MaxHp * .35f && G.P.Candy > 0 ? 2 : boss && G.P.Mp >= 6 ? 1 : 0;
                     foreach (var x in Choose(pick)) yield return x;
+                    if (pick == 1)
+                    {
+                        yield return (Func<bool>)(() => G.ChoiceOpen);
+                        Keys.Press(KeyCode.Return);    // 주문 목록 맨 위 = 별빛 폭풍
+                    }
                     if (pick == 2)
                     {
                         yield return (Func<bool>)(() => G.ChoiceOpen);

@@ -34,11 +34,19 @@ namespace GirlAdventure.EditorTools
             float ch1Gear = BalanceSimulation(true), ch2Gear = BalanceSimulation2(true);
             // 목표: 장비 없이도 대부분 이기지만(보스다운 긴장감), 장비를 사 두면 확실히 이긴다
             Check("gear makes bosses safe (≥99%)", ch1Gear >= .99f && ch2Gear >= .99f && ch1Gear >= ch1 && ch2Gear >= ch2, $"ch1 {ch1:P1}→{ch1Gear:P1} ch2 {ch2:P1}→{ch2Gear:P1}");
+            // 반짝 힐(Lv4)을 쓰는 경우는 기록만: 기준은 "사탕·별빛 폭풍만 쓰는 5살" 규칙 (백로그 42)
+            simHeal = logOnly = true;
+            BalanceSimulation(false); BalanceSimulation2(false);
+            simHeal = logOnly = false;
             Debug.Log(fails == 0 ? "SMOKETEST_RESULT: ALL_PASS" : $"SMOKETEST_RESULT: {fails}_FAILURES");
         }
 
+        /// <summary>밸런스 시뮬레이션: 사탕이 떨어지면 반짝 힐도 쓴다 / 이때는 검사하지 않고 로그만.</summary>
+        static bool simHeal, logOnly;
+
         static void Check(string name, bool ok, string detail = "")
         {
+            if (logOnly) return;
             if (!ok) fails++;
             Debug.Log($"[{(ok ? "PASS" : "FAIL")}] {name} {detail}");
         }
@@ -385,6 +393,22 @@ namespace GirlAdventure.EditorTools
             p.MaxHp = 40; p.Hp = 5;
             o = b.Act(Cmd.Candy);
             Check("candy heals & capped", o.Heal == BattleSystem.CandyHeal && p.Hp == 5 + BattleSystem.CandyHeal && p.Candy == 2, $"hp={p.Hp}");
+
+            // 주문 목록 (백로그 42): 반짝 힐은 Lv4 에 배우고, 다쳤을 때만, MP 를 쓴다. "주문" 명령 자체는 실행되지 않는다
+            var h = PlayerState.NewGame("힐");
+            var hb = new BattleSystem(h, GameData.Normal[0], new System.Random(2));
+            var heal = GameData.Skill(Cmd.Heal);
+            h.Hp = 5;
+            Check("heal unknown at Lv1", heal.Lv == 4 && heal.Mp > 0 && !BattleSystem.Knows(h, Cmd.Heal) && !hb.CanUse(Cmd.Heal) && hb.CanUse(Cmd.Spell));
+            h.GainExp(PlayerState.NextExp(3));
+            h.Hp = 5;
+            int hmp = h.Mp;
+            var ho = hb.Act(Cmd.Heal);
+            Check("heal at Lv4", h.Lv == 4 && !ho.Failed && ho.Heal >= heal.Heal && ho.Heal < heal.Heal + heal.Rand && h.Hp == 5 + ho.Heal && h.Mp == hmp - heal.Mp, $"lv={h.Lv} heal={ho.Heal}");
+            h.Hp = h.MaxHp;
+            Check("heal not at full hp / spell cmd never acts", !hb.CanUse(Cmd.Heal) && hb.Act(Cmd.Spell).Failed);
+            h.Mp = 0; h.Hp = 1;
+            Check("no spell usable without mp", !hb.CanUse(Cmd.Spell));
         }
 
         static void JosaTests()
@@ -708,12 +732,12 @@ namespace GirlAdventure.EditorTools
                     if (Fight(p, GameData.Guard, r)) gw++;
                 }
                 float gr = gw / (float)runs;
-                Debug.Log($"[BALANCE2] guardWinRate@Lv7={gr:P1}");
+                Debug.Log($"[BALANCE2{(simHeal ? " +heal" : "")}] guardWinRate@Lv7={gr:P1}");
                 Check("guard beatable at Lv7", gr >= .7f, $"winRate={gr:P0}");
                 Check("guard not trivial at Lv7", gr <= .995f, $"winRate={gr:P0}");
             }
             float gold = goldSum / (float)runs;
-            Debug.Log($"[BALANCE2{(gear ? " +cave gear" : "")}] avgBattlesLv6to8={battles / (float)runs:F1} goldBeforeGeneral={gold:F0} generalWinRate@Lv8={rate:P1}");
+            Debug.Log($"[BALANCE2{(gear ? " +cave gear" : "")}{(simHeal ? " +heal" : "")}] avgBattlesLv6to8={battles / (float)runs:F1} goldBeforeGeneral={gold:F0} generalWinRate@Lv8={rate:P1}");
             if (gear) return rate;     // 장비를 다 산 경우는 기록만 (쉬워지는 건 의도)
             Check("general beatable at Lv8 (5살도)", rate >= .85f, $"winRate={rate:P0}");
             Check("general not trivial at Lv8", rate <= .985f, $"winRate={rate:P0}");
@@ -798,7 +822,7 @@ namespace GirlAdventure.EditorTools
             }
             float winRate = bossWins / (float)runs;
             float gold = goldSum / (float)runs;
-            Debug.Log($"[BALANCE{(gear ? " +field gear" : "")}] runs={runs} avgBattlesToLv5={totalBattles / (float)runs:F1} deathsPerRun={totalDeaths / (float)runs:F2} goldBeforeKing={gold:F0} bossWinRate@Lv5={winRate:P1}");
+            Debug.Log($"[BALANCE{(gear ? " +field gear" : "")}{(simHeal ? " +heal" : "")}] runs={runs} avgBattlesToLv5={totalBattles / (float)runs:F1} deathsPerRun={totalDeaths / (float)runs:F2} goldBeforeKing={gold:F0} bossWinRate@Lv5={winRate:P1}");
             if (gear) return winRate;
             Check("boss beatable at Lv5 (5살도)", winRate >= .85f, $"winRate={winRate:P0}");
             Check("boss not trivial at Lv5", winRate <= .985f, $"winRate={winRate:P0}");
@@ -812,6 +836,7 @@ namespace GirlAdventure.EditorTools
             for (int turn = 0; turn < 60; turn++)
             {
                 Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy
+                      : simHeal && p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Heal) ? Cmd.Heal      // 사탕이 떨어지면 반짝 힐
                       : def.Boss && b.CanUse(Cmd.Star) ? Cmd.Star
                       : Cmd.Fire;
                 b.Act(c);

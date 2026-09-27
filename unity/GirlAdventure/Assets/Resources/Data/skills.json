@@ -2,6 +2,8 @@
   "Skills": [
     { "Cmd": "Fire",  "Name": "리본 파이어", "Mp": 0, "AtkMul": 1, "Bonus": 0, "Rand": 4, "Miss": 0.08 },
     { "Cmd": "Star",  "Name": "별빛 폭풍",   "Mp": 6, "AtkMul": 2, "Bonus": 6, "Rand": 5, "Miss": 0 },
+    { "Cmd": "Heal",  "Name": "반짝 힐",     "Mp": 4, "Lv": 4, "Heal": 20, "Rand": 6 },
+    { "Cmd": "Spell", "Name": "주문",        "Mp": 0 },
     { "Cmd": "Candy", "Name": "사탕 먹기",   "Mp": 0 },
     { "Cmd": "Item",  "Name": "도구",        "Mp": 0 },
     { "Cmd": "Run",   "Name": "도망가기",    "Mp": 0, "Rate": 0.75 }

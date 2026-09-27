@@ -19,12 +19,13 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SkillDef
     {
-        public string Cmd;              // Fire / Star / Candy / Run
+        public string Cmd;              // Fire / Star / Heal / Spell(주문 목록) / Candy / Item / Run
         public string Name;
         public int Mp;
         public int AtkMul, Bonus, Rand;
         public double Miss;             // 빗나갈 확률
-        public int Heal;
+        public int Heal;                // 회복 주문: Heal + 0~Rand-1 만큼 HP 회복
+        public int Lv;                  // 이 레벨부터 쓸 수 있는 주문 (0 이면 처음부터)
         public double Rate;             // 도망 성공률
     }
 

@@ -39,7 +39,7 @@ namespace GirlAdventure.View
         // command window
         GameObject cmdWin;
         readonly List<Text> cmdTexts = new List<Text>();
-        readonly Cmd[] cmdOrder = { Cmd.Fire, Cmd.Star, Cmd.Item, Cmd.Run };
+        readonly Cmd[] cmdOrder = { Cmd.Fire, Cmd.Spell, Cmd.Item, Cmd.Run };   // DQ 처럼: 공격 주문 · 주문 목록 · 도구 · 도망
         int cmdIndex;
         Cmd? chosenCmd;
 
@@ -224,7 +224,7 @@ namespace GirlAdventure.View
         {
             switch (c)
             {
-                case Cmd.Star: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>MP {BattleSystem.StarCost}</color></size>";
+                case Cmd.Spell: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>▸</color></size>";
                 case Cmd.Item:
                     int n = 0;
                     foreach (var id in Items.Owned(P)) n += P.Count(id);
