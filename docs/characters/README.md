@@ -69,8 +69,10 @@ assets/characters/
     <who>_walk.png         걷기 시트
     <who>_portrait.png     초상화
     <who>_card.png         카드 그림
-    <who>_main_transparent.png, <who>_walk_side.gif, icons/, poses/  — 시트를 잘라 자동 생성
-    (girl 만) <who>_turnaround.png, cards/, girl_card_ultimate.png
+    <who>_turnaround.png   앞·옆·뒤 (Gemini)
+    <who>_main_transparent.png, <who>_walk_side.gif, icons/, poses/  — 시트를 잘라 자동 생성 (tools/build_character_set.py)
+    cards/<who>_card_unit.png + 필살기 카드  — tools/card_mockup.py (숫자는 카드 규칙 정할 때까지 임시)
+    (girl 만) girl_card_ultimate.png — 필살기 카드용 별도 그림
   gen/family/            family_title.png(타이틀 키아트), family_party.png(파티 단체)
   overviews/<who>.jpg, family.jpg   한 장 요약 이미지 — python tools/build_character_set.py (자르기+요약 한 번에)
 ```
