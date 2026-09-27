@@ -22,6 +22,7 @@ namespace GirlAdventure.EditorTools
             VillageTests();
             ProgressionTests();
             BattleRuleTests();
+            GroupBattleTests();
             JosaTests();
             MusicTests();
             SaveTests();
@@ -409,6 +410,91 @@ namespace GirlAdventure.EditorTools
             Check("heal not at full hp / spell cmd never acts", !hb.CanUse(Cmd.Heal) && hb.Act(Cmd.Spell).Failed);
             h.Mp = 0; h.Hp = 1;
             Check("no spell usable without mp", !hb.CanUse(Cmd.Spell));
+        }
+
+        /// <summary>몬스터 무리 (백로그 43): 대상 고르기, 별빛 폭풍 전체 공격, 경험치·골드 합계, 적 차례, 출현표 무리 확률, 무리 밸런스.</summary>
+        static void GroupBattleTests()
+        {
+            var p = PlayerState.NewGame("무리");
+            p.GainExp(PlayerState.NextExp(2));
+            var blue = GameData.Normal[0];
+            var b = new BattleSystem(p, new[] { blue, blue, GameData.Normal[1] }, new System.Random(3));
+            Check("group of 3", b.Foes.Count == 3 && b.AliveCount == 3 && !b.Boss && b.CanUse(Cmd.Run)
+                  && b.TotalExp == blue.Exp * 2 + GameData.Normal[1].Exp && b.TotalGold == blue.Gold * 2 + GameData.Normal[1].Gold);
+            PlayerOutcome o;
+            do o = b.Act(Cmd.Fire, null, 2); while (o.Missed);
+            Check("fire hits chosen target only", o.Target == 2 && o.Damages[2] > 0 && o.Damages[0] == 0 && b.Foes[0].Hp == blue.Hp && b.Foes[2].Hp == Math.Max(0, GameData.Normal[1].Hp - o.Damage));
+            p.Mp = p.MaxMp;
+            b.Foes[0].Hp = 0;                           // 첫째 마리는 이미 쓰러짐
+            o = b.Act(Cmd.Star);
+            Check("star hits every alive foe", o.Damages[0] == 0 && o.Damages[1] > 0 && o.Target == 1 && (o.Damages[2] > 0 || b.Foes[2].Down || o.Damages[2] == 0 && b.Foes[2].Hp == 0));
+            var b2 = new BattleSystem(p, new[] { blue, blue }, new System.Random(4));
+            b2.Foes[0].Hp = 0;
+            do o = b2.Act(Cmd.Fire, null, 0); while (o.Missed);
+            Check("fire on downed foe → next alive", o.Target == 1);
+            p.Hp = p.MaxHp;
+            var b3 = new BattleSystem(p, new[] { blue, blue, blue }, new System.Random(5));
+            b3.Foes[1].Hp = 0;
+            var turn = b3.EnemyTurn();
+            Check("enemy turn: each alive foe once", turn.Count == 2 && turn[0].Foe == 0 && turn[1].Foe == 2);
+            Check("boss group can't run", !new BattleSystem(p, new[] { blue, GameData.Guard }, new System.Random(1)).CanUse(Cmd.Run));
+            bool threw = false;
+            try { new BattleSystem(p, new EnemyDef[4] { blue, blue, blue, blue }, new System.Random(1)); } catch (ArgumentException) { threw = true; }
+            Check("no more than 3 foes", threw);
+
+            // 출현표: 시작 근처는 늘 한 마리, 먼 곳은 가끔 2~3마리 (최대 3)
+            var rr = new System.Random(9);
+            int nearMax = 0, farGroups = 0, farMax = 0, caveGroups = 0;
+            for (int i = 0; i < 2000; i++)
+            {
+                nearMax = Math.Max(nearMax, GameData.RollEncounter(MapKind.Field, 3, 4, rr).Count);
+                int n = GameData.RollEncounter(MapKind.Field, 20, 15, rr).Count;
+                if (n > 1) farGroups++;
+                farMax = Math.Max(farMax, n);
+                if (GameData.RollEncounter(MapKind.Cave, 12, 15, rr).Count > 1) caveGroups++;
+            }
+            Check("encounter groups by zone", nearMax == 1 && farMax == 3 && farGroups > 450 && farGroups < 750 && caveGroups > 350 && caveGroups < 650,
+                  $"nearMax={nearMax} far={farGroups}/2000 max={farMax} cave={caveGroups}/2000");
+
+            // 무리 밸런스: 그 구역에 올 만한 레벨(장비 없음)로 무리를 만났을 때 이길 확률 — 5살도 거의 이겨야 한다
+            float W(int lv, MapKind kind, int x, int y, int n)
+            {
+                var r = new System.Random(77);
+                int wins = 0;
+                for (int run = 0; run < 400; run++)
+                {
+                    var q = PlayerState.NewGame("g");
+                    if (lv > 1) q.GainExp(PlayerState.NextExp(lv - 1));
+                    var list = kind == MapKind.Cave ? GameData.Cave : GameData.Normal;
+                    var pool = GameData.EncounterPool(kind, x, y);
+                    var foes = new List<EnemyDef>();
+                    for (int i = 0; i < n; i++) foes.Add(list[pool[r.Next(pool.Length)]]);
+                    if (FightGroup(q, foes, r)) wins++;
+                }
+                return wins / 400f;
+            }
+            float mid2 = W(2, MapKind.Field, 10, 11, 2), far3 = W(3, MapKind.Field, 20, 15, 3), far2 = W(3, MapKind.Field, 20, 15, 2);
+            float cave2 = W(6, MapKind.Cave, 12, 15, 2), cave3 = W(7, MapKind.Cave, 12, 5, 3);
+            Debug.Log($"[BALANCE GROUP] mid x2 @Lv2={mid2:P1} far x2 @Lv3={far2:P1} far x3 @Lv3={far3:P1} cave x2 @Lv6={cave2:P1} deep cave x3 @Lv7={cave3:P1}");
+            Check("groups beatable (5살도)", mid2 >= .9f && far2 >= .85f && far3 >= .7f && cave2 >= .85f && cave3 >= .7f,
+                  $"mid2={mid2:P0} far2={far2:P0} far3={far3:P0} cave2={cave2:P0} cave3={cave3:P0}");
+        }
+
+        /// <summary>무리 전투 AI: HP 35% 이하면 사탕, 2마리 이상 살아 있으면 별빛 폭풍, 아니면 리본 파이어 (첫 적).</summary>
+        static bool FightGroup(PlayerState p, List<EnemyDef> foes, System.Random r)
+        {
+            var b = new BattleSystem(p, foes, r);
+            for (int turn = 0; turn < 80; turn++)
+            {
+                Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy
+                      : b.AliveCount >= 2 && b.CanUse(Cmd.Star) ? Cmd.Star
+                      : Cmd.Fire;
+                b.Act(c);
+                if (b.EnemyDown) { p.GainExp(b.TotalExp); p.GainGold(b.TotalGold); return true; }
+                b.EnemyTurn();
+                if (b.PlayerDown) return false;
+            }
+            return false;
         }
 
         static void JosaTests()

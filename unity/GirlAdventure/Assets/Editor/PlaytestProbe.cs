@@ -667,6 +667,8 @@ namespace GirlAdventure.EditorTools
             Shot("battle_heal");
             Log($"HEAL hp {healHp0}->{G.P.Hp} mp {healMp0}->{G.P.Mp}");
             Expect("heal spell restores hp for mp", G.P.Lv >= 4 && G.P.Hp > healHp0 && G.P.Mp == healMp0 - GameData.Skill(Cmd.Heal).Mp);
+            G.DebugSetHp(G.P.MaxHp);                  // 힐 확인용으로 깎은 HP 는 되돌린다 (보스전 결과가 운에 달리지 않게)
+            G.DebugSetMp(healMp0);
             foreach (var x in FightUntilOver(true)) yield return x;
             yield return (Func<bool>)(() => G.Current == GameRoot.Mode.Ending);
             yield return 1f;

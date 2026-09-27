@@ -88,7 +88,7 @@ B. **딸의 아이디어 노트 (2026-09-27, docs/ideas/daughter_note_01.md)** �
 41. [x] (완료 2026-09-27 — npcs.json `Talks` [{If, Talk}], 조건 boss·boss2·guard·key·door·chN·lvN·!, Lv5 되면 밀짚모자·촌장 "이제 성에 가 봐", 동굴 입구 광부 젤리가 진행 단계별로 안내) **NPC 대사가 진행에 따라 바뀜**: npcs.json 대사에 조건(챕터·보스 격파·열쇠) — "킹 젤리를 물리쳤구나!" 등, SmokeTest 조건 검사
 ### ROADMAP M3 "전투의 깊이"
 42. [x] (완료 2026-09-27 — 명령창 "리본 파이어·주문·도구·도망", 주문 목록은 배운 것만·못 쓰면 흐리게, 반짝 힐 Lv4 MP4 HP 20~25. 밸런스 기준은 힐 없는 5살 규칙 유지, 힐을 쓰면 킹 99.8%·바위 대장 100%·젤리 장군 77%(힐이 별빛 폭풍 MP를 먹음) → 로그만 `[BALANCE +heal]`) **주문 목록 메뉴**: 전투 명령 "주문" → 목록(MP 표시, 부족하면 흐리게). 새 주문 "반짝 힐"(Lv4, MP4, HP 회복) — skills.json, 밸런스 시뮬레이션 반영
-43. [ ] **몬스터 그룹 전투 a (Sim)**: `BattleSystem` 이 적 1~3마리, 대상 고르기, 별빛 폭풍은 전체 공격, 경험치·골드 합산. encounters.json 에 무리 확률. SmokeTest·밸런스
+43. [x] (완료 2026-09-27 — `BattleSystem.Foes` 1~3마리, Act(target), 별빛 폭풍 전체, EnemyTurn(), TotalExp/Gold, `GameData.RollEncounter`, encounters.json Group·MaxGroup: 시작 근처 0, 중간 20%(2), 먼 곳 30%(3), 동굴 25%/30%. 무리 승률 시뮬 모두 100%. 필드는 아직 한 마리만 → 44에서 `RollEncounter` 로 연결) **몬스터 그룹 전투 a (Sim)**: `BattleSystem` 이 적 1~3마리, 대상 고르기, 별빛 폭풍은 전체 공격, 경험치·골드 합산. encounters.json 에 무리 확률. SmokeTest·밸런스
 44. [ ] **몬스터 그룹 전투 b (View)**: 적 2~3마리 가로 배치·각자 체력 막대, 대상 고르기 화살표(터치 가능), 쓰러진 적만 사라짐. 프로브 무리 전투
 45. [ ] **몬스터 도감**: 만난·쓰러뜨린 젤리 기록(세이브), 상태 창 메뉴 "도감"에서 그림·이름·설명 — 그림·설명은 docs/monsters/monsters.json 과 assets/monsters/cut (B-5 이후). 다 모으면 칭호
 46. [ ] **주문 이펙트 강화**: 리본 파이어 불꽃 파티클 꼬리, 별빛 폭풍 별똥별 여러 개, 반짝 힐 빛기둥 (지금 반짝 힐은 발밑 별 알갱이라 대화창에 반쯤 가림 + 자세가 불꽃 지팡이 "cast" → 몸 위쪽에서 빛이 내려오게)

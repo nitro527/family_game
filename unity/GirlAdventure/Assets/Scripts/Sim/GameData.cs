@@ -58,6 +58,8 @@ namespace GirlAdventure.Sim
         public int MinFar;
         public int MaxY = 99;
         public string[] Pool;
+        public double Group;            // 몬스터 무리(2~3마리)로 나올 확률 (0 이면 늘 한 마리)
+        public int MaxGroup = 2;        // 무리 최대 마리 수 (2 또는 3)
     }
 
     [Serializable]
@@ -153,14 +155,30 @@ namespace GirlAdventure.Sim
         /// <summary>
         /// 이 자리의 출현표 (적 인덱스 목록: 초원은 Normal, 동굴은 Cave). 맞는 구역이 없으면 첫 구역.
         /// </summary>
-        public static int[] EncounterPool(MapKind kind, int x, int y)
+        public static int[] EncounterPool(MapKind kind, int x, int y) => ZoneAt(kind, x, y).pool ?? new[] { 0 };
+
+        /// <summary>이 자리 구역의 무리 확률과 최대 마리 수 (구역이 없으면 무리 없음).</summary>
+        public static (double rate, int max) GroupAt(MapKind kind, int x, int y)
+        {
+            var z = ZoneAt(kind, x, y).zone;
+            return z == null ? (0, 1) : (z.Group, z.MaxGroup);
+        }
+
+        /// <summary>이 자리에서 만나는 적들 (1~3마리, 무리 확률은 구역마다).</summary>
+        public static List<EnemyDef> RollEncounter(MapKind kind, int x, int y, Random r)
+        {
+            var (rate, max) = GroupAt(kind, x, y);
+            return Encounter.Roll(kind == MapKind.Cave ? Cave : Normal, EncounterPool(kind, x, y), rate, max, r);
+        }
+
+        static (EncounterZone zone, int[] pool) ZoneAt(MapKind kind, int x, int y)
         {
             string map = kind == MapKind.Cave ? "cave" : "field";
-            int[] found = null;
+            (EncounterZone, int[]) found = (null, null);
             foreach (var (z, pool) in zones)
-                if (z.Map == map && (found == null || (x + y >= z.MinFar && y <= z.MaxY)))
-                    found = pool;
-            return found ?? new[] { 0 };
+                if (z.Map == map && (found.Item1 == null || (x + y >= z.MinFar && y <= z.MaxY)))
+                    found = (z, pool);
+            return found;
         }
 
         public static SkillDef Skill(Cmd c)
