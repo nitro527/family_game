@@ -50,6 +50,17 @@ namespace GirlAdventure.Sim
         public static bool Walkable(WorldMap m, PlayerState p, int x, int y) =>
             !GuardAt(m, p, x, y) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)));
 
+        /// <summary>
+        /// 동생 지훈 합류 (백로그 48): 젤리 장군(챕터 2 보스)을 물리치면 합류한다. 이미 합류했거나 아직이면 false.
+        /// 합류 연출·챕터 3 시작은 View(49·50) 가 맡는다.
+        /// </summary>
+        public static bool TryJoinBrother(PlayerState p)
+        {
+            if (p.BrotherJoined || !p.Boss2Down) return false;
+            p.JoinBrother();
+            return true;
+        }
+
         /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>
         public static void StartChapter2(PlayerState p)
         {

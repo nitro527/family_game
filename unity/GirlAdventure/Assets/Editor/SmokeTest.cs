@@ -30,6 +30,7 @@ namespace GirlAdventure.EditorTools
             HoleTests();
             BestiaryTests();
             BoyArtTests();
+            BrotherTests();
             ShopTests();
             ItemTests();
             GearTests();
@@ -700,6 +701,96 @@ namespace GirlAdventure.EditorTools
             Check("boy a bit smaller than sister", boyWalk != null && girlWalk != null && boyBattle != null && girlBattle != null
                   && boyWalk.height < girlWalk.height && boyWalk.height > girlWalk.height * .85f && boyBattle.height < girlBattle.height,
                   $"walk {boyWalk?.height}/{girlWalk?.height} battle {boyBattle?.height}/{girlBattle?.height}");
+        }
+
+        /// <summary>동생 지훈 합류 b (48): 합류 조건, 능력치·성장, 세이브, 2인 전투 규칙, 2인 밸런스.</summary>
+        static void BrotherTests()
+        {
+            var p = PlayerState.NewGame("t");
+            p.GainExp(PlayerState.NextExp(5));      // Lv6
+            Check("brother: no join before general", !Quest.TryJoinBrother(p) && !p.BrotherJoined);
+            p.Boss2Down = true;
+            Check("brother: joins after general, full hp/mp, once", Quest.TryJoinBrother(p) && p.BrotherJoined && p.BroHp == p.BroMaxHp && p.BroMp == p.BroMaxMp
+                  && !Quest.TryJoinBrother(p));
+            Check("brother: attack type (more hp·atk, less mp than sister)", p.BroMaxHp > p.MaxHp && p.BroAtk > p.Atk && p.BroMaxMp < p.MaxMp,
+                  $"bro hp{p.BroMaxHp} atk{p.BroAtk} mp{p.BroMaxMp} / sis hp{p.MaxHp} atk{p.Atk} mp{p.MaxMp}");
+            int hp0 = p.BroMaxHp;
+            p.BroHp = 1;
+            p.GainExp(PlayerState.NextExp(6) - p.Exp);
+            Check("brother: levels with sister, healed on level up", p.Lv == 7 && p.BroMaxHp == hp0 + PlayerState.BroHpPerLevel && p.BroHp == p.BroMaxHp);
+            p.BroHp = 5; p.BroMp = 1;
+            var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":8,\"Name\":\"a\",\"Lv\":8,\"Chapter\":2,\"Boss2Down\":true}"));
+            Check("brother: saved (hp/mp), old save not joined", back.BrotherJoined && back.BroHp == 5 && back.BroMp == 1 && !old.BrotherJoined);
+            back.RestoreAll();
+            Check("brother: spring heals brother too", back.BroHp == back.BroMaxHp && back.BroMp == back.BroMaxMp);
+
+            // 2인 전투: 동생 명령, 적은 두 사람 중 무작위, 한 명만 쓰러지면 아직 안 짐
+            var q = PlayerState.NewGame("t");
+            q.GainExp(PlayerState.NextExp(7));
+            q.Boss2Down = true;
+            Quest.TryJoinBrother(q);
+            var b = new BattleSystem(q, new[] { GameData.Cave[0], GameData.Cave[0] }, new System.Random(3));
+            var slash = b.BroAct(Cmd.Slash, 1);
+            Check("brother: slash hits chosen foe", slash.Target == 1 && (slash.Missed || b.Foes[1].Hp == Math.Max(0, GameData.Cave[0].Hp - slash.Damage)) && b.Foes[0].Hp == GameData.Cave[0].Hp);
+            int mp0 = q.BroMp;
+            var bolt = b.BroAct(Cmd.Bolt, 0);
+            Check("brother: bolt costs mp, hits harder", !bolt.Failed && q.BroMp == mp0 - GameData.Skill(Cmd.Bolt).Mp && bolt.Damage >= q.BroAtk * 2);
+            q.BroMp = 0;
+            Check("brother: no bolt without mp", !b.BroCanUse(Cmd.Bolt) && b.BroAct(Cmd.Bolt).Failed && b.BroCanUse(Cmd.Slash));
+            b = new BattleSystem(q, GameData.General, new System.Random(4));     // 체력 많은 적으로 (앞의 적은 쓰러졌을 수 있음)
+            int onBro = 0, onSis = 0;
+            for (int i = 0; i < 400; i++)
+            {
+                q.Hp = q.MaxHp; q.BroHp = q.BroMaxHp;
+                var e = b.EnemyAct(0);
+                if (e.Dodged) continue;
+                if (e.OnBrother) onBro++; else onSis++;
+            }
+            Check("party: enemies target both", onBro > 120 && onSis > 120, $"bro {onBro} sis {onSis}");
+            q.Hp = 0; q.BroHp = 10;
+            Check("party: sister down alone ≠ defeat, all enemy hits go to brother", !b.PlayerDown && b.EnemyAct(0) is var e2 && (e2.Dodged || e2.OnBrother));
+            q.BroHp = 0;
+            Check("party: both down = defeat", b.PlayerDown);
+            var solo = PlayerState.NewGame("t");
+            solo.Hp = 0;
+            Check("solo: sister down = defeat (unchanged)", new BattleSystem(solo, GameData.Normal[0], new System.Random(1)).PlayerDown);
+
+            // 2인 밸런스 (기록 + 최소 조건): 젤리 장군을 Lv8 둘이서 → 혼자보다 쉬워야 한다 (챕터 3 보스 수치를 정할 기준)
+            int soloWin = 0, duoWin = 0;
+            var rr = new System.Random(88);
+            for (int run = 0; run < 400; run++)
+            {
+                var s1 = PlayerState.NewGame("s"); s1.GainExp(PlayerState.NextExp(7));
+                if (Fight(s1, GameData.General, rr)) soloWin++;
+                var s2 = PlayerState.NewGame("s"); s2.GainExp(PlayerState.NextExp(7)); s2.Boss2Down = true; Quest.TryJoinBrother(s2);
+                if (FightDuo(s2, GameData.General, rr)) duoWin++;
+            }
+            Debug.Log($"[BALANCE DUO] general@Lv8 solo={soloWin / 4f:F1}% duo={duoWin / 4f:F1}%");
+            Check("duo beats general more often than solo", duoWin >= soloWin && duoWin >= 390, $"solo {soloWin}/400 duo {duoWin}/400");
+        }
+
+        /// <summary>2인 AI: 서진은 Fight 와 같고, 지훈은 보스면 MP 있을 때 번개, 아니면 검. 서진이 쓰러지면 지훈만.</summary>
+        static bool FightDuo(PlayerState p, EnemyDef def, System.Random r)
+        {
+            var b = new BattleSystem(p, def, r);
+            for (int turn = 0; turn < 60; turn++)
+            {
+                if (!b.SisterDown)
+                {
+                    Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy : def.Boss && b.CanUse(Cmd.Star) ? Cmd.Star : Cmd.Fire;
+                    b.Act(c);
+                    if (b.EnemyDown) return true;
+                }
+                if (!b.BrotherDown)
+                {
+                    b.BroAct(def.Boss && b.BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash);
+                    if (b.EnemyDown) return true;
+                }
+                b.EnemyTurn();
+                if (b.PlayerDown) return false;
+            }
+            return false;
         }
 
         static void BestiaryTests()
