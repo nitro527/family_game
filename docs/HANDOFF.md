@@ -18,6 +18,7 @@ U="/c/Program Files/Unity/Hub/Editor/6000.5.3f1/Editor/Unity.exe"; P="C:\\code_w
 "$U" -batchmode -quit -projectPath "$P" -executeMethod GirlAdventure.EditorTools.PlayerBuilder.BuildWindows -logFile player.log  # unity/Build/GirlAdventure.exe
 ```
 (배치 모드는 Unity Hub 로그인 상태여야 동작)
+보스 수치 후보는 Unity 없이 `python tools/balance.py` (예: `python tools/balance.py king --hp 120:160:10`)로 먼저 훑기
 
 ## 완료
 - 걷기 방향별 캐릭터 크기 불일치 수정 (모든 걷기 프레임 키 240px 통일)
