@@ -90,16 +90,33 @@ namespace GirlAdventure.View
             return s != null ? s : cave ? (def.Boss ? bgCaveBoss : bgCave) : (def.Boss ? bgBoss : bgNormal);
         }
 
+        // 코드 젤리 텍스처 전체(420px, 96ppu)의 세계 높이와 그 안에서 머리 꼭대기까지의 높이 (발=기준점)
+        const float JellyTexUnits = 420f / 96f, JellyHeadUnits = 220f / 96f;
+        // 도감 그림: 그림 전체를 이 높이(세계 단위)로, 기준점은 아래 가장자리에서 조금 위(그림에 그려진 그림자 가운데)
+        const float ArtUnits = 2.6f, ArtFeet = .04f;
+
         Sprite JellySprite(EnemyDef def)
         {
             if (!jellySprites.TryGetValue(def, out var s))
             {
-                var tex = Painter.Jelly(def, out var pivot);
-                s = Art.FromTexture(tex, pivot, 96);     // 텍스처는 2배 해상도
+                var art = HasArt(def) ? Resources.Load<Texture2D>("Monsters/" + def.Art) : null;
+                if (art != null) s = Art.FromTexture(art, new Vector2(.5f, ArtFeet), art.height / ArtUnits);
+                else
+                {
+                    var tex = Painter.Jelly(def, out var pivot);
+                    s = Art.FromTexture(tex, pivot, 96);     // 텍스처는 2배 해상도
+                }
                 jellySprites[def] = s;
             }
             return s;
         }
+
+        static bool HasArt(EnemyDef def) => !string.IsNullOrEmpty(def.Art);
+        /// <summary>도감 그림이 실제로 들어왔는지 (프로브·SmokeTest 용)</summary>
+        public bool UsesArt(EnemyDef def) => HasArt(def) && Resources.Load<Texture2D>("Monsters/" + def.Art) != null;
+
+        /// <summary>배율 1 에서 발부터 머리 꼭대기까지 높이 (세계 단위). 전투 이름표 위치에 씀.</summary>
+        float HeadUnits(EnemyDef def) => UsesArt(def) ? ArtUnits * (1 - ArtFeet) - .2f : JellyHeadUnits;   // -.2: 스크린샷으로 맞춘 이름표 간격
 
         // ------------------------------------------------------------------ main loop
         IEnumerator BattleRoutine(EnemyDef def)
@@ -123,7 +140,8 @@ namespace GirlAdventure.View
             enemyAppear = def.Boss ? -.45f : -.65f;   // 음수 = 소용돌이가 걷힐 때(.35초)까지 숨어서 기다림
             if (def.Boss) camShake = .45f;      // 보스는 땅이 울리며 솟아오른다
             pose = "ready";
-            enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -18 : -160 + (def.Size - 1) * 1.05f * 203);   // 큰 젤리는 머리가 높아 이름표도 위로
+            // 큰 젤리·도감 그림은 머리가 높아 이름표도 위로 (코드 젤리 머리 높이 기준, 1 단위 ≈ 88.6px)
+            enemyLabel.rectTransform.anchoredPosition = new Vector2(360, def.Boss ? -18 : -160 + (HeadUnits(def) * def.Size - JellyHeadUnits) * 1.05f * 88.6f);
             enemyLabel.text = def.Name;
             enemyHpShown = 1;
             RefreshHud();

@@ -62,7 +62,7 @@ B. **딸의 아이디어 노트 (2026-09-27, docs/ideas/daughter_note_01.md)** �
    - [x] B-2. (완료 2026-09-27) **동굴 광물 젤리**: 세모 결정이 박힌 젤리(Look "ore", 금·보라빛). 돌 < 광물 < 수정 순 세기로 동굴 출현표에 추가
    - [x] B-3. (완료 2026-09-27) **젤리 1단·2단·3단**: 같은 색 젤리가 단계별로 커짐(2단 = 1.3배 크기·강화 수치, 이름 "큰 ○○ 젤리"), 3단 = 왕관(킹). 지역 난이도 지도대로 성에서 먼 곳에 2단 출현
    - B-5. **도감 그림으로 젤리 교체 — 사용자 지시(2026-09-27): "시간될 때마다 하나씩". 한 회차에 한 줄만** (그림: `assets/monsters/cut/<id>.png`, 이름 매핑은 docs/monsters/monsters.json `ingame`)
-     - [ ] B-5a. **구조 + 파랑 젤리**: cut/jelly_blue.png 를 `Resources/Monsters/` 로 복사(높이 360px 정도, tools/prepare_unity_art.py 에 추가), enemies.json `Art` 칸 → 있으면 Painter.Jelly 대신 이 스프라이트(없으면 코드 그림 그대로). 흔들림·피격 번쩍임·쓰러짐·등장·공격 모션이 스프라이트에서도 되는지, 필드 작은 몬스터에도 쓸지(작게 줄였을 때 알아보기 쉬운지) 스크린샷으로 판단. 전투 이름표 위치를 그림 높이에 맞춤
+     - [x] B-5a. (완료 2026-09-27) **구조 + 파랑 젤리**: cut/jelly_blue.png 를 `Resources/Monsters/` 로 복사(높이 360px 정도, tools/prepare_unity_art.py 에 추가), enemies.json `Art` 칸 → 있으면 Painter.Jelly 대신 이 스프라이트(없으면 코드 그림 그대로). 흔들림·피격 번쩍임·쓰러짐·등장·공격 모션이 스프라이트에서도 되는지, 필드 작은 몬스터에도 쓸지(작게 줄였을 때 알아보기 쉬운지) 스크린샷으로 판단. 전투 이름표 위치를 그림 높이에 맞춤
      - [ ] B-5b. 초록 젤리 (cut/jelly_green.png)
      - [ ] B-5c. 분홍 젤리 (cut/jelly_pink.png)
      - [ ] B-5d. 킹 젤리 (cut/jelly_king.png, 보스 크기·왕관은 그림에 있으니 코드 왕관 안 얹기)
@@ -107,6 +107,7 @@ B. **딸의 아이디어 노트 (2026-09-27, docs/ideas/daughter_note_01.md)** �
 - 🙋 엄마·아빠 캐릭터를 아이들 그림체로 만들기 (Gemini)
 
 ## 완료 기록
+- 2026-09-27: 도감 그림 파랑 젤리 (B-5a) — enemies.json `Art` → `Resources/Monsters/<Art>.png`(높이 360, `python tools/prepare_unity_art.py monsters` 가 Art 쓰는 것만 복사, 임포터 NPOT 끔·밉맵). 전투·필드 모두 그림(`ArtUnits` 2.6, 발 = 그림자 가운데, 필드는 그림에 그림자가 있어 코드 그림자 끔), 이름표는 머리 높이 따라. 그림 없으면 코드 젤리. 프로브 걷기 검사가 가끔 가게·몬스터에 부딪히던 것 수정(`DebugOpenSpot` 트인 곳에서 걷기 + `DebugClearMobsNear`)
 - 2026-09-27: 젤리 2단 (B-3, 딸 노트) — `EnemyDef.Tier`(2 = 큰 젤리, `Size` 1.3배: 전투·필드 스프라이트·그림자, 전투 이름표도 위로). 큰 초록(HP19)·큰 분홍(HP27)은 초원 가장 먼 구역에만, 큰 돌멩이(HP38)는 동굴 깊은 곳에만. 3단 = 왕관 쓴 킹 젤리(기존). 밸런스: 킹 95.0%·장군 98.0%(장비 둘 다 100%). SmokeTest `big jelly = stronger same color, far only`, 프로브 큰 돌멩이 젤리 필드·전투 촬영
 - 2026-09-27: 광물 젤리 (B-2, 딸 노트) — 보랏빛 몸에 금빛·보랏빛 세모 결정 7개가 박힌 새 겉모습 `Look "ore"`(`Painter.OreGems`), HP29·공10·경험치19·골드18(돈 많이 줌), 반짝반짝 회전. 동굴 출현표 얕은 곳 돌·돌·광물·수정, 깊은 곳 돌·광물·수정·수정. 장군 승률 96.8%(장비 100%), 장군 전 골드 195G. SmokeTest `cave rock < ore < crystal`, 프로브 동굴 전투가 광물 젤리
 - 2026-09-27: 젤리 색 = 난이도 (B-1, 딸 노트) — enemies.json 에서 분홍·초록의 이름·색만 맞바꿔 파랑(HP8) < 초록(HP12·통통 점프) < 분홍(HP18·빙글빙글 회전). 수치 칸 순서는 그대로라 밸런스 결과 동일. encounters.json 도 맞바꿔 시작 근처엔 파랑·초록만, 먼 곳에 분홍. SmokeTest `jelly color = difficulty`

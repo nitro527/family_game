@@ -169,6 +169,10 @@ namespace GirlAdventure.EditorTools
 
             // 네 방향 걷기 — 방향별 캐릭터 크기 비교 (몬스터가 다가와 전투가 끼어들면 걷기 검사가 흔들려서 멈춤)
             G.DebugMobs(true, false);
+            var open = G.DebugOpenSpot(6);            // 걷는 거리가 프레임마다 조금씩 달라서, 사방이 트인 곳에서 걷는다
+            G.DebugTeleport(open.x, open.y, "down");
+            yield return .3f;
+            G.DebugClearMobsNear(8);                  // 멈춘 몬스터라도 걷는 길 위에 있으면 부딪혀 전투가 됨 → 멀리 옮김
             foreach (var x in Walk(KeyCode.RightArrow, "right", .5f, true)) yield return x;
             Shot("idle_right");
             foreach (var x in Walk(KeyCode.DownArrow, "down", .4f, true)) yield return x;
@@ -423,6 +427,18 @@ namespace GirlAdventure.EditorTools
             yield return .3f;
             Shot("mob_depth");
             Expect("mob depth sorting (front over, back under)", G.DebugMobDepthOk());
+            // 도감 그림 파랑 젤리 (B-5a): 필드(위 mob_depth)와 전투 모두 그림으로
+            Expect("blue jelly uses dogam art", G.UsesArt(GameData.Normal[0]));
+            G.DebugMobs(true, true);
+            G.DebugSpawnMob(9, 12, 0);
+            yield return .3f;
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return (Func<bool>)(() => G.CommandOpen);
+            Expect("art jelly battle", G.BattleEnemy == GameData.Normal[0]);
+            Shot("art_blue_battle");
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            G.DebugTeleport(8, 12, "right");
             G.DebugMobs(true, true);
             G.DebugSpawnMob(9, 12, 1);
             yield return .3f;

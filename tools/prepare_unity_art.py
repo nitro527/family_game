@@ -5,10 +5,13 @@ than the front/back row, so every walk frame is re-scaled to the same figure
 height (feet on the bottom edge). The four side frames share one scale so their
 natural bob is kept.
 
-usage: python tools/prepare_unity_art.py
+usage: python tools/prepare_unity_art.py            (딸 그림 전부)
+       python tools/prepare_unity_art.py monsters   (몬스터 도감 그림 중 enemies.json 의 "Art" 가 가리키는 것만)
 """
 import glob
+import json
 import os
+import sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -91,5 +94,27 @@ def main():
         print(f'{n:15s} canvas={im.size} figH={b[3] - b[1]} bottomGap={im.height - b[3]}')
 
 
+MONSTER_CUT = os.path.join(ROOT, 'assets', 'monsters', 'cut')
+MONSTER_OUT = os.path.join(ROOT, 'unity', 'GirlAdventure', 'Assets', 'Resources', 'Monsters')
+MONSTER_H = 360           # 몬스터 그림 높이 (px). 화면 크기는 Unity 쪽(ArtUnits)에서 정함
+
+
+def monsters():
+    """enemies.json 에서 Art 를 쓰는 적만 골라 도감 그림(assets/monsters/cut/<Art>.png)을 줄여 복사."""
+    data = json.load(open(os.path.join(ROOT, 'unity', 'GirlAdventure', 'Assets', 'Resources', 'Data', 'enemies.json'), encoding='utf-8'))
+    arts = set()
+    for v in data.values():
+        for d in (v if isinstance(v, list) else [v]):
+            if d.get('Art'):
+                arts.add(d['Art'])
+    os.makedirs(MONSTER_OUT, exist_ok=True)
+    for a in sorted(arts):
+        im = Image.open(os.path.join(MONSTER_CUT, a + '.png')).convert('RGBA')
+        im = im.crop(im.getchannel('A').getbbox())
+        im = im.resize((round(im.width * MONSTER_H / im.height), MONSTER_H), Image.LANCZOS)
+        im.save(os.path.join(MONSTER_OUT, a + '.png'), optimize=True)
+        print(f'{a:15s} {im.size}')
+
+
 if __name__ == '__main__':
-    main()
+    monsters() if sys.argv[1:] == ['monsters'] else main()

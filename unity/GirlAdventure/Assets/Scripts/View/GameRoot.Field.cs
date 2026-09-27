@@ -447,7 +447,7 @@ namespace GirlAdventure.View
                     body.transform.SetParent(fieldRoot, false);
                     body.sprite = JellySprite(def);
                     body.sortingOrder = 2;
-                    float s = MobHeight / Mathf.Max(.01f, body.sprite.bounds.size.y) * def.Size;
+                    float s = MobHeight / JellyTexUnits * def.Size;   // 코드 젤리·도감 그림 모두 같은 배율 (그림은 ArtUnits 로 크기를 맞춰 둠)
                     body.transform.localScale = Vector3.one * s;
                     var sh = new GameObject("MobShadow").AddComponent<SpriteRenderer>();
                     sh.transform.SetParent(fieldRoot, false);
@@ -455,6 +455,7 @@ namespace GirlAdventure.View
                     sh.color = new Color(0, 0, 0, .4f);
                     sh.transform.localScale = new Vector3(.8f, .26f, 1) * def.Size;
                     sh.sortingOrder = 1;
+                    sh.enabled = !UsesArt(def);     // 도감 그림은 그림자가 그려져 있음
                     v = (body, sh, s);
                     mobViews[m.Id] = v;
                     Spawn(v.body, true);

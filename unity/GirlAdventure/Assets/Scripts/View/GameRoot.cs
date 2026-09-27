@@ -295,6 +295,35 @@ namespace GirlAdventure.View
             SyncMobViews();
         }
 
+        /// <summary>프로브용: 사방 r 칸이 모두 그냥 땅(풀·수풀·꽃·길·다리)인 첫 칸. 걷기 검사가 가게·사람에 부딪히지 않게.</summary>
+        public Vector2Int DebugOpenSpot(int r)
+        {
+            for (int y = r; y < WorldMap.H - r; y++)
+                for (int x = r; x < WorldMap.W - r; x++)
+                {
+                    bool ok = true;
+                    for (int dy = -r; dy <= r && ok; dy++)
+                        for (int dx = -r; dx <= r && ok; dx++)
+                            ok = ".,f=b".IndexOf(map.At(x + dx, y + dy)) >= 0;
+                    if (ok) return new Vector2Int(x, y);
+                }
+            return new Vector2Int(P.X, P.Y);
+        }
+
+        /// <summary>프로브용: 주인공 가까이(맨해튼 거리 r 이하) 몬스터를 멀리 옮김 (수는 그대로). 멈춘 몬스터가 걷는 길 위에 있으면 전투가 끼어들어서.</summary>
+        public void DebugClearMobsNear(int r)
+        {
+            bool Near(FieldMonster m) => Mathf.Abs(m.X - P.X) + Mathf.Abs(m.Y - P.Y) <= r;
+            int n = mobs.List.RemoveAll(Near);
+            for (int k = 0; k < 60 && n > 0; k++)
+            {
+                var m = mobs.TrySpawn(P.X, P.Y);
+                if (m == null) break;
+                if (Near(m)) mobs.Remove(m); else n--;
+            }
+            SyncMobViews();
+        }
+
         public void DebugSpawnMob(int x, int y, int index = 0)
         {
             mobs.Spawn(x, y, index);
