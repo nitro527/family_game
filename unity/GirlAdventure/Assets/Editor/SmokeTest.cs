@@ -323,7 +323,7 @@ namespace GirlAdventure.EditorTools
         static void ProgressionTests()
         {
             var p = PlayerState.NewGame("  ");
-            Check("default name", p.Name == "첫째");
+            Check("default name", p.Name == PlayerState.DefaultName && p.Name == "서진");
             int ups = p.GainExp(PlayerState.NextExp(1));
             Check("level up at threshold", ups == 1 && p.Lv == 2 && p.Hp == p.MaxHp, $"lv={p.Lv} hp={p.Hp}/{p.MaxHp}");
             ups = p.GainExp(1000);
@@ -354,7 +354,8 @@ namespace GirlAdventure.EditorTools
 
         static void JosaTests()
         {
-            Check("josa 이/가", Josa.With("첫째", "이/가") == "첫째가" && Josa.With("젤리", "을/를") == "젤리를" && Josa.With("킹 젤리", "이/가") == "킹 젤리가");
+            Check("josa 이/가", Josa.With("첫째", "이/가") == "첫째가" && Josa.With("젤리", "을/를") == "젤리를" && Josa.With("킹 젤리", "이/가") == "킹 젤리가"
+                  && Josa.With(PlayerState.DefaultName, "이/가") == "서진이" && Josa.With(PlayerState.BrotherName, "이/가") == "지훈이");
             Check("josa batchim", Josa.With("서진", "은/는") == "서진은");
         }
 
@@ -373,7 +374,7 @@ namespace GirlAdventure.EditorTools
             var bad = new SaveData { Name = "", Lv = 0, Hp = 0, Mp = 999, Candy = 50, Gold = -5, X = 0, Y = 0 };
             var r = PlayerState.FromSave(bad);
             Check("save sanitized", r.Lv == 1 && r.Hp == r.MaxHp && r.Mp == r.MaxMp && r.Candy == PlayerState.BagCandy && r.Gold == 0
-                  && r.X == WorldMap.Start.x && r.Y == WorldMap.Start.y && r.Name == "첫째", $"pos=({r.X},{r.Y}) hp={r.Hp}");
+                  && r.X == WorldMap.Start.x && r.Y == WorldMap.Start.y && r.Name == PlayerState.DefaultName, $"pos=({r.X},{r.Y}) hp={r.Hp}");
         }
 
         /// <summary>사탕 가게: 골드로 사탕 사기, 가방 한도, 샘물은 산 사탕을 빼앗지 않음, 가게는 두 맵 모두 걸어서 닿는다.</summary>

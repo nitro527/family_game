@@ -22,7 +22,7 @@ namespace GirlAdventure.Sim
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
-    /// <summary>주인공(첫째)의 능력치와 진행 상태. UnityEngine 의존 없음.</summary>
+    /// <summary>주인공(서진)의 능력치와 진행 상태. UnityEngine 의존 없음.</summary>
     public class PlayerState
     {
         public const int StartHp = 22, StartMp = 10, StartAtk = 5, MaxCandy = 3;
@@ -30,7 +30,10 @@ namespace GirlAdventure.Sim
         public const int BagCandy = 9, MaxGold = 99999;
         public const int HpPerLevel = 6, MpPerLevel = 3, AtkPerLevel = 2;
 
-        public string Name = "첫째";
+        /// <summary>설정집(docs/lore/characters.md) 기준 이름: 주인공 서진, 동생 지훈.</summary>
+        public const string DefaultName = "서진", BrotherName = "지훈";
+
+        public string Name = DefaultName;
         public int Lv = 1;
         public int Hp = StartHp, MaxHp = StartHp;
         public int Mp = StartMp, MaxMp = StartMp;
@@ -88,7 +91,7 @@ namespace GirlAdventure.Sim
 
         public static PlayerState NewGame(string name)
         {
-            var p = new PlayerState { Name = string.IsNullOrWhiteSpace(name) ? "첫째" : name.Trim() };
+            var p = new PlayerState { Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim() };
             p.X = WorldMap.Start.x;
             p.Y = WorldMap.Start.y;
             return p;

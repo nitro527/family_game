@@ -356,7 +356,9 @@ namespace GirlAdventure.View
             cmdWin.SetActive(false);
             enemyLabel.text = "";
             HideMessage();
-            nameInput.text = PlayerPrefs.GetString("girlName", "첫째");
+            // 예전 기본 이름 "첫째" 는 설정집 이름 "서진" 으로 (직접 바꾼 이름은 그대로)
+            string lastName = PlayerPrefs.GetString("girlName", PlayerState.DefaultName);
+            nameInput.text = lastName == "첫째" ? PlayerState.DefaultName : lastName;
             bool canContinue = SaveStore.AnyExists;
             continueBtn.gameObject.SetActive(canContinue);
             ((RectTransform)optionsLbl.transform.parent).anchoredPosition = new Vector2(canContinue ? 312 : 60, -446);   // 이어하기가 없으면 그 자리에

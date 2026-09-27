@@ -41,7 +41,7 @@ namespace GirlAdventure.View
             bgm = gameObject.AddComponent<Bgm>();
 
             map = new WorldMap();
-            P = PlayerState.NewGame("첫째");
+            P = PlayerState.NewGame(PlayerState.DefaultName);
             BuildField();
             BuildBattle();
             BuildUI();
@@ -248,7 +248,7 @@ namespace GirlAdventure.View
         public void DebugEnterField()
         {
             StopAllCoroutines();
-            P = PlayerState.NewGame("첫째");
+            P = PlayerState.NewGame(PlayerState.DefaultName);
             EnterField();
             HideMessage();
             busy = false;

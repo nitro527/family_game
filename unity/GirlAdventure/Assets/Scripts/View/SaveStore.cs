@@ -61,7 +61,7 @@ namespace GirlAdventure.View
             }
         }
 
-        /// <summary>선택창에 보일 칸 이름: "1. 첫째 Lv 5 · 챕터 2 · 09-26 12:30" / "2. (비어 있음)".</summary>
+        /// <summary>선택창에 보일 칸 이름: "1. 서진 Lv 5 · 챕터 2 · 09-26 12:30" / "2. (비어 있음)".</summary>
         public static string Label(int s)
         {
             var d = Peek(s);
