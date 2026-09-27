@@ -6,15 +6,26 @@ namespace GirlAdventure.Sim
     /// <summary>
     /// 마을 사람 (착한 젤리). Resources/Data/npcs.json.
     /// 맵의 그 칸은 'N'(막힘)이 되고, 부딪히면 Talk 대사(dialogue.json id)를 한다.
-    /// 킹 젤리를 물리친 뒤에는 TalkAfter 가 있으면 그것을 말한다.
+    /// 진행에 따라 바뀌는 말: Talks(조건 붙은 대사) 중 위에서부터 처음 맞는 것 → 없으면
+    /// 킹 젤리를 물리친 뒤 TalkAfter → 그것도 없으면 Talk.
     /// </summary>
+    [Serializable]
+    public class NpcTalk
+    {
+        /// <summary>조건: 쉼표로 여러 개(모두 맞아야 함), 앞에 '!' 면 반대.
+        /// boss(킹 젤리) boss2(젤리 장군) guard(바위 대장) key(기지 열쇠 가짐) door(기지 문 열림) chN(챕터 N 이상) lvN(레벨 N 이상)</summary>
+        public string If;
+        public string Talk;
+    }
+
     [Serializable]
     public class NpcDef
     {
-        public string Id, Map, Name;        // Map: "field" / "cave"
+        public string Id, Map, Name;        // Map: "field" / "village" / "cave"
         public int X, Y;
         public string Color, Dark, Look;    // 겉모습 (EnemyDef.Looks 중 하나)
         public string Talk, TalkAfter;
+        public NpcTalk[] Talks;             // 조건 붙은 대사 (위에서부터 먼저 맞는 것)
         public bool Inn;                    // 여관 주인: 말 걸면 묵을지 묻는다 (Sim.Inn)
 
         public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : MapKind.Field;
@@ -50,8 +61,44 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>지금 할 말 (진행에 따라 바뀜).</summary>
-        public static string TalkId(NpcDef n, PlayerState p) =>
-            p.BossDown && !string.IsNullOrEmpty(n.TalkAfter) ? n.TalkAfter : n.Talk;
+        public static string TalkId(NpcDef n, PlayerState p)
+        {
+            if (n.Talks != null)
+                foreach (var t in n.Talks)
+                    if (t != null && !string.IsNullOrEmpty(t.Talk) && Holds(t.If, p)) return t.Talk;
+            return p.BossDown && !string.IsNullOrEmpty(n.TalkAfter) ? n.TalkAfter : n.Talk;
+        }
+
+        /// <summary>조건 문자열이 지금 맞는지 (빈 조건은 늘 맞음, 모르는 낱말은 틀림 — SmokeTest 가 잡는다).</summary>
+        public static bool Holds(string cond, PlayerState p)
+        {
+            if (string.IsNullOrWhiteSpace(cond)) return true;
+            foreach (var raw in cond.Split(','))
+            {
+                string w = raw.Trim();
+                bool not = w.StartsWith("!");
+                if (not) w = w.Substring(1);
+                bool? v = Word(w, p);
+                if (v == null || v.Value == not) return false;
+            }
+            return true;
+        }
+
+        /// <summary>조건 낱말 하나의 값 (모르는 낱말이면 null).</summary>
+        public static bool? Word(string w, PlayerState p)
+        {
+            switch (w)
+            {
+                case "boss": return p.BossDown;
+                case "boss2": return p.Boss2Down;
+                case "guard": return p.GuardDown;
+                case "key": return p.HasItem(Quest.KeyItem);
+                case "door": return Quest.DoorOpen(p);
+            }
+            if (w.Length > 2 && (w.StartsWith("ch") || w.StartsWith("lv")) && int.TryParse(w.Substring(2), out int n))
+                return w.StartsWith("ch") ? p.Chapter >= n : p.Lv >= n;
+            return null;
+        }
 
         /// <summary>맵에 NPC 칸('N')을 놓는다 (걸어 들어갈 수 없게).</summary>
         public static void Place(WorldMap m)

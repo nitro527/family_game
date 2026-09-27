@@ -139,7 +139,7 @@ namespace GirlAdventure.EditorTools
             foreach (int i in GameData.EncounterPool(MapKind.Field, 3, 4)) nearSmall &= GameData.Normal[i].Tier < 2;
             foreach (int i in GameData.EncounterPool(MapKind.Field, 10, 11)) nearSmall &= GameData.Normal[i].Tier < 2;
             Check("big jelly = stronger same color, far only", badTier == "" && nearSmall && GameData.Normal[GameData.EncounterPool(MapKind.Field, 20, 15)[4]].Tier == 2, badTier);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", PlayerState.DefaultName), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -214,6 +214,41 @@ namespace GirlAdventure.EditorTools
             string before = Npcs.TalkId(guide, talker);
             talker.BossDown = true;
             Check("npc talk changes after boss", before == guide.Talk && Npcs.TalkId(guide, talker) == guide.TalkAfter);
+
+            // 조건 대사 (백로그 41): 모든 NPC 의 조건 낱말이 알려진 것이고 대사 id 가 있다
+            string badCond = "";
+            foreach (var n in Npcs.All)
+                if (n.Talks != null)
+                    foreach (var t in n.Talks)
+                    {
+                        if (t == null || !GameData.HasTalk(t.Talk)) { badCond += n.Id + ":" + t?.Talk + " "; continue; }
+                        foreach (var w in (t.If ?? "").Split(','))
+                            if (w.Trim().TrimStart('!') != "" && Npcs.Word(w.Trim().TrimStart('!'), talker) == null) badCond += n.Id + ":" + w + " ";
+                    }
+            Check("npc conditional talks valid", badCond == "", badCond);
+            var cp = PlayerState.NewGame("c");
+            Check("npc cond words", Npcs.Holds("", cp) && Npcs.Holds("!boss,lv1", cp) && !Npcs.Holds("lv5", cp) && !Npcs.Holds("boss", cp)
+                  && !Npcs.Holds("ch2", cp) && !Npcs.Holds("nonsense", cp) && Npcs.Word("lv", cp) == null);
+            // 밀짚모자 젤리: Lv5 가 되면 "성에 가 봐도 되겠어", 킹 젤리를 이기면 고맙다는 말
+            cp.GainExp(PlayerState.NextExp(1) + PlayerState.NextExp(2) + PlayerState.NextExp(3) + PlayerState.NextExp(4) + 1000);
+            string ready = Npcs.TalkId(guide, cp);
+            cp.BossDown = true;
+            Check("guide: ready at lv5, thanks after boss", cp.Lv >= 5 && ready == "npc_guide_ready" && Npcs.TalkId(guide, cp) == guide.TalkAfter, $"lv={cp.Lv} ready={ready}");
+            // 동굴 광부 젤리: 처음 → 바위 대장 격파 → 열쇠 → 문 열림 → 젤리 장군 격파 순서로 말이 바뀐다
+            NpcDef miner = null;
+            foreach (var n in Npcs.On(MapKind.Cave)) if (n.Id == "miner") miner = n;
+            var mp = PlayerState.NewGame("m");
+            Quest.StartChapter2(mp);
+            var said = new List<string> { Npcs.TalkId(miner, mp) };
+            mp.GuardDown = true; said.Add(Npcs.TalkId(miner, mp));
+            Quest.OpenChest(mp, WorldMap.Chest.x, WorldMap.Chest.y, out _); said.Add(Npcs.TalkId(miner, mp));
+            Quest.TryBaseDoor(mp); said.Add(Npcs.TalkId(miner, mp));
+            mp.Boss2Down = true; said.Add(Npcs.TalkId(miner, mp));
+            Check("cave miner talk follows progress", miner != null && string.Join(",", said) == "npc_miner,npc_miner_guard,npc_miner_key,npc_miner_door,npc_miner_end", string.Join(",", said));
+            var caveNpc = WorldMap.Cave();
+            Npcs.Place(caveNpc);
+            Check("cave miner placed on entrance floor", miner != null && caveNpc.At(miner.X, miner.Y) == 'N' && Reach(caveNpc)[WorldMap.BaseDoor.x - 1, WorldMap.BaseDoor.y + 1]
+                  && Reach(caveNpc)[WorldMap.CaveSpring.x - 1, WorldMap.CaveSpring.y + 1]);
 
             // PIPOYA 타일 맵: 타일을 읽을 수 있고, 그린 맵에 빈(투명) 칸이 없어야 한다
             var tiles = FieldTiles.Load();

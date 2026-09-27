@@ -670,6 +670,14 @@ namespace GirlAdventure.EditorTools
             G.DebugMobs(true, false);
             yield return .5f;
             Shot("cave_start");
+            // 광부 젤리 (백로그 41): 동굴 입구에서 열쇠 이야기
+            G.DebugTeleport(3, 20, "left");
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            yield return 1.2f;
+            Shot("cave_miner_talk");
+            Expect("cave miner talks about the key", G.MessageText.Contains("광부 젤리"));
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             G.DebugTeleport(16, 11, "down");
             yield return .5f;
             Shot("cave_pool");
