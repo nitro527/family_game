@@ -132,7 +132,7 @@ namespace GirlAdventure.View
         float FoeX(int i)
         {
             int n = battle != null ? battle.Foes.Count : 1;
-            return n <= 1 ? EnemyX : n == 2 ? (i == 0 ? 470 : 690) : 430 + i * 165;
+            return n <= 1 ? EnemyX : n == 2 ? (i == 0 ? 440 : 575) : 355 + i * 110;     // 오른쪽 명령·선택창(x 630~)에 안 가리게
         }
 
         /// <summary>적 칸 i 의 크기 (보스 1.75, 큰 젤리 ×1.3, 무리일수록 조금 작게).</summary>
@@ -141,7 +141,7 @@ namespace GirlAdventure.View
             if (battle == null) return 1.05f;
             var d = battle.Foes[i].Def;
             int n = battle.Foes.Count;
-            return (d.Boss ? 1.75f : 1.05f) * d.Size * (n >= 3 ? .78f : n == 2 ? .9f : 1f);
+            return (d.Boss ? 1.75f : 1.05f) * d.Size * (n >= 3 ? .7f : n == 2 ? .85f : 1f);
         }
 
         /// <summary>같은 젤리가 여럿이면 "파랑 젤리 A/B/C" (DQ 식).</summary>
@@ -353,8 +353,8 @@ namespace GirlAdventure.View
         {
             for (int i = 0; i < groupTags.Length; i++)
             {
-                groupTags[i] = UIKit.Label(ui, "FoeTag" + i, "", 0, 0, 200, 30, 20, TextAnchor.MiddleCenter, Color.white, true);
-                groupBars[i] = UIKit.Bar(groupTags[i].transform, "Hp", 30, 30, 140, 8, new Color32(86, 212, 106, 255));
+                groupTags[i] = UIKit.Label(ui, "FoeTag" + i, "", 0, 0, 120, 26, 16, TextAnchor.MiddleCenter, Color.white, true);
+                groupBars[i] = UIKit.Bar(groupTags[i].transform, "Hp", 22, 26, 76, 7, new Color32(86, 212, 106, 255));
                 groupGroups[i] = groupTags[i].gameObject.AddComponent<CanvasGroup>();
                 groupGroups[i].blocksRaycasts = false;
             }
@@ -362,26 +362,19 @@ namespace GirlAdventure.View
             targetArrow.gameObject.SetActive(false);
         }
 
-        /// <summary>적 i 의 머리 위 화면 위치 (캔버스 좌표계의 스크린 px).</summary>
-        Vector3 FoeHeadScreen(int i)
-        {
-            var d = battle.Foes[i].Def;
-            var head = Px(FoeX(i), EnemyY) + new Vector3(0, HeadUnits(d) * FoeScale(i), 0);
-            return cam.WorldToScreenPoint(head);
-        }
+        /// <summary>적 i 의 머리 꼭대기 y (무대 px = 캔버스 기준 해상도 960×540 과 같은 좌표).</summary>
+        float FoeHeadY(int i) => EnemyY - HeadUnits(battle.Foes[i].Def) * FoeScale(i) * 48;
 
         void TickGroupTags()
         {
             bool on = Current == Mode.Battle && GroupBattle && battleRoot.gameObject.activeSelf;
-            float sf = ui.GetComponent<Canvas>().scaleFactor;
             for (int i = 0; i < groupTags.Length; i++)
             {
                 bool show = on && i < battle.Foes.Count && groupTags[i].text != "";
                 if (groupTags[i].gameObject.activeSelf != show) groupTags[i].gameObject.SetActive(show);
                 if (!show) continue;
                 var f = battle.Foes[i];
-                var s = FoeHeadScreen(i);
-                groupTags[i].rectTransform.position = s + new Vector3(-100 * sf, 52 * sf, 0);     // 기준점 왼쪽 위
+                groupTags[i].rectTransform.anchoredPosition = new Vector2(FoeX(i) - 60, -(FoeHeadY(i) - 44));     // 머리 위, 기준점 왼쪽 위
                 groupShown[i] = Mathf.MoveTowards(groupShown[i], Mathf.Clamp01(f.Hp / (float)Mathf.Max(1, f.Def.Hp)), Time.deltaTime * .9f);
                 groupBars[i].fillAmount = groupShown[i];
                 groupBars[i].color = groupShown[i] > .5f ? new Color32(86, 212, 106, 255) : groupShown[i] > .25f ? new Color32(242, 196, 67, 255) : new Color32(255, 96, 96, 255);
@@ -393,8 +386,8 @@ namespace GirlAdventure.View
             if (targetArrow.gameObject.activeSelf != arrow) targetArrow.gameObject.SetActive(arrow);
             if (arrow)
             {
-                float bob = Mathf.Abs(Mathf.Sin(Time.time * 6)) * 6 * sf;
-                targetArrow.rectTransform.position = FoeHeadScreen(targetMark) + new Vector3(-30 * sf, 96 * sf + bob, 0);
+                float bob = Mathf.Abs(Mathf.Sin(Time.time * 6)) * 6;
+                targetArrow.rectTransform.anchoredPosition = new Vector2(FoeX(targetMark) - 30, -(FoeHeadY(targetMark) - 86 - bob));
             }
         }
 
