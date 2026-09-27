@@ -7,6 +7,7 @@
   "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 10, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss" },
   "Cave": [
     { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16, "Gold": 10, "Move": "slam",  "Attack": "쿵쿵 누르기", "Look": "rock" },
+    { "Name": "광물 젤리",   "Color": "#9C88C8", "Dark": "#5E4C8A", "Hp": 29, "Atk": 10, "Exp": 19, "Gold": 18, "Move": "spin",  "Attack": "반짝반짝 회전", "Look": "ore" },
     { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22, "Gold": 13, "Move": "shard", "Attack": "수정 조각 날리기", "Look": "crystal" }
   ],
   "Guard": { "Name": "바위 대장 젤리", "Color": "#8C7B6B", "Dark": "#54483E", "Hp": 170, "Atk": 13, "Exp": 45, "Gold": 40, "Boss": true, "Move": "slam", "Attack": "바위 굴리기", "Look": "rock", "Backdrop": "cave_guard" },

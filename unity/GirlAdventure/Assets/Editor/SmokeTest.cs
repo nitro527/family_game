@@ -101,7 +101,7 @@ namespace GirlAdventure.EditorTools
             Check("skills.json has every command", skillsOk);
             string P(MapKind k, int x, int y) => string.Join(",", GameData.EncounterPool(k, x, y));
             Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2"
-                  && P(MapKind.Cave, 5, 20) == "0,0,1" && P(MapKind.Cave, 12, 5) == "0,1,1",
+                  && P(MapKind.Cave, 5, 20) == "0,0,1,2" && P(MapKind.Cave, 12, 5) == "0,1,2,2",
                   $"field={P(MapKind.Field, 3, 4)}|{P(MapKind.Field, 10, 11)}|{P(MapKind.Field, 20, 15)} cave={P(MapKind.Cave, 5, 20)}|{P(MapKind.Cave, 12, 5)}");
             // 딸의 노트: 젤리 색 = 난이도 (파랑 쉬움 < 초록 중간 < 분홍 어려움), 시작 근처엔 분홍이 안 나옴
             var nm = GameData.Normal;
@@ -109,6 +109,11 @@ namespace GirlAdventure.EditorTools
                   && nm[0].Hp < nm[1].Hp && nm[1].Hp < nm[2].Hp && nm[0].Atk < nm[1].Atk && nm[1].Atk < nm[2].Atk
                   && !P(MapKind.Field, 3, 4).Contains("2"),
                   $"{nm[0].Name}/{nm[1].Name}/{nm[2].Name}");
+            // 딸의 노트: 동굴은 돌 < 광물(세모 결정) < 수정 순서로 세다
+            var cv = GameData.Cave;
+            Check("cave rock < ore < crystal", cv.Length == 3 && cv[0].Look == "rock" && cv[1].Look == "ore" && cv[2].Look == "crystal"
+                  && cv[0].Hp < cv[1].Hp && cv[1].Hp < cv[2].Hp && cv[0].Atk < cv[1].Atk && cv[1].Atk < cv[2].Atk,
+                  string.Join("/", Array.ConvertAll(cv, d => d.Name)));
             var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", "첫째"), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
             foreach (var id in TalkIds)
             {

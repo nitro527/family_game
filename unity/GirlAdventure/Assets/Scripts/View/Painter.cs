@@ -192,6 +192,7 @@ namespace GirlAdventure.View
                 R.Ellipse(cx - w * .2f, bottom - h * .55f, w * .07f, h * .12f, new Color32(255, 255, 255, 170));
             if (look == "rock") RockShell(R, cx, bottom, w, h);
             else if (look == "crystal") CrystalGrowth(R, cx, bottom, w, h);
+            else if (look == "ore") OreGems(R, cx, bottom, w, h);
             else if (look == "general") GeneralArmor(R, cx, bottom, w, h);
             else if (look == "hat") StrawHat(R, cx, bottom, w, h);
             else if (look == "bow") HeadBow(R, cx, bottom, w, h);
@@ -297,6 +298,32 @@ namespace GirlAdventure.View
             foreach (var (px, py, deg) in new[] { (-.3f, .18f, -20f), (.32f, .14f, 25f) })       // 몸의 작은 조각
                 Prism(R, cx + w * px, bottom - h * py, 24, 8, deg, dark, mid, lite);
             foreach (var (sx, sy, r) in new[] { (-.1f, 1.28f, 9f), (.28f, 1.05f, 7f), (-.4f, .82f, 6f) })   // 반짝
+            {
+                float x = cx + w * sx, y = bottom - h * sy;
+                R.Polygon(new[] { new Vector2(x, y - r * 2), new Vector2(x + r * .4f, y - r * .4f), new Vector2(x + r * 2, y), new Vector2(x + r * .4f, y + r * .4f),
+                                  new Vector2(x, y + r * 2), new Vector2(x - r * .4f, y + r * .4f), new Vector2(x - r * 2, y), new Vector2(x - r * .4f, y - r * .4f) },
+                          new Color32(255, 255, 255, 230));
+            }
+        }
+
+        /// <summary>광물 젤리 (딸의 노트): 몸에 박힌 세모 결정 — 금빛·보랏빛, 면마다 밝고 어두운 쪽이 나뉘어 반짝.</summary>
+        static void OreGems(Raster R, float cx, float bottom, float w, float h)
+        {
+            Color32 gold = Raster.Hex("#FFD84A"), goldD = Raster.Hex("#C88A1E"), vio = Raster.Hex("#C98CFF"), vioD = Raster.Hex("#7438C0");
+            // (가로 위치, 높이, 크기, 기울기, 금빛?) — 머리 위 큰 세모 둘, 어깨·몸에 작은 것들
+            foreach (var (px, py, s, deg, isGold) in new[] { (-.09f, .9f, 60f, -14f, true), (.17f, .82f, 48f, 20f, false), (-.36f, .5f, 36f, -42f, false),
+                                                             (.38f, .48f, 38f, 44f, true), (-.27f, .16f, 26f, -8f, true), (.28f, .12f, 24f, 10f, false), (.04f, .64f, 20f, 4f, true) })
+            {
+                float a = deg * Mathf.Deg2Rad;
+                Vector2 up = new Vector2(Mathf.Sin(a), -Mathf.Cos(a)), side = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                Vector2 b = new Vector2(cx + w * px, bottom - h * py), tip = b + up * s * 1.25f, l = b - side * s * .8f, r = b + side * s * .8f;
+                Color32 c = isGold ? gold : vio, d = isGold ? goldD : vioD;
+                R.Polygon(new[] { l, tip, r }, c, Ink, 6);
+                R.Polygon(new[] { b + up * s * .12f, tip, r }, d);                      // 오른쪽 그늘진 면
+                R.Line(l.x + (tip.x - l.x) * .25f + side.x * 5, l.y + (tip.y - l.y) * .25f + side.y * 5,
+                       l.x + (tip.x - l.x) * .7f + side.x * 3, l.y + (tip.y - l.y) * .7f + side.y * 3, 3, new Color32(255, 255, 255, 200));   // 빛 줄
+            }
+            foreach (var (sx, sy, r) in new[] { (-.18f, 1.2f, 8f), (.34f, .8f, 6f) })   // 반짝
             {
                 float x = cx + w * sx, y = bottom - h * sy;
                 R.Polygon(new[] { new Vector2(x, y - r * 2), new Vector2(x + r * .4f, y - r * .4f), new Vector2(x + r * 2, y), new Vector2(x + r * .4f, y + r * .4f),
