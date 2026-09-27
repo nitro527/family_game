@@ -7,25 +7,26 @@ namespace GirlAdventure.Sim
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
     /// 초원 — '.' 풀밭  ',' 수풀(인카운트↑)  'f' 꽃  '=' 길  'b' 다리  'w' 물  'T' 나무
-    ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'M' 사탕 가게  'N' 마을 사람(Npcs.Place)
+    ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'N' 마을 사람(Npcs.Place)
     /// 동굴 — '#' 바위벽  '_' 동굴 바닥(인카운트)  ':' 입구 바닥(안전)  'r' 바위기둥  'w' 지하 샘
     ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'M' 사탕 가게
     ///        (보물상자 바로 옆 GuardSpot 에는 바위 대장 젤리가 버티고 있다 — 타일이 아니라 Quest 규칙)
     ///        초원의 'V' = 별빛 마을 입구 (밟으면 마을로)
-    /// 마을 — '.' 풀밭 'f' 꽃 '=' 길 'T' 숲 'h' 집 'u' 우물 'x' 울타리 'S' 표지판 'E' 출구(밟으면 초원으로) 'N' 마을 사람
+    /// 마을 — '.' 풀밭 'f' 꽃 '=' 길 'T' 숲 'h' 집 'u' 우물 'x' 울타리 'S' 표지판 'M' 사탕 가게 'E' 출구(밟으면 초원으로) 'N' 마을 사람
     /// </summary>
     public class WorldMap
     {
         public const int W = 36, H = 24;
         // 초원 (챕터 1)
-        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19), FieldShop = (7, 5);
+        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19);
         // 동굴 (챕터 2)
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
                                                     Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3),
                                                     CaveShop = (8, 17), GuardSpot = (2, 8);
         // 별빛 마을: 초원 시작 공터 위쪽 입구(VillageGate) ↔ 마을 아래쪽 출구(VillageExit)
         public static readonly (int x, int y) VillageGate = (10, 2), VillageStart = (18, 19), VillageExit = (18, 20),
-                                                    Well = (18, 10), VillageSign = (20, 18);
+                                                    Well = (18, 10), VillageSign = (20, 18),
+                                                    VillageShop = (12, 10);    // 사탕 가게: 동서 길 바로 위 (백로그 40 — 초원에서 옮겨 옴)
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
         public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
@@ -38,7 +39,8 @@ namespace GirlAdventure.Sim
         /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리).</summary>
         public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : CaveSpring;
         public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : Kind == MapKind.Village ? VillageSign : CaveSign;
-        public (int x, int y) ShopPos => Kind == MapKind.Field ? FieldShop : CaveShop;
+        /// <summary>사탕 가게 (초원에는 없다 — 마을 가게를 쓴다).</summary>
+        public (int x, int y) ShopPos => Kind == MapKind.Village ? VillageShop : Kind == MapKind.Cave ? CaveShop : (-1, -1);
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
         public (int x, int y) RevivePoint => (Spring.x - 1, Spring.y + 1);
 
@@ -97,7 +99,6 @@ namespace GirlAdventure.Sim
                     if (tiles[x, y] != '=') Set(x, y, (x + y) % 5 != 0 ? '.' : 'f');
             Set(Fountain.x, Fountain.y, 'F');
             Set(Sign.x, Sign.y, 'S');
-            Set(FieldShop.x, FieldShop.y, 'M');
             // 성
             Fill(28, 19, 34, 22, 'C');
             for (int x = 27; x <= 35; x++)
@@ -134,6 +135,7 @@ namespace GirlAdventure.Sim
             m.Fill(20, 16, 24, 16, 'x');
             m.Set(Well.x, Well.y, 'u');
             m.Set(VillageSign.x, VillageSign.y, 'S');
+            m.Set(VillageShop.x, VillageShop.y, 'M');
             m.Set(VillageExit.x, VillageExit.y, 'E');
             return m;
         }

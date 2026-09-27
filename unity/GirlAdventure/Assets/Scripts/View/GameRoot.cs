@@ -268,6 +268,16 @@ namespace GirlAdventure.View
             UpdatePlayerVisual();
         }
 
+        /// <summary>플레이테스트용: 걷지 않고 바로 마을/초원으로 (챕터 1). 배경음악도 그 맵 곡으로.</summary>
+        public void DebugSetVillage(bool inVillage)
+        {
+            P.InVillage = inVillage;
+            ApplyMap();
+            bgm.Play(MapSong);
+            RefreshQuestProps();
+            UpdatePlayerVisual();
+        }
+
         public void DebugSetEnemyHp(int hp) { if (battle != null) battle.EnemyHp = hp; }
 
         public bool EnemyAppearing => enemyAppear < 1;

@@ -395,7 +395,8 @@ namespace GirlAdventure.EditorTools
             Check("spring refills to 3", p.Candy == PlayerState.MaxCandy);
             p.GainGold(-999999);
             Check("gold never negative", p.Gold == 0);
-            foreach (var m in new[] { new WorldMap(), WorldMap.Cave() })
+            Check("field: no shop (moved to village)", new WorldMap().ShopPos == (-1, -1) && Shop.Goods(MapKind.Field).Count == 0);
+            foreach (var m in new[] { WorldMap.Village(), WorldMap.Cave() })
             {
                 var (sx, sy) = m.ShopPos;
                 var reach = Reach(m, p);
@@ -413,7 +414,7 @@ namespace GirlAdventure.EditorTools
             foreach (var d in GameData.Consumables)
                 dataOk &= !string.IsNullOrEmpty(d.Name) && (d.Hp > 0 || d.Mp > 0) && d.Price > 0 && !string.IsNullOrEmpty(d.Shops);
             Check("items.json consumables valid", dataOk, $"n={GameData.Consumables.Count}");
-            var fieldGoods = Shop.Goods(MapKind.Field);
+            var fieldGoods = Shop.Goods(MapKind.Village);
             var caveGoods = Shop.Goods(MapKind.Cave);
             Check("shop goods per map", fieldGoods.Contains("candy") && fieldGoods.Contains("potion") && !fieldGoods.Contains("moon")
                   && caveGoods.Contains("moon") && caveGoods.FindAll(Items.IsConsumable).Count <= 3 && !fieldGoods.Contains("key"), string.Join(",", caveGoods));
@@ -455,7 +456,7 @@ namespace GirlAdventure.EditorTools
             foreach (var d in GameData.Gear)
                 dataOk &= !string.IsNullOrEmpty(d.Name) && (d.Atk > 0 || d.Def > 0) && d.Price > 0 && !string.IsNullOrEmpty(d.Shops);
             Check("items.json gear valid", dataOk, $"n={GameData.Gear.Count}");
-            foreach (var kind in new[] { MapKind.Field, MapKind.Cave })
+            foreach (var kind in new[] { MapKind.Village, MapKind.Cave })
             {
                 var slots = new HashSet<string>();
                 foreach (var id in Shop.Goods(kind))
@@ -711,13 +712,13 @@ namespace GirlAdventure.EditorTools
         static void MusicTests()
         {
             Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
-            foreach (var name in new[] { "title", "field", "cave", "battle", "boss", "ending" })
+            foreach (var name in new[] { "title", "field", "village", "cave", "battle", "boss", "ending" })
             {
                 var s = Music.Get(name);
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                bool longSong = name == "field" || name == "battle" || name == "cave";     // A-B 16마디 곡
+                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village";     // A-B 16마디 곡
                 Check($"bgm {name} loops cleanly", (longSong ? lead == 128 : lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;
@@ -743,7 +744,7 @@ namespace GirlAdventure.EditorTools
             for (int run = 0; run < runs; run++)
             {
                 var p = PlayerState.NewGame("sim");
-                if (gear) GearUp(p, MapKind.Field);
+                if (gear) GearUp(p, MapKind.Village);
                 int battles = 0, deaths = 0;
                 while (p.Lv < 5 && battles < 200)
                 {

@@ -177,7 +177,6 @@ namespace GirlAdventure.View
 
             Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
             Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
-            CandyShop(R, WorldMap.FieldShop.x * T, WorldMap.FieldShop.y * T);
 
             // 나무: 위쪽부터 그려서 아래 나무가 위 나무를 살짝 덮게
             for (int y = 0; y < WorldMap.H; y++)
@@ -189,7 +188,7 @@ namespace GirlAdventure.View
 
         // ------------------------------------------------------------------ field (PIPOYA 타일)
         /// <summary>
-        /// 초원을 PIPOYA 월드 타일로: 풀밭 바탕 → 수풀·길·물·숲 오토타일 → 다리·샘물·표지판·가게·꽃 → 성.
+        /// 초원을 PIPOYA 월드 타일로: 풀밭 바탕 → 수풀·길·물·숲 오토타일 → 다리·샘물·표지판·꽃 → 성.
         /// 성(C)은 가장자리를 숲으로 덮고, 가운데에 파란 성 그림(2배)을 성문 위치에 맞춰 얹는다.
         /// </summary>
         static Raster TiledField(WorldMap m, FieldTiles t)
@@ -221,7 +220,6 @@ namespace GirlAdventure.View
                 }
             Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
             Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
-            CandyShop(R, WorldMap.FieldShop.x * T, WorldMap.FieldShop.y * T);
             // 숲: 위 칸부터 (아래 줄 나무가 위 줄을 살짝 덮게)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -291,6 +289,7 @@ namespace GirlAdventure.View
             foreach (var (hx, hy, roof) in WorldMap.Houses) House(R, hx * T, hy * T, roof);
             var inn = WorldMap.Houses[WorldMap.InnHouse];
             InnSign(R, inn.x * T + 3 * T / 2f, inn.y * T + 48);
+            CandyShop(R, WorldMap.VillageShop.x * T, WorldMap.VillageShop.y * T);
             if (t != null)
                 for (int y = 0; y < WorldMap.H; y++)
                     for (int x = 0; x < WorldMap.W; x++)

@@ -299,9 +299,12 @@ namespace GirlAdventure.View
             UpdatePlayerVisual();
             RefreshQuestProps();
             mobs.Grace = 2f;                   // 전투 직후 바로 또 부딪히지 않게
-            bgm.Play(map.Kind == MapKind.Cave ? "cave" : "field");
+            bgm.Play(MapSong);
             AutoSave();
         }
+
+        /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village".</summary>
+        string MapSong => map.Kind == MapKind.Cave ? "cave" : map.Kind == MapKind.Village ? "village" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -317,6 +320,7 @@ namespace GirlAdventure.View
             facing = toVillage ? "up" : "down";
             moveT = -1;
             ApplyMap();
+            bgm.Play(MapSong);
             RefreshQuestProps();
             UpdatePlayerVisual();
             mobs.Grace = 2f;

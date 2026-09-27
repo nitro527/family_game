@@ -205,7 +205,7 @@ namespace GirlAdventure.EditorTools
             Shot("fountain_sparkle");
 
             // 터치 버튼: 화면 버튼을 실제 포인터 이벤트로 눌러서 걷기
-            G.DebugTeleport(3, 6, "down");               // 가게(7,5)에 부딪히지 않는 줄
+            G.DebugTeleport(3, 6, "down");               // 샘물·표지판에 부딪히지 않는 줄
             G.ForceTouchPad = true;
             yield return .3f;
             Expect("touch pad visible in field", G.TouchPadVisible);
@@ -245,10 +245,13 @@ namespace GirlAdventure.EditorTools
             Shot("fountain");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
 
-            // 도구 가게: 사탕 하나, 마법 물약 하나 사고 Esc 로 그만두기
+            // 도구 가게 (백로그 40: 마을로 옮김): 사탕 하나, 마법 물약 하나 사고 Esc 로 그만두기
+            G.DebugSetVillage(true);
+            yield return .3f;
+            ExpectBgm("village");
             G.DebugSetGold(40);
             int candy0 = G.P.Candy;
-            G.DebugTeleport(WorldMap.FieldShop.x - 1, WorldMap.FieldShop.y, "right");
+            G.DebugTeleport(WorldMap.VillageShop.x - 1, WorldMap.VillageShop.y, "right");
             yield return .3f;
             Shot("shop_front");
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
@@ -271,12 +274,12 @@ namespace GirlAdventure.EditorTools
             // 장비 사기: 별빛 지팡이(목록 3번째)를 사서 바로 장착, 한 번 더 고르면 "가짐"
             G.DebugSetGold(100);
             int atk0 = G.P.Atk;
-            G.DebugTeleport(WorldMap.FieldShop.x - 1, WorldMap.FieldShop.y, "right");
+            G.DebugTeleport(WorldMap.VillageShop.x - 1, WorldMap.VillageShop.y, "right");
             yield return .3f;
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
             foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
             yield return .2f;
-            int wandIdx = Shop.Goods(MapKind.Field).IndexOf("star_wand");
+            int wandIdx = Shop.Goods(MapKind.Village).IndexOf("star_wand");
             for (int k = 0; k < wandIdx; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
             Shot("shop_gear_list");
             Keys.Press(KeyCode.Return);                // 별빛 지팡이 사기
@@ -295,6 +298,11 @@ namespace GirlAdventure.EditorTools
             Expect("shop: gear not bought twice", G.P.Gold == 100 - GameData.ItemPrice("star_wand"));
             Keys.Press(KeyCode.Escape);
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugSetVillage(false);
+            G.DebugTeleport(6, 5, "down");
+            yield return .3f;
+            Expect("field has no shop tile", G.MapKind == MapKind.Field);
+            ExpectBgm("field");
 
             // 상태 창: Esc 로 열고 닫기
             Keys.Press(KeyCode.Escape);
@@ -448,6 +456,7 @@ namespace GirlAdventure.EditorTools
             yield return .5f;
             Expect("entered village", G.MapKind == MapKind.Village && (G.P.X, G.P.Y) == WorldMap.VillageStart && G.P.InVillage && G.MobCount == 0);
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            ExpectBgm("village");
             Shot("village");
             G.DebugTeleport(16, 13, "up");
             yield return .3f;

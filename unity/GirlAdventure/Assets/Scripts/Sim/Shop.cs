@@ -5,7 +5,7 @@ namespace GirlAdventure.Sim
     public enum BuyResult { Bought, NoGold, Full, Owned }
 
     /// <summary>
-    /// 가게: 샘물 옆 가게에서 골드로 소모품과 장비를 산다. 가격과 파는 곳(Shops: "field"/"cave")은 items.json.
+    /// 가게: 샘물 옆 가게에서 골드로 소모품과 장비를 산다. 가격과 파는 곳(Shops: "village"/"cave")은 items.json.
     /// 샘물은 사탕을 3개까지만 채워 주므로, 먼 길(성·기지)을 떠나기 전에 더 사 두는 곳.
     /// 장비는 종류마다 하나만 산다 (이미 있으면 Owned).
     /// </summary>
@@ -18,7 +18,7 @@ namespace GirlAdventure.Sim
         /// <summary>이 맵 가게에서 파는 물건 id (소모품 다음 장비, 데이터 순서).</summary>
         public static List<string> Goods(MapKind kind)
         {
-            string where = kind == MapKind.Cave ? "cave" : "field";
+            string where = kind == MapKind.Cave ? "cave" : kind == MapKind.Village ? "village" : "field";
             var list = new List<string>();
             foreach (var d in GameData.Consumables) if (Sells(d, where)) list.Add(d.Id);
             foreach (var d in GameData.Gear) if (Sells(d, where)) list.Add(d.Id);

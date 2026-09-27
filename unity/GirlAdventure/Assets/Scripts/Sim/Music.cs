@@ -90,6 +90,21 @@ namespace GirlAdventure.Sim
             },
             new Song
             {
+                Name = "village", Bpm = 92, SoftLead = true,
+                // 별빛 마을: 삼각파로 느긋하게. A (사장조) → B (마단조로 살짝 저녁빛, 라 7화음으로 A 로 돌아간다)
+                Lead = "G5.2 B5.2 D6.3 B5 | C6.2 A5.2 F#5.4 | G5.2 E5.2 D5.2 G5.2 | A5.6 R.2 |" +
+                       "G5.2 B5.2 D6.3 E6 | D6.2 B5.2 C6.4 | B5.2 A5.2 F#5.2 A5.2 | G5.6 R.2 |" +
+                       "E5.2 G5.2 B5.4 | A5.2 G5.2 F#5.4 | D5.2 F#5.2 A5.3 G5 | F#5.6 R.2 |" +
+                       "E5.2 G5.2 C6.4 | B5.2 A5.2 G5.4 | A5.2 B5.2 C6.2 A5.2 | D5.6 R.2",
+                Bass = "G2.2 D3.2 B2.2 D3.2 | C3.2 G3.2 D3.2 A3.2 | E3.2 B3.2 G2.2 D3.2 | D3.2 A3.2 D3.2 F#3.2 |" +
+                       "G2.2 D3.2 B2.2 D3.2 | G2.2 D3.2 C3.2 G3.2 | D3.2 A3.2 D3.2 F#3.2 | G2.2 D3.2 G2.4 |" +
+                       "E2.2 B2.2 E3.2 B2.2 | D3.2 A2.2 D3.2 A2.2 | D3.2 A3.2 F#3.2 A3.2 | B2.2 F#3.2 D3.2 F#3.2 |" +
+                       "C3.2 G3.2 E3.2 G3.2 | G2.2 D3.2 B2.2 D3.2 | A2.2 E3.2 C3.2 E3.2 | D3.2 A3.2 D3.2 C3.2",
+                Drums = "k..hk.h.k..hk.h.k..hk.h.k..hk.h.k..hk.h.k..hk.h.k..hk.h.k.h.s.h." +
+                        "k..hk.h.k..hk.h.k..hk.h.k..hk.h.k..hk.h.k..hk.h.k..hk.h.k.hhs.s.",
+            },
+            new Song
+            {
                 Name = "ending", Bpm = 96, SoftLead = true,
                 Lead = "C5.2 F5.2 A5.4 | G5.2 F5.2 E5.2 F5.2 | G5.3 A5 A#5.2 G5.2 | A5.6 R.2 |" +
                        "F5.2 A5.2 C6.4 | A#5.2 A5.2 G5.2 F5.2 | E5.2 G5.2 C5.2 E5.2 | F5.6 R.2",
