@@ -72,10 +72,12 @@ def dogam(data):
     page = Image.new('RGB', (cols * cw + 40, rows * chh + 110), '#fff8e8')
     d = ImageDraw.Draw(page)
     title, big, small = (ImageFont.truetype(FONT, s) for s in (40, 24, 17))
-    d.text((24, 22), f'몬스터 도감  ({len(mons)}마리 · 딸의 아이디어)', font=title, fill='#5a3b1a')
+    ally = sum(1 for m in mons if m.get('kind') == 'ally')
+    d.text((24, 22), f'몬스터 도감  (몬스터 {len(mons) - ally} · 우리팀 {ally} · 딸의 아이디어)', font=title, fill='#5a3b1a')
     for i, m in enumerate(mons):
         x, y = 20 + (i % cols) * cw, 90 + (i // cols) * chh
-        d.rounded_rectangle((x + 6, y + 6, x + cw - 6, y + chh - 6), 18, fill='white', outline='#e0c89a', width=3)
+        edge = '#8fc7a0' if m.get('kind') == 'ally' else '#e0c89a'
+        d.rounded_rectangle((x + 6, y + 6, x + cw - 6, y + chh - 6), 18, fill='white', outline=edge, width=3)
         im = Image.open(os.path.join(CUT, m['id'] + '.png'))
         im.thumbnail((cw - 60, 250))
         page.paste(im, (x + (cw - im.width) // 2, y + 18 + (250 - im.height)), im)
