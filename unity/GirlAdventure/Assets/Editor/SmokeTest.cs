@@ -19,6 +19,7 @@ namespace GirlAdventure.EditorTools
             fails = 0;
             DataTests();
             MapTests();
+            VillageTests();
             ProgressionTests();
             BattleRuleTests();
             JosaTests();
@@ -45,7 +46,7 @@ namespace GirlAdventure.EditorTools
         /// <summary>코드가 부르는 대사 id 목록 — 새 대사를 코드에서 쓰면 여기에도 추가.</summary>
         static readonly string[] TalkIds =
         {
-            "intro", "continue", "npc_guide", "npc_guide_after", "npc_tips", "npc_tips_after", "slot_new", "slot_load", "slot_overwrite", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
+            "intro", "continue", "npc_chief", "npc_chief_after", "npc_kid", "npc_kid_after", "sign_village", "village_enter", "npc_guide", "npc_guide_after", "npc_tips", "npc_tips_after", "slot_new", "slot_load", "slot_overwrite", "sign", "fountain", "boss_gate", "appear", "fire_cast", "fire_miss", "fire_hit", "star_cast", "star_hit",
             "item_hp", "item_mp", "item_noneed", "item_none", "run_ok", "run_fail", "enemy_attack", "dodge", "hurt", "win", "exp", "levelup", "defeat", "revive",
             "ending_light", "ending_card",
             "ch2_intro", "sign_ch2", "chest_sealed", "chest_open", "chest_empty", "door_sealed", "door_locked", "door_open",
@@ -229,6 +230,79 @@ namespace GirlAdventure.EditorTools
                 var tex = r.ToTexture(FilterMode.Point, true);
                 System.IO.Directory.CreateDirectory("../playtest");
                 System.IO.File.WriteAllBytes("../playtest/map_field.png", tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+            }
+        }
+
+        /// <summary>BFS: from 에서 걸어서 닿는 칸.</summary>
+        static bool[,] Reach(WorldMap m, (int x, int y) from)
+        {
+            var seen = new bool[WorldMap.W, WorldMap.H];
+            var q = new Queue<(int, int)>();
+            q.Enqueue(from);
+            seen[from.x, from.y] = true;
+            while (q.Count > 0)
+            {
+                var (x, y) = q.Dequeue();
+                foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= WorldMap.W || ny >= WorldMap.H || seen[nx, ny] || m.Blocked(nx, ny)) continue;
+                    seen[nx, ny] = true;
+                    q.Enqueue((nx, ny));
+                }
+            }
+            return seen;
+        }
+
+        /// <summary>별빛 마을 (백로그 38): 초원 입구 ↔ 마을 출구, 집 문 앞·마을 사람·표지판·우물에 닿을 수 있고, 몬스터가 없다. 세이브에 마을 안 위치.</summary>
+        static void VillageTests()
+        {
+            var field = new WorldMap();
+            Npcs.Place(field);
+            var fr = Reach(field, WorldMap.Start);
+            var gate = WorldMap.VillageGate;
+            Check("field has village gate", field.At(gate.x, gate.y) == 'V' && field.IsDoorway(gate.x, gate.y) && fr[gate.x, gate.y] && !field.Blocked(gate.x, gate.y + 1));
+            var v = WorldMap.Village();
+            Npcs.Place(v);
+            var vr = Reach(v, WorldMap.VillageStart);
+            var ex = WorldMap.VillageExit;
+            Check("village exit reachable", v.Kind == MapKind.Village && v.IsDoorway(ex.x, ex.y) && vr[ex.x, ex.y] && !v.IsDoorway(WorldMap.VillageStart.x, WorldMap.VillageStart.y));
+            bool Beside((int x, int y) p) => (p.x + 1 < WorldMap.W && vr[p.x + 1, p.y]) || (p.x > 0 && vr[p.x - 1, p.y]) || (p.y + 1 < WorldMap.H && vr[p.x, p.y + 1]) || (p.y > 0 && vr[p.x, p.y - 1]);
+            string bad = "";
+            foreach (var (hx, hy, _) in WorldMap.Houses)
+                if (v.At(hx + 1, hy + 1) != 'h' || !vr[hx + 1, hy + 2]) bad += $"house({hx},{hy}) ";
+            foreach (var n in Npcs.On(MapKind.Village))
+                if (v.At(n.X, n.Y) != 'N' || !Beside((n.X, n.Y)) || !GameData.HasTalk(n.Talk)) bad += n.Id + " ";
+            if (!Beside(WorldMap.Well) || v.At(WorldMap.Well.x, WorldMap.Well.y) != 'u') bad += "well ";
+            if (!Beside(WorldMap.VillageSign) || v.At(WorldMap.VillageSign.x, WorldMap.VillageSign.y) != 'S') bad += "sign ";
+            int npcs = 0; foreach (var _ in Npcs.On(MapKind.Village)) npcs++;
+            Check("village houses/npcs/well/sign reachable", bad == "" && npcs >= 2, $"npcs={npcs} bad={bad}");
+            bool quiet = true;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    quiet &= v.EncounterRate(x, y) == 0 && v.Safe(x, y);
+            var mobs = new FieldMonsters(new System.Random(3));
+            mobs.Reset(v, WorldMap.VillageStart.x, WorldMap.VillageStart.y);
+            for (int i = 0; i < 5; i++) mobs.TrySpawn(WorldMap.VillageStart.x, WorldMap.VillageStart.y);
+            Check("no monsters in village", quiet && mobs.List.Count == 0, $"mobs={mobs.List.Count}");
+            // 세이브: 마을 안 위치가 그대로 돌아오고, 챕터 2 세이브엔 마을 표시가 무시된다
+            var p = PlayerState.NewGame("v");
+            p.InVillage = true;
+            (p.X, p.Y) = (WorldMap.VillageStart.x, WorldMap.VillageStart.y - 3);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            var s2 = p.ToSave(); s2.Chapter = 2;
+            var q2 = PlayerState.FromSave(s2);
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":6,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
+            Check("save keeps village position", q.InVillage && q.X == p.X && q.Y == p.Y && !q2.InVillage && !old.InVillage && (old.X, old.Y) == (3, 4),
+                  $"q={q.InVillage}({q.X},{q.Y}) ch2={q2.InVillage} old={old.InVillage}");
+            var tiles = FieldTiles.Load();
+            if (tiles != null)
+            {
+                var r = MapPainter.RenderRaster(v, tiles);
+                var tex = r.ToTexture(FilterMode.Point, true);
+                System.IO.Directory.CreateDirectory("../playtest");
+                System.IO.File.WriteAllBytes("../playtest/map_village.png", tex.EncodeToPNG());
                 UnityEngine.Object.DestroyImmediate(tex);
             }
         }

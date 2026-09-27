@@ -54,6 +54,7 @@ namespace GirlAdventure.Sim
         public static void StartChapter2(PlayerState p)
         {
             p.Chapter = 2;
+            p.InVillage = false;
             p.RestoreAll();
             p.X = WorldMap.CaveStart.x;
             p.Y = WorldMap.CaveStart.y;

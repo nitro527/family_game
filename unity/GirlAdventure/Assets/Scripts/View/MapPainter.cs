@@ -21,7 +21,7 @@ namespace GirlAdventure.View
         /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
-            m.Kind == MapKind.Cave ? Cave(m) : tiles != null ? TiledField(m, tiles) : Field(m);
+            m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
         static float Hash(int x, int y, int s)
@@ -203,7 +203,7 @@ namespace GirlAdventure.View
                 {
                     char ch = m.At(x, y);
                     if (ch == ',') AutoTile(R, t.Grass, m, ",", x, y);
-                    else if (ch == '=' || ch == 'G') AutoTile(R, t.Path, m, "=Gb", x, y);
+                    else if (ch == '=' || ch == 'G' || ch == 'V') AutoTile(R, t.Path, m, "=GbV", x, y);
                     else if (ch == 'w' || ch == 'b') AutoTile(R, t.Water, m, "wb", x, y);
                 }
             // 꽃(f)은 여기서 안 그린다 — View 가 FlowerTuft 스프라이트로 얹어 바람에 살랑이게 한다
@@ -229,7 +229,136 @@ namespace GirlAdventure.View
             // 성: 시트 (5,6)~(6,7) 의 96×96 파란 성을 2배 → 4×4 칸. 성문 칸 가운데 위에서부터 아래로
             int gx = WorldMap.Gate.x * T + T / 2, gy = WorldMap.Gate.y * T;
             R.Stamp(t.Sheet, 5 * T, 6 * T, 2 * T, 2 * T, gx - 2 * T, gy, 2);
+            VillageArch(R, WorldMap.VillageGate.x * T, WorldMap.VillageGate.y * T);
             return R;
+        }
+
+        // ------------------------------------------------------------------ 별빛 마을
+        /// <summary>초원 쪽 마을 입구: 숲 사이 나무 아치 + 별 간판.</summary>
+        static void VillageArch(Raster R, float X, float Y)
+        {
+            Color32 wood = H("#8A5A30"), woodD = H("#5A3418"), woodL = H("#B98050");
+            foreach (float px in new[] { X - 2, X + 42 })
+            {
+                R.Rect(px, Y - 34, 8, 80, woodD);
+                R.Rect(px + 1, Y - 34, 4, 80, wood);
+            }
+            R.Rect(X - 8, Y - 42, 64, 12, woodD);                                // 가로보
+            R.Rect(X - 6, Y - 40, 60, 7, woodL);
+            R.Rect(X + 6, Y - 30, 36, 16, H("#3A2A5A"));                          // 간판 (밤하늘 색)
+            Star(R, X + 16, Y - 22, 5, H("#FFE27A"));
+            Star(R, X + 28, Y - 23, 3.5f, H("#FFF4C8"));
+            Star(R, X + 36, Y - 20, 2.5f, H("#FFE27A"));
+        }
+
+        static void Star(Raster R, float x, float y, float r, Color32 c)
+        {
+            var pts = new Vector2[10];
+            for (int i = 0; i < 10; i++)
+            {
+                float a = -Mathf.PI / 2 + i * Mathf.PI / 5, rr = i % 2 == 0 ? r : r * .45f;
+                pts[i] = new Vector2(x + Mathf.Cos(a) * rr, y + Mathf.Sin(a) * rr);
+            }
+            R.Polygon(pts, c);
+        }
+
+        /// <summary>마을 맵: 풀밭·길·숲은 초원과 같은 PIPOYA 타일 (없으면 단색), 집·우물·울타리·표지판은 코드로.</summary>
+        static Raster Village(WorldMap m, FieldTiles t)
+        {
+            var R = new Raster(WorldMap.W * T, WorldMap.H * T);
+            if (t != null)
+            {
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                        R.Stamp(t.Sheet, 0, 0, T, T, x * T, y * T);
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                        if ("=E".IndexOf(m.At(x, y)) >= 0) AutoTile(R, t.Path, m, "=E", x, y);
+            }
+            else
+            {
+                R.Rect(0, 0, WorldMap.W * T, WorldMap.H * T, H("#7CC45A"));
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                        if ("=E".IndexOf(m.At(x, y)) >= 0) R.Rect(x * T, y * T, T, T, H("#D9B77A"));
+            }
+            // 울타리 (텃밭) — 울타리 뒤(위)에 채소 줄
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'x') Fence(R, x * T, y * T, m.At(x - 1, y) == 'x', m.At(x + 1, y) == 'x');
+            Well(R, WorldMap.Well.x * T, WorldMap.Well.y * T);
+            Sign(R, WorldMap.VillageSign.x * T, WorldMap.VillageSign.y * T);
+            foreach (var (hx, hy, roof) in WorldMap.Houses) House(R, hx * T, hy * T, roof);
+            if (t != null)
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                        if (m.At(x, y) == 'T') AutoTile(R, t.Forest, m, "T", x, y);
+            return R;
+        }
+
+        /// <summary>3×2 칸 집: 크림색 벽, 세모 지붕(빨강·파랑·초록), 가운데 문, 양쪽 창문(불빛), 굴뚝.</summary>
+        static void House(Raster R, float X, float Y, int roof)
+        {
+            string[][] roofs = { new[] { "#D8574A", "#A83A30", "#F07A6A" }, new[] { "#4A7BD8", "#30559E", "#6E9CF0" }, new[] { "#4FA85A", "#327A3C", "#72C87C" } };
+            var rc = roofs[roof % 3];
+            float w = 3 * T, h = 2 * T;
+            R.Ellipse(X + w / 2 + 6, Y + h - 2, w / 2 + 4, 10, new Color32(0, 0, 0, 70));          // 그림자
+            // 벽
+            R.Rect(X + 6, Y + 30, w - 12, h - 32, H("#6B4A30"));
+            R.Rect(X + 8, Y + 32, w - 16, h - 36, H("#F4E3C4"));
+            for (int i = 0; i < 4; i++) R.Rect(X + 8, Y + 44 + i * 12, w - 16, 1.5f, H("#E0CBA4"));   // 판자 줄
+            // 굴뚝
+            R.Rect(X + w - 40, Y - 22, 14, 34, H("#8A5A48"));
+            R.Rect(X + w - 42, Y - 26, 18, 6, H("#6B4030"));
+            // 지붕 (벽보다 넓은 세모 + 처마)
+            var roofPts = new[] { new Vector2(X - 4, Y + 38), new Vector2(X + w / 2, Y - 14), new Vector2(X + w + 4, Y + 38) };
+            R.Polygon(roofPts, (px, py) => Color32.Lerp(H(rc[2]), H(rc[0]), Mathf.Clamp01((py - Y + 14) / 30f)), Ink, 4);
+            for (int i = 1; i < 4; i++) R.Line(X + w / 2, Y - 10, X - 4 + i * (w + 8) / 4, Y + 36, 2, H(rc[1]));   // 기와 줄
+            R.Rect(X - 4, Y + 34, w + 8, 5, H(rc[1]));
+            // 문
+            float dx = X + w / 2 - 11;
+            R.Rect(dx - 2, Y + h - 34, 26, 34, H("#4A2E18"));
+            R.Rect(dx, Y + h - 32, 22, 32, H("#9A6238"));
+            R.Circle(dx + 17, Y + h - 16, 2, H("#FFD84A"));
+            // 창문 (따뜻한 불빛)
+            foreach (float wx in new[] { X + 18, X + w - 42 })
+            {
+                R.Rect(wx - 2, Y + 50, 28, 24, H("#5A3A24"));
+                R.Rect(wx, Y + 52, 24, 20, H("#FFE08A"));
+                R.Rect(wx + 11, Y + 52, 2, 20, H("#5A3A24"));
+                R.Rect(wx, Y + 61, 24, 2, H("#5A3A24"));
+                R.Rect(wx + 2, Y + 54, 7, 5, H("#FFF6D0"));
+            }
+        }
+
+        /// <summary>돌 우물: 둥근 돌벽 + 나무 지붕 + 도르래 줄. 물에 별빛이 비친다.</summary>
+        static void Well(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 42, 24, 7, new Color32(0, 0, 0, 70));
+            R.Ellipse(X + 24, Y + 32, 21, 12, H("#6E6A78"));
+            R.Ellipse(X + 24, Y + 30, 19, 10, H("#A8A4B4"));
+            R.Ellipse(X + 24, Y + 29, 14, 6, H("#1E2A5A"));
+            R.Circle(X + 20, Y + 28, 1.5f, H("#FFF4C8"));
+            R.Circle(X + 28, Y + 30, 1.2f, H("#FFE27A"));
+            R.Rect(X + 6, Y + 2, 4, 30, H("#6B4020"));
+            R.Rect(X + 38, Y + 2, 4, 30, H("#6B4020"));
+            R.Polygon(new[] { new Vector2(X, Y + 6), new Vector2(X + 24, Y - 10), new Vector2(X + 48, Y + 6) }, H("#A8703A"), Ink, 3);
+            R.Line(X + 24, Y + 2, X + 24, Y + 22, 1.2f, H("#E8D8B0"));
+            R.Rect(X + 20, Y + 20, 8, 6, H("#8A5A30"));
+        }
+
+        /// <summary>나무 울타리 한 칸 (옆 칸도 울타리면 가로대를 잇는다) + 뒤쪽 채소.</summary>
+        static void Fence(Raster R, float X, float Y, bool left, bool right)
+        {
+            for (int i = 0; i < 3; i++) R.Ellipse(X + 10 + i * 14, Y + 8, 6, 5, H(i % 2 == 0 ? "#5FB84A" : "#FF8A3C"));   // 채소
+            float x0 = left ? X : X + 6, x1 = right ? X + T : X + T - 6;
+            R.Rect(x0, Y + 22, x1 - x0, 4, H("#8A5A30"));
+            R.Rect(x0, Y + 34, x1 - x0, 4, H("#8A5A30"));
+            foreach (float px in new[] { X + 8, X + T - 12 })
+            {
+                R.Rect(px, Y + 16, 5, 28, H("#6B4020"));
+                R.Rect(px + 1, Y + 16, 2, 28, H("#B98050"));
+            }
         }
 
         /// <summary>꽃 한 칸 (48×48, 투명 바탕에 꽃 다섯 송이). 모양은 variant 로 정해져 늘 같다.</summary>

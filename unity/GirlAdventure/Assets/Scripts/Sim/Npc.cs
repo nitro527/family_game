@@ -16,7 +16,7 @@ namespace GirlAdventure.Sim
         public string Color, Dark, Look;    // 겉모습 (EnemyDef.Looks 중 하나)
         public string Talk, TalkAfter;
 
-        public MapKind Kind => Map == "cave" ? MapKind.Cave : MapKind.Field;
+        public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : MapKind.Field;
 
         /// <summary>그림용 젤리 정의 (View 가 Painter.Jelly 로 그린다).</summary>
         public EnemyDef AsJelly() => new EnemyDef { Name = Name, Color = Color, Dark = Dark, Look = Look, Hp = 1, Atk = 1, Exp = 1, Move = "hop", Attack = "-" };

@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 6;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스
+        public const int CurrentVersion = 7;        // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -15,6 +15,7 @@ namespace GirlAdventure.Sim
         public bool BossDown, Boss2Down;
         public bool GuardDown;          // 버전 6: 챕터 2 중간 보스
         public int Chapter;
+        public bool InVillage;          // 버전 7: 별빛 마을 안에서 저장 (X, Y 는 마을 좌표)
         public string[] Items, Opened;
         public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
         public string[] Gear, Equipped; // 가진 장비 id, 장착한 장비 id
@@ -46,6 +47,7 @@ namespace GirlAdventure.Sim
         public bool Boss2Down;              // 젤리 장군 (챕터 2)
         public bool GuardDown;              // 바위 대장 젤리 (챕터 2 중간 보스)
         public int Chapter = 1;
+        public bool InVillage;              // 별빛 마을 맵 안 (챕터 1)
         public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
         public List<string> Gear = new List<string>();      // 가진 장비 id
@@ -113,7 +115,7 @@ namespace GirlAdventure.Sim
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
             Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, SavedAt = savedAt,
-            Chapter = Chapter, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
+            Chapter = Chapter, InVillage = InVillage, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
         };
 
@@ -162,7 +164,8 @@ namespace GirlAdventure.Sim
                     if (!p.Gear.Contains(id) && (!GameData.Loaded || Equipment.IsGear(id))) p.Gear.Add(id);
             if (s.Equipped != null && GameData.Loaded)
                 foreach (var id in s.Equipped) Equipment.Equip(p, id);    // 가진 장비만 장착된다
-            var map = WorldMap.ForChapter(p.Chapter);
+            p.InVillage = s.InVillage && p.Chapter <= 1;
+            var map = WorldMap.ForPlayer(p.Chapter, p.InVillage);
             (p.X, p.Y) = map.SpawnPoint;
             if (Quest.Walkable(map, p, s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)
             {

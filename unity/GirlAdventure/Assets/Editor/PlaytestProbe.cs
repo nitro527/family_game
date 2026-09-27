@@ -438,6 +438,30 @@ namespace GirlAdventure.EditorTools
             Shot("art_blue_battle");
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+
+            // 별빛 마을 (백로그 38): 초원 입구 → 마을 → 촌장 젤리와 이야기 → 출구로 초원에
+            G.DebugTeleport(WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1, "up");
+            yield return .3f;
+            Shot("village_gate");
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return (Func<bool>)(() => G.MapKind == MapKind.Village);
+            yield return .5f;
+            Expect("entered village", G.MapKind == MapKind.Village && (G.P.X, G.P.Y) == WorldMap.VillageStart && G.P.InVillage && G.MobCount == 0);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Shot("village");
+            G.DebugTeleport(16, 13, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return 1.2f;
+            Shot("village_chief_talk");
+            Expect("village chief talks", G.MessageText.Contains("촌장 젤리"));
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugTeleport(WorldMap.VillageStart.x, WorldMap.VillageStart.y, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return (Func<bool>)(() => G.MapKind == MapKind.Field && !G.Busy);
+            Expect("left village to field", G.MapKind == MapKind.Field && !G.P.InVillage && (G.P.X, G.P.Y) == (WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1));
+
             G.DebugTeleport(8, 12, "right");
             G.DebugMobs(true, true);
             G.DebugSpawnMob(9, 12, 1);

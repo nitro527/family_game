@@ -3,6 +3,10 @@
     { "Id": "guide", "Map": "field", "X": 7, "Y": 2, "Name": "밀짚모자 젤리", "Color": "#9FE08A", "Dark": "#5FA84E", "Look": "hat",
       "Talk": "npc_guide", "TalkAfter": "npc_guide_after" },
     { "Id": "tips", "Map": "field", "X": 2, "Y": 6, "Name": "리본 젤리", "Color": "#FFC3DA", "Dark": "#D98AAE", "Look": "bow",
-      "Talk": "npc_tips", "TalkAfter": "npc_tips_after" }
+      "Talk": "npc_tips", "TalkAfter": "npc_tips_after" },
+    { "Id": "chief", "Map": "village", "X": 16, "Y": 12, "Name": "촌장 젤리", "Color": "#C9B8FF", "Dark": "#8E78D0", "Look": "hat",
+      "Talk": "npc_chief", "TalkAfter": "npc_chief_after" },
+    { "Id": "kid", "Map": "village", "X": 21, "Y": 13, "Name": "꼬마 젤리", "Color": "#9FD8FF", "Dark": "#5FA0D8", "Look": "bow",
+      "Talk": "npc_kid", "TalkAfter": "npc_kid_after" }
   ]
 }
