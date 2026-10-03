@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using GirlAdventure.Sim;
 using UnityEngine;
 
@@ -76,7 +75,7 @@ namespace GirlAdventure.View
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap }.Concat(homeMaps))
+            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap })   // 집 안 18채는 미리 그리지 않고 처음 들어갈 때 그린다 (한 장 8MB, Q-16)
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
