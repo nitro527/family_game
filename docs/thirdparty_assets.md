@@ -14,6 +14,6 @@
 - 원본 에셋 파일만 따로 공유하거나 배포하지 않아요 (PIPOYA, Painterly 조건).
 
 ## 게임에 쓰는 파일
-- 전투 배경 (`unity/GirlAdventure/Assets/Resources/Battle/`, 1280×720 JPG로 줄임): meadow=22번, meadow_boss=23번, cave=49번, cave_guard=36번, cave_boss=40번, desert=1번 (사막 후보: 오아시스 2번, 붉은 바위 20·27번)
+- 전투 배경 (`unity/GirlAdventure/Assets/Resources/Battle/`, 1280×720 JPG로 줄임): meadow=22번, meadow_boss=23번, cave=49번, cave_guard=36번, cave_boss=40번, desert=1번, desert_boss=20번 (남은 사막 후보: 오아시스 2번, 붉은 바위 27번)
 - 초원 타일 (`unity/GirlAdventure/Assets/Resources/Tiles/`, 48×48 원본 그대로): pipo_sheet=pipo-map001.png, pipo_at_kusa/miti/umi/mori=[A]_type1 오토타일, 사막(챕터 3) pipo_at_sabaku·pipo_at_yama2=[A]_type1
 - UI (`unity/GirlAdventure/Assets/Resources/UI/`): bar_back=barBack 3조각 합침(색 바꿈), bar_fill=barGreen 3조각 합쳐 흑백화, buttonLong_grey(_pressed) 원본
