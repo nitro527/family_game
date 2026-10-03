@@ -7,7 +7,8 @@
 ## 다시 시작할 때 (순서대로)
 1. Unity Hub 로그인 확인 (배치 모드 검증에 필요)
 2. 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 이 대화에서 사용자 명령 / 알아서 퀄리티 개선
-3. `docs/BACKLOG.md` 맨 위부터 (P·C5·C4·U 는 모두 완료). 다음 후보: 전반 퀄리티(아래 Q 섹션), PLAN_NEXT, 🙋 답 반영
+3. `docs/BACKLOG.md` 맨 위부터 (P·C5·C4·U 는 모두 완료, **Q 퀄리티 Q-1~15 완료 2026-10-04**: 이름표·모든 마을 집 안·선택 창 스크롤(대장간 9줄 버그)·상태 창·눈 효과음·용암/눈 구멍·열린 상자 그림·✏️ 표시 정리·도감 사는 곳·편지 퀘스트·어두운 상자·성장 곡선). 다음 후보: Q 계속(화면 점검), PLAN_NEXT 62(지훈 기술 🙋 이름)·75(태블릿)·76(소리 평가), 🙋 답 반영
+   - 화면 점검 요령: 프로브 스크린샷 여러 장을 PIL 로 한 장에 모아 보기 (scratchpad), SmokeTest 그림 내보내기(`ExportSheet`·map_snow·chests)
    - 동료는 `party.json` (지훈 jihun·아빠 dad), 화면은 동료 배열(`AllyView`·`Follower`·`allyHuds`), 동료 공용 대사 `ally_*`, 지훈은 예전 `bro_*`
    - 챕터 추가 자리: `WorldMap.LastChapter`(지금 5)·`ForChapter`·`HasTown`·`ForPlayer`, `Quest.StartChapterN`·`QuickStart`(챕터 고르기 레벨·장비), View `SurfaceMap`·`TravelRoutine`·`StartNextChapter`·`ChapterNRoutine`·`ShowEnding`
    - 맵 종류: Field·Cave·Village·Desert·Oasis·Underworld·Lava·LavaTown·Home(집 안)·Snow·SnowTown. 얼음 미끄럼 `WorldMap.Slippery/SlideEnd`
