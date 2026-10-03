@@ -178,16 +178,16 @@ namespace GirlAdventure.View
         {
             P = Quest.QuickStart(nameInput.text, chapter);
             PlayerPrefs.SetString("girlName", P.Name);
-            facing = chapter == 4 ? "right" : "down";
+            facing = chapter >= 4 ? "right" : "down";
             sfx.Play("start");
-            StartCoroutine(chapter == 4 ? Chapter4Routine() : chapter == 3 ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(chapter >= 5 ? Chapter5Routine() : chapter == 4 ? Chapter4Routine() : chapter == 3 ? Chapter3Routine() : Chapter2Routine());
         }
 
         /// <summary>프로브용: 타이틀에서 챕터 고르기 메뉴만 연다 / 고른 셈 치고 그 칸에서 바로 시작한다.</summary>
         public void DebugOpenChapterPick() => PickChapter();
         public void DebugQuickStart(int chapter, int slot) { StopAllCoroutines(); HideMessage(); busy = false; SaveStore.Slot = slot; BeginQuick(chapter); }
 
-        static string ChapterPlace(int c) => c == 2 ? "동굴" : c == 3 ? "사막" : c == 4 ? "용암 땅" : "초원";
+        static string ChapterPlace(int c) => c == 2 ? "동굴" : c == 3 ? "사막" : c == 4 ? "용암 땅" : c == 5 ? "눈 덮인 곳" : "초원";
 
         void ContinueGame()
         {
@@ -286,12 +286,13 @@ namespace GirlAdventure.View
             if (Current != Mode.Ending || P.Chapter >= WorldMap.LastChapter) return;
             confirmFrame = Time.frameCount;
             int from = P.Chapter;
-            if (from == 3) Quest.StartChapter4(P);
+            if (from == 4) Quest.StartChapter5(P);
+            else if (from == 3) Quest.StartChapter4(P);
             else if (from == 2) Quest.StartChapter3(P);
             else Quest.StartChapter2(P);
-            facing = from == 3 ? "right" : "down";
+            facing = from >= 3 ? "right" : "down";
             sfx.Play("start");
-            StartCoroutine(from == 3 ? Chapter4Routine() : from == 2 ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(from == 4 ? Chapter5Routine() : from == 3 ? Chapter4Routine() : from == 2 ? Chapter3Routine() : Chapter2Routine());
         }
 
         /// <summary>챕터 4 시작 (사용자 2026-10-03): 용암 땅 도입 → 아빠 합류 대사 → "기사 아빠 합류!" 컷인 → 셋이 함께.</summary>
@@ -304,6 +305,17 @@ namespace GirlAdventure.View
             yield return CutinRoutine(Art.UI("Dad/hero"), "기사 아빠 합류!", "lvup");
             RefreshHud();
             yield return Talk("dad_joined");
+            HideMessage();
+            AutoSave();
+            busy = false;
+        }
+
+        /// <summary>챕터 5 시작 (눈 덮인 곳, 서진이 2026-10-03): 도입 대사 → 셋이 눈밭에서 출발.</summary>
+        IEnumerator Chapter5Routine()
+        {
+            EnterField();
+            busy = true;
+            yield return Talk("ch5_intro");
             HideMessage();
             AutoSave();
             busy = false;
@@ -375,6 +387,8 @@ namespace GirlAdventure.View
         public void DebugBackToField()
         {
             StopAllCoroutines();
+            LeaveBattleStage();                     // 전투 무대를 치우고 필드를 다시 켠다 (안 하면 필드가 꺼진 채 남음)
+            HideSwirl();
             EnterField();
             HideMessage();
             busy = false;

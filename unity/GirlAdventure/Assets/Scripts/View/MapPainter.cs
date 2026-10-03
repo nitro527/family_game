@@ -22,7 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -473,6 +473,143 @@ namespace GirlAdventure.View
             Sign(R, WorldMap.LavaSign.x * T, WorldMap.LavaSign.y * T);
             TownArch(R, WorldMap.LavaGate.x * T, WorldMap.LavaGate.y * T);       // 온천 마을 문
             return R;
+        }
+
+        /// <summary>
+        /// 눈 덮인 땅 (챕터 5, C5-1): 푸르스름한 눈밭(언덕 그늘·반짝이) → 밟힌 눈길 → 꽁꽁 언 호수(하얀 빗금·금) →
+        /// 바위(눈 모자) → 눈 덮인 전나무(위 줄부터) → 눈 산(동굴 입구) → 모닥불·표지판·눈사람.
+        /// </summary>
+        static Raster SnowLand(WorldMap m)
+        {
+            int w = WorldMap.W * T, h = WorldMap.H * T;
+            var R = new Raster(w, h);
+            var lake = Mask(m, "i");
+            var path = Mask(m, "=");
+            Color32 s0 = H("#E4ECF7"), s1 = H("#FBFDFF"), shade = H("#BCCBE2"), trod = H("#AFBFD6");
+            Color32 i0 = H("#94CDEB"), i1 = H("#D0EEFA"), irim = H("#7AA2C4");
+            for (int py = 0; py < h; py++)
+                for (int px = 0; px < w; px++)
+                {
+                    float n = Fbm(px, py, 61), fine = Hash(px, py, 62);
+                    var c = Lerp(s0, s1, n);
+                    float drift = Noise(px / 46f, py / 18f, 63);                       // 눈 언덕 그늘
+                    if (drift < .32f) c = Lerp(c, shade, (.32f - drift) / .32f * .55f);
+                    if (fine > .997f) c = H("#FFFFFF");
+                    else if (fine < .002f) c = H("#A8C8F0");                           // 반짝
+                    float wob = (Noise(px / 14f, py / 14f, 64) - .5f) * 12;
+                    float pw = Soft(path, px + wob, py - wob * .5f);
+                    if (pw > .4f) c = Lerp(c, trod, Smooth(.4f, .62f, pw) * .8f);
+                    float lw = Soft(lake, px + wob * .5f, py - wob * .5f);
+                    if (lw > .35f)
+                    {
+                        if (lw < .5f) c = Lerp(c, irim, Smooth(.35f, .5f, lw));
+                        else
+                        {
+                            var ice = Lerp(i0, i1, Noise(px / 34f, py / 34f, 65));
+                            float st = Mathf.Abs(((px + py * .6f) % 70f) - 35f) / 35f;  // 하얀 빗금 (반사)
+                            if (st > .93f) ice = Lerp(ice, H("#FFFFFF"), (st - .93f) / .07f * .7f);
+                            if (Mathf.Abs(Noise(px / 26f, py / 26f, 66) - .5f) < .01f) ice = Lerp(ice, irim, .6f);   // 금
+                            c = ice;
+                        }
+                    }
+                    R.Blend(px, py, c);
+                }
+            for (int y = 0; y < WorldMap.H; y++)                                       // 눈길 발자국 (동글동글 두 줄)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == '=')
+                    {
+                        bool vertical = m.At(x, y - 1) == '=' || m.At(x, y + 1) == '=';
+                        bool horizontal = m.At(x - 1, y) == '=' || m.At(x + 1, y) == '=';
+                        for (int k = 0; k < 2; k++)
+                        {
+                            float fx2 = vertical && !horizontal ? x * T + 18 + k * 12 : x * T + 8 + k * 24, fy2 = vertical && !horizontal ? y * T + 10 + k * 24 : y * T + 18 + k * 10;
+                            R.Ellipse(fx2, fy2, 4, 5.5f, H("#93A6C2"));
+                        }
+                    }
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    float X = x * T, Y = y * T;
+                    if (ch == 'R')
+                    {
+                        R.Ellipse(X + 26, Y + 40, 22, 7, new Color32(70, 90, 130, 60));
+                        R.Ellipse(X + 24, Y + 28, 21, 17, Ink);
+                        R.Ellipse(X + 24, Y + 28, 19, 15, H("#6E7888"));
+                        R.Ellipse(X + 20, Y + 24, 12, 8, H("#8E98A8"));
+                        R.Ellipse(X + 23, Y + 16, 15, 6, H("#FFFFFF"));
+                    }
+                    else if (ch == 'n') Snowman(R, X, Y);
+                }
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 67));
+            SnowPeakArt(R, WorldMap.SnowPeak.x * T, WorldMap.SnowPeak.y * T);
+            Campfire(R, WorldMap.SnowFire.x * T, WorldMap.SnowFire.y * T);
+            Sign(R, WorldMap.SnowSign.x * T, WorldMap.SnowSign.y * T);
+            return R;
+        }
+
+        /// <summary>눈 덮인 전나무 한 그루 (칸 위로 조금 솟는다, 세 층마다 눈).</summary>
+        static void SnowPine(Raster R, float X, float Y, float k)
+        {
+            float cx = X + T / 2f + (k - .5f) * 6;
+            R.Ellipse(cx + 5, Y + T - 3, 19, 6, new Color32(60, 80, 130, 60));
+            R.Rect(cx - 4, Y + T - 14, 8, 12, H("#6B4A30"));
+            for (int i = 0; i < 3; i++)
+            {
+                float top = Y - 16 + i * 14, bot = top + 28, half = 11 + i * 6;
+                R.Polygon(new[] { new Vector2(cx, top), new Vector2(cx + half, bot), new Vector2(cx - half, bot) }, H(i == 2 ? "#2A5E46" : "#2F6B4E"), Ink, 2);
+                R.Polygon(new[] { new Vector2(cx, top + 2), new Vector2(cx + half * .6f, top + 15), new Vector2(cx + half * .2f, top + 12),
+                                  new Vector2(cx - half * .15f, top + 16), new Vector2(cx - half * .6f, top + 15) }, H("#FFFFFF"));
+            }
+        }
+
+        /// <summary>눈 산 (4×4 칸): 푸른 회색 산에 하얀 눈 모자, 오른쪽 그늘, 아래 가운데 동굴 입구 (보스 C5-5).</summary>
+        static void SnowPeakArt(Raster R, float X, float Y)
+        {
+            float w = 4 * T, h = 4 * T;
+            R.Ellipse(X + w / 2 + 8, Y + h - 6, w / 2 + 6, 14, new Color32(60, 80, 130, 70));
+            R.Polygon(new[] { new Vector2(X - 8, Y + h), new Vector2(X + w * .2f, Y + h * .45f), new Vector2(X + w * .32f, Y + h) }, H("#8C9CB4"), Ink, 3);   // 작은 봉우리
+            R.Polygon(new[] { new Vector2(X + w * .02f, Y + h), new Vector2(X + w * .48f, Y - 14), new Vector2(X + w + 8, Y + h) }, H("#7F8FA8"), Ink, 3);
+            R.Polygon(new[] { new Vector2(X + w * .48f, Y - 12), new Vector2(X + w + 6, Y + h - 2), new Vector2(X + w * .62f, Y + h - 2) }, H("#66748C"));
+            R.Polygon(new[] { new Vector2(X + w * .48f, Y - 10), new Vector2(X + w * .7f, Y + h * .3f), new Vector2(X + w * .6f, Y + h * .24f),
+                              new Vector2(X + w * .5f, Y + h * .34f), new Vector2(X + w * .38f, Y + h * .22f), new Vector2(X + w * .27f, Y + h * .31f) }, H("#FFFFFF"));
+            R.Polygon(new[] { new Vector2(X + w * .2f, Y + h * .45f), new Vector2(X + w * .26f, Y + h * .58f), new Vector2(X + w * .2f, Y + h * .55f), new Vector2(X + w * .14f, Y + h * .58f) }, H("#FFFFFF"));
+            float dx = X + 2 * T + T / 2f, dy = Y + h;                                   // 동굴 입구 (눈길 끝 위)
+            R.Ellipse(dx - T / 2f, dy - 14, 22, 26, Ink);
+            R.Ellipse(dx - T / 2f, dy - 12, 18, 22, H("#1A2030"));
+            R.Rect(dx - T / 2f - 24, dy - 4, 48, 6, H("#7F8FA8"));
+        }
+
+        /// <summary>모닥불 (눈 덮인 땅의 회복 자리): 눈 녹은 자리 + 돌 + 장작 + 불꽃.</summary>
+        static void Campfire(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 24, Y + 36, 22, 9, H("#A8B4C4"));
+            for (int i = 0; i < 7; i++)
+            {
+                float a = i / 7f * Mathf.PI * 2;
+                R.Circle(X + 24 + Mathf.Cos(a) * 17, Y + 34 + Mathf.Sin(a) * 6, 4.5f, H(i % 2 == 0 ? "#6E7888" : "#8E98A8"));
+            }
+            R.Line(X + 12, Y + 36, X + 36, Y + 28, 6, H("#6B4A30"));
+            R.Line(X + 12, Y + 28, X + 36, Y + 36, 6, H("#5A3A24"));
+            R.Ellipse(X + 24, Y + 20, 10, 15, H("#FF6A1A"));
+            R.Ellipse(X + 24, Y + 24, 7, 10, H("#FFB028"));
+            R.Ellipse(X + 24, Y + 28, 3.5f, 5, H("#FFF2A0"));
+        }
+
+        /// <summary>눈사람: 눈덩이 둘, 숯 눈, 당근 코, 빨간 목도리, 양동이 모자.</summary>
+        static void Snowman(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 44, 16, 5, new Color32(60, 80, 130, 60));
+            R.Circle(X + 24, Y + 33, 13, Ink); R.Circle(X + 24, Y + 33, 11.5f, H("#FFFFFF"));
+            R.Circle(X + 24, Y + 14, 9.5f, Ink); R.Circle(X + 24, Y + 14, 8, H("#FFFFFF"));
+            R.Circle(X + 21, Y + 12, 1.6f, Ink); R.Circle(X + 27, Y + 12, 1.6f, Ink);
+            R.Polygon(new[] { new Vector2(X + 23, Y + 15), new Vector2(X + 33, Y + 17), new Vector2(X + 23, Y + 18) }, H("#F08A30"));
+            R.Rect(X + 15, Y + 21, 18, 4, H("#D8574A"));
+            R.Rect(X + 28, Y + 21, 4, 9, H("#D8574A"));
+            R.Rect(X + 17, Y - 1, 14, 6, H("#4A7BD8"));
+            R.Circle(X + 24, Y + 31, 1.5f, Ink); R.Circle(X + 24, Y + 37, 1.5f, Ink);
         }
 
         /// <summary>

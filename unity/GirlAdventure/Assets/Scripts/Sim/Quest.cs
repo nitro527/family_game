@@ -109,7 +109,7 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
-        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13 };
+        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16 };
         /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>
         static readonly string[][] QuickGear =
         {
@@ -117,6 +117,7 @@ namespace GirlAdventure.Sim
             new[] { "star_wand", "flower_cape", "ribbon" },
             new[] { "crystal_wand", "moon_robe", "star_pendant" },
             new[] { "sun_wand", "sand_cape", "star_pendant", "bro_sword", "bro_shield" },
+            new[] { "flame_wand", "lava_robe", "star_pendant", "flame_sword", "bro_shield", "lion_blade", "lion_shield" },
         };
 
         /// <summary>
@@ -131,6 +132,7 @@ namespace GirlAdventure.Sim
             p.BossDown = true;
             if (chapter >= 3) { p.GuardDown = true; p.Boss2Down = true; }
             if (chapter >= 4) p.Boss3Down = true;
+            if (chapter >= 5) p.Boss4Down = true;
             foreach (var id in QuickGear[chapter])
             {
                 if (!p.Gear.Contains(id)) p.Gear.Add(id);
@@ -142,8 +144,22 @@ namespace GirlAdventure.Sim
             if (chapter >= 3) p.AddItem("moon", 2);
             if (chapter == 2) StartChapter2(p);
             else if (chapter == 3) StartChapter3(p);
-            else StartChapter4(p);
+            else if (chapter == 4) StartChapter4(p);
+            else StartChapter5(p);
             return p;
+        }
+
+        /// <summary>챕터 4 를 깬 뒤 챕터 5 (눈 덮인 곳, 서진이 2026-10-03)로: 셋이 함께 회복하고 눈 덮인 땅 왼쪽 아래에서 출발.</summary>
+        public static void StartChapter5(PlayerState p)
+        {
+            TryJoinBrother(p);
+            p.Join("dad");
+            p.Chapter = 5;
+            p.InVillage = false;
+            p.Underground = false;
+            p.RestoreAll();
+            p.X = WorldMap.SnowStart.x;
+            p.Y = WorldMap.SnowStart.y;
         }
 
         /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>

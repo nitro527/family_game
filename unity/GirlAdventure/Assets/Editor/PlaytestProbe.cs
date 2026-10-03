@@ -1393,7 +1393,25 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
             yield return 1.2f;
             Shot("ch4_clear");
-            Expect("chapter 4 cleared (last chapter for now)", G.P.Boss4Down && G.EndingHead.Contains("챕터 4") && G.NextChapterLabel == "", G.EndingHead);
+            Expect("chapter 4 cleared, chapter 5 offered", G.P.Boss4Down && G.EndingHead.Contains("챕터 4") && G.NextChapterLabel.Contains("챕터 5"), G.EndingHead + " / " + G.NextChapterLabel);
+            // 챕터 5 (C5-1): 눈 덮인 땅, 셋이 함께
+            Keys.Press(KeyCode.Return);
+            yield return 1.5f;
+            Shot("ch5_intro");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            yield return 1.0f;
+            Shot("ch5_snow");
+            Expect("chapter 5 starts on the snow land with the family", G.P.Chapter == 5 && G.MapKindNow == MapKind.Snow && G.FollowerVisible("dad") && G.BroFieldVisible && (G.P.X, G.P.Y) == WorldMap.SnowStart);
+            ExpectBgm("snow");
+            G.DebugTeleport(WorldMap.SnowPeak.x + 1, WorldMap.SnowPeak.y + 5, "up");
+            yield return .8f;
+            Shot("ch5_peak");
+            G.DebugBattle(false);
+            yield return 1.5f;
+            Shot("ch5_battle_bg");
+            Expect("snow battle backdrop", G.BattleBackdropName == "snow", G.BattleBackdropName);
+            G.DebugBackToField();
+            yield return .5f;
 
             // 챕터 고르기 (사용자 2026-10-03): 타이틀 맨 아래 버튼 → 챕터 목록 → 용암 땅으로 바로 (3번 칸)
             G.DebugToTitle();

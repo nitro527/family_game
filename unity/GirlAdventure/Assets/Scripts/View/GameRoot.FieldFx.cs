@@ -196,6 +196,15 @@ namespace GirlAdventure.View
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }
+                else if (map.Kind == MapKind.Snow)
+                {
+                    ambientTimer = .05f;                // 눈 덮인 땅: 펑펑 내리는 눈
+                    var p = new Vector3(camPos.x + Random.Range(-halfW - 1, halfW), camPos.y + halfH + .3f, 0);
+                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(.05f, .45f), Random.Range(-1.1f, -.6f)), Random.Range(9f, 12f),
+                                        Random.Range(.05f, .1f), new Color(1f, 1f, 1f, .92f));
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
                 else if (map.Kind == MapKind.Home)
                 {
                     ambientTimer = .5f;                 // 집 안: 창으로 든 햇살에 먼지가 반짝

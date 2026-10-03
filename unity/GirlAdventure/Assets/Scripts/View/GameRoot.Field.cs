@@ -34,7 +34,7 @@ namespace GirlAdventure.View
         }
         readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
-        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap;
+        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap;
         WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
         SpriteRenderer homeChestSR;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
@@ -59,6 +59,7 @@ namespace GirlAdventure.View
             underMap = WorldMap.Underworld();
             lavaMap = WorldMap.Lava();
             lavaTownMap = WorldMap.LavaTown();
+            snowMap = WorldMap.Snow();
             homeMaps = new WorldMap[WorldMap.Houses.Length];
             for (int i = 0; i < homeMaps.Length; i++) { homeMaps[i] = WorldMap.Home(i); Npcs.Place(homeMaps[i]); }
             mobs = new FieldMonsters(rng);
@@ -72,7 +73,7 @@ namespace GirlAdventure.View
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap }.Concat(homeMaps))
+            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap }.Concat(homeMaps))
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -157,7 +158,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지하세계가 아닐 때 있어야 할 맵 (챕터·마을 안).</summary>
-        WorldMap SurfaceMap => P.Chapter >= 4 ? (P.InVillage ? lavaTownMap : lavaMap) : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+        WorldMap SurfaceMap => P.Chapter >= 5 ? snowMap : P.Chapter >= 4 ? (P.InVillage ? lavaTownMap : lavaMap) : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
 
         /// <summary>연 상자·열린 문·보물상자 지킴이 그림.</summary>
         void RefreshQuestProps()
@@ -352,7 +353,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.Kind == MapKind.Home ? "village" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => map.Kind == MapKind.Home ? "village" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -914,7 +915,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.LavaTown ? "sign_lavatown" : map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(map.Kind == MapKind.Snow ? "sign_snow" : map.Kind == MapKind.LavaTown ? "sign_lavatown" : map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }

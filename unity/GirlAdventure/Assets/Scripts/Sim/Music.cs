@@ -121,6 +121,20 @@ namespace GirlAdventure.Sim
             },
             new Song
             {
+                Name = "snow", Bpm = 100, SoftLead = true,
+                // 눈 덮인 땅 (챕터 5): A 는 라장조로 사뿐사뿐 눈 밟는 소리 (썰매 방울 같은 하이햇), B 는 나단조로 살짝 차갑게 갔다가 돌아온다
+                Lead = "D5.2 F#5.2 A5.2 F#5.2 | G5.2 B5.2 A5.4 | F#5.2 A5.2 D6.2 C#6.2 | B5.4 A5.4 |" +
+                       "G5.2 F#5.2 E5.2 D5.2 | E5.2 F#5.2 G5.4 | A5.2 G5.2 F#5.2 E5.2 | D5.6 R.2 |" +
+                       "B4.2 D5.2 F#5.4 | E5.2 D5.2 C#5.4 | D5.2 E5.2 F#5.2 G5.2 | A5.6 R.2 |" +
+                       "B5.2 A5.2 G5.4 | F#5.2 E5.2 D5.4 | E5.2 F#5.2 G5.2 E5.2 | D5.6 R.2",
+                Bass = "D2.4 A1.4 | G1.4 D2.4 | D2.4 F#2.4 | G1.4 A1.4 |" +
+                       "G1.4 D2.4 | A1.4 E2.4 | A1.4 A1.4 | D2.4 D2.4 |" +
+                       "B1.4 F#2.4 | A1.4 E2.4 | B1.4 E2.4 | F#1.4 A1.4 |" +
+                       "G1.4 D2.4 | D2.4 B1.4 | A1.4 A1.4 | D2.4 D2.4",
+                Drums = "k.hhs.hhk.hhs.hhk.hhs.hhk.hhs.s.k.hhs.hhk.hhs.hhk.hhs.hhk.hhs.s.k.hhs.hhk.hhs.hhk.hhs.hhk.hhs.s.k.hhs.hhk.hhs.hhk.hhs.hhk.hhs.s.",
+            },
+            new Song
+            {
                 Name = "underworld", Bpm = 84, SoftLead = true,
                 // 지하세계 (숨겨진 구멍 아래): A 는 온음계(도 레 미 파♯ 솔♯ 라♯)로 둥둥 떠다니고, B 는 라단조로 살짝 무섭게 내려갔다가 돌아온다
                 Lead = "C5.2 D5.2 E5.2 F#5.2 | G#5.4 E5.4 | A#5.2 G#5.2 F#5.2 E5.2 | D5.6 R.2 |" +

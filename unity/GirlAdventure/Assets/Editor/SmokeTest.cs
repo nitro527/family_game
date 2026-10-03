@@ -471,6 +471,7 @@ namespace GirlAdventure.EditorTools
             Boss4Tests();
             QuickStartTests();
             HomeTests();
+            SnowTests();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -506,6 +507,41 @@ namespace GirlAdventure.EditorTools
             float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
             Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
+        }
+
+        /// <summary>눈 덮인 땅 (C5-1): 챕터 4 → 5 (셋이 함께, 출발 자리), 맵 이어짐(눈 산 아래까지·모닥불·표지판·호수), 몬스터·마을 아직 없음, 곡.</summary>
+        static void SnowTests()
+        {
+            var m = WorldMap.Snow();
+            var r = Reach(m, WorldMap.SnowStart);
+            bool Near((int x, int y) t) => r[t.x - 1, t.y] || r[t.x + 1, t.y] || r[t.x, t.y + 1] || r[t.x, t.y - 1];
+            int lake = 0, lakeReach = 0, enc = 0;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    if (m.At(x, y) == 'i') { lake++; if (r[x, y]) lakeReach++; }
+                    if (m.EncounterRate(x, y) > 0) enc++;
+                }
+            var foot = (WorldMap.SnowPeak.x + 1, WorldMap.SnowPeak.y + 4);
+            Check("snow map: start safe, peak foot / fire / sign reachable, frozen lake walkable, no monsters yet",
+                  m.Kind == MapKind.Snow && m.SpawnPoint == WorldMap.SnowStart && m.Safe(WorldMap.SnowStart.x, WorldMap.SnowStart.y) && r[foot.Item1, foot.Item2]
+                  && m.At(WorldMap.SnowFire.x, WorldMap.SnowFire.y) == 'F' && Near(WorldMap.SnowFire) && Near(WorldMap.SnowSign)
+                  && lake > 20 && lakeReach == lake && enc == 0 && m.At(-1, 5) == 'P', $"lake {lakeReach}/{lake} enc {enc}");
+            var p = PlayerState.NewGame("s");
+            p.Boss2Down = true; Quest.TryJoinBrother(p); p.Join("dad"); p.Chapter = 4; p.Boss4Down = true; p.InVillage = true; p.Hp = 1;
+            Quest.StartChapter5(p);
+            Check("chapter 4 → 5: three together at the snow start, healed, no town yet",
+                  WorldMap.LastChapter == 5 && p.Chapter == 5 && !p.InVillage && (p.X, p.Y) == WorldMap.SnowStart && p.Companions.Count == 2 && p.Hp == p.MaxHp
+                  && !WorldMap.HasTown(5) && WorldMap.ForPlayer(5, true).Kind == MapKind.Snow && WorldMap.ForPlayer(4, true).Kind == MapKind.LavaTown);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("chapter 5 save loads on the snow map", q.Chapter == 5 && (q.X, q.Y) == WorldMap.SnowStart && q.Companions.Count == 2);
+            try   // 그림 확인용: 눈 덮인 땅 전체 그림 (unity/playtest/map_snow.png)
+            {
+                var tex = MapPainter.RenderRaster(m).ToTexture(FilterMode.Bilinear, true);
+                System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../playtest/map_snow.png")), tex.EncodeToPNG());
+            }
+            catch (Exception e) { Debug.LogWarning("map_snow.png: " + e.Message); }
+            Check("snow song + talk", Music.Get("snow")?.Name == "snow" && GameData.HasTalk("ch5_intro") && GameData.HasTalk("sign_snow"));
         }
 
         /// <summary>집 안 (P-5): 마을 집 문마다 방, 문 앞이 마을에서 닿음, 방 안 주민·상자·침대·책장에 닿음, 상자 한 번, 집 안 저장은 문 앞으로.</summary>
@@ -560,7 +596,7 @@ namespace GirlAdventure.EditorTools
                 var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
                 Check($"quick start chapter {ch}: level, party, gear, place, bosses",
                       p.Chapter == ch && p.Lv == Quest.QuickLevels[ch] && p.Companions.Count == mates && (p.X, p.Y) == start
-                      && p.BossDown && p.Boss2Down == (ch >= 3) && p.Boss3Down == (ch >= 4) && !p.Boss4Down
+                      && p.BossDown && p.Boss2Down == (ch >= 3) && p.Boss3Down == (ch >= 4) && p.Boss4Down == (ch >= 5)
                       && p.Equipped.Count >= 3 && p.Atk > PlayerState.StartAtk + 5 && p.Hp == p.MaxHp && p.Gold > 0
                       && q.Lv == p.Lv && q.Companions.Count == mates && q.Equipped.Count == p.Equipped.Count && q.Chapter == ch,
                       $"lv {p.Lv} mates {p.Companions.Count} gear {p.Equipped.Count} at {p.X},{p.Y}");
@@ -671,7 +707,7 @@ namespace GirlAdventure.EditorTools
                   && unreached == 0 && free > 400 && lava > 40 && bridges >= 4 && m.Blocked(16, 5) == (m.At(16, 5) == 'L' || m.At(16, 5) == 'R'), $"free {free} unreached {unreached} lava {lava} bridges {bridges}");
             Check("lava land: hot spring revive, sign, volcano, edges rock", m.At(m.Spring.x, m.Spring.y) == 'F' && reach[m.RevivePoint.x, m.RevivePoint.y]
                   && m.At(m.SignPos.x, m.SignPos.y) == 'S' && m.At(WorldMap.Volcano.x, WorldMap.Volcano.y) == 'K' && m.At(-1, 3) == 'R'
-                  && WorldMap.ForChapter(4).Kind == MapKind.Lava && WorldMap.LastChapter == 4 && WorldMap.HasTown(4) && !WorldMap.HasTown(2));
+                  && WorldMap.ForChapter(4).Kind == MapKind.Lava && WorldMap.LastChapter >= 4 && WorldMap.HasTown(4) && !WorldMap.HasTown(2));
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(12));
             p.Boss2Down = true; p.Boss3Down = true; p.Chapter = 3; Quest.TryJoinBrother(p); p.Hp = 1; p.InVillage = true;
