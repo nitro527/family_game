@@ -570,9 +570,9 @@ namespace GirlAdventure.View
             hudWin.SetActive(false);
             hintLabel.SetActive(false);
             enemyLabel.text = "";
-            bool ch3 = P.Boss3Down, ch2 = P.Boss2Down;
-            endHead.text = ch3 ? "챕터 3 완료!" : ch2 ? "챕터 2 완료!" : "모험 완료!";
-            endText.text = FillText(GameData.Talk(ch3 ? "ending_card3" : ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
+            bool ch4 = P.Boss4Down, ch3 = P.Boss3Down, ch2 = P.Boss2Down;
+            endHead.text = ch4 ? "챕터 4 완료!" : ch3 ? "챕터 3 완료!" : ch2 ? "챕터 2 완료!" : "모험 완료!";
+            endText.text = FillText(GameData.Talk(ch4 ? "ending_card4" : ch3 ? "ending_card3" : ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
             bool next = P.Chapter < WorldMap.LastChapter;
             nextChapterBtn.gameObject.SetActive(next);
             if (next) nextChapterBtn.GetComponentInChildren<Text>().text = $"▶ 챕터 {P.Chapter + 1} 시작!";

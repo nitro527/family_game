@@ -1320,6 +1320,27 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Expect("left the hot spring town to the lava gate", G.MapKindNow == MapKind.Lava && !G.P.InVillage && G.P.X == WorldMap.LavaGate.x - 1);
             ExpectBgm("lava");
+
+            // 화산 보스 (C4-7b, ✏️): 화산 동굴 입구 → 화산 젤리 대장 → 화산이 잠잠 → 챕터 4 완료
+            G.DebugMobs(true, true);
+            G.DebugNearLavaBoss();
+            yield return .6f;
+            Shot("lava_boss_door");
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .4f;
+            Shot("boss4_battle");
+            Expect("lava boss battle", G.BattleEnemy == GameData.LavaBoss && G.BattleBackdropName == "lava_boss", G.BattleBackdropName);
+            ExpectBgm("boss");
+            G.DebugSetEnemyHp(60);                     // 흐름만 확인 (난이도는 SmokeTest [BALANCE BOSS4])
+            foreach (var x in FightUntilOver(true)) yield return x;
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("잠잠") || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .6f;
+            Shot("ch4_calm");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return 1.2f;
+            Shot("ch4_clear");
+            Expect("chapter 4 cleared (last chapter for now)", G.P.Boss4Down && G.EndingHead.Contains("챕터 4") && G.NextChapterLabel == "", G.EndingHead);
         }
 
         static bool skillUpSeen, broCmdSeen, comboShot;

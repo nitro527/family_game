@@ -682,6 +682,7 @@ namespace GirlAdventure.View
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
             if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }
+            if (here == 'B' && !P.Boss4Down && map.Kind == MapKind.Lava) { StartCoroutine(Boss4Routine()); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
             if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(!map.IsTown)); return; }
@@ -854,6 +855,13 @@ namespace GirlAdventure.View
             busy = true;
             yield return Talk("boss2_meet");
             yield return BattleRoutine(GameData.General);
+        }
+
+        IEnumerator Boss4Routine()
+        {
+            busy = true;
+            yield return Talk("boss4_meet");
+            yield return BattleRoutine(GameData.LavaBoss);
         }
 
         IEnumerator Boss3Routine()

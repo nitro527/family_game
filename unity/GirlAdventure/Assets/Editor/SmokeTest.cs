@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "lavatown_enter", "sign_lavatown", "npc_lava_elder", "npc_springkeeper", "npc_smith", "npc_lava_kid", "ally_equip_on", "ally_equip_off", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "lavatown_enter", "sign_lavatown", "npc_lava_elder", "npc_springkeeper", "npc_smith", "npc_lava_kid", "ally_equip_on", "ally_equip_off", "boss4_meet", "ch4_clear", "ending_card4", "npc_lava_elder_end", "npc_lava_kid_end", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -106,7 +106,7 @@ namespace GirlAdventure.EditorTools
             Check("monster art loads", badArt == "" && arts >= 1, $"arts={arts} {badArt}");
             // 전투 배경 그림: 맵 기본(meadow/cave) + 적이 정한 것 모두 1280×720 으로 들어와야 함 (NPOT 늘림 없음)
             string badBg = "";
-            var bgNames = new List<string> { "meadow", "cave", "desert", "underworld", "lava" };
+            var bgNames = new List<string> { "meadow", "cave", "desert", "underworld", "lava" };   // 보스 배경(lava_boss 등)은 적 Backdrop 에서
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())
                     if (!string.IsNullOrEmpty(d.Backdrop)) bgNames.Add(d.Backdrop);
@@ -468,6 +468,42 @@ namespace GirlAdventure.EditorTools
             LavaTests();
             LavaJellyTests();
             LavaTownTests();
+            Boss4Tests();
+        }
+
+        /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
+        static void Boss4Tests()
+        {
+            var m = WorldMap.Lava();
+            var b = WorldMap.VolcanoDoor;
+            var reach = Reach(m, WorldMap.LavaStart);
+            var boss = GameData.LavaBoss;
+            Check("lava boss: tile reachable below the volcano, data", m.At(b.x, b.y) == 'B' && reach[b.x, b.y] && m.At(b.x, b.y - 1) == 'K'
+                  && boss != null && boss.Boss && boss.Look == "magma" && boss.Backdrop == "lava_boss");
+            var p = PlayerState.NewGame("t"); p.Boss4Down = true; p.Chapter = 4;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("boss4 saved (v14), elder thanks", SaveData.CurrentVersion >= 14 && q.Boss4Down
+                  && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.LavaTown)).Find(n => n.Id == "lava_elder"), q) == "npc_lava_elder_end");
+            float Win(int lv, bool gear)
+            {
+                var r = new System.Random(321);
+                int wins = 0;
+                for (int run = 0; run < 400; run++)
+                {
+                    var d = PlayerState.NewGame("d");
+                    d.GainExp(PlayerState.NextExp(lv - 1));
+                    d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad");
+                    var kit = gear ? new[] { "flame_wand", "lava_robe", "flame_sword", "bro_shield", "lion_blade", "lion_shield" }
+                                   : new[] { "sun_wand", "sand_cape", "bro_sword", "bro_shield" };
+                    foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
+                    d.Candy = 6;
+                    if (FightDuo(d, new List<EnemyDef> { boss }, r)) wins++;
+                }
+                return wins / 400f;
+            }
+            float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
+            Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
+            Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
         }
 
         /// <summary>온천 마을 (C4-7a): 용암 땅 문, 마을 모든 칸 이어짐(마을 사람 놓은 뒤), 마을 사람, 대장간(아빠 장비), 드나들기 맵.</summary>
@@ -715,6 +751,7 @@ namespace GirlAdventure.EditorTools
                 (8, "{\"Version\":8,\"Name\":\"a\",\"Lv\":7,\"Exp\":150,\"Hp\":50,\"Mp\":20,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":2,\"BossDown\":true,\"Seen\":[\"파랑 젤리\",\"없는 젤리\"],\"Beaten\":[\"파랑 젤리\"]}"),
                 (9, "{\"Version\":9,\"Name\":\"a\",\"Lv\":9,\"Exp\":240,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":28,\"Y\":3,\"Chapter\":2,\"BossDown\":true,\"Boss2Down\":true,\"GuardDown\":true,\"BrotherJoined\":true,\"BroHp\":0,\"BroMp\":5}"),
                 (10, "{\"Version\":10,\"Name\":\"a\",\"Lv\":11,\"Exp\":340,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":4,\"Y\":15,\"Chapter\":3,\"BossDown\":true,\"Boss2Down\":true,\"Boss3Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5}"),
+                (13, "{\"Version\":13,\"Name\":\"a\",\"Lv\":12,\"Exp\":700,\"Hp\":80,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Party\":[\"jihun:90:10\",\"dad:0:5\"]}"),
                 (12, "{\"Version\":12,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":20,\"Y\":16,\"Chapter\":3,\"Underground\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":40,\"BroMp\":3}"),
                 (11, "{\"Version\":11,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":18,\"Y\":17,\"Chapter\":3,\"InVillage\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5,\"SkillUses\":[\"Fire:31\",\"Bolt:2\"]}"),
             };

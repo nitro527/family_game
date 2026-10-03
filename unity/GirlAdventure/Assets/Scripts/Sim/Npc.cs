@@ -92,6 +92,7 @@ namespace GirlAdventure.Sim
                 case "boss": return p.BossDown;
                 case "boss2": return p.Boss2Down;
                 case "boss3": return p.Boss3Down;
+                case "boss4": return p.Boss4Down;
                 case "guard": return p.GuardDown;
                 case "key": return p.HasItem(Quest.KeyItem);
                 case "door": return Quest.DoorOpen(p);

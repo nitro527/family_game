@@ -19,7 +19,7 @@ namespace GirlAdventure.Sim
     ///        'X' 동굴 출구(챕터 2 동굴에서 나온 곳)  'F' 오아시스 샘물  'S' 표지판  'V' 오아시스 마을 입구(밟으면 마을로)
     ///        'B' 카우보이 젤리 대장 자리 (남쪽 바위 골짜기, 밟으면 보스전)
     /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
-    /// 용암 땅 (챕터 4, 사용자 2026-10-03) — '.' 잿빛 땅  ':' 출발 자리(안전)  'R' 검은 바위  'L' 용암  'b' 돌다리  'K' 화산(4×4)  'F' 온천  'S' 표지판
+    /// 용암 땅 (챕터 4, 사용자 2026-10-03) — 'B' 화산 동굴 입구(화산 젤리 대장)  '.' 잿빛 땅  ':' 출발 자리(안전)  'R' 검은 바위  'L' 용암  'b' 돌다리  'K' 화산(4×4)  'F' 온천  'S' 표지판
     /// 온천 마을 (챕터 4, ✏️ 임시 이름) — '.' 잿빛 땅  'R' 바위  'h' 돌집  'w' 온천 웅덩이  'F' 온천(회복)  'M' 대장간(가게)  'S' 표지판  'E' 출구  'N' 마을 사람
     /// 오아시스 마을 (✏️ 임시 이름) — '.' 모래  'R' 바위  'h' 흙벽돌 집  't' 천막(2×2)  'u' 마른 우물  'p' 야자  'M' 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// </summary>
@@ -41,7 +41,7 @@ namespace GirlAdventure.Sim
                                                     Oasis = (24, 10), OasisSpring = (20, 11),
                                                     DesertBoss = (24, 20);    // 남쪽 바위 골짜기 끝: 카우보이 젤리 대장 (53)
         // 용암 땅 (챕터 4): 왼쪽 아래에서 아빠와 함께 출발, 가운데 용암 강(돌다리 둘), 오른쪽 위 화산
-        public static readonly (int x, int y) LavaStart = (4, 20), LavaSpring = (7, 19), LavaSign = (6, 21), Volcano = (28, 2);
+        public static readonly (int x, int y) LavaStart = (4, 20), LavaSpring = (7, 19), LavaSign = (6, 21), Volcano = (28, 2), VolcanoDoor = (29, 6);   // 화산 아래 동굴 입구 앞: 화산 젤리 대장 (C4-7b)
         // 온천 마을 (챕터 4, C4-7a): 용암 땅 오른쪽 아래 문(LavaGate) ↔ 마을 아래쪽 출구
         public static readonly (int x, int y) LavaGate = (32, 19), LavaTownStart = (18, 19), LavaTownExit = (18, 20),
                                                     LavaTownSpring = (14, 9), LavaTownSign = (20, 18), LavaTownShop = (12, 13);
@@ -289,6 +289,7 @@ namespace GirlAdventure.Sim
             m.Set(LavaSpring.x, LavaSpring.y, 'F');
             m.Set(LavaSign.x, LavaSign.y, 'S');
             m.Set(LavaGate.x, LavaGate.y, 'V');
+            m.Set(VolcanoDoor.x, VolcanoDoor.y, 'B');
             return m;
         }
 

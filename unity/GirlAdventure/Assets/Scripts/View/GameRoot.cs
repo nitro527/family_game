@@ -189,6 +189,19 @@ namespace GirlAdventure.View
             sfx.Play("lvup");
         }
 
+        /// <summary>챕터 4 끝 (C4-7b): 화산이 잠잠해지는 대사 → 번쩍 → 챕터 4 완료 카드.</summary>
+        IEnumerator Chapter4ClearRoutine()
+        {
+            yield return Talk("ch4_clear");
+            yield return Flash(.6f);
+            HideMessage();
+            AutoSave();
+            Current = Mode.Ending;
+            ShowEnding();
+            bgm.Play("ending");
+            sfx.Play("lvup");
+        }
+
         /// <summary>챕터 3 끝 (백로그 53): 물이 돌아오는 대사 → 화면이 하얗게 번쩍 → 챕터 3 완료 카드.</summary>
         IEnumerator Chapter3ClearRoutine()
         {
@@ -480,6 +493,7 @@ namespace GirlAdventure.View
         public void DebugSetBroAuto(bool on) => Settings.SetBroAuto(on);
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
+        public void DebugNearLavaBoss() => DebugTeleport(WorldMap.VolcanoDoor.x, WorldMap.VolcanoDoor.y + 1, "up");
         public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");
 
         /// <summary>플레이테스트용: 지금 진행 그대로 완료 화면 (다음 챕터 버튼까지).</summary>
