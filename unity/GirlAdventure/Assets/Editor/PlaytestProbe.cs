@@ -1028,6 +1028,65 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             ExpectBgm("desert");
+
+            // 오아시스 마을 (백로그 52): 사막 동쪽 문 → 마을 → 마을 어른 → 가게에서 지훈 칼 → 상태 창 → 나가기
+            G.DebugMobs(true, true);
+            G.DebugTeleport(WorldMap.TownGate.x - 1, WorldMap.TownGate.y, "right");
+            yield return .5f;
+            Shot("town_gate");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("오아시스 옆") || G.MapKindNow == MapKind.Oasis && !G.Busy)) yield return x;
+            yield return .6f;
+            Shot("town_enter");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("entered the oasis town", G.MapKindNow == MapKind.Oasis && G.P.InVillage && G.BroFieldVisible);
+            ExpectBgm("village");
+            G.DebugTeleport(16, 13, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("우물"))) yield return x;
+            yield return .5f;
+            Shot("town_elder");
+            Expect("elder talks about the dry well", G.MessageText.Contains("우물"), G.MessageText);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugSetGold(500);
+            int broAtk0 = G.P.BroAtk;
+            G.DebugTeleport(WorldMap.TownShop.x + 1, WorldMap.TownShop.y, "left");
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            yield return .2f;
+            int swordIdx = Shop.Goods(MapKind.Oasis).IndexOf("bro_sword");
+            for (int k = 0; k < swordIdx; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Shot("town_shop");
+            Keys.Press(KeyCode.Return);                // 모래바람 칼 사기
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);   // "지금 장착할까?" 예/나중에
+            yield return .3f;
+            Keys.Press(KeyCode.Return);                // 지금 장착하기
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("장착했다") || G.ChoiceOpen)) yield return x;
+            Shot("town_bro_equip");
+            Expect("brother sword bought & equipped", Equipment.IsEquipped(G.P, "bro_sword") && G.P.BroAtk == broAtk0 + GameData.Item("bro_sword").Atk, $"broAtk {G.P.BroAtk}");
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Keys.Press(KeyCode.Escape);                // 그만두기
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugTeleport(WorldMap.TownWell.x, WorldMap.TownWell.y + 3, "up");
+            yield return .5f;
+            Shot("town_well");
+            Keys.Press(KeyCode.Escape);
+            yield return .6f;
+            Shot("status_ch3");
+            Expect("status shows brother gear", G.StatusOpen);
+            Keys.Press(KeyCode.Escape);
+            yield return .4f;
+            G.DebugTeleport(WorldMap.TownStart.x, WorldMap.TownStart.y, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            foreach (var x in SkipTalk(() => G.MapKindNow == MapKind.Desert && !G.Busy)) yield return x;
+            yield return .4f;
+            Expect("left the town to the desert gate", G.MapKindNow == MapKind.Desert && !G.P.InVillage && G.P.X == WorldMap.TownGate.x - 1 && G.P.Y == WorldMap.TownGate.y);
+            ExpectBgm("desert");
         }
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>

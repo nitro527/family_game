@@ -141,7 +141,8 @@ namespace GirlAdventure.View
             Equipment.Equip(P, id);
             sfx.Play("chest");
             RefreshHud();
-            yield return Talk("equip_on", ("item", GameData.ItemName(id)), ("atk", P.Atk), ("def", P.Def));
+            if (Equipment.ForBrother(id)) yield return Talk("bro_equip_on", ("item", GameData.ItemName(id)), ("atk", P.BroAtk), ("def", P.BroDef));
+            else yield return Talk("equip_on", ("item", GameData.ItemName(id)), ("atk", P.Atk), ("def", P.Def));
         }
 
         /// <summary>
@@ -150,22 +151,23 @@ namespace GirlAdventure.View
         IEnumerator ChangeGear()
         {
             choiceIndex = 0;
+            var slots = Equipment.MenuSlots(P);         // 서진 3칸 + 지훈 2칸 (합류 뒤)
             while (true)
             {
-                var labels = new string[Equipment.Slots.Length + 1];
-                for (int i = 0; i < Equipment.Slots.Length; i++)
+                var labels = new string[slots.Length + 1];
+                for (int i = 0; i < slots.Length; i++)
                 {
-                    string cur = Equipment.In(P, Equipment.Slots[i]);
-                    labels[i] = $"<color=#9AA3C7>{Equipment.SlotName(Equipment.Slots[i])}</color>  {(cur != null ? GameData.ItemName(cur) : "<color=#9AA3C7>(없음)</color>")}";
+                    string cur = Equipment.In(P, slots[i]);
+                    labels[i] = $"<color=#9AA3C7>{Equipment.SlotName(slots[i])}</color>  {(cur != null ? GameData.ItemName(cur) : "<color=#9AA3C7>(없음)</color>")}";
                 }
-                labels[Equipment.Slots.Length] = "그만두기";
+                labels[slots.Length] = "그만두기";
                 ShowMessageWindow(true);
                 SetFace("smile");
                 msgText.text = "어느 곳의 장비를 바꿀까?";
                 yield return Choose(labels);
-                if (choicePicked >= Equipment.Slots.Length) yield break;
+                if (choicePicked >= slots.Length) yield break;
                 int slotIdx = choicePicked;
-                string slot = Equipment.Slots[slotIdx];
+                string slot = slots[slotIdx];
                 var owned = Equipment.OwnedFor(P, slot);
                 if (owned.Count == 0)
                 {
@@ -193,7 +195,8 @@ namespace GirlAdventure.View
                     Equipment.Unequip(P, slot);
                     sfx.Play("select");
                     RefreshHud();
-                    yield return Talk("equip_off", ("item", GameData.ItemName(cur2)), ("atk", P.Atk), ("def", P.Def));
+                    if (Equipment.IsBroSlot(slot)) yield return Talk("bro_equip_off", ("item", GameData.ItemName(cur2)), ("atk", P.BroAtk), ("def", P.BroDef));
+                    else yield return Talk("equip_off", ("item", GameData.ItemName(cur2)), ("atk", P.Atk), ("def", P.Def));
                 }
                 RenderStatus();
                 choiceIndex = slotIdx;

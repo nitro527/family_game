@@ -27,7 +27,7 @@ namespace GirlAdventure.View
         Vector2Int broTile, broFrom;
         string broFacing = "down";
         float moveT = -1, walkT;
-        WorldMap fieldMap, caveMap, villageMap, desertMap;
+        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
@@ -46,15 +46,17 @@ namespace GirlAdventure.View
             caveMap = WorldMap.Cave();
             villageMap = WorldMap.Village();
             desertMap = WorldMap.Desert();
+            townMap = WorldMap.OasisTown();
             mobs = new FieldMonsters(rng);
             Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
             Npcs.Place(caveMap);
             Npcs.Place(villageMap);
             Npcs.Place(desertMap);
+            Npcs.Place(townMap);
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap })
+            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap, townMap })
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -129,7 +131,7 @@ namespace GirlAdventure.View
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
-            var want = P.Chapter >= 3 ? desertMap : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+            var want = P.Chapter >= 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
@@ -329,7 +331,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.Kind == MapKind.Cave ? "cave" : map.Kind == MapKind.Village ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => map.Kind == MapKind.Cave ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -341,8 +343,10 @@ namespace GirlAdventure.View
             sfx.Play("step");
             yield return Fade(0, 1, .3f);
             P.InVillage = toVillage;
-            (P.X, P.Y) = toVillage ? WorldMap.VillageStart : (WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1);
-            facing = toVillage ? "up" : "down";
+            bool desert = P.Chapter >= 3;           // 챕터 3: 사막 ↔ 오아시스 마을 (문이 오른쪽 끝이라 나오면 왼쪽을 본다)
+            if (desert) (P.X, P.Y) = toVillage ? WorldMap.TownStart : (WorldMap.TownGate.x - 1, WorldMap.TownGate.y);
+            else (P.X, P.Y) = toVillage ? WorldMap.VillageStart : (WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1);
+            facing = toVillage ? "up" : desert ? "left" : "down";
             moveT = -1;
             ApplyMap();
             ResetBrother();
@@ -353,7 +357,7 @@ namespace GirlAdventure.View
             AutoSave();
             yield return Fade(1, 0, .3f);
             HideSwirl();
-            if (toVillage) { yield return Talk("village_enter"); HideMessage(); }
+            if (toVillage) { yield return Talk(desert ? "oasis_enter" : "village_enter"); HideMessage(); }
             busy = false;
         }
 
@@ -563,7 +567,7 @@ namespace GirlAdventure.View
             char here = map.At(P.X, P.Y);
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
-            if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(map.Kind == MapKind.Field)); return; }
+            if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(!map.IsTown)); return; }
             var mob = mobs.At(P.X, P.Y);
             if (mob != null && mobs.Grace <= 0) StartMobBattle(mob);
         }
@@ -716,7 +720,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }

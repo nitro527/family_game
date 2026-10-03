@@ -101,6 +101,12 @@ namespace GirlAdventure.View
                 mid.Append(id != null ? $"{GameData.ItemName(id)}\n     <size=15><color=#9AA3C7>{Equipment.BonusText(id)}</color></size>\n"
                                       : "<color=#9AA3C7>(없음)</color>\n");
             }
+            if (P.BrotherJoined)                    // 지훈 장비는 한 줄씩 (효과는 장비 바꾸기에서)
+                foreach (var slot in Equipment.BroSlots)
+                {
+                    string id = Equipment.In(P, slot);
+                    mid.Append($"  <color=#9AA3C7>{Equipment.SlotName(slot)}</color> {(id != null ? GameData.ItemName(id) : "<color=#9AA3C7>(없음)</color>")}\n");
+                }
             mid.Append("\n<color=#F2C443>주문</color>\n");
             foreach (var c in new[] { Cmd.Fire, Cmd.Star })
             {
@@ -175,7 +181,7 @@ namespace GirlAdventure.View
         string Goal()
         {
             if (P.Chapter < 2) return P.BossDown ? "별빛을 되찾았어요!" : "남동쪽 성의 킹 젤리를 물리치자";
-            if (P.Chapter >= 3) return "동쪽 오아시스까지 가 보자";       // ✏️ 사막 마을(52)·보스(53) 생기면 바꾼다
+            if (P.Chapter >= 3) return "오아시스 마을의 말라 버린 우물… 남쪽 바위 골짜기를 살펴보자";   // ✏️ 사막 보스(53) 생기면 바꾼다
             if (P.Boss2Down) return "동굴에 평화가 찾아왔어요!";
             if (Quest.DoorOpen(P)) return "기지 안쪽의 젤리 장군을 물리치자";
             if (P.HasItem(Quest.KeyItem)) return "열쇠로 동쪽 젤리 기지 문을 열자";

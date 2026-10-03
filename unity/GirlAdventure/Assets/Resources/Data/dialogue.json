@@ -99,6 +99,28 @@
       { "Text": "{name:와/과} {bro}, 둘이 함께하는 챕터 3, 사막 모험 시작!", "Face": "bro_determined" } ] },
     { "Id": "sign_ch3", "Lines": [
       { "Text": "표지판: \"여기는 모래 사막. 동쪽으로 가면 오아시스. 선인장 가시 조심!\"", "Face": "smile" } ] },
+    { "Id": "oasis_enter", "Lines": [
+      { "Text": "오아시스 옆 작은 마을에 들어왔다. 흙벽돌 집과 알록달록 천막이 보여요!", "Face": "smile", "Hold": 1.4 },
+      { "Text": "누나, 저기 우물 있다! 물 마시자!", "Face": "bro_laugh", "Hold": 1.2 } ] },
+    { "Id": "sign_oasis", "Lines": [
+      { "Text": "표지판: \"오아시스 마을 (✏️ 임시 이름). 여관은 위쪽 가운데 집, 가게는 우물 왼쪽!\"", "Face": "smile" } ] },
+    { "Id": "npc_elder", "Lines": [
+      { "Text": "\"어서 오너라, 꼬마 용사들. 그런데 큰일이 났단다…\"", "Face": "surprised" },
+      { "Text": "\"며칠 전부터 마을 우물이 바싹 말라 버렸어. 오아시스 물도 조금씩 줄고 있지.\"", "Face": "surprised" },
+      { "Text": "\"남쪽 바위 골짜기 쪽에서 모래바람이 불어온 뒤부터란다. 거기에 무언가 있는 게 틀림없어.\"", "Face": "smile" },
+      { "Text": "내가 가 볼게! 누나랑 같이 모래바람 혼내 줄 거야!", "Face": "bro_determined" } ] },
+    { "Id": "npc_wellkeeper", "Lines": [
+      { "Text": "\"두레박을 내려도 모래만 올라와요. 퐁당 소리가 그리워요…\"", "Face": "pout" },
+      { "Text": "\"물은 오아시스 샘물에서 길어 와요. 거기 물은 아직 반짝반짝해요.\"", "Face": "smile" } ] },
+    { "Id": "npc_cowkid", "Lines": [
+      { "Text": "\"하이요! 나도 커서 올가미 던지는 카우보이 젤리가 될 거야!\"", "Face": "laugh" },
+      { "Text": "\"밖의 카우보이 젤리 형들은 심술쟁이야. 올가미를 빙빙 돌리면 조심해!\"", "Face": "smile" },
+      { "Text": "나도 칼 빙빙 할 수 있어!", "Face": "bro_laugh" } ] },
+    { "Id": "npc_tentlady", "Lines": [
+      { "Text": "\"천막 그늘에서 쉬어 가렴. 큰 선인장 젤리는 동쪽·남쪽 멀리에만 산단다.\"", "Face": "smile" },
+      { "Text": "\"가게에 지훈이한테 딱 맞는 작은 칼이랑 방패가 들어왔대!\"", "Face": "laugh" } ] },
+    { "Id": "bro_equip_on",  "Lines": [ { "Text": "{bro:이/가} {item:을/를} 장착했다! 공격력 {atk}, 방어력 {def}", "Face": "bro_laugh", "Hold": 1.0 } ] },
+    { "Id": "bro_equip_off", "Lines": [ { "Text": "{bro:이/가} {item:을/를} 내려놓았다. 공격력 {atk}, 방어력 {def}", "Face": "bro_smile", "Hold": 0.9 } ] },
     { "Id": "sign_ch2", "Lines": [
       { "Text": "표지판: \"젤리 기지는 동굴 동쪽 끝! 열쇠는 서쪽 굴 끝 보물상자에 있다는 소문이…\"", "Face": "smile" } ] },
     { "Id": "guard_meet", "Lines": [

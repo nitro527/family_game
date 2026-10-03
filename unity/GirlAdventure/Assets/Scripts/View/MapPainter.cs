@@ -22,6 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -234,7 +235,7 @@ namespace GirlAdventure.View
 
         // ------------------------------------------------------------------ 사막 (챕터 3)
         /// <summary>모래로 그리는 칸 (오아시스 풀밭·물·야자·샘물 말고 전부).</summary>
-        const string SandChars = ".:RYXS";
+        const string SandChars = ".:RYXSV";
 
         /// <summary>
         /// 사막: 풀밭 바탕 → 모래 오토타일(오아시스 둘레는 풀 경계가 생긴다) → 오아시스 물 → 바위 언덕 오토타일
@@ -285,6 +286,7 @@ namespace GirlAdventure.View
             CaveMouth(R, cave.x * T, cave.y * T);
             Fountain(R, WorldMap.OasisSpring.x * T, WorldMap.OasisSpring.y * T, false);
             Sign(R, WorldMap.DesertSign.x * T, WorldMap.DesertSign.y * T);
+            TownArch(R, WorldMap.TownGate.x * T, WorldMap.TownGate.y * T);
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
@@ -293,6 +295,117 @@ namespace GirlAdventure.View
                     else if (ch == 'p') Palm(R, x, y);
                 }
             return R;
+        }
+
+        /// <summary>
+        /// 오아시스 마을: 바닥은 모두 모래(오토타일 가득 찬 칸) → 바위 테두리 → 흙벽돌 집·천막·마른 우물·가게·표지판·야자 (위 줄부터).
+        /// </summary>
+        static Raster OasisTown(WorldMap m, FieldTiles t)
+        {
+            var R = new Raster(WorldMap.W * T, WorldMap.H * T);
+            bool tiled = t != null && t.Sand != null && t.Rock != null;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    if (tiled) R.Stamp(t.Sand, 0, 4 * T, T, T, x * T, y * T);          // 모래 가득 찬 칸
+                    else R.Rect(x * T, y * T, T, T, H("#E8CC96"));
+                }
+            // 광장: 우물 둘레 밝은 흙
+            var w = WorldMap.TownWell;
+            R.Ellipse(w.x * T + 24, w.y * T + 30, 130, 80, H("#F3DDB0", 120));
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'R')
+                    {
+                        if (tiled) AutoTile(R, t.Rock, m, "R", x, y);
+                        else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44"));
+                    }
+            TownArch(R, WorldMap.TownExit.x * T, WorldMap.TownExit.y * T);
+            for (int i = 0; i < WorldMap.TownHouses.Length; i++)
+            {
+                var (hx, hy) = WorldMap.TownHouses[i];
+                AdobeHouse(R, hx * T, hy * T, i);
+            }
+            var inn = WorldMap.TownHouses[WorldMap.TownInn];
+            InnSign(R, inn.x * T + 3 * T / 2f, inn.y * T + 48);
+            foreach (var (tx, ty) in WorldMap.TownTents) Tent(R, tx * T, ty * T, tx + ty);
+            DryWell(R, w.x * T, w.y * T);
+            CandyShop(R, WorldMap.TownShop.x * T, WorldMap.TownShop.y * T);
+            Sign(R, WorldMap.TownSign.x * T, WorldMap.TownSign.y * T);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'p') Palm(R, x, y);
+            return R;
+        }
+
+        /// <summary>흙벽돌 집 (3×2 칸): 둥근 모서리 모래색 벽, 평평한 지붕 위 나무 들보 끝, 아치 문, 작은 창, 벽 앞 항아리.</summary>
+        static void AdobeHouse(Raster R, float X, float Y, int v)
+        {
+            float w = 3 * T, h = 2 * T;
+            Color32 wall = v % 2 == 0 ? H("#E2B47A") : H("#D9A06A"), wallD = Mul(wall, .82f), wallL = Mul(wall, 1.1f);
+            R.Ellipse(X + w / 2 + 8, Y + h - 2, w / 2 + 6, 10, new Color32(0, 0, 0, 70));          // 그림자
+            R.Rect(X + 4, Y + 10, w - 8, h - 12, Ink);
+            R.Rect(X + 7, Y + 13, w - 14, h - 18, wall);
+            R.Rect(X + 7, Y + 13, w - 14, 10, wallL);                                               // 지붕 턱
+            R.Rect(X + 7, Y + h - 16, w - 14, 10, wallD);                                           // 벽 아래 그늘
+            for (int i = 0; i < 5; i++) R.Rect(X + 14 + i * 26, Y + 16, 8, 6, H("#7A4E2A"));        // 들보 끝
+            R.Ellipse(X + w / 2, Y + h - 30, 15, 16, Ink);                                          // 아치 문
+            R.Rect(X + w / 2 - 15, Y + h - 30, 30, 26, Ink);
+            R.Ellipse(X + w / 2, Y + h - 30, 11, 12, H("#5A3418"));
+            R.Rect(X + w / 2 - 11, Y + h - 30, 22, 24, H("#5A3418"));
+            foreach (float wx in new[] { X + 30, X + w - 30 })                                      // 창 (안쪽 그늘 + 파란 덧문)
+            {
+                R.Rect(wx - 10, Y + 38, 20, 16, Ink);
+                R.Rect(wx - 7, Y + 41, 14, 10, H("#3A2A20"));
+                R.Rect(wx - 12, Y + 40, 3, 13, H("#3F86C8"));
+                R.Rect(wx + 9, Y + 40, 3, 13, H("#3F86C8"));
+            }
+            R.Ellipse(X + w - 16, Y + h - 10, 9, 10, H("#B8643A"));                                 // 항아리
+            R.Ellipse(X + w - 16, Y + h - 19, 6, 3, H("#7A3E20"));
+        }
+
+        /// <summary>줄무늬 천막 (2×2 칸): 둥근 지붕 천막, 빨강·크림 줄, 가운데 어두운 입구, 꼭대기 깃발.</summary>
+        static void Tent(Raster R, float X, float Y, int v)
+        {
+            float cx = X + T, bot = Y + 2 * T - 6;
+            Color32 a = v % 2 == 0 ? H("#D8574A") : H("#3F86C8"), b = H("#F6EBD2");
+            R.Ellipse(cx + 8, bot, 46, 9, new Color32(0, 0, 0, 70));
+            var pts = new[] { new Vector2(cx, Y + 8), new Vector2(cx + 44, bot - 4), new Vector2(cx - 44, bot - 4) };
+            R.Polygon(pts, (x, y) => ((int)((x - cx + 60) / 11) % 2 == 0) ? a : b, Ink, 4);
+            R.Polygon(new[] { new Vector2(cx, Y + 46), new Vector2(cx + 13, bot - 4), new Vector2(cx - 13, bot - 4) }, H("#3A2418"));
+            R.Line(cx, Y + 8, cx, Y - 8, 3, H("#6B4020"));                                         // 깃대
+            R.Polygon(new[] { new Vector2(cx + 1, Y - 8), new Vector2(cx + 16, Y - 3), new Vector2(cx + 1, Y + 2) }, H("#FFD84A"));
+        }
+
+        /// <summary>마른 우물: 돌 테두리 안이 모래로 차 있고 금이 갔다. 나무 지붕과 빈 두레박.</summary>
+        static void DryWell(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 42, 24, 7, new Color32(0, 0, 0, 70));
+            R.Ellipse(X + 24, Y + 32, 21, 12, H("#7A6A58"));
+            R.Ellipse(X + 24, Y + 30, 16, 8, H("#C9A66A"));                                        // 모래로 찬 속
+            R.Line(X + 16, Y + 29, X + 24, Y + 32, 1.5f, H("#8A6A44"));                           // 금
+            R.Line(X + 24, Y + 32, X + 30, Y + 28, 1.5f, H("#8A6A44"));
+            R.Rect(X + 4, Y + 32, 40, 10, H("#8C7B6B"));
+            for (int i = 0; i < 4; i++) R.Rect(X + 6 + i * 10, Y + 34, 8, 6, H("#A89A8C"));
+            R.Rect(X + 6, Y + 2, 4, 30, H("#6B4020"));
+            R.Rect(X + 38, Y + 2, 4, 30, H("#6B4020"));
+            R.Polygon(new[] { new Vector2(X + 24, Y - 10), new Vector2(X + 48, Y + 6), new Vector2(X + 0, Y + 6) }, H("#9A6A3A"), Ink, 2);
+            R.Line(X + 24, Y + 6, X + 24, Y + 18, 1.2f, H("#3A2A20"));                            // 줄
+            R.Rect(X + 19, Y + 18, 10, 8, H("#8A5A30"));                                            // 빈 두레박
+        }
+
+        /// <summary>오아시스 마을 문: 흙벽돌 기둥 두 개 + 위에 걸친 줄무늬 천 (사막 쪽 입구와 마을 안 출구 같은 모양).</summary>
+        static void TownArch(Raster R, float X, float Y)
+        {
+            foreach (float px in new[] { X - 14, X + 46 })
+            {
+                R.Rect(px - 2, Y - 30, 20, 74, Ink);
+                R.Rect(px + 1, Y - 27, 14, 68, H("#E2B47A"));
+                R.Rect(px + 1, Y - 27, 14, 6, H("#F0CC94"));
+            }
+            R.Rect(X - 14, Y - 36, 76, 10, Ink);
+            for (int i = 0; i < 7; i++) R.Rect(X - 12 + i * 10.4f, Y - 34, 10, 6, i % 2 == 0 ? H("#D8574A") : H("#F6EBD2"));
+            R.Circle(X + 24, Y - 31, 6, H("#FFD84A"));                                            // 해 모양 장식
         }
 
         /// <summary>바위 언덕에 뚫린 동굴 출구 (챕터 2 동굴에서 나온 곳): 어두운 아치 + 돌 테두리 + 안쪽 푸른 수정 빛.</summary>

@@ -10,14 +10,31 @@ namespace GirlAdventure.Sim
     public static class Equipment
     {
         public static readonly string[] Slots = { "weapon", "armor", "acc" };
+        /// <summary>동생 지훈 장비 (백로그 52, 오아시스 마을 가게): 칼·방패. 서진 장비와 같은 Equipped 표에 부위 이름만 다르게.</summary>
+        public static readonly string[] BroSlots = { "bro_weapon", "bro_shield" };
 
-        public static string SlotName(string slot) => slot == "weapon" ? "무기" : slot == "armor" ? "옷" : "장신구";
+        public static string SlotName(string slot) => slot == "weapon" ? "무기" : slot == "armor" ? "옷" : slot == "bro_weapon" ? "지훈 칼" : slot == "bro_shield" ? "지훈 방패" : "장신구";
+
+        public static bool IsBroSlot(string slot) => System.Array.IndexOf(BroSlots, slot) >= 0;
+
+        /// <summary>장비 바꾸기 메뉴의 부위: 서진 3칸 + (합류했으면) 지훈 2칸.</summary>
+        public static string[] MenuSlots(PlayerState p)
+        {
+            if (!p.BrotherJoined) return Slots;
+            var all = new string[Slots.Length + BroSlots.Length];
+            Slots.CopyTo(all, 0);
+            BroSlots.CopyTo(all, Slots.Length);
+            return all;
+        }
 
         public static bool IsGear(string id)
         {
             var d = GameData.Item(id);
-            return d != null && System.Array.IndexOf(Slots, d.Kind) >= 0;
+            return d != null && (System.Array.IndexOf(Slots, d.Kind) >= 0 || IsBroSlot(d.Kind));
         }
+
+        /// <summary>지훈 장비인가.</summary>
+        public static bool ForBrother(string id) => IsGear(id) && IsBroSlot(GameData.Item(id).Kind);
 
         /// <summary>가진 장비를 장착한다 (같은 부위에 있던 것은 벗는다). 안 가진 것이면 false.</summary>
         public static bool Equip(PlayerState p, string id)
@@ -43,15 +60,18 @@ namespace GirlAdventure.Sim
             return list;
         }
 
-        public static int AtkBonus(PlayerState p) => Sum(p, true);
-        public static int DefBonus(PlayerState p) => Sum(p, false);
+        public static int AtkBonus(PlayerState p) => Sum(p, true, false);
+        public static int DefBonus(PlayerState p) => Sum(p, false, false);
+        public static int BroAtkBonus(PlayerState p) => Sum(p, true, true);
+        public static int BroDefBonus(PlayerState p) => Sum(p, false, true);
 
-        static int Sum(PlayerState p, bool atk)
+        static int Sum(PlayerState p, bool atk, bool bro)
         {
             int s = 0;
-            foreach (var id in p.Equipped.Values)
+            foreach (var kv in p.Equipped)
             {
-                var d = GameData.Item(id);
+                if (IsBroSlot(kv.Key) != bro) continue;
+                var d = GameData.Item(kv.Value);
                 if (d != null) s += atk ? d.Atk : d.Def;
             }
             return s;

@@ -67,8 +67,9 @@ namespace GirlAdventure.Sim
         public int BroHp, BroMp;
         public int BroMaxHp => BroStartHp + BroHpPerLevel * (Lv - 1);
         public int BroMaxMp => BroStartMp + BroMpPerLevel * (Lv - 1);
-        public int BroAtk => BroStartAtk + BroAtkPerLevel * (Lv - 1);
-        public int BroDef => BroBaseDef;                    // 나무 방패 (동생 장비는 챕터 3 사막 가게에서)
+        /// <summary>지훈 공격력 = 레벨 + 지훈 칼. 방어력 = 나무 방패 1 + 지훈 방패 (장비는 오아시스 마을 가게).</summary>
+        public int BroAtk => BroStartAtk + BroAtkPerLevel * (Lv - 1) + Equipment.BroAtkBonus(this);
+        public int BroDef => BroBaseDef + Equipment.BroDefBonus(this);
 
         /// <summary>동생 합류: 가득 찬 HP·MP 로.</summary>
         public void JoinBrother()
@@ -214,7 +215,7 @@ namespace GirlAdventure.Sim
                 p.BroHp = s.BroHp <= 0 ? p.BroMaxHp : Math.Min(s.BroHp, p.BroMaxHp);
                 p.BroMp = Math.Max(0, Math.Min(s.BroMp, p.BroMaxMp));
             }
-            p.InVillage = s.InVillage && p.Chapter <= 1;
+            p.InVillage = s.InVillage && WorldMap.HasTown(p.Chapter);
             var map = WorldMap.ForPlayer(p.Chapter, p.InVillage);
             (p.X, p.Y) = map.SpawnPoint;
             if (Quest.Walkable(map, p, s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)

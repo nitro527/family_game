@@ -196,6 +196,8 @@ namespace GirlAdventure.View
             else if (look == "general") GeneralArmor(R, cx, bottom, w, h);
             else if (look == "hat") StrawHat(R, cx, bottom, w, h);
             else if (look == "bow") HeadBow(R, cx, bottom, w, h);
+            else if (look == "turban") Turban(R, cx, bottom, w, h);
+            else if (look == "cowboy") CowboyHat(R, cx, bottom, w, h);
             foreach (int s in new[] { -1, 1 })
             {
                 float ex = cx + s * w * .15f, ey = bottom - h * .38f;
@@ -345,6 +347,37 @@ namespace GirlAdventure.View
             R.Ellipse(cx, top + 14, w * .23f, 32, straw);
             R.Rect(cx - w * .23f, top + 24, w * .46f, 12, Raster.Hex("#E0484E"));
             R.Ellipse(cx - w * .08f, top + 2, 12, 8, new Color32(255, 255, 255, 120));
+        }
+
+        /// <summary>오아시스 마을 사람: 머리를 둘둘 감은 하얀 터번 + 가운데 빨간 보석.</summary>
+        static void Turban(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            Color32 cloth = Raster.Hex("#F6F0E2"), clothD = Raster.Hex("#C9BFA8");
+            R.Ellipse(cx, top + 22, w * .36f + 5, 34, Ink);
+            R.Ellipse(cx, top + 22, w * .36f, 29, cloth);
+            for (int i = 0; i < 3; i++)                                            // 감은 주름
+                R.Line(cx - w * .32f, top + 14 + i * 12, cx + w * .32f, top + 4 + i * 12, 4, clothD);
+            R.Ellipse(cx + w * .1f, top - 6, 16, 12, Ink);                          // 위 매듭
+            R.Ellipse(cx + w * .1f, top - 6, 12, 8, cloth);
+            R.Circle(cx, top + 30, 11, Ink);
+            R.Circle(cx, top + 30, 8, Raster.Hex("#E0484E"));
+            R.Circle(cx - 3, top + 27, 3, new Color32(255, 255, 255, 180));
+        }
+
+        /// <summary>오아시스 마을 사람: 넓은 챙의 갈색 카우보이 모자 (양옆 챙이 살짝 올라감).</summary>
+        static void CowboyHat(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            Color32 felt = Raster.Hex("#A8693A"), feltD = Raster.Hex("#7A4724");
+            R.Ellipse(cx, top + 36, w * .52f + 5, 22, Ink);                         // 챙
+            R.Ellipse(cx, top + 36, w * .52f, 17, felt);
+            foreach (int s in new[] { -1, 1 }) R.Ellipse(cx + s * w * .46f, top + 26, 18, 14, felt);   // 올라간 챙 끝
+            R.Ellipse(cx, top + 12, w * .26f + 5, 36, Ink);                         // 머리 부분
+            R.Ellipse(cx, top + 12, w * .26f, 31, felt);
+            R.Line(cx, top - 14, cx, top + 6, 6, feltD);                            // 가운데 접힌 자국
+            R.Rect(cx - w * .26f, top + 24, w * .52f, 10, Raster.Hex("#E0484E"));   // 빨간 띠
+            R.Ellipse(cx - w * .1f, top + 2, 10, 7, new Color32(255, 255, 255, 90));
         }
 
         /// <summary>마을 사람: 머리 위 커다란 리본.</summary>

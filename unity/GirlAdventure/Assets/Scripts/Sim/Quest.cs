@@ -67,6 +67,7 @@ namespace GirlAdventure.Sim
         public static void StartChapter3(PlayerState p)
         {
             TryJoinBrother(p);
+            p.Items.Remove(KeyItem);            // 기지 열쇠는 동굴에 두고 간다
             p.Chapter = 3;
             p.InVillage = false;
             p.RestoreAll();

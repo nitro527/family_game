@@ -150,7 +150,7 @@ namespace GirlAdventure.View
 
             // 샘물: 별가루가 퐁퐁 솟는다
             sparkleTimer -= dt;
-            if (sparkleTimer <= 0)
+            if (sparkleTimer <= 0 && map.Kind != MapKind.Oasis)      // 오아시스 마을 우물은 말라 있다 (반짝이 없음)
             {
                 sparkleTimer = .22f;
                 var c = FeetAt(map.Spring.x, map.Spring.y) + new Vector3(Random.Range(-.3f, .3f), .5f, 0);
@@ -173,7 +173,7 @@ namespace GirlAdventure.View
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }
-                else if (map.Kind == MapKind.Desert)
+                else if (map.Kind == MapKind.Desert || map.Kind == MapKind.Oasis)
                 {
                     ambientTimer = .1f;
                     var p = new Vector3(camPos.x - halfW - .3f, camPos.y + Random.Range(-halfH, halfH), 0);

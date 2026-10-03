@@ -303,7 +303,7 @@ namespace GirlAdventure.EditorTools
             var st = WorldMap.DesertStart;
             Check("desert: kind, start walkable & safe, cave exit near start", m.Kind == MapKind.Desert && !m.Blocked(st.x, st.y) && m.At(st.x, st.y) == ':'
                   && m.At(WorldMap.DesertCave.x, WorldMap.DesertCave.y) == 'X' && m.Blocked(WorldMap.DesertCave.x, WorldMap.DesertCave.y)
-                  && WorldMap.ForChapter(3).Kind == MapKind.Desert && WorldMap.ForPlayer(3, true).Kind == MapKind.Desert);
+                  && WorldMap.ForChapter(3).Kind == MapKind.Desert && WorldMap.ForPlayer(3, false).Kind == MapKind.Desert);
             int water = 0, cactus = 0, palms = 0, free = 0, unreached = 0;
             var reach = Reach(m, st);
             for (int y = 0; y < WorldMap.H; y++)
@@ -382,6 +382,61 @@ namespace GirlAdventure.EditorTools
             var bad = p.ToSave(); bad.X = 0; bad.Y = 0;
             var r = PlayerState.FromSave(bad);
             Check("chapter 3 bad spot → desert start", (r.X, r.Y) == st);
+            TownTests();
+        }
+
+        /// <summary>오아시스 마을 (백로그 52): 드나들기, 모든 칸 이어짐(마을 사람 놓은 뒤), 마을 사람, 지훈 장비, 여관.</summary>
+        static void TownTests()
+        {
+            var desert = WorldMap.Desert();
+            var g = WorldMap.TownGate;
+            var dReach = Reach(desert, WorldMap.DesertStart);
+            Check("desert: town gate is a doorway, reachable, exit spot free", desert.IsDoorway(g.x, g.y) && !desert.Blocked(g.x, g.y) && dReach[g.x, g.y]
+                  && !desert.Blocked(g.x - 1, g.y) && desert.EncounterRate(g.x - 1, g.y) >= 0);
+            var town = WorldMap.OasisTown();
+            Npcs.Place(town);
+            var ts = WorldMap.TownStart;
+            var reach = Reach(town, ts);
+            int free = 0, unreached = 0;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (!town.Blocked(x, y)) { free++; if (!reach[x, y]) unreached++; }
+            var ex = WorldMap.TownExit;
+            Check("town: kind, start, exit doorway, no monsters, all reachable", town.Kind == MapKind.Oasis && town.IsTown && !town.Blocked(ts.x, ts.y)
+                  && town.IsDoorway(ex.x, ex.y) && reach[ex.x, ex.y] && town.EncounterRate(ts.x, ts.y) == 0 && unreached == 0 && free > 250,
+                  $"free {free} unreached {unreached}");
+            string badNpc = "";
+            int npcs = 0;
+            foreach (var n in Npcs.On(MapKind.Oasis))
+            {
+                npcs++;
+                bool near = false;
+                foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) near |= reach[n.X + dx, n.Y + dy];
+                if (town.At(n.X, n.Y) != 'N' || !near || !GameData.HasTalk(n.Talk) || Array.IndexOf(EnemyDef.Looks, n.Look ?? "") < 0) badNpc += n.Id + " ";
+            }
+            Check("town npcs: placed on sand, reachable, talk + look (turban/cowboy)", npcs >= 4 && badNpc == "" && new List<NpcDef>(Npcs.On(MapKind.Oasis)).Exists(n => n.Inn), badNpc);
+            Check("town: well/sign/shop tiles", town.At(WorldMap.TownWell.x, WorldMap.TownWell.y) == 'u' && town.At(town.SignPos.x, town.SignPos.y) == 'S'
+                  && WorldMap.ForPlayer(3, true).Kind == MapKind.Oasis && WorldMap.ForPlayer(2, true).Kind == MapKind.Cave);
+
+            // 지훈 장비: 오아시스 가게, 지훈 능력치에만 더해짐, 장비 메뉴 5칸, 세이브
+            var goods = Shop.Goods(MapKind.Oasis);
+            Check("oasis shop: brother gear + new wand", goods.Contains("bro_sword") && goods.Contains("bro_shield") && goods.Contains("sun_wand") && goods.Contains("candy"),
+                  string.Join(",", goods));
+            var p = PlayerState.NewGame("t");
+            p.GainExp(PlayerState.NextExp(8));
+            p.Boss2Down = true; Quest.StartChapter3(p);
+            int sAtk = p.Atk, bAtk = p.BroAtk, bDef = p.BroDef;
+            p.GainGold(1000);
+            Shop.Buy(p, "bro_sword"); Shop.Buy(p, "bro_shield");
+            Equipment.Equip(p, "bro_sword"); Equipment.Equip(p, "bro_shield");
+            Check("brother gear adds to brother only", Equipment.ForBrother("bro_sword") && !Equipment.ForBrother("sun_wand")
+                  && p.BroAtk == bAtk + GameData.Item("bro_sword").Atk && p.BroDef == bDef + GameData.Item("bro_shield").Def && p.Atk == sAtk
+                  && Equipment.MenuSlots(p).Length == 5 && Equipment.MenuSlots(PlayerState.NewGame("x")).Length == 3);
+            p.InVillage = true; (p.X, p.Y) = (ts.x, ts.y - 2);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("brother gear + town position saved", q.BroAtk == p.BroAtk && q.BroDef == p.BroDef && q.InVillage && q.X == p.X && q.Y == p.Y);
+            p.BroHp = 1; p.Hp = 1;
+            Check("inn heals brother too", Inn.Stay(p) && p.BroHp == p.BroMaxHp && p.Hp == p.MaxHp);
         }
 
         /// <summary>BFS: from 에서 걸어서 닿는 칸.</summary>
@@ -647,7 +702,7 @@ namespace GirlAdventure.EditorTools
             p.GainGold(-999999);
             Check("gold never negative", p.Gold == 0);
             Check("field: no shop (moved to village)", new WorldMap().ShopPos == (-1, -1) && Shop.Goods(MapKind.Field).Count == 0);
-            foreach (var m in new[] { WorldMap.Village(), WorldMap.Cave() })
+            foreach (var m in new[] { WorldMap.Village(), WorldMap.Cave(), WorldMap.OasisTown() })
             {
                 var (sx, sy) = m.ShopPos;
                 var reach = Reach(m, p);
