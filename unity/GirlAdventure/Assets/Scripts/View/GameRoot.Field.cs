@@ -404,7 +404,7 @@ namespace GirlAdventure.View
         IEnumerator HomeRoutine(int room)
         {
             busy = true;
-            sfx.Play("step");
+            sfx.Play("door");
             yield return Fade(0, 1, .25f);
             int from = P.Home;
             P.Home = room;

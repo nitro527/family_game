@@ -1441,7 +1441,7 @@ namespace GirlAdventure.EditorTools
             yield return (Func<bool>)(() => G.MessageText.Contains("미끄러"));
             Shot("ice_hint");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
-            Expect("ice slide + snow step sounds exist", G.HasSfx("slide") && G.HasSfx("step_snow"));
+            Expect("ice slide + snow step + door sounds exist", G.HasSfx("slide") && G.HasSfx("step_snow") && G.HasSfx("door"));
             Expect("slid across the ice to the chest", G.P.X == WorldMap.SnowChest.x - 1 && G.P.Y == WorldMap.SnowChest.y, $"{G.P.X},{G.P.Y}");
             Keys.Hold(KeyCode.RightArrow, true); yield return .12f; Keys.Hold(KeyCode.RightArrow, false);
             yield return 1.2f;
