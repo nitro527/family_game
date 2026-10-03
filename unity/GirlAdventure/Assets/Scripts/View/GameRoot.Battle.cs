@@ -273,6 +273,15 @@ namespace GirlAdventure.View
         /// <summary>지훈 차례: 검 휘두르기 · 번개 (적이 여럿이면 대상 고르기) · 도망.</summary>
         IEnumerator BrotherTurn()
         {
+            if (Settings.BroAuto)                   // 지훈 자동 공격: 명령창 없이 바로
+            {
+                var (ac, at) = battle.BroAuto();
+                var ao = battle.BroAct(ac, at);
+                yield return BrotherAct(ao);
+                if (ao.SkillUp > 0) yield return SkillUpRoutine(ao.Cmd, ao.SkillUp, true);
+                yield return AfterAct(ao);
+                yield break;
+            }
             while (true)
             {
                 yield return AskCommand(true);
@@ -338,8 +347,12 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지훈의 검(앞으로 뛰어들며 베기) · 번개(하늘에서 내리꽂힘) 연출.</summary>
+        /// <summary>프로브용: 지훈이 행동한 횟수.</summary>
+        public int BroActCount { get; private set; }
+
         IEnumerator BrotherAct(PlayerOutcome o)
         {
+            BroActCount++;
             bool bolt = o.Cmd == Cmd.Bolt;
             broPose = "attack"; broLunge = 1;
             RefreshHud();

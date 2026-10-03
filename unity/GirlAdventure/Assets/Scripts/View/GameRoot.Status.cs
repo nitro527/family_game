@@ -172,18 +172,22 @@ namespace GirlAdventure.View
                     $"글자 속도  <color=#F2C443>{Settings.TextSpeedName}</color>",
                     $"화면 번쩍임  <color=#F2C443>{(Settings.Flash ? "켬" : "끔")}</color>",
                     $"글자 크기  <color=#F2C443>{(Settings.BigText ? "크게" : "보통")}</color>",
+                    $"지훈 자동 공격  <color=#F2C443>{(Settings.BroAuto ? "켬" : "끔")}</color>",
                     "닫기");
                 int picked = choicePicked;
-                if (picked >= 5) break;
+                if (picked >= 6) break;
                 if (picked == 0) bgm.CycleVolume();
                 else if (picked == 1) Settings.CycleSfx();
                 else if (picked == 2) Settings.CycleTextSpeed();
                 else if (picked == 3) Settings.ToggleFlash();
-                else Settings.ToggleBigText();
+                else if (picked == 4) Settings.ToggleBigText();
+                else Settings.ToggleBroAuto();
                 PlayerPrefs.Save();
                 sfx.Play("select");
                 if (picked == 2) yield return Say($"이 빠르기로 말할게요! ({Settings.TextSpeedName})", "laugh", .6f);
                 if (picked == 4) yield return Say($"글씨를 이 크기로 보여 줄게요! ({(Settings.BigText ? "크게" : "보통")})", "laugh", .6f);
+                if (picked == 5) yield return Say(Settings.BroAuto ? "지훈이가 알아서 씩씩하게 싸워요! (명령을 안 골라도 돼요)" : "지훈이 차례에 명령을 직접 골라요.",
+                                                  Settings.BroAuto ? "bro_laugh" : "bro_smile", .6f);
                 choiceIndex = picked;
             }
         }

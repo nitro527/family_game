@@ -1071,7 +1071,14 @@ namespace GirlAdventure.EditorTools
                 yield return .3f;
                 Shot("under_battle");
                 Expect("underworld jelly battle", G.BattleEnemy == GameData.Under[0] && G.BattleBackdropName == "underworld", G.BattleBackdropName);
+                // 지훈 자동 공격 (PLAN_NEXT 71): 켜 두면 지훈 명령창이 한 번도 안 뜬다
+                G.DebugSetBroAuto(true);
+                broCmdSeen = false;
+                int broActs0 = G.BroActCount;
+                G.DebugSetEnemyHp(200);                     // 지훈 차례가 오도록 넉넉히
                 foreach (var x in FightUntilOver(false)) yield return x;
+                Expect("brother auto attack: acted without a command window", !broCmdSeen && G.BroActCount > broActs0, $"acts {G.BroActCount - broActs0}");
+                G.DebugSetBroAuto(false);
                 foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
                 G.NoGroups = false;
                 G.DebugMobs(true, true);
@@ -1176,7 +1183,7 @@ namespace GirlAdventure.EditorTools
             Expect("town well has water again", G.MapKindNow == MapKind.Oasis && G.WellWaterShown && !G.SandTwisterShown);
         }
 
-        static bool skillUpSeen;
+        static bool skillUpSeen, broCmdSeen;
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
@@ -1186,6 +1193,7 @@ namespace GirlAdventure.EditorTools
             {
                 if (G.BroCommandTurn)
                 {
+                    broCmdSeen = true;
                     foreach (var x in Choose(0)) yield return x;    // 지훈은 늘 검 (대상이 여럿이면 Z 로 첫 적)
                 }
                 else if (G.CommandOpen)

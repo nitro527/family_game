@@ -182,6 +182,21 @@ namespace GirlAdventure.Sim
 
         int Roll(SkillDef s, double power) => SkillLevels.Scale(P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
 
+        /// <summary>
+        /// 지훈 자동 공격 (설정 "지훈 자동 공격", PLAN_NEXT 71 — 3살 지훈이가 명령을 고르지 않아도 되게):
+        /// 보스에게는 MP 가 있으면 번개, 아니면 검. 대상은 HP 가 가장 적게 남은 적 (하나씩 쓰러뜨리게).
+        /// </summary>
+        public (Cmd cmd, int target) BroAuto() => (Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());
+
+        /// <summary>살아 있는 적 중 HP 가 가장 적은 적 번호 (같으면 앞쪽, 모두 쓰러졌으면 -1).</summary>
+        public int WeakestAlive()
+        {
+            int best = -1;
+            for (int i = 0; i < Foes.Count; i++)
+                if (!Foes[i].Down && (best < 0 || Foes[i].Hp < Foes[best].Hp)) best = i;
+            return best;
+        }
+
         /// <summary>동생이 이 명령을 쓸 수 있나: 검은 늘, 번개는 MP 가 있으면.</summary>
         public bool BroCanUse(Cmd c) => Party && !BrotherDown && (c == Cmd.Slash || (c == Cmd.Bolt && P.BroMp >= GameData.Skill(c).Mp));
 

@@ -47,6 +47,17 @@ namespace GirlAdventure.View
             private set => PlayerPrefs.SetInt("bigText", value ? 1 : 0);
         }
 
+        /// <summary>지훈 자동 공격: 켜면 지훈 차례에 명령창 없이 알아서 싸운다 (Sim BattleSystem.BroAuto).</summary>
+        public static bool BroAuto
+        {
+            get => PlayerPrefs.GetInt("broAuto", 0) != 0;
+            private set => PlayerPrefs.SetInt("broAuto", value ? 1 : 0);
+        }
+
+        public static void ToggleBroAuto() => BroAuto = !BroAuto;
+        /// <summary>프로브용.</summary>
+        public static void SetBroAuto(bool on) => BroAuto = on;
+
         public static int MessageFontSize => BigText ? 26 : 23;
         public static int ChoiceFontSize => BigText ? 25 : 22;
 
@@ -63,6 +74,7 @@ namespace GirlAdventure.View
             PlayerPrefs.DeleteKey("textSpeed");
             PlayerPrefs.DeleteKey("flashOn");
             PlayerPrefs.DeleteKey("bigText");
+            PlayerPrefs.DeleteKey("broAuto");
         }
     }
 }

@@ -441,6 +441,23 @@ namespace GirlAdventure.EditorTools
             SkillLevelTests();
             UnderworldTests();
             SaveSafetyTests();
+            BroAutoTests();
+        }
+
+        /// <summary>지훈 자동 공격 (PLAN_NEXT 71): 보스엔 번개(MP 있으면), 보통 적엔 검, 가장 약한 적부터.</summary>
+        static void BroAutoTests()
+        {
+            var p = PlayerState.NewGame("a");
+            p.GainExp(PlayerState.NextExp(8)); p.Boss2Down = true; Quest.TryJoinBrother(p);
+            var boss = new BattleSystem(p, GameData.DesertBoss, new System.Random(1));
+            bool bolt = boss.BroAuto().cmd == Cmd.Bolt;
+            p.BroMp = 0;
+            bool slashNoMp = boss.BroAuto().cmd == Cmd.Slash;
+            var group = new BattleSystem(p, new[] { GameData.Desert[0], GameData.Desert[1], GameData.Desert[0] }, new System.Random(2));
+            group.Foes[2].Hp = 5;
+            var (gc, gt) = group.BroAuto();
+            group.Foes[2].Hp = 0;
+            Check("brother auto: bolt on boss (MP), slash otherwise, weakest foe first", bolt && slashNoMp && gc == Cmd.Slash && gt == 2 && group.WeakestAlive() == 0);
         }
 
         /// <summary>
