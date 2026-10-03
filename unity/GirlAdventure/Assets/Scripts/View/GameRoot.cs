@@ -214,16 +214,33 @@ namespace GirlAdventure.View
             AutoSave();
         }
 
-        /// <summary>완료 화면의 "챕터 N 시작": 챕터 1 → 동굴, 챕터 2 → 사막 (지훈과 함께).</summary>
+        /// <summary>완료 화면의 "챕터 N 시작": 챕터 1 → 동굴, 챕터 2 → 사막 (지훈과 함께), 챕터 3 → 용암 땅 (아빠 합류).</summary>
         void StartNextChapter()
         {
             if (Current != Mode.Ending || P.Chapter >= WorldMap.LastChapter) return;
             confirmFrame = Time.frameCount;
-            bool toDesert = P.Chapter == 2;
-            if (toDesert) Quest.StartChapter3(P); else Quest.StartChapter2(P);
-            facing = "down";
+            int from = P.Chapter;
+            if (from == 3) Quest.StartChapter4(P);
+            else if (from == 2) Quest.StartChapter3(P);
+            else Quest.StartChapter2(P);
+            facing = from == 3 ? "right" : "down";
             sfx.Play("start");
-            StartCoroutine(toDesert ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(from == 3 ? Chapter4Routine() : from == 2 ? Chapter3Routine() : Chapter2Routine());
+        }
+
+        /// <summary>챕터 4 시작 (사용자 2026-10-03): 용암 땅 도입 → 아빠 합류 대사 → "기사 아빠 합류!" 컷인 → 셋이 함께.</summary>
+        IEnumerator Chapter4Routine()
+        {
+            EnterField();
+            busy = true;
+            yield return Talk("ch4_intro");
+            yield return Talk("dad_join");
+            yield return CutinRoutine(Art.UI("Dad/hero"), "기사 아빠 합류!", "lvup");
+            RefreshHud();
+            yield return Talk("dad_joined");
+            HideMessage();
+            AutoSave();
+            busy = false;
         }
 
         IEnumerator Chapter3Routine()
@@ -462,6 +479,17 @@ namespace GirlAdventure.View
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
         public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");
+
+        /// <summary>플레이테스트용: 지금 진행 그대로 완료 화면 (다음 챕터 버튼까지).</summary>
+        public void DebugShowEnding()
+        {
+            StopAllCoroutines();
+            LeaveBattleStage();
+            HideMessage();
+            busy = false;
+            Current = Mode.Ending;
+            ShowEnding();
+        }
 
         public void DebugEnding()
         {

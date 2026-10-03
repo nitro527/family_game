@@ -22,7 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -406,6 +406,82 @@ namespace GirlAdventure.View
             R.Rect(X - 14, Y - 36, 76, 10, Ink);
             for (int i = 0; i < 7; i++) R.Rect(X - 12 + i * 10.4f, Y - 34, 10, 6, i % 2 == 0 ? H("#D8574A") : H("#F6EBD2"));
             R.Circle(X + 24, Y - 31, 6, H("#FFD84A"));                                            // 해 모양 장식
+        }
+
+        // ------------------------------------------------------------------ 용암 땅 (챕터 4)
+        /// <summary>
+        /// 용암 땅: 잿빛 땅(얼룩 + 주황빛이 새는 금) → 용암(가장자리는 빛나는 테두리, 안은 노랑·주황 물결과 검은 딱지)
+        /// → 돌다리 → 검은 바위(회색 바위 타일을 어둡게) → 화산(PIPOYA 시트 화산 그림 2배) → 온천·표지판.
+        /// </summary>
+        static Raster LavaLand(WorldMap m, FieldTiles t)
+        {
+            int w = WorldMap.W * T, h = WorldMap.H * T;
+            var R = new Raster(w, h);
+            var lava = Mask(m, "Lb");
+            var deep = Erode(Mask(m, "L"));
+            Color32 a0 = H("#3A302E"), a1 = H("#574640"), crackGlow = H("#FF7A2A");
+            Color32 l0 = H("#FF5A1A"), l1 = H("#FFB028"), l2 = H("#FFE27A"), crust = H("#5A1E10"), rim = H("#2A1612");
+            for (int py = 0; py < h; py++)
+                for (int px = 0; px < w; px++)
+                {
+                    float n = Fbm(px, py, 41), fine = Hash(px, py, 42);
+                    float wob = (Noise(px / 14f, py / 14f, 43) - .5f) * 14;
+                    float lw = Soft(lava, px - wob * .6f, py + wob * .6f);
+                    var c = Mul(Lerp(a0, a1, n), .94f + fine * .1f);                   // 잿빛 땅
+                    float crack = Mathf.Abs(Noise(px / 22f, py / 22f, 44) - .5f);       // 금 (주황빛)
+                    if (crack < .018f) c = Lerp(c, crackGlow, (1 - crack / .018f) * .55f);
+                    if (lw > .32f)
+                    {
+                        if (lw < .48f) c = Lerp(c, rim, Smooth(.32f, .48f, lw));         // 그을린 가장자리
+                        else
+                        {
+                            float d = Soft(deep, px, py);
+                            float flow = Noise(px / 18f + py / 40f, py / 18f, 45);
+                            var lc = Lerp(l0, l1, flow);
+                            lc = Lerp(lc, l2, Smooth(.65f, .9f, flow) * .8f);
+                            if (Noise(px / 9f, py / 9f, 46) > .72f + d * .1f) lc = Lerp(lc, crust, .7f);   // 검은 딱지
+                            float edge = 1 - Mathf.Abs(lw - .52f) / .05f;                                  // 빛나는 테두리
+                            if (edge > 0) lc = Lerp(lc, l2, edge * .9f);
+                            c = lc;
+                        }
+                    }
+                    R.Blend(px, py, c);
+                }
+            // 돌다리
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'b')
+                    {
+                        // 용암 가장자리가 부드럽게 번져 그려지므로, 다리 양 끝은 둑까지 조금 더 뻗는다
+                        float x0 = x * T - (m.At(x - 1, y) != 'b' ? 14 : 0), x1 = x * T + T + (m.At(x + 1, y) != 'b' ? 14 : 0);
+                        R.Rect(x0, y * T + 6, x1 - x0, T - 12, H("#6E6A72"));
+                        R.Rect(x0, y * T + 6, x1 - x0, 4, H("#9A96A0"));
+                        R.Rect(x0, y * T + T - 10, x1 - x0, 4, H("#3E3A44"));
+                        for (int k = 0; k < 3; k++) R.Rect(x * T + 4 + k * 16, y * T + 12, 1.5f, T - 24, H("#4E4A54"));
+                    }
+            // 검은 바위: 위 칸부터
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'R')
+                    {
+                        if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "RK", x, y);
+                        else { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#5A5662")); }
+                    }
+            // 화산: 시트 (6,4)~(7,5) 의 96×96 용암이 넘치는 화산을 2배 → 4×4 칸
+            if (t != null) R.Stamp(t.Sheet, 6 * T, 4 * T, 2 * T, 2 * T, WorldMap.Volcano.x * T, WorldMap.Volcano.y * T, 2);
+            HotSpring(R, WorldMap.LavaSpring.x * T, WorldMap.LavaSpring.y * T);
+            Sign(R, WorldMap.LavaSign.x * T, WorldMap.LavaSign.y * T);
+            return R;
+        }
+
+        /// <summary>온천: 둥근 돌 테두리 안의 하늘색 물 + 김.</summary>
+        static void HotSpring(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 40, 24, 7, new Color32(0, 0, 0, 80));
+            R.Ellipse(X + 24, Y + 30, 22, 14, H("#6E6A72"));
+            R.Ellipse(X + 24, Y + 29, 18, 10, H("#5FC8E8"));
+            R.Ellipse(X + 20, Y + 27, 8, 3, H("#C8F4FF", 200));
+            for (int i = 0; i < 3; i++) R.Ellipse(X + 14 + i * 10, Y + 12 - i * 3, 5, 7, H("#FFFFFF", 70));   // 김
         }
 
         /// <summary>바위 언덕에 뚫린 동굴 출구 (챕터 2 동굴에서 나온 곳): 어두운 아치 + 돌 테두리 + 안쪽 푸른 수정 빛.</summary>

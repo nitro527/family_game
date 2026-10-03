@@ -743,6 +743,7 @@ namespace GirlAdventure.EditorTools
             Expect("heal spell restores hp for mp", G.P.Lv >= 4 && G.P.Hp > healHp0 && G.P.Mp == healMp0 - GameData.Skill(Cmd.Heal).Mp);
             G.DebugSetHp(G.P.MaxHp);                  // 힐 확인용으로 깎은 HP 는 되돌린다 (보스전 결과가 운에 달리지 않게)
             G.DebugSetMp(healMp0);
+            G.DebugSetEnemyHp(40);                     // 흐름만 확인 (난이도는 SmokeTest 밸런스로 — 게임 난수는 매번 달라 95% 보스전도 가끔 진다)
             foreach (var x in FightUntilOver(true)) yield return x;
             yield return (Func<bool>)(() => G.Current == GameRoot.Mode.Ending);
             yield return 1f;
@@ -1213,7 +1214,7 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
             yield return 1.2f;
             Shot("ch3_clear");
-            Expect("chapter 3 cleared (no next chapter yet)", G.P.Boss3Down && G.Current == GameRoot.Mode.Ending && G.EndingHead.Contains("챕터 3") && G.NextChapterLabel == "", G.EndingHead);
+            Expect("chapter 3 cleared, offers chapter 4", G.P.Boss3Down && G.Current == GameRoot.Mode.Ending && G.EndingHead.Contains("챕터 3") && G.NextChapterLabel.Contains("챕터 4"), G.EndingHead + " / " + G.NextChapterLabel);
             ExpectBgm("ending");
             G.DebugBackToField();
             G.DebugSetVillage(true);
@@ -1222,6 +1223,44 @@ namespace GirlAdventure.EditorTools
             yield return .8f;
             Shot("town_well_water");
             Expect("town well has water again", G.MapKindNow == MapKind.Oasis && G.WellWaterShown && !G.SandTwisterShown);
+
+            // 챕터 4 (C4-4·5, 사용자 2026-10-03): 완료 화면 → "챕터 4 시작" → 용암 땅 + 아빠 합류
+            G.DebugShowEnding();
+            yield return 1.8f;
+            Expect("ending offers chapter 4", G.NextChapterLabel.Contains("챕터 4"), G.NextChapterLabel);
+            Keys.Press(KeyCode.Return);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("용암 땅!") || G.CutinShowing != null)) yield return x;
+            yield return .6f;
+            Shot("ch4_intro");
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("아빠가 왔다") || G.CutinShowing != null)) yield return x;
+            yield return .8f;
+            Shot("dad_join_talk");
+            foreach (var x in SkipTalk(() => G.CutinShowing != null)) yield return x;
+            yield return .9f;
+            Shot("dad_join_cutin");
+            Expect("dad join cut-in", G.CutinShowing != null && G.CutinShowing.Contains("아빠"));
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("chapter 4: lava land with the family of three", G.P.Chapter == 4 && G.MapKindNow == MapKind.Lava && G.P.Has("dad") && G.FollowerVisible("dad") && G.AllyHudCount == 2);
+            ExpectBgm("lava");
+            yield return .5f;
+            Shot("lava_start");
+            G.DebugMobs(true, true);
+            Keys.Hold(KeyCode.RightArrow, true); yield return .9f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return .5f;
+            Shot("lava_walk");
+            G.DebugTeleport(16, 16, "down");
+            yield return .8f;
+            Shot("lava_bridge");
+            G.DebugTeleport(26, 7, "up");
+            yield return .8f;
+            Shot("lava_volcano");
+            G.DebugGroupBattle(1);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .3f;
+            Shot("lava_battle");
+            Expect("lava battle backdrop", G.BattleBackdropName == "lava", G.BattleBackdropName);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
         }
 
         static bool skillUpSeen, broCmdSeen, comboShot;

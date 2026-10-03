@@ -196,6 +196,15 @@ namespace GirlAdventure.View
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }
+                else if (map.Kind == MapKind.Lava)
+                {
+                    ambientTimer = .08f;                // 용암 땅: 아래에서 솟아오르는 불티
+                    var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y - halfH - .2f, 0);
+                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)), Random.Range(3f, 5f),
+                                        Random.Range(.05f, .1f), Random.value < .6f ? new Color(1f, .55f, .15f, .9f) : new Color(1f, .85f, .3f, .9f));
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
                 else if (map.Kind == MapKind.Desert || map.Kind == MapKind.Oasis)
                 {
                     ambientTimer = .1f;

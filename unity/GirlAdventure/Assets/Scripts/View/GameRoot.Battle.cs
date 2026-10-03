@@ -124,7 +124,7 @@ namespace GirlAdventure.View
         Sprite Backdrop(EnemyDef def)
         {
             bool cave = map.IsCaveLike;
-            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : map.Kind == MapKind.Underworld ? "underworld" : cave ? "cave"
+            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : cave ? "cave"
                         : map.Kind == MapKind.Desert ? "desert" : "meadow";
             if (!backdrops.TryGetValue(name, out var s))
             {

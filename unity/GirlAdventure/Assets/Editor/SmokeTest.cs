@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -106,7 +106,7 @@ namespace GirlAdventure.EditorTools
             Check("monster art loads", badArt == "" && arts >= 1, $"arts={arts} {badArt}");
             // 전투 배경 그림: 맵 기본(meadow/cave) + 적이 정한 것 모두 1280×720 으로 들어와야 함 (NPOT 늘림 없음)
             string badBg = "";
-            var bgNames = new List<string> { "meadow", "cave", "desert", "underworld" };
+            var bgNames = new List<string> { "meadow", "cave", "desert", "underworld", "lava" };
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())
                     if (!string.IsNullOrEmpty(d.Backdrop)) bgNames.Add(d.Backdrop);
@@ -465,6 +465,37 @@ namespace GirlAdventure.EditorTools
             SaveSafetyTests();
             BroAutoTests();
             PartyTests();
+            LavaTests();
+        }
+
+        /// <summary>챕터 4 용암 땅 (C4-4·5, 사용자 2026-10-03): 맵 이어짐(돌다리), 온천·표지판·화산, 챕터 4 시작에 아빠 합류, 세이브.</summary>
+        static void LavaTests()
+        {
+            var m = WorldMap.Lava();
+            var st = WorldMap.LavaStart;
+            var reach = Reach(m, st);
+            int free = 0, unreached = 0, lava = 0, bridges = 0;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char c = m.At(x, y);
+                    if (c == 'L') lava++;
+                    if (c == 'b') bridges++;
+                    if (!m.Blocked(x, y)) { free++; if (!reach[x, y]) unreached++; }
+                }
+            Check("lava land: start safe, every open tile reachable (bridges cross the river)", m.Kind == MapKind.Lava && !m.Blocked(st.x, st.y) && m.Safe(st.x, st.y)
+                  && unreached == 0 && free > 400 && lava > 40 && bridges >= 4 && m.Blocked(16, 5) == (m.At(16, 5) == 'L' || m.At(16, 5) == 'R'), $"free {free} unreached {unreached} lava {lava} bridges {bridges}");
+            Check("lava land: hot spring revive, sign, volcano, edges rock", m.At(m.Spring.x, m.Spring.y) == 'F' && reach[m.RevivePoint.x, m.RevivePoint.y]
+                  && m.At(m.SignPos.x, m.SignPos.y) == 'S' && m.At(WorldMap.Volcano.x, WorldMap.Volcano.y) == 'K' && m.At(-1, 3) == 'R'
+                  && WorldMap.ForChapter(4).Kind == MapKind.Lava && WorldMap.LastChapter == 4 && !WorldMap.HasTown(4));
+            var p = PlayerState.NewGame("t");
+            p.GainExp(PlayerState.NextExp(12));
+            p.Boss2Down = true; p.Boss3Down = true; p.Chapter = 3; Quest.TryJoinBrother(p); p.Hp = 1; p.InVillage = true;
+            Quest.StartChapter4(p);
+            Check("chapter 4 start: dad joins, lava start, healed, not in town", p.Chapter == 4 && p.Has("dad") && p.Companions.Count == 2 && p.Companions[1].Id == "dad"
+                  && (p.X, p.Y) == st && p.Hp == p.MaxHp && !p.InVillage);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("chapter 4 save/load: lava map, dad kept", q.Chapter == 4 && q.Has("dad") && (q.X, q.Y) == st && WorldMap.ForPlayer(q.Chapter, q.InVillage, q.Underground).Kind == MapKind.Lava);
         }
 
         /// <summary>
@@ -1575,13 +1606,13 @@ namespace GirlAdventure.EditorTools
         static void MusicTests()
         {
             Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
-            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "underworld", "battle", "boss", "ending" })
+            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "underworld", "lava", "battle", "boss", "ending" })
             {
                 var s = Music.Get(name);
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert" || name == "underworld";     // A-B 16마디 곡
+                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert" || name == "underworld" || name == "lava";     // A-B 16마디 곡
                 Check($"bgm {name} loops cleanly", (longSong ? lead == 128 : lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;

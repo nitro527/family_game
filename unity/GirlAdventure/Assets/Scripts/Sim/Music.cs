@@ -106,6 +106,21 @@ namespace GirlAdventure.Sim
             },
             new Song
             {
+                Name = "lava", Bpm = 120,
+                // 용암 땅 (챕터 4): A 는 라단조로 무겁게 쿵쿵 (아빠 발걸음), B 는 바단조→미 로 화산이 끓어오르듯 올라갔다 A 로
+                Lead = "A4.2 C5.2 E5.2 A5.2 | G#5.3 F5 E5.4 | D5.2 F5.2 A5.2 D6.2 | C6.3 B5 A5.4 |" +
+                       "A4.2 C5.2 E5.2 A5.2 | B5.3 C6 D6.4 | C6.2 B5.2 A5.2 G#5.2 | A5.6 R.2 |" +
+                       "F5.2 G#5.2 C6.4 | A#5.2 G#5.2 G5.4 | F5.2 G5.2 G#5.2 A#5.2 | C6.6 R.2 |" +
+                       "C6.2 D6.2 E6.4 | D6.2 C6.2 B5.4 | A5.2 B5.2 C6.2 D6.2 | E6.6 R.2",
+                Bass = "A1 A2 A1 A2 A1 A2 A1 A2 | E1 E2 E1 E2 E1 E2 E1 E2 | D2 D3 D2 D3 D2 D3 D2 D3 | E1 E2 E1 E2 E1 E2 E1 E2 |" +
+                       "A1 A2 A1 A2 A1 A2 A1 A2 | G1 G2 G1 G2 G1 G2 G1 G2 | E1 E2 E1 E2 E1 E2 E1 E2 | A1 A2 A1 A2 A1.4 |" +
+                       "F1 F2 F1 F2 F1 F2 F1 F2 | C#2 C#3 C#2 C#3 C2 C3 C2 C3 | F1 F2 F1 F2 G1 G2 G1 G2 | C2 C3 C2 C3 C2 C3 C2 C3 |" +
+                       "A1 A2 A1 A2 A1 A2 A1 A2 | E1 E2 E1 E2 E1 E2 E1 E2 | F1 F2 F1 F2 D2 D3 D2 D3 | E1 E2 E1 E2 E1 E2 E1 E2",
+                Drums = "k.h.k.h.k.h.s.h." + "k.h.k.h.k.hks.h." + "k.h.k.h.k.h.s.h." + "k.h.k.h.k.hks.s." +
+                        "kkh.s.h.kkh.s.h." + "kkh.s.h.kkh.s.hh" + "kkh.s.h.kkh.s.h." + "kkh.s.h.k.s.s.s.",
+            },
+            new Song
+            {
                 Name = "underworld", Bpm = 84, SoftLead = true,
                 // 지하세계 (숨겨진 구멍 아래): A 는 온음계(도 레 미 파♯ 솔♯ 라♯)로 둥둥 떠다니고, B 는 라단조로 살짝 무섭게 내려갔다가 돌아온다
                 Lead = "C5.2 D5.2 E5.2 F#5.2 | G#5.4 E5.4 | A#5.2 G#5.2 F#5.2 E5.2 | D5.6 R.2 |" +

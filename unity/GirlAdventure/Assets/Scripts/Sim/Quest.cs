@@ -75,6 +75,21 @@ namespace GirlAdventure.Sim
             p.Y = WorldMap.DesertStart.y;
         }
 
+        /// <summary>
+        /// 챕터 3 을 깬 뒤 챕터 4 (용암 땅)로: 챕터를 시작할 때 아빠가 합류한다 (사용자 2026-10-03). 회복하고 용암 땅 왼쪽 아래에서 출발.
+        /// </summary>
+        public static void StartChapter4(PlayerState p)
+        {
+            TryJoinBrother(p);
+            p.Join("dad");
+            p.Chapter = 4;
+            p.InVillage = false;
+            p.Underground = false;
+            p.RestoreAll();
+            p.X = WorldMap.LavaStart.x;
+            p.Y = WorldMap.LavaStart.y;
+        }
+
         /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>
         public static void StartChapter2(PlayerState p)
         {
