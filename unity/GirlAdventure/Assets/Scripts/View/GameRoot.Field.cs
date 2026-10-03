@@ -773,7 +773,7 @@ namespace GirlAdventure.View
                 int dx = facing == "left" ? -1 : facing == "right" ? 1 : 0, dy = facing == "up" ? -1 : facing == "down" ? 1 : 0;
                 if (Quest.Walkable(map, P, P.X + dx, P.Y + dy) && mobs.At(P.X + dx, P.Y + dy) == null)
                 {
-                    if (!sliding) sfx.Play("mv_spin");
+                    if (!sliding) sfx.Play("slide");
                     sliding = true;
                     TryMove(facing);
                     return;
@@ -782,7 +782,7 @@ namespace GirlAdventure.View
             bool slid = sliding;
             sliding = false;
             if (slid && !P.Opened.Contains("ice_hint")) { P.Opened.Add("ice_hint"); StartCoroutine(IceHintRoutine()); }
-            sfx.Play("step");
+            sfx.Play(map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown ? "step_snow" : "step");
             char here = map.At(P.X, P.Y);
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }

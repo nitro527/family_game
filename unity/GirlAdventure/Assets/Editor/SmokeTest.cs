@@ -702,6 +702,17 @@ namespace GirlAdventure.EditorTools
                   && m.SlideEnd(13, 13, -1, 0, walk) is var off && !m.Slippery(off.x, off.y) && !m.Slippery(4, 20), $"east {east} south {south} rock {rockStop}");
             var sp = PlayerState.NewGame("c");
             var sc1 = Quest.OpenSnowChest(sp, out var sw);
+            try   // 그림 확인용: 닫힌·열린 보물상자 (unity/playtest/chests.png)
+            {
+                Painter.ReadableForTests = true;
+                var a = Painter.ChestTexture(false); var b2 = Painter.ChestTexture(true);
+                var sheet = new Texture2D(a.width * 2, a.height, TextureFormat.RGBA32, false);
+                sheet.SetPixels32(0, 0, a.width, a.height, a.GetPixels32());
+                sheet.SetPixels32(a.width, 0, b2.width, b2.height, b2.GetPixels32());
+                System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../playtest/chests.png")), sheet.EncodeToPNG());
+            }
+            catch (Exception e) { Debug.LogWarning("chests.png: " + e.Message); }
+            finally { Painter.ReadableForTests = false; }
             Check("snow chest: pendant once, gear but not sold", sc1 == ChestResult.Got && Quest.OpenSnowChest(sp, out _) == ChestResult.Empty && sp.Gear.Contains("snow_pendant")
                   && sw == "눈꽃 목걸이" && Equipment.IsGear("snow_pendant") && !Shop.Goods(MapKind.LavaTown).Contains("snow_pendant"));
             Check("snow song + talk", Music.Get("snow")?.Name == "snow" && GameData.HasTalk("ch5_intro") && GameData.HasTalk("sign_snow"));
@@ -1811,6 +1822,24 @@ namespace GirlAdventure.EditorTools
             Check("holes keep paths open", fr[WorldMap.Gate.x, WorldMap.Gate.y] && fr[WorldMap.VillageGate.x, WorldMap.VillageGate.y] && caveOk
                   && Reach(c, WorldMap.CaveStart)[WorldMap.BaseDoor.x, WorldMap.BaseDoor.y + 1]);
             Check("no holes in village", v.Holes.Count == 0);
+            // 용암 땅·눈 덮인 땅에도 구멍 셋 (Q-8): 바닥, 닿음, 길을 막지 않음, 2단 괴물은 그 땅의 큰 젤리
+            string bad2 = "";
+            foreach (var m in new[] { WorldMap.Lava(), WorldMap.Snow() })
+            {
+                var reach = Reach(m, m.SpawnPoint);
+                if (m.Holes.Count != 3 || m.SecretHole.x >= 0) bad2 += $"{m.Kind} count {m.Holes.Count} ";
+                foreach (var (x, y) in m.Holes)
+                {
+                    bool side = false;
+                    foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) side |= reach[x + dx, y + dy];
+                    if (m.At(x, y) != 'o' || !side || m.Safe(x, y)) bad2 += $"{m.Kind}({x},{y}) ";
+                }
+            }
+            var lr = Reach(WorldMap.Lava(), WorldMap.LavaStart);
+            var sr2 = Reach(WorldMap.Snow(), WorldMap.SnowStart);
+            Check("lava/snow holes: 3 each, reachable, paths still open, local big jelly", bad2 == "" && lr[WorldMap.VolcanoDoor.x, WorldMap.VolcanoDoor.y] && lr[WorldMap.LavaGate.x, WorldMap.LavaGate.y]
+                  && sr2[WorldMap.SnowBossDoor.x, WorldMap.SnowBossDoor.y] && sr2[WorldMap.SnowGate.x, WorldMap.SnowGate.y]
+                  && Holes.BigMonster(MapKind.Lava).Name == "큰 용암 젤리" && Holes.BigMonster(MapKind.Snow).Name == "큰 눈송이 젤리", bad2);
             Check("hole monster is tier 2", Holes.BigMonster(MapKind.Field).Tier == 2 && Holes.BigMonster(MapKind.Cave).Tier == 2,
                   $"{Holes.BigMonster(MapKind.Field).Name}/{Holes.BigMonster(MapKind.Cave).Name}");
 

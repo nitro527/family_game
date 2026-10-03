@@ -377,6 +377,7 @@ namespace GirlAdventure.Sim
             m.Fill(9, 20, 30, 20, '=');
             m.Set(SnowGate.x, SnowGate.y, 'V');                        // 눈꽃 마을 문 (C5-4)
             m.Set(SnowBossDoor.x, SnowBossDoor.y, 'B');                // 눈 산 동굴 입구: 예티 (C5-5)
+            m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));  // 수상한 구멍 (Q-8, 숨겨진 구멍은 없음)
             m.Fill(28, 7, 28, 20, '=');
             // 출발 자리 (안전) + 모닥불 + 표지판 + 눈사람
             m.Fill(2, 18, 8, 21, ':');
@@ -441,6 +442,7 @@ namespace GirlAdventure.Sim
             m.Set(LavaSpring.x, LavaSpring.y, 'F');
             m.Set(LavaSign.x, LavaSign.y, 'S');
             m.Set(LavaGate.x, LavaGate.y, 'V');
+            m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));  // 수상한 구멍 (Q-8, 숨겨진 구멍은 없음)
             m.Set(VolcanoDoor.x, VolcanoDoor.y, 'B');
             return m;
         }

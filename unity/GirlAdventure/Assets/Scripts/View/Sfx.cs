@@ -16,6 +16,8 @@ namespace GirlAdventure.View
             src = gameObject.AddComponent<AudioSource>();
             src.playOnAwake = false;
             Add("step", Wave.Square, .025f, .10f, 180);
+            Add("step_snow", Wave.Saw, .03f, .06f, 120, 95);                      // 눈 밟는 소리 (뽀득)
+            Add("slide", Wave.Triangle, .045f, .16f, 1568, 1397, 1245, 1175, 1046, 988, 880);   // 얼음 미끄럼 (슈르르륵)
             Add("bump", Wave.Square, .05f, .18f, 110);
             Add("select", Wave.Square, .03f, .15f, 880);
             Add("encounter", Wave.Square, .06f, .22f, 523, 659, 784, 1046, 784, 1046);

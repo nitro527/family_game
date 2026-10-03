@@ -20,11 +20,15 @@ namespace GirlAdventure.View
             R.Rect(x + 7, y + 30, 34, 3, dark);
             if (open)
             {
-                R.Rect(x + 7, y + 20, 34, 5, Raster.Hex("#2A1808"));                // 안쪽 그림자
-                R.Rect(x + 5, y + 4, 38, 16, Ink);                                   // 젖혀진 뚜껑
-                R.Rect(x + 7, y + 6, 34, 12, wood);
-                R.Rect(x + 7, y + 11, 34, 2, dark);
-                R.Circle(x + 24, y + 22, 3, Raster.Hex("#FFF6B0"));
+                // 뒤로 젖혀진 뚜껑 (안쪽 면이 보여 어둡게) + 안이 금빛으로 반짝 — 닫힌 상자와 한눈에 달라 보이게 (Q-9)
+                R.Polygon(new[] { new Vector2(x + 5, y + 21), new Vector2(x + 9, y + 2), new Vector2(x + 39, y + 2), new Vector2(x + 43, y + 21) }, Raster.Hex("#6A3A14"), Ink, 2.5f);
+                R.Rect(x + 10, y + 9, 28, 2, dark);
+                R.Rect(x + 7, y + 20, 34, 9, Raster.Hex("#2A1808"));                // 안쪽 그림자
+                R.Ellipse(x + 24, y + 22, 15, 6, new Color32(255, 230, 120, 150));  // 금빛
+                foreach (var (cx, cy) in new[] { (15f, 24f), (21f, 22f), (27f, 24f), (33f, 22f) }) R.Circle(x + cx, y + cy, 3, gold);
+                R.Circle(x + 24, y + 16, 2, Raster.Hex("#FFFFFF"));
+                R.Line(x + 24, y + 11, x + 24, y + 21, 1.2f, Raster.Hex("#FFFFFF"));
+                R.Line(x + 19, y + 16, x + 29, y + 16, 1.2f, Raster.Hex("#FFFFFF"));
             }
             else
             {
@@ -42,7 +46,7 @@ namespace GirlAdventure.View
         {
             var R = new Raster(Tile, Tile);
             Chest(R, 0, 0, open);
-            return R.ToTexture();
+            return R.ToTexture(readable: ReadableForTests);
         }
 
         /// <summary>킹 젤리 성 (초원 오른쪽 아래).</summary>

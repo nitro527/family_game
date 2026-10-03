@@ -19,7 +19,7 @@ namespace GirlAdventure.View
         Sprite HoleSprite(MapKind k, bool empty)
         {
             if (!holeSprites.TryGetValue((k, empty), out var s))
-                holeSprites[(k, empty)] = s = Art.FromTexture(HoleTexture(k == MapKind.Cave, empty), new Vector2(0, 1), Painter.Tile);
+                holeSprites[(k, empty)] = s = Art.FromTexture(HoleTexture(k, empty), new Vector2(0, 1), Painter.Tile);
             return s;
         }
 
@@ -28,10 +28,12 @@ namespace GirlAdventure.View
         /// 둥근 흙 턱 없이 땅에 뚫린 까만 구멍. 가장자리만 살짝 어둡게 번지고 금 몇 줄, 안쪽 벽이 조금 보인다.
         /// 들여다본 구멍은 얕은 바닥과 자갈이 보인다.
         /// </summary>
-        static Texture2D HoleTexture(bool cave, bool empty)
+        static Texture2D HoleTexture(MapKind k, bool empty)
         {
+            bool cave = k == MapKind.Cave;
             var R = new Raster(Painter.Tile, Painter.Tile);
-            Color32 shade = cave ? new Color32(20, 14, 26, 90) : new Color32(40, 26, 12, 90), crack = cave ? Raster.Hex("#2A2232") : Raster.Hex("#4A3420");
+            Color32 shade = cave ? new Color32(20, 14, 26, 90) : k == MapKind.Snow ? new Color32(60, 80, 130, 80) : k == MapKind.Lava ? new Color32(30, 10, 6, 110) : new Color32(40, 26, 12, 90);
+            Color32 crack = cave ? Raster.Hex("#2A2232") : k == MapKind.Snow ? Raster.Hex("#8EA4C4") : k == MapKind.Lava ? Raster.Hex("#FF7A2A") : Raster.Hex("#4A3420");   // 눈밭은 푸른 금, 용암 땅은 주황빛 금
             R.Ellipse(24, 30, 20, 12, shade);                                  // 가장자리가 살짝 어둡게 번진 땅
             R.Ellipse(24, 30, 16.5f, 9.5f, Raster.Hex("#0C0810"));             // 구멍
             R.Ellipse(24, 26.5f, 13, 4, cave ? Raster.Hex("#2E2638") : Raster.Hex("#3A2814"));   // 위쪽 안벽 (조금 보인다)
