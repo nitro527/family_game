@@ -163,13 +163,14 @@ namespace GirlAdventure.View
             }
         }
 
-        /// <summary>동료 창은 서진 창이 보일 때, 합류한 동료 수만큼. 동료가 둘 이상이면 안내 띠를 짧게 오른쪽으로.</summary>
+        /// <summary>동료 창은 서진 창이 보일 때, 합류한 동료 수만큼 (집 안은 빼고). 동료가 둘 이상이면 안내 띠를 짧게 오른쪽으로.</summary>
         void TickBroHud()
         {
             bool any = false;
             for (int i = 0; i < allyHuds.Count; i++)
             {
-                bool on = hudWin.activeSelf && P != null && i < P.Companions.Count;
+                bool on = hudWin.activeSelf && P != null && i < P.Companions.Count
+                          && (map == null || map.Kind != MapKind.Home);       // 집 안에선 동료 창을 접는다 (방 위쪽 벽·창문을 가리지 않게)
                 any |= on;
                 if (allyHuds[i].win.activeSelf != on) { allyHuds[i].win.SetActive(on); if (on) RefreshHud(); }
             }

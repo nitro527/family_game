@@ -922,9 +922,12 @@ namespace GirlAdventure.View
         {
             var R = new Raster(WorldMap.W * T, WorldMap.H * T);
             R.Rect(0, 0, WorldMap.W * T, WorldMap.H * T, H("#0A0710"));
-            int roof = m.Room >= 0 && m.Room < WorldMap.Houses.Length ? WorldMap.Houses[m.Room].roof : 0;
-            string[][] papers = { new[] { "#F7DCD4", "#EBC4BA", "#D8574A" }, new[] { "#DAE5F7", "#BFCDEA", "#4A7BD8" }, new[] { "#DCF0D4", "#BFDDB3", "#4FA85A" } };
-            var pc = papers[roof % 3];
+            int style = m.Room >= 0 && m.Room < WorldMap.AllHouses.Length ? WorldMap.AllHouses[m.Room].style : 0;
+            string[][] papers = { new[] { "#F7DCD4", "#EBC4BA", "#D8574A" }, new[] { "#DAE5F7", "#BFCDEA", "#4A7BD8" }, new[] { "#DCF0D4", "#BFDDB3", "#4FA85A" },
+                                  new[] { "#F4E2C0", "#E6CDA0", "#C8783A" },     // 흙벽돌 (오아시스)
+                                  new[] { "#DCD8DC", "#C8C4CC", "#B8643A" },     // 돌집 (온천)
+                                  new[] { "#E8C898", "#D4AE78", "#4A7BD8" } };   // 통나무집 (눈꽃)
+            var pc = papers[style % papers.Length];
             float L = 12 * T, Tp = 6 * T, Wd = 11 * T, Ht = 10 * T;
             R.Rect(L - 4, Tp - 4, Wd + 8, Ht + 8, Ink);                                   // 바깥 테두리
             R.Rect(L, Tp, Wd, Ht, H("#5A3A24"));                                            // 벽 (나무)

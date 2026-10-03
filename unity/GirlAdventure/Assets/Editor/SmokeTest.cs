@@ -710,16 +710,17 @@ namespace GirlAdventure.EditorTools
         /// <summary>집 안 (P-5): 마을 집 문마다 방, 문 앞이 마을에서 닿음, 방 안 주민·상자·침대·책장에 닿음, 상자 한 번, 집 안 저장은 문 앞으로.</summary>
         static void HomeTests()
         {
-            var v = WorldMap.Village();
-            Npcs.Place(v);
-            var vr = Reach(v, WorldMap.VillageStart);
+            var towns = new Dictionary<MapKind, (WorldMap m, bool[,] r)>();
+            foreach (var t in new[] { WorldMap.Village(), WorldMap.OasisTown(), WorldMap.LavaTown(), WorldMap.SnowTown() }) { Npcs.Place(t); towns[t.Kind] = (t, Reach(t, t.SpawnPoint)); }
             string bad = "";
-            int residents = 0;
-            for (int i = 0; i < WorldMap.Houses.Length; i++)
+            int residents = 0, inns = 0;
+            for (int i = 0; i < WorldMap.AllHouses.Length; i++)
             {
-                var (hx, hy, _) = WorldMap.Houses[i];
+                var (town, hx, hy, _) = WorldMap.AllHouses[i];
+                var (v, vr) = towns[town];
                 var front = WorldMap.HomeDoorFront(i);
-                if (v.At(hx + 1, hy + 1) != 'h' || WorldMap.HouseAtDoor(hx + 1, hy + 1) != i || v.Blocked(front.x, front.y) || !vr[front.x, front.y]) bad += $"door{i} ";
+                if (WorldMap.IsInnHome(i)) inns++;
+                if (v.At(hx + 1, hy + 1) != 'h' || WorldMap.HouseAtDoor(town, hx + 1, hy + 1) != i || v.Blocked(front.x, front.y) || !vr[front.x, front.y]) bad += $"door{i}({town}) ";
                 var m = WorldMap.Home(i);
                 Npcs.Place(m);
                 var r = Reach(m, WorldMap.HomeStart);
@@ -733,9 +734,10 @@ namespace GirlAdventure.EditorTools
                         if (m.EncounterRate(x, y) > 0) bad += $"{i}:enc@{x},{y} ";
                     }
                 foreach (var n in Npcs.On(m)) { residents++; if (!GameData.HasTalk(n.Talk)) bad += n.Id + ":talk "; }
-                if ((m.Find('H').x >= 0) != Quest.HasHomeChest(i)) bad += $"chest{i} ";
+                if ((m.Find('H').x >= 0) != Quest.HasHomeChest(i) || Quest.HasHomeChest(i) == WorldMap.IsInnHome(i)) bad += $"chest{i} ";
             }
-            Check("homes: every village house opens to a room, door front reachable, furniture & residents reachable, no monsters", bad == "" && residents == WorldMap.Houses.Length, bad);
+            Check("homes: every town house (4 towns) opens to a room, door front reachable, furniture & residents reachable, inn has no chest, no monsters",
+                  bad == "" && residents == WorldMap.AllHouses.Length && inns == 4 && Quest.HomeChests.Length == WorldMap.AllHouses.Length && WorldMap.AllHouses.Length == 18, bad + $" residents {residents} inns {inns}");
             var p = PlayerState.NewGame("h");
             int candy0 = p.Candy, gold0 = p.Gold;
             var r0 = Quest.OpenHomeChest(p, 0, out var what0);

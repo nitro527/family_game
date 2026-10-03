@@ -63,7 +63,7 @@ namespace GirlAdventure.View
             snowMap = WorldMap.Snow();
             snowTownMap = WorldMap.SnowTown();
             Npcs.Place(snowTownMap);
-            homeMaps = new WorldMap[WorldMap.Houses.Length];
+            homeMaps = new WorldMap[WorldMap.AllHouses.Length];
             for (int i = 0; i < homeMaps.Length; i++) { homeMaps[i] = WorldMap.Home(i); Npcs.Place(homeMaps[i]); }
             mobs = new FieldMonsters(rng);
             Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
@@ -561,7 +561,7 @@ namespace GirlAdventure.View
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
                 else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
-                else if (c == 'h' && map.Kind == MapKind.Village && dir == "up" && WorldMap.HouseAtDoor(nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(nx, ny)));
+                else if (c == 'h' && map.IsTown && dir == "up" && WorldMap.HouseAtDoor(map.Kind, nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(map.Kind, nx, ny)));
                 else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
                 else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
                 else if (c == 'D') StartCoroutine(DoorRoutine());

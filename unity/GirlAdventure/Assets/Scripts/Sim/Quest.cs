@@ -90,8 +90,14 @@ namespace GirlAdventure.Sim
             p.Y = WorldMap.LavaStart.y;
         }
 
-        /// <summary>별빛 마을 집 안 보물상자 (P-5, 집 번호 순): 사탕·물약·(여관은 없음)·골드·달님 사탕. ✏️ 임시</summary>
-        public static readonly (string id, int n)[] HomeChests = { ("candy", 2), ("potion", 1), (null, 0), ("gold", 30), ("moon", 1) };
+        /// <summary>집 안 보물상자 (집 번호 = WorldMap.AllHouses 순, 여관은 없음). ✏️ 임시 — 별빛 → 오아시스 → 온천 → 눈꽃 마을로 갈수록 조금씩 많이.</summary>
+        public static readonly (string id, int n)[] HomeChests =
+        {
+            ("candy", 2), ("potion", 1), (null, 0), ("gold", 30), ("moon", 1),                 // 별빛 마을
+            ("moon", 1), ("gold", 50), (null, 0), ("potion", 2), ("candy", 3),                  // 오아시스 마을
+            ("moon", 2), (null, 0), ("gold", 80), ("potion", 3),                                // 온천 마을
+            ("moon", 2), (null, 0), ("gold", 100), ("potion", 3),                               // 눈꽃 마을
+        };
         public static string HomeChestId(int room) => "home" + room;
         public static bool HasHomeChest(int room) => room >= 0 && room < HomeChests.Length && HomeChests[room].id != null;
 

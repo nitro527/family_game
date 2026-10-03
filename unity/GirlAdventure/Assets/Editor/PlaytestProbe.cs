@@ -1439,6 +1439,22 @@ namespace GirlAdventure.EditorTools
             Shot("snowtown_elder");
             Expect("snow elder mentions the yeti", G.MessageText.Contains("눈꽃 마을 어른 젤리") || G.MessageText.Contains("눈 산"));
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            // 눈꽃 마을 통나무집 안 (Q: 다른 마을 집도 들어가기)
+            int cabin = Array.FindIndex(WorldMap.AllHouses, h => h.town == MapKind.SnowTown);
+            var cabinFront = WorldMap.HomeDoorFront(cabin);
+            G.DebugTeleport(cabinFront.x, cabinFront.y, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return (Func<bool>)(() => G.MapKind == MapKind.Home);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            yield return .4f;
+            Shot("snowtown_cabin");
+            Expect("entered a snow town cabin", G.MapKind == MapKind.Home && G.P.Home == cabin);
+            G.DebugTeleport(WorldMap.HomeStart.x, WorldMap.HomeStart.y, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return (Func<bool>)(() => G.MapKind == MapKind.SnowTown && !G.Busy);
+            Expect("left the cabin to its door", (G.P.X, G.P.Y) == cabinFront);
             G.DebugTeleport(WorldMap.SnowTownStart.x, WorldMap.SnowTownStart.y, "down");
             yield return .3f;
             Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);

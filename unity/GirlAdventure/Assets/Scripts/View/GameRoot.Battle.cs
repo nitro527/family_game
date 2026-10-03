@@ -560,6 +560,8 @@ namespace GirlAdventure.View
             frame.effectColor = new Color(0, 0, 0, .9f);
             frame.effectDistance = new Vector2(2, -2);
             enemyHpText = UIKit.Label(enemyLabel.transform, "EnemyHPText", "", 254, 35, 120, 24, 16, TextAnchor.MiddleLeft, Color.white, true);
+            // 밝은 배경(눈밭·사막)에서도 읽히게 이름·HP 글자 테두리를 두껍게
+            foreach (var t in new[] { enemyLabel, enemyHpText }) t.GetComponent<TextRim>().effectDistance = new Vector2(2f, 2f);
             enemyTagGroup = enemyLabel.gameObject.AddComponent<CanvasGroup>();
             enemyTagGroup.blocksRaycasts = false;
         }
@@ -595,6 +597,7 @@ namespace GirlAdventure.View
             for (int i = 0; i < groupTags.Length; i++)
             {
                 groupTags[i] = UIKit.Label(ui, "FoeTag" + i, "", 0, 0, 120, 26, 16, TextAnchor.MiddleCenter, Color.white, true);
+                groupTags[i].GetComponent<TextRim>().effectDistance = new Vector2(1.7f, 1.7f);
                 groupBars[i] = UIKit.Bar(groupTags[i].transform, "Hp", 22, 26, 76, 7, new Color32(86, 212, 106, 255));
                 groupGroups[i] = groupTags[i].gameObject.AddComponent<CanvasGroup>();
                 groupGroups[i].blocksRaycasts = false;

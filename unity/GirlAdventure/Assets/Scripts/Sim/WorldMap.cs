@@ -72,17 +72,43 @@ namespace GirlAdventure.Sim
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
         public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
+
+        /// <summary>
+        /// 들어갈 수 있는 집 전부 (P-5 별빛 마을 → 오아시스·온천·눈꽃 마을까지): (마을, 왼쪽 위 칸, 벽지 스타일).
+        /// 스타일 0~2 = 별빛 마을 지붕 색, 3 흙벽돌, 4 돌집, 5 통나무집. 번호가 집 안 맵의 Room (별빛 마을이 0~4).
+        /// </summary>
+        public static (MapKind town, int x, int y, int style)[] AllHouses => allHouses ??= BuildAllHouses();
+        static (MapKind town, int x, int y, int style)[] allHouses;
+        static (MapKind, int, int, int)[] BuildAllHouses()
+        {
+            var l = new List<(MapKind, int, int, int)>();
+            foreach (var (x, y, roof) in Houses) l.Add((MapKind.Village, x, y, roof));
+            foreach (var (x, y) in TownHouses) l.Add((MapKind.Oasis, x, y, 3));
+            foreach (var (x, y) in LavaTownHouses) l.Add((MapKind.LavaTown, x, y, 4));
+            foreach (var (x, y) in SnowTownHouses) l.Add((MapKind.SnowTown, x, y, 5));
+            return l.ToArray();
+        }
+
+        /// <summary>그 집이 마을 여관인가 (여관 안은 침대 셋, 보물상자 없음).</summary>
+        public static bool IsInnHome(int room)
+        {
+            if (room < 0 || room >= AllHouses.Length) return false;
+            var town = AllHouses[room].town;
+            int first = Array.FindIndex(AllHouses, h => h.town == town);
+            int inn = town == MapKind.Village ? InnHouse : town == MapKind.Oasis ? TownInn : town == MapKind.LavaTown ? LavaTownInn : SnowTownInn;
+            return room - first == inn;
+        }
         const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPn";
         // 집 안 (P-5): 방 하나 (바닥 13..21 × 8..14), 아래 벽 가운데 문
         public static readonly (int x, int y) HomeDoor = (17, 15), HomeStart = (17, 14);
-        /// <summary>집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호, 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
-        public static int HouseAtDoor(int x, int y)
+        /// <summary>그 마을의 집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호(AllHouses), 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
+        public static int HouseAtDoor(MapKind town, int x, int y)
         {
-            for (int i = 0; i < Houses.Length; i++) if (x == Houses[i].x + 1 && y == Houses[i].y + 1) return i;
+            for (int i = 0; i < AllHouses.Length; i++) if (AllHouses[i].town == town && x == AllHouses[i].x + 1 && y == AllHouses[i].y + 1) return i;
             return -1;
         }
         /// <summary>집 문 바로 앞 (마을, 나오면 여기 서서 아래를 본다).</summary>
-        public static (int x, int y) HomeDoorFront(int house) => (Houses[house].x + 1, Houses[house].y + 2);
+        public static (int x, int y) HomeDoorFront(int house) => (AllHouses[house].x + 1, AllHouses[house].y + 2);
         /// <summary>집 안 맵이면 몇 번째 집인지 (아니면 -1).</summary>
         public int Room { get; private set; } = -1;
 
@@ -268,7 +294,7 @@ namespace GirlAdventure.Sim
             bool left = room % 2 == 0;
             int bed = left ? 13 : 21;
             m.Set(bed, 8, 'k'); m.Set(bed, 9, 'k');
-            if (room == InnHouse)
+            if (IsInnHome(room))
                 foreach (int bx in new[] { 15, 17 }) { m.Set(bx, 8, 'k'); m.Set(bx, 9, 'k'); }
             else m.Set(left ? 21 : 13, 8, 'H');
             m.Set(left ? 16 : 18, 7, 'q');
