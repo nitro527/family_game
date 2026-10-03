@@ -67,6 +67,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down",
         };
 
         static void DataTests()
@@ -153,7 +154,7 @@ namespace GirlAdventure.EditorTools
             foreach (int i in GameData.EncounterPool(MapKind.Field, 3, 4)) nearSmall &= GameData.Normal[i].Tier < 2;
             foreach (int i in GameData.EncounterPool(MapKind.Field, 10, 11)) nearSmall &= GameData.Normal[i].Tier < 2;
             Check("big jelly = stronger same color, far only", badTier == "" && nearSmall && GameData.Normal[GameData.EncounterPool(MapKind.Field, 20, 15)[4]].Tier == 2, badTier);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", PlayerState.DefaultName), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기") };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", PlayerState.DefaultName), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기"), ("bro", PlayerState.BrotherName) };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -166,6 +167,17 @@ namespace GirlAdventure.EditorTools
                     }
                 Check($"dialogue {id}", ok, sample);
             }
+            // 대사 얼굴: "smile" → Girl/face_smile, "bro_smile" → Boy/face_smile 그림이 실제로 있어야 한다
+            string noFace = "";
+            foreach (var id in TalkIds)
+                if (GameData.HasTalk(id))
+                    foreach (var l in GameData.Talk(id))
+                    {
+                        if (string.IsNullOrEmpty(l.Face)) continue;
+                        string path = GameRoot.FacePath(l.Face);
+                        if (Resources.Load<Texture2D>(path.Contains("/") ? path : "Girl/" + path) == null) noFace += $"{id}:{l.Face} ";
+                    }
+            Check("dialogue faces exist (girl + bro_)", noFace == "" && GameRoot.FacePath("bro_cry") == "Boy/face_cry", noFace);
             Check("fill josa", GameData.Fill("{name:이/가} {enemy:을/를} {x}", ("name", "첫째"), ("enemy", "킹 젤리")) == "첫째가 킹 젤리를 {x}");
         }
 
@@ -724,6 +736,12 @@ namespace GirlAdventure.EditorTools
             Check("brother: saved (hp/mp), old save not joined", back.BrotherJoined && back.BroHp == 5 && back.BroMp == 1 && !old.BrotherJoined);
             back.RestoreAll();
             Check("brother: spring heals brother too", back.BroHp == back.BroMaxHp && back.BroMp == back.BroMaxMp);
+            back.Hp = 0; back.BroHp = 0;
+            back.WakeUpAfterBattle();
+            Check("party: downed member wakes with 1 hp after a win", back.Hp == 1 && back.BroHp == 1);
+            back.Mp = 0; back.BroMp = 0;
+            back.Revive();
+            Check("party: revive after defeat fills both", back.Hp == back.MaxHp && back.Mp == back.MaxMp && back.BroHp == back.BroMaxHp && back.BroMp == back.BroMaxMp);
 
             // 2인 전투: 동생 명령, 적은 두 사람 중 무작위, 한 명만 쓰러지면 아직 안 짐
             var q = PlayerState.NewGame("t");

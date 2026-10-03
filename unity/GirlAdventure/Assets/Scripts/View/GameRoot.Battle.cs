@@ -13,10 +13,17 @@ namespace GirlAdventure.View
     public partial class GameRoot
     {
         static readonly Vector3 Stage = new Vector3(1000, 0, 0);
-        const float HeroHeightPx = 275, HeroX = 215, HeroY = 428, EnemyX = 560, EnemyY = 345;
+        const float HeroHeightPx = 275, HeroY = 428, EnemyX = 560, EnemyY = 345;
+        // 동생 지훈 (합류 뒤): 서진 오른쪽 앞, 누나 어깨 높이쯤 (설정집 3.5등신)
+        const float BroX = 278, BroY = 434, BroHeightPx = 218;
+        /// <summary>서진의 무대 x: 혼자면 가운데 왼쪽, 지훈과 함께면 한 칸 왼쪽으로 비켜 선다.</summary>
+        float HeroX => battle != null && battle.Party ? 140 : 215;
 
         Transform battleRoot;
-        SpriteRenderer bgSR, heroSR;
+        SpriteRenderer bgSR, heroSR, broSR;
+        readonly Dictionary<string, Sprite> broPoses = new Dictionary<string, Sprite>();
+        string broPose = "ready";
+        float broShake, broLunge;
         // 적 1~3마리 (몬스터 무리). 한 마리 전투는 0번 칸만 쓴다
         readonly SpriteRenderer[] foeSR = new SpriteRenderer[BattleSystem.MaxFoes];
         SpriteRenderer enemySR => foeSR[0];
@@ -67,6 +74,9 @@ namespace GirlAdventure.View
             heroSR = NewSR("Heroine", 3);
             foreach (var p in new[] { "ready", "cast", "damage", "victory" })
                 poses[p] = Art.Get("battle_" + p, HeroHeightPx / 48f);
+            broSR = NewSR("Brother", 3);
+            foreach (var p in new[] { "ready", "attack", "damage", "victory" })
+                broPoses[p] = Art.Get("Boy/battle_" + p, BroHeightPx / 48f);
             glowSprite = Art.FromTexture(Painter.Glow(), new Vector2(.5f, .5f), 64);
             starSprite = Art.FromTexture(Painter.Star(), new Vector2(.5f, .5f), 64);
             battleRoot.gameObject.SetActive(false);
@@ -184,6 +194,8 @@ namespace GirlAdventure.View
                 foeSR[i].transform.localScale = Vector3.one * FoeScale(i);
             }
             heroShake = heroLunge = hurtFlash = camShake = 0;
+            broSR.gameObject.SetActive(battle.Party);
+            broPose = "ready"; broShake = broLunge = 0;
             movingFoe = 0; targetMark = -1; pickingTarget = false;
             moveP = 1; fxFrozen = false;
             enemyAppear = def.Boss ? -.45f : -.65f;   // 음수 = 소용돌이가 걷힐 때(.35초)까지 숨어서 기다림
@@ -199,6 +211,32 @@ namespace GirlAdventure.View
 
             if (GroupBattle) yield return Talk("appear_group", ("enemy", def.Name), ("count", defs.Count));
             else yield return Talk("appear", ("enemy", def.Name));
+            // 한 차례: 서진 → (합류했으면) 지훈 → 적. 쓰러진 사람은 건너뛴다
+            while (true)
+            {
+                battleOver = false;
+                if (!battle.SisterDown)
+                {
+                    yield return SisterTurn();
+                    if (battleOver) yield break;
+                    if (turnRetry) continue;
+                }
+                if (battle.Party && !battle.BrotherDown)
+                {
+                    yield return BrotherTurn();
+                    if (battleOver) yield break;
+                }
+                yield return EnemyTurn();
+                if (battle.PlayerDown) { yield return Defeat(); yield break; }
+            }
+        }
+
+        bool battleOver, turnRetry;
+
+        /// <summary>서진 차례: 명령 고르기(주문·도구·대상은 그만두면 다시) → 실행. 쓸 수 없는 명령이면 turnRetry.</summary>
+        IEnumerator SisterTurn()
+        {
+            turnRetry = false;
             while (true)
             {
                 yield return AskCommand();
@@ -224,21 +262,76 @@ namespace GirlAdventure.View
                 }
                 var o = battle.Act(chosenCmd.Value, item, target);
                 yield return PlayerTurn(o);
-                if (o.Escaped) { yield return EndBattle(); yield break; }
-                if (battle.EnemyDown) { yield return Victory(); yield break; }
-                // 무리 중 쓰러진 적은 사라지고 이름표도 지운다
-                for (int i = 0; i < battle.Foes.Count; i++)
-                    if (battle.Foes[i].Down && !foeFading[i])
-                    {
-                        foeFading[i] = true;
-                        groupTags[i].text = "";
-                        sfx.Play("win");
-                        yield return Talk("win", ("enemy", FoeName(i)));
-                    }
-                if (o.Failed) continue;
-                yield return EnemyTurn();
-                if (battle.PlayerDown) { yield return Defeat(); yield break; }
+                yield return AfterAct(o);
+                turnRetry = o.Failed && !battleOver;
+                yield break;
             }
+        }
+
+        /// <summary>지훈 차례: 검 휘두르기 · 번개 (적이 여럿이면 대상 고르기) · 도망.</summary>
+        IEnumerator BrotherTurn()
+        {
+            while (true)
+            {
+                yield return AskCommand(true);
+                var c = chosenCmd.Value;
+                PlayerOutcome o;
+                if (c == Cmd.Run)
+                {
+                    o = battle.Act(Cmd.Run);
+                    yield return PlayerTurn(o);
+                }
+                else
+                {
+                    int target = -1;
+                    if (battle.AliveCount > 1)
+                    {
+                        yield return PickTarget();
+                        if (pickedTarget < 0) continue;     // 그만두기 → 다시 명령 고르기
+                        target = pickedTarget;
+                    }
+                    o = battle.BroAct(c, target);
+                    yield return BrotherAct(o);
+                }
+                yield return AfterAct(o);
+                yield break;
+            }
+        }
+
+        /// <summary>한 사람의 행동 뒤: 도망·승리면 전투 끝(battleOver), 무리 중 쓰러진 적은 사라지고 이름표도 지운다.</summary>
+        IEnumerator AfterAct(PlayerOutcome o)
+        {
+            if (o.Escaped) { battleOver = true; yield return EndBattle(); yield break; }
+            if (battle.EnemyDown) { battleOver = true; yield return Victory(); yield break; }
+            for (int i = 0; i < battle.Foes.Count; i++)
+                if (battle.Foes[i].Down && !foeFading[i])
+                {
+                    foeFading[i] = true;
+                    groupTags[i].text = "";
+                    sfx.Play("win");
+                    yield return Talk("win", ("enemy", FoeName(i)));
+                }
+        }
+
+        /// <summary>지훈의 검(앞으로 뛰어들며 베기) · 번개(하늘에서 내리꽂힘) 연출.</summary>
+        IEnumerator BrotherAct(PlayerOutcome o)
+        {
+            bool bolt = o.Cmd == Cmd.Bolt;
+            broPose = "attack"; broLunge = 1;
+            RefreshHud();
+            yield return Talk(bolt ? "bro_bolt" : "bro_cast", ("skill", GameData.Skill(o.Cmd).Name));
+            if (bolt) yield return Lightning(o.Target);
+            else { sfx.Play("mv_spin"); yield return SlashArc(o.Target); }
+            if (o.Missed)
+            {
+                broPose = "ready"; sfx.Play("miss");
+                yield return Talk("bro_miss");
+                yield break;
+            }
+            HitFoe(o.Target, o.Damage, bolt);
+            RefreshHud();
+            yield return Talk("bro_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
+            broPose = "ready";
         }
 
         IEnumerator PlayerTurn(PlayerOutcome o)
@@ -421,7 +514,7 @@ namespace GirlAdventure.View
             }
             labels[targetOrder.Count] = "그만두기";
             ShowMessageWindow(true);
-            SetFace("smile");
+            SetFace(broTurn ? "bro_smile" : "smile");
             msgText.text = "어느 젤리를 노릴까?";
             choiceIndex = 0;
             pickingTarget = true;
@@ -454,7 +547,20 @@ namespace GirlAdventure.View
             var e = battle.EnemyAct(i);
             if (e.Dodged)
             {
-                yield return Talk("dodge");
+                yield return Talk(e.OnBrother ? "bro_dodge" : "dodge");
+                yield break;
+            }
+            if (e.OnBrother)
+            {
+                sfx.Play("hurt");
+                broPose = "damage"; broShake = .35f;
+                hurtFlash = HurtFlashTime;
+                camShake = Mathf.Max(camShake, d.Boss ? .3f : .15f);
+                RefreshHud();
+                Pop(e.Damage.ToString(), BroX, 240, new Color32(255, 107, 107, 255));
+                yield return Talk("bro_hurt", ("dmg", e.Damage));
+                if (battle.BrotherDown && !battle.PlayerDown) yield return Talk("bro_down");
+                else broPose = "ready";
                 yield break;
             }
             sfx.Play("hurt");
@@ -464,6 +570,7 @@ namespace GirlAdventure.View
             RefreshHud();
             Pop(e.Damage.ToString(), HeroX, 220, new Color32(255, 107, 107, 255));
             yield return Talk("hurt", ("dmg", e.Damage));
+            if (battle.Party && battle.SisterDown && !battle.PlayerDown) { yield return Talk("sis_down"); yield break; }
             pose = "ready";
         }
 
@@ -473,7 +580,9 @@ namespace GirlAdventure.View
             for (int i = 0; i < foeFading.Length; i++) foeFading[i] = true;
             bgm.Stop();                // DQ 처럼 승리 팡파르만 들리게
             sfx.Play("win");
-            pose = "victory";
+            pose = "victory"; broPose = "victory";
+            P.WakeUpAfterBattle();              // 둘 중 쓰러졌던 사람은 HP 1 로 일어난다
+            RefreshHud();
             enemyLabel.text = "";
             foreach (var t in groupTags) t.text = "";
             if (GroupBattle) yield return Talk("win_group");
@@ -525,7 +634,7 @@ namespace GirlAdventure.View
             pose = "damage";
             bgm.Stop();
             yield return Talk("defeat");
-            P.Hp = P.MaxHp; P.Mp = P.MaxMp;
+            P.Revive();
             (P.X, P.Y) = map.RevivePoint;
             facing = "down";
             yield return Flash(.3f);
@@ -579,6 +688,24 @@ namespace GirlAdventure.View
             heroSR.transform.position = Px(HeroX, HeroY) + new Vector3(sx + lunge, breathe + jump, 0);
             heroShake = Mathf.Max(0, heroShake - dt);
             heroLunge = Mathf.Max(0, heroLunge - dt * 4);
+            bool party = battle != null && battle.Party;
+            if (party && battle.SisterDown) heroSR.sprite = poses["damage"];
+            heroSR.color = party && battle.SisterDown ? new Color(.55f, .55f, .65f, .8f) : Color.white;   // 쓰러지면 흐리게
+
+            // 동생 지훈 (합류 뒤)
+            if (party)
+            {
+                bool down = battle.BrotherDown;
+                broSR.sprite = broPoses[down ? "damage" : broPose];
+                float bsx = broShake > 0 ? Random.Range(-1f, 1f) * broShake : 0;
+                float blunge = broLunge > 0 ? Mathf.Sin(broLunge * Mathf.PI) * 1.4f : 0;     // 검은 더 크게 뛰어든다
+                float bbreathe = broPose == "ready" && !down ? Mathf.Sin(battleT * 2.9f + 1) * .05f : 0;
+                float bjump = broPose == "victory" ? Mathf.Abs(Mathf.Sin(battleT * 6 + .8f)) * .3f : 0;
+                broSR.transform.position = Px(BroX, BroY) + new Vector3(bsx + blunge, bbreathe + bjump, 0);
+                broSR.color = down ? new Color(.55f, .55f, .65f, .8f) : Color.white;
+                broShake = Mathf.Max(0, broShake - dt);
+                broLunge = Mathf.Max(0, broLunge - dt * 3);
+            }
 
             // 적 (1~3마리): 모션은 공격 중인 적(movingFoe)만, 등장은 다 같이
             bool boss = battle != null && battle.Boss;
@@ -762,7 +889,7 @@ namespace GirlAdventure.View
         IEnumerator Fireball(int target)
         {
             SpellFx = "fire";
-            Vector3 from = Px(300, 250), to = Px(FoeX(Mathf.Max(0, target)) - 10, EnemyY - 50);
+            Vector3 from = Px(HeroX + 85, 250), to = Px(FoeX(Mathf.Max(0, target)) - 10, EnemyY - 50);
             var core = NewSR("Fireball", 6);
             core.sprite = glowSprite;
             core.color = new Color(1f, .85f, .4f);
@@ -821,6 +948,55 @@ namespace GirlAdventure.View
                 Spawn(starSprite, chest, new Vector3(Mathf.Cos(a), Mathf.Sin(a) * .7f) * 2.4f, .6f, .3f, new Color(.75f, 1f, .8f), 300);
             }
             yield return new WaitForSeconds(.25f);
+            SpellFx = null;
+        }
+
+        /// <summary>검 휘두르기: 적 몸을 비스듬히 가르는 하얀 빛줄기 (위 → 아래로 반달 모양).</summary>
+        IEnumerator SlashArc(int target)
+        {
+            SpellFx = "slash";
+            yield return new WaitForSeconds(.12f);          // 뛰어드는 동안
+            var c = Px(FoeX(Mathf.Max(0, target)), EnemyY - 70);
+            for (int i = 0; i <= 10; i++)
+            {
+                float a = Mathf.Lerp(130, -40, i / 10f) * Mathf.Deg2Rad;
+                var p = c + new Vector3(Mathf.Cos(a) * 1.3f - .4f, Mathf.Sin(a) * 1.3f, 0);
+                Spawn(glowSprite, p, Vector3.zero, .3f, .55f, new Color(1f, 1f, 1f, .9f));
+                Spawn(starSprite, p, new Vector3(Random.Range(-.6f, .6f), Random.Range(-.6f, .6f)), .35f, .22f, new Color(.75f, .9f, 1f), 400);
+                yield return new WaitForSeconds(.015f);
+            }
+            yield return new WaitForSeconds(.12f);
+            SpellFx = null;
+        }
+
+        /// <summary>번개: 하늘에서 지그재그 빛줄기가 적에게 내리꽂히고 화면이 번쩍.</summary>
+        IEnumerator Lightning(int target)
+        {
+            SpellFx = "bolt";
+            float x = FoeX(Mathf.Max(0, target));
+            yield return new WaitForSeconds(.15f);
+            sfx.Play("thud");
+            for (int flash = 0; flash < 2; flash++)
+            {
+                float px = x + Random.Range(-20, 20);
+                for (float y = -30; y < EnemyY - 40; y += 22)       // 지그재그로 내려온다
+                {
+                    px += Random.Range(-18, 18);
+                    Spawn(glowSprite, Px(px, y), Vector3.zero, .28f, .5f, new Color(1f, .95f, .45f, .95f));
+                    Spawn(glowSprite, Px(px, y), Vector3.zero, .28f, .22f, Color.white);
+                }
+                Spawn(glowSprite, Px(x, EnemyY - 50), Vector3.zero, .3f, 3f, new Color(1f, 1f, .7f, .8f));
+                for (int i = 0; i < 10; i++)
+                {
+                    float a = i / 10f * Mathf.PI * 2;
+                    Spawn(starSprite, Px(x, EnemyY - 50), new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 3.5f, .4f, .26f, new Color(1f, .95f, .4f), 500);
+                }
+                camShake = Mathf.Max(camShake, .2f);
+                if (Settings.Flash) flashImg.color = new Color(1, 1, .8f, .5f);
+                yield return new WaitForSeconds(.08f);
+                flashImg.color = new Color(1, 1, 1, 0);
+                yield return new WaitForSeconds(.12f);
+            }
             SpellFx = null;
         }
 

@@ -25,6 +25,10 @@ namespace GirlAdventure.View
         // HUD
         Text hudName, hudHp, hudMp, hudGold;
         Image hudHpBar, hudMpBar;
+        // 동생 지훈 HUD (합류한 뒤, 서진 창 오른쪽)
+        GameObject broHud;
+        Text broName, broHp, broMp;
+        Image broHpBar, broMpBar;
 
         // message window
         RectTransform msgWin;
@@ -39,7 +43,11 @@ namespace GirlAdventure.View
         // command window
         GameObject cmdWin;
         readonly List<Text> cmdTexts = new List<Text>();
-        readonly Cmd[] cmdOrder = { Cmd.Fire, Cmd.Spell, Cmd.Item, Cmd.Run };   // DQ 처럼: 공격 주문 · 주문 목록 · 도구 · 도망
+        readonly Cmd[] sisCmds = { Cmd.Fire, Cmd.Spell, Cmd.Item, Cmd.Run };   // DQ 처럼: 공격 주문 · 주문 목록 · 도구 · 도망
+        readonly Cmd[] broCmds = { Cmd.Slash, Cmd.Bolt, Cmd.Run };              // 동생 지훈: 검 · 번개 · 도망
+        Cmd[] cmdOrder;
+        bool broTurn;                       // 지금 지훈이 명령을 고르는 차례
+        int sisCmdIndex, broCmdIndex;       // 사람마다 마지막에 고른 줄을 기억
         int cmdIndex;
         Cmd? chosenCmd;
 
@@ -97,6 +105,14 @@ namespace GirlAdventure.View
             hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
             hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
             hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
+            broHud = UIKit.Window(ui, "BroHUD", 272, 12, 196, 118).gameObject;
+            var b = broHud.transform;
+            broName = UIKit.Label(b, "Name", "", 16, 10, 176, 26, 20, TextAnchor.UpperLeft, UIKit.Gold);
+            broHp = UIKit.Label(b, "HP", "", 16, 36, 176, 24, 18);
+            broHpBar = UIKit.Bar(b, "HPBar", 16, 60, 164, 8, new Color32(86, 212, 106, 255));
+            broMp = UIKit.Label(b, "MP", "", 16, 70, 176, 24, 18);
+            broMpBar = UIKit.Bar(b, "MPBar", 16, 94, 164, 8, new Color32(90, 168, 255, 255));
+            broHud.SetActive(false);
             // 안내 문구: 나무·바위 위에서도 읽히게 반투명 띠를 깔고 그 위에 쓴다
             var band = UIKit.Img(ui, "HintBand", UIKit.White, 586, 8, 366, 30, false);
             band.color = new Color(.04f, .03f, .12f, .62f);
@@ -114,6 +130,20 @@ namespace GirlAdventure.View
             hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}" + (P.HasItem(Quest.KeyItem) ? "  <color=#F2C443>열쇠</color>" : "");
             hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
             hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;
+            if (P.Hp <= 0) hudHp.text = "<color=#FF6060>HP 0 (쓰러짐)</color>";
+            if (!P.BrotherJoined) return;
+            broName.text = $"{PlayerState.BrotherName} · 용사 Lv {P.Lv}";
+            broHp.text = P.BroHp <= 0 ? "<color=#FF6060>HP 0 (쓰러짐)</color>" : $"HP {P.BroHp}/{P.BroMaxHp}";
+            broMp.text = $"MP {P.BroMp}/{P.BroMaxMp}";
+            broHpBar.fillAmount = P.BroHp / (float)P.BroMaxHp;
+            broMpBar.fillAmount = P.BroMp / (float)P.BroMaxMp;
+        }
+
+        /// <summary>지훈 창은 서진 창이 보일 때, 합류한 뒤에만 함께 보인다.</summary>
+        void TickBroHud()
+        {
+            bool on = hudWin.activeSelf && P != null && P.BrotherJoined;
+            if (broHud.activeSelf != on) { broHud.SetActive(on); if (on) RefreshHud(); }
         }
 
         // ------------------------------------------------------------------ message
@@ -134,9 +164,13 @@ namespace GirlAdventure.View
 
         void SetFace(string face)
         {
-            msgFace.sprite = faceOverride != null ? faceOverride : Art.UI("face_" + face);   // 마을 사람이 말할 때는 그 젤리 얼굴
+            // 마을 사람이 말할 때는 그 젤리 얼굴, "bro_" 로 시작하면 동생 지훈 얼굴 (Resources/Boy)
+            msgFace.sprite = faceOverride != null ? faceOverride : Art.UI(FacePath(face));
             msgFace.preserveAspect = faceOverride != null;
         }
+
+        /// <summary>대사 얼굴 이름 → 그림 경로: "smile" → Girl/face_smile, "bro_smile" → Boy/face_smile.</summary>
+        public static string FacePath(string face) => face.StartsWith("bro_") ? "Boy/face_" + face.Substring(4) : "face_" + face;
 
         void ShowMessageWindow(bool narrow)
         {
@@ -199,9 +233,10 @@ namespace GirlAdventure.View
 
         string FillText(string tmpl, (string key, object val)[] vars)
         {
-            var all = new (string, object)[vars.Length + 1];
+            var all = new (string, object)[vars.Length + 2];
             all[0] = ("name", P.Name);
-            vars.CopyTo(all, 1);
+            all[1] = ("bro", PlayerState.BrotherName);
+            vars.CopyTo(all, 2);
             return GameData.Fill(tmpl, all);
         }
 
@@ -209,7 +244,8 @@ namespace GirlAdventure.View
         void BuildCommands()
         {
             cmdWin = UIKit.Window(ui, "Commands", 644, 330, 300, 196).gameObject;
-            for (int i = 0; i < cmdOrder.Length; i++)
+            cmdOrder = sisCmds;
+            for (int i = 0; i < sisCmds.Length; i++)
             {
                 int idx = i;
                 var t = UIKit.Label(cmdWin.transform, "Cmd" + i, "", 12, 12 + i * 43, 276, 42, 22, TextAnchor.MiddleLeft);
@@ -232,15 +268,21 @@ namespace GirlAdventure.View
                     int n = 0;
                     foreach (var id in Items.Owned(P)) n += P.Count(id);
                     return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{n}</color></size>";
+                case Cmd.Bolt: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>MP {GameData.Skill(c).Mp}</color></size>";
                 default: return GameData.Skill(c).Name;
             }
         }
 
+        /// <summary>지금 명령을 고르는 사람이 이 명령을 쓸 수 있나 (도망은 둘 다 같은 규칙).</summary>
+        bool CmdUsable(Cmd c) => broTurn && c != Cmd.Run ? battle.BroCanUse(c) : battle.CanUse(c);
+
         void RenderCommands()
         {
-            for (int i = 0; i < cmdOrder.Length; i++)
+            for (int i = 0; i < cmdTexts.Count; i++)
             {
-                bool ok = battle.CanUse(cmdOrder[i]);
+                cmdTexts[i].gameObject.SetActive(i < cmdOrder.Length);
+                if (i >= cmdOrder.Length) continue;
+                bool ok = CmdUsable(cmdOrder[i]);
                 string arrow = i == cmdIndex ? "<color=#F2C443>▶</color> " : "    ";
                 cmdTexts[i].text = arrow + CmdLabel(cmdOrder[i]);
                 cmdTexts[i].color = ok ? Color.white : new Color(.5f, .5f, .55f);
@@ -249,7 +291,7 @@ namespace GirlAdventure.View
 
         void ClickCommand(int i)
         {
-            if (!cmdWin.activeSelf) return;
+            if (!cmdWin.activeSelf || i >= cmdOrder.Length) return;
             cmdIndex = i;
             TryPickCommand();
         }
@@ -257,27 +299,34 @@ namespace GirlAdventure.View
         void TryPickCommand()
         {
             var c = cmdOrder[cmdIndex];
-            if (!battle.CanUse(c)) { sfx.Play("miss"); RenderCommands(); return; }
+            if (!CmdUsable(c)) { sfx.Play("miss"); RenderCommands(); return; }
             sfx.Play("select");
             chosenCmd = c;
         }
 
-        IEnumerator AskCommand()
+        /// <summary>명령 고르기. bro 면 동생 지훈의 명령(검·번개·도망)을, 아니면 서진의 명령을.</summary>
+        IEnumerator AskCommand(bool bro = false)
         {
             chosenCmd = null;
+            broTurn = bro;
+            cmdOrder = bro ? broCmds : sisCmds;
+            cmdIndex = bro ? broCmdIndex : sisCmdIndex;
             ShowMessageWindow(true);
-            SetFace("smile");
-            msgText.text = $"{Josa.With(P.Name, "은/는")} 무엇을 할까?";
+            SetFace(bro ? "bro_smile" : "smile");
+            string who = bro ? PlayerState.BrotherName : P.Name;
+            msgText.text = $"{Josa.With(who, "은/는")} 무엇을 할까?";
             cmdWin.SetActive(true);
-            if (!battle.CanUse(cmdOrder[cmdIndex])) cmdIndex = 0;
+            if (cmdIndex >= cmdOrder.Length || !CmdUsable(cmdOrder[cmdIndex])) cmdIndex = 0;
             RenderCommands();
+            int n = cmdOrder.Length;
             while (chosenCmd == null)
             {
-                if (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.W)) { cmdIndex = (cmdIndex + 3) % 4; sfx.Play("select"); RenderCommands(); }
-                if (Keys.Down(KeyCode.DownArrow) || Keys.Down(KeyCode.S)) { cmdIndex = (cmdIndex + 1) % 4; sfx.Play("select"); RenderCommands(); }
+                if (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.W)) { cmdIndex = (cmdIndex + n - 1) % n; sfx.Play("select"); RenderCommands(); }
+                if (Keys.Down(KeyCode.DownArrow) || Keys.Down(KeyCode.S)) { cmdIndex = (cmdIndex + 1) % n; sfx.Play("select"); RenderCommands(); }
                 if (ConfirmDown()) TryPickCommand();
                 yield return null;
             }
+            if (bro) broCmdIndex = cmdIndex; else sisCmdIndex = cmdIndex;
             cmdWin.SetActive(false);
         }
 
@@ -390,10 +439,16 @@ namespace GirlAdventure.View
             cutinPanel.SetActive(false);
         }
 
-        IEnumerator CutinRoutine()
+        /// <summary>컷인: 기본은 별빛 폭풍 (서진 필살 그림). 다른 그림·글자를 주면 그것으로 보여 주고 되돌린다 (지훈 합류).</summary>
+        IEnumerator CutinRoutine(Sprite art0 = null, string text = null, string sound = "star")
         {
+            var keepArt = cutinArt.sprite;
+            var keepText = cutinText.text;
+            if (art0 != null) cutinArt.sprite = art0;
+            if (text != null) cutinText.text = text;
+            CutinShowing = text ?? keepText;
             cutinPanel.SetActive(true);
-            sfx.Play("star");
+            sfx.Play(sound);
             var art = cutinArt.rectTransform;
             var txt = cutinText.rectTransform;
             for (float t = 0; t < 1.5f; t += Time.deltaTime)
@@ -408,7 +463,13 @@ namespace GirlAdventure.View
                 yield return null;
             }
             cutinPanel.SetActive(false);
+            cutinArt.sprite = keepArt;
+            cutinText.text = keepText;
+            CutinShowing = null;
         }
+
+        /// <summary>프로브용: 지금 보이는 컷인 글자 (없으면 null).</summary>
+        public string CutinShowing { get; private set; }
 
         IEnumerator Flash(float dur = .35f)
         {

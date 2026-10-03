@@ -20,6 +20,12 @@ namespace GirlAdventure.View
         Sprite[] frontFrames, backFrames;       // 앞/뒤 걷기: 한 발 → 두 발 모음 → 반대 발 → 두 발 모음 (tools/make_walk_frames.py)
         string facing = "down";
         Vector2Int moveFrom;
+        // 동생 지훈 (합류 뒤): DQ 대열처럼 서진이 방금 있던 칸을 한 걸음 늦게 따라온다
+        SpriteRenderer broFieldSR, broShadowSR;
+        Sprite[] broSide;
+        Sprite broFront, broBack;
+        Vector2Int broTile, broFrom;
+        string broFacing = "down";
         float moveT = -1, walkT;
         WorldMap fieldMap, caveMap, villageMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
@@ -71,6 +77,20 @@ namespace GirlAdventure.View
             frontFrames = new[] { Art.Get("walk_front", FieldCharHeight), Art.Get("walk_front2", FieldCharHeight), Art.Get("walk_front3", FieldCharHeight) };
             backFrames = new[] { Art.Get("walk_back", FieldCharHeight), Art.Get("walk_back2", FieldCharHeight), Art.Get("walk_back3", FieldCharHeight) };
             playerSR.sprite = frontFrames[1];
+
+            broShadowSR = new GameObject("BroShadow").AddComponent<SpriteRenderer>();
+            broShadowSR.transform.SetParent(fieldRoot, false);
+            broShadowSR.sprite = shadowSR.sprite;
+            broShadowSR.color = shadowSR.color;
+            broShadowSR.transform.localScale = new Vector3(.8f, .27f, 1);
+            broShadowSR.sortingOrder = 1;
+            broFieldSR = new GameObject("Brother").AddComponent<SpriteRenderer>();
+            broFieldSR.transform.SetParent(fieldRoot, false);
+            broFieldSR.sortingOrder = 2;
+            float bh = FieldCharHeight * BroFieldScale;
+            broSide = new[] { Art.Get("Boy/walk_side1", bh), Art.Get("Boy/walk_side2", bh), Art.Get("Boy/walk_side3", bh), Art.Get("Boy/walk_side4", bh) };
+            broFront = Art.Get("Boy/walk_front", bh);
+            broBack = Art.Get("Boy/walk_back", bh);
 
             chestOpenSR = Prop("ChestOpen", Painter.ChestTexture(true), WorldMap.Chest);
             doorOpenSR = Prop("DoorOpen", MapPainter.OpenDoorTexture(), (WorldMap.BaseDoor.x, WorldMap.BaseDoor.y - 1));
@@ -298,6 +318,7 @@ namespace GirlAdventure.View
             ApplyMap();
             RefreshHud();
             moveT = -1;
+            ResetBrother();
             UpdatePlayerVisual();
             RefreshQuestProps();
             mobs.Grace = 2f;                   // 전투 직후 바로 또 부딪히지 않게
@@ -321,6 +342,7 @@ namespace GirlAdventure.View
             (P.X, P.Y) = toVillage ? WorldMap.VillageStart : (WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1);
             facing = toVillage ? "up" : "down";
             moveT = -1;
+            ResetBrother();
             ApplyMap();
             bgm.Play(MapSong);
             RefreshQuestProps();
@@ -412,6 +434,9 @@ namespace GirlAdventure.View
                 return;
             }
             moveFrom = new Vector2Int(P.X, P.Y);
+            // 지훈은 서진이 떠난 칸으로 (멀리 떨어져 있었으면 그 칸에서 바로 시작)
+            broFrom = Manhattan(broTile, moveFrom) <= 1 ? broTile : moveFrom;
+            broTile = moveFrom;
             P.X = nx; P.Y = ny;
             moveT = 0;
             SpawnDust(moveFrom.x, moveFrom.y, dx, dy);
@@ -448,6 +473,7 @@ namespace GirlAdventure.View
             playerSR.transform.localPosition = feet + new Vector3(sway, bob, 0);
             playerSR.transform.localRotation = Quaternion.Euler(0, 0, lean);
             shadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
+            UpdateBrotherVisual(k, moving);
 
             // 카메라: 맵 밖이 보이지 않게 가둔다
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
@@ -457,6 +483,62 @@ namespace GirlAdventure.View
         }
 
         Vector2 playerTilePos;
+
+        /// <summary>지훈 그림 크기: 서진의 0.84배 (설정집: 3.5등신, 누나 어깨 높이).</summary>
+        const float BroFieldScale = .84f;
+
+        /// <summary>맵에 들어오거나 순간 이동하면 지훈은 서진 칸에서 다시 시작 (걸으면 뒤로 빠져나온다).</summary>
+        void ResetBrother() => broTile = broFrom = new Vector2Int(P.X, P.Y);
+
+        static int Manhattan(Vector2Int a, Vector2Int b) => Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
+
+        /// <summary>
+        /// 필드의 지훈: 서진과 같은 걸음(moveT)으로 broFrom → broTile 을 걷는다.
+        /// 순간 이동·맵 이동으로 두 칸 넘게 떨어지면 서진 칸으로 붙는다 (서진 뒤에 숨어 있다가 걸으면 나온다).
+        /// </summary>
+        void UpdateBrotherVisual(float k, bool moving)
+        {
+            bool on = P != null && P.BrotherJoined;
+            if (broFieldSR.enabled != on) { broFieldSR.enabled = on; broShadowSR.enabled = on; }
+            if (!on) return;
+            var here = new Vector2Int(P.X, P.Y);
+            if (moveT < 0 && Manhattan(broTile, here) > 1) broTile = broFrom = here;
+            bool walking = moveT >= 0 && broFrom != broTile;
+            if (walking)
+            {
+                var d = broTile - broFrom;
+                broFacing = d.x > 0 ? "right" : d.x < 0 ? "left" : d.y < 0 ? "up" : "down";
+            }
+            else if (broTile == here) broFacing = facing;
+            float bx = walking ? Mathf.Lerp(broFrom.x, broTile.x, k) : broTile.x;
+            float by = walking ? Mathf.Lerp(broFrom.y, broTile.y, k) : broTile.y;
+            var feet = FeetAt(bx, by) + new Vector3(0, 0, .002f);      // 같은 줄이면 누나 뒤에
+            float bob = 0, lean = 0;
+            float wt = walkT + .07f;                                    // 누나와 발걸음이 살짝 어긋나게
+            if (broFacing == "left" || broFacing == "right")
+            {
+                broFieldSR.sprite = broSide[moving ? (int)(wt / .11f) % 4 : 0];
+                broFieldSR.flipX = broFacing == "left";
+                bob = moving ? Mathf.Abs(Mathf.Sin(wt * 12)) * .08f : Mathf.Sin(Time.time * 2.5f + 1) * .02f;
+            }
+            else
+            {
+                // 앞뒤 걷기 그림은 한 장뿐이라 통통 튀고 좌우로 기우뚱하며 걷는다
+                broFieldSR.sprite = broFacing == "up" ? broBack : broFront;
+                broFieldSR.flipX = false;
+                float ph = wt * Mathf.PI / .22f;
+                bob = moving ? Mathf.Abs(Mathf.Cos(ph)) * .1f : Mathf.Sin(Time.time * 2.5f + 1) * .02f;
+                lean = moving ? Mathf.Sin(ph) * 6f : 0;
+            }
+            broFieldSR.transform.localPosition = feet + new Vector3(0, bob, 0);
+            broFieldSR.transform.localRotation = Quaternion.Euler(0, 0, lean);
+            broShadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
+        }
+
+        // ---- 프로브용
+        public bool BroFieldVisible => broFieldSR != null && broFieldSR.enabled;
+        public Vector2Int BroTile => broTile;
+        public string BroFacing => broFacing;
 
         void OnArrive()
         {

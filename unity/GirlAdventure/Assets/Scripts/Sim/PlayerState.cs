@@ -78,6 +78,20 @@ namespace GirlAdventure.Sim
             BroMp = BroMaxMp;
         }
 
+        /// <summary>전투에서 이겼을 때 쓰러져 있던 사람은 HP 1 로 일어난다 (둘이 싸우다 한 명만 쓰러진 경우).</summary>
+        public void WakeUpAfterBattle()
+        {
+            if (Hp <= 0) Hp = 1;
+            if (BrotherJoined && BroHp <= 0) BroHp = 1;
+        }
+
+        /// <summary>전멸하고 샘물에서 다시 일어날 때: 둘 다 HP·MP 가득 (사탕·골드는 그대로).</summary>
+        public void Revive()
+        {
+            Hp = MaxHp; Mp = MaxMp;
+            if (BrotherJoined) { BroHp = BroMaxHp; BroMp = BroMaxMp; }
+        }
+
         public bool HasItem(string id) => Items.Contains(id);
 
         public PlayerState() { Candy = MaxCandy; }

@@ -85,6 +85,7 @@ namespace GirlAdventure.View
             TickPops();
             TickEnemyHp();
             TickGroupTags();
+            TickBroHud();
             TickTouchPad();
             if (vignette != null && Current != Mode.Field) vignette.enabled = false;
         }
@@ -169,6 +170,7 @@ namespace GirlAdventure.View
             EnterField();
             busy = true;
             yield return Talk("continue", ("lv", P.Lv));
+            yield return BrotherJoinRoutine(true);      // 옛 세이브: 젤리 장군을 이미 이겼는데 합류 전이면 여기서
             HideMessage();
             busy = false;
         }
@@ -176,12 +178,27 @@ namespace GirlAdventure.View
         IEnumerator Chapter2ClearRoutine()
         {
             yield return Talk("ch2_clear");
+            yield return BrotherJoinRoutine(false);
             HideMessage();
             AutoSave();
             Current = Mode.Ending;
             ShowEnding();
             bgm.Play("ending");
             sfx.Play("lvup");
+        }
+
+        /// <summary>
+        /// 동생 지훈 합류 (백로그 49): 철창에서 구해 주는 대사 → "용사 지훈 합류!" 컷인 → 동료가 되었다.
+        /// late 는 옛 세이브(이미 보스를 이김)를 이어할 때: 짧은 대사만.
+        /// </summary>
+        IEnumerator BrotherJoinRoutine(bool late)
+        {
+            if (!Quest.TryJoinBrother(P)) yield break;
+            yield return Talk(late ? "bro_join_late" : "bro_join");
+            yield return CutinRoutine(Art.UI("Boy/hero"), $"용사 {PlayerState.BrotherName} 합류!", "lvup");
+            RefreshHud();
+            yield return Talk("bro_joined");
+            AutoSave();
         }
 
         void StartChapter2()
@@ -247,6 +264,24 @@ namespace GirlAdventure.View
             $"mode={Current} ch={P.Chapter} map={map.Kind} mobs={mobs.List.Count} bgm={bgm.Current}@{bgm.LevelPercent}% busy={busy} tile=({P.X},{P.Y}) facing={facing} lv={P.Lv} hp={P.Hp}/{P.MaxHp} mp={P.Mp} gold={P.Gold} candy={P.Candy} " +
             $"cmd={CommandOpen} msg=\"{MessageText.Replace('\n', ' ')}\"";
 
+        /// <summary>플레이테스트용: 지금 상태(챕터·동료) 그대로 필드로 돌아온다 (엔딩 화면 뒤 등).</summary>
+        public void DebugBackToField()
+        {
+            StopAllCoroutines();
+            EnterField();
+            HideMessage();
+            busy = false;
+        }
+
+        /// <summary>지훈이 명령을 고르는 차례인가 (명령창이 지훈 것).</summary>
+        public bool BroCommandTurn => CommandOpen && broTurn;
+        /// <summary>전투 무대가 보이는 중 (보스를 이긴 뒤 컷신은 무대를 치우고 Mode.Battle 인 채로 진행).</summary>
+        public bool OnBattleStage => battleRoot != null && battleRoot.gameObject.activeSelf;
+        public bool BroHudShown => broHud != null && broHud.activeSelf;
+        public bool BroInBattle => broSR != null && broSR.gameObject.activeSelf && battleRoot.gameObject.activeSelf;
+
+        public bool DebugWalkable(int x, int y) => Quest.Walkable(map, P, x, y);
+
         public void DebugEnterField()
         {
             StopAllCoroutines();
@@ -280,6 +315,7 @@ namespace GirlAdventure.View
         public void DebugTeleport(int x, int y, string face = "down")
         {
             P.X = x; P.Y = y; facing = face; moveT = -1;
+            ResetBrother();
             UpdatePlayerVisual();
         }
 

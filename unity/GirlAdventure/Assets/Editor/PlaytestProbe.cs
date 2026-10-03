@@ -72,10 +72,10 @@ namespace GirlAdventure.EditorTools
 
         static void Log(string s) => Debug.Log($"PT: {s} | {G.DebugState()}");
 
-        static void Expect(string what, bool ok)
+        static void Expect(string what, bool ok, string detail = "")
         {
             if (!ok) fails++;
-            Log($"CHECK {(ok ? "OK" : "FAIL")} {what}");
+            Log($"CHECK {(ok ? "OK" : "FAIL")} {what}" + (ok || detail == "" ? "" : $" ({detail})"));
         }
 
         /// <summary>기대한 배경음악이 나오는지 확인 (틀리면 실패로 센다).</summary>
@@ -903,20 +903,80 @@ namespace GirlAdventure.EditorTools
             Shot("boss2_command");
             G.DebugSetEnemyHp(25);                     // 흐름만 확인 (난이도는 SmokeTest 밸런스로)
             foreach (var x in FightUntilOver(true)) yield return x;
+            // 동생 합류 (백로그 49): 철창 대사 → "용사 지훈 합류!" 컷인 → 동료가 되었다 → 챕터 2 완료
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("철창 안에 있던") || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .8f;
+            Shot("bro_join_talk");
+            foreach (var x in SkipTalk(() => G.CutinShowing != null || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .9f;
+            Shot("bro_join_cutin");
+            Expect("brother join cut-in", G.CutinShowing != null && G.CutinShowing.Contains(PlayerState.BrotherName));
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("동료가 되었다") || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .6f;
+            Shot("bro_joined");
+            Expect("brother hud shown on join", G.BroHudShown);
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
             yield return 1f;
             Shot("ch2_clear");
             Expect("chapter 2 cleared", G.P.Boss2Down && G.Current == GameRoot.Mode.Ending);
+            Expect("brother joined with full hp", G.P.BrotherJoined && G.P.BroHp == G.P.BroMaxHp);
             ExpectBgm("ending");
+
+            // 필드 대열: 지훈이 서진이 방금 있던 칸을 따라온다
+            G.DebugBackToField();
+            G.DebugMobs(true, true);
+            var spot = G.DebugOpenSpot(6);
+            G.DebugTeleport(spot.x, spot.y, "right");
+            yield return .3f;
+            Expect("brother on field (on sister's tile after teleport)", G.BroFieldVisible && G.BroTile == new Vector2Int(G.P.X, G.P.Y));
+            Keys.Hold(KeyCode.RightArrow, true); yield return .45f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return .4f;
+            Shot("bro_follow_right");
+            Expect("brother one step behind (left)", G.BroTile == new Vector2Int(G.P.X - 1, G.P.Y) && G.BroFacing == "right", $"bro {G.BroTile} sis ({G.P.X},{G.P.Y})");
+            // 꺾어서 한 걸음 (아래가 막혔으면 위로): 지훈은 서진이 방금 있던 칸으로
+            var before = new Vector2Int(G.P.X, G.P.Y);
+            var turnKey = G.DebugWalkable(before.x, before.y + 1) ? KeyCode.DownArrow : KeyCode.UpArrow;
+            Keys.Hold(turnKey, true); yield return .2f; Keys.Hold(turnKey, false);
+            yield return .4f;
+            Shot("bro_follow_turn");
+            Expect("brother follows the turn", G.P.Y != before.y && G.BroTile == before, $"bro {G.BroTile} before {before} sis ({G.P.X},{G.P.Y})");
+
+            // 2인 전투: 서진 → 지훈 명령 차례, 지훈 HUD
+            G.DebugGroupBattle(2);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .3f;
+            Shot("party_battle");
+            Expect("party battle: brother on stage + hud", G.BroInBattle && G.BroHudShown && !G.BroCommandTurn);
+            foreach (var x in Choose(0)) yield return x;            // 서진: 리본 파이어 → 대상 고르기
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            Keys.Press(KeyCode.Return);
+            foreach (var x in SkipTalk(() => G.CommandOpen || G.Current != GameRoot.Mode.Battle)) yield return x;
+            Expect("brother's command turn comes after sister", G.BroCommandTurn && G.MessageText.Contains(PlayerState.BrotherName), G.MessageText);
+            Shot("bro_command");
+            if (G.BroCommandTurn)
+            {
+                foreach (var x in Choose(0)) yield return x;        // 지훈: 검 휘두르기
+                if (G.FoesAlive > 1) { yield return (Func<bool>)(() => G.ChoiceOpen); Keys.Press(KeyCode.Return); }
+                for (int i = 0; i < 30 && G.SpellFx != "slash"; i++) yield return .05f;
+                Shot("bro_slash");
+                Expect("brother slash effect", G.SpellFx == "slash");
+            }
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("after party battle both standing", G.P.Hp > 0 && G.P.BroHp > 0 && G.Current == GameRoot.Mode.Field);
         }
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
         {
             int lvShot = 0;
-            for (int i = 0; i < 200 && G.Current == GameRoot.Mode.Battle; i++)
+            for (int i = 0; i < 200 && G.Current == GameRoot.Mode.Battle && G.OnBattleStage; i++)
             {
-                if (G.CommandOpen)
+                if (G.BroCommandTurn)
+                {
+                    foreach (var x in Choose(0)) yield return x;    // 지훈은 늘 검 (대상이 여럿이면 Z 로 첫 적)
+                }
+                else if (G.CommandOpen)
                 {
                     int pick = G.P.Hp <= G.P.MaxHp * .35f && G.P.Candy > 0 ? 2 : boss && G.P.Mp >= 6 ? 1 : 0;
                     foreach (var x in Choose(pick)) yield return x;
