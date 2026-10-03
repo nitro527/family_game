@@ -420,6 +420,10 @@ namespace GirlAdventure.EditorTools
             yield return .2f;
             Shot("book_complete");
             Expect("book: all beaten → title", G.BookText.Contains(Bestiary.Title) && G.BookText.Contains("★ 쓰러뜨렸어요"));
+            G.DebugBookSelect(Bestiary.Total - 1);              // 12종이 넘으면 줄을 넘겨 본다 (사막 젤리)
+            yield return .2f;
+            Shot("book_scrolled");
+            Expect("book scrolls to the last entry", G.BookTopRow > 0 && G.BookText.Contains(Bestiary.Entries[Bestiary.Total - 1].Name), $"top {G.BookTopRow}");
             G.P.Beaten.Clear(); G.P.Beaten.AddRange(beaten0);
             G.P.Seen.Clear(); G.P.Seen.AddRange(seen0);
             Keys.Press(KeyCode.Escape);
@@ -999,6 +1003,23 @@ namespace GirlAdventure.EditorTools
             Shot("desert_sign");
             Expect("desert sign talks about the oasis", G.MessageText.Contains("오아시스"), G.MessageText);
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            // 사막 젤리 (백로그 51): 필드에 선인장 젤리를 세우고 부딪혀 싸운다 → 도감 그림, 초록 가시
+            G.DebugMobs(true, true);
+            var ds = G.DebugOpenSpot(6);
+            G.DebugTeleport(ds.x, ds.y, "right");
+            G.NoGroups = true;
+            G.DebugSpawnMob(ds.x + 1, ds.y, 1);
+            yield return .4f;
+            Shot("desert_mob_field");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            Expect("desert mob is a cactus jelly with art", G.BattleEnemy != null && G.BattleEnemy.Name == "선인장 젤리" && G.UsesArt(G.BattleEnemy), G.BattleEnemy?.Name);
+            Shot("desert_cactus_battle");
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            G.NoGroups = false;
+            Expect("cactus jelly in the book", Bestiary.Beaten(G.P, GameData.Desert[1]));
+
             G.DebugGroupBattle(2);
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .3f;

@@ -570,7 +570,7 @@ namespace GirlAdventure.View
 
         // ------------------------------------------------------------------ 보이는 몬스터
         EnemyDef MobDef(FieldMonster m) =>
-            mobs.Map.Kind == MapKind.Cave ? GameData.Cave[m.EnemyIndex % GameData.Cave.Length] : GameData.Normal[m.EnemyIndex % GameData.Normal.Length];
+            GameData.ListFor(mobs.Map.Kind)[m.EnemyIndex % GameData.ListFor(mobs.Map.Kind).Length];
 
         void StartMobBattle(FieldMonster m)
         {

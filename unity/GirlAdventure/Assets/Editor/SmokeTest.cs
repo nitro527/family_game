@@ -320,7 +320,56 @@ namespace GirlAdventure.EditorTools
             var rv = m.RevivePoint;
             Check("desert: oasis spring + revive point reachable, sign", m.Spring == WorldMap.OasisSpring && m.At(m.Spring.x, m.Spring.y) == 'F'
                   && reach[rv.x, rv.y] && m.At(m.SignPos.x, m.SignPos.y) == 'S' && m.SpawnPoint == st);
-            Check("desert: edges are rock, no encounters yet (51)", m.At(-1, 5) == 'R' && m.Blocked(0, 0) && m.EncounterRate(10, 10) == 0);
+            Check("desert: edges are rock, jellies only on sand (not oasis / exit)", m.At(-1, 5) == 'R' && m.Blocked(0, 0)
+                  && OnlySand(m), $"oasis {m.EncounterRate(WorldMap.Oasis.x, WorldMap.Oasis.y - 2)}");
+
+            // 사막 젤리 (백로그 51): 도감 그림, 큰 선인장 젤리 = 같은 색·그림의 더 센 2단, 먼 곳에만
+            var desert = GameData.Desert;
+            EnemyDef cactusS = Array.Find(desert, d => d.Name == "선인장 젤리"), cactusB = Array.Find(desert, d => d.Name == "큰 선인장 젤리");
+            Check("desert jellies: cowboy·cactus·big cactus with art", desert.Length == 3 && Array.Exists(desert, d => d.Name == "카우보이 젤리" && d.Art == "desert_cowboy")
+                  && cactusS != null && cactusB != null && cactusS.Art == "desert_cactus" && cactusB.Art == cactusS.Art && cactusB.Color == cactusS.Color
+                  && cactusB.Tier == 2 && cactusB.Hp > cactusS.Hp && cactusB.Atk >= cactusS.Atk && cactusB.Exp > cactusS.Exp);
+            bool nearNoBig = true;
+            foreach (int i in GameData.EncounterPool(MapKind.Desert, 8, 16)) nearNoBig &= desert[i].Tier < 2;
+            bool farBig = Array.Exists(GameData.EncounterPool(MapKind.Desert, 28, 18), i => desert[i].Tier == 2);
+            Check("desert: big cactus only far east/south", nearNoBig && farBig);
+            var rr = new System.Random(31);
+            int dMax = 0;
+            for (int i = 0; i < 500; i++) dMax = Math.Max(dMax, GameData.RollEncounter(MapKind.Desert, 28, 18, rr).Count);
+            Check("desert far groups up to 3", dMax == 3);
+
+            // 2인 밸런스: 사막에 막 들어온 Lv9 (장비 없음) — 거의 이기지만 HP 가 꽤 깎인다. 레벨업 속도는 3~5번 싸움에 1레벨
+            (float win, float hpLeft, float exp) Duo(int lv, int x, int y, int force)
+            {
+                var r = new System.Random(55);
+                int wins = 0, n = 400;
+                float hp = 0, ex = 0;
+                for (int run = 0; run < n; run++)
+                {
+                    var q2 = PlayerState.NewGame("d");
+                    q2.GainExp(PlayerState.NextExp(lv - 1));
+                    q2.Boss2Down = true; Quest.TryJoinBrother(q2);
+                    List<EnemyDef> foes;
+                    if (force > 0)
+                    {
+                        var pool = GameData.EncounterPool(MapKind.Desert, x, y);
+                        foes = new List<EnemyDef>();
+                        for (int i = 0; i < force; i++) foes.Add(desert[pool[r.Next(pool.Length)]]);
+                    }
+                    else foes = GameData.RollEncounter(MapKind.Desert, x, y, r);
+                    foreach (var f in foes) ex += f.Exp;
+                    if (FightDuo(q2, foes, r)) wins++;
+                    hp += (Math.Max(0, q2.Hp) + Math.Max(0, q2.BroHp)) / (float)(q2.MaxHp + q2.BroMaxHp);
+                }
+                return (wins / (float)n, hp / n, ex / n);
+            }
+            var near = Duo(9, 8, 16, 0);
+            var far3 = Duo(10, 28, 18, 3);
+            float perLevel = (PlayerState.NextExp(9) - PlayerState.NextExp(8)) / near.exp;
+            Debug.Log($"[BALANCE DESERT] near @Lv9 win={near.win:P1} hpLeft={near.hpLeft:P0} exp={near.exp:F1} (battles/level≈{perLevel:F1}) | far x3 @Lv10 win={far3.win:P1} hpLeft={far3.hpLeft:P0}");
+            Check("desert duo balance (near ≥97% but costs HP, far x3 ≥85%, 3~5 fights/level)",
+                  near.win >= .97f && near.hpLeft < .9f && far3.win >= .85f && perLevel >= 2.5f && perLevel <= 5.5f,
+                  $"near {near.win:P1} hp {near.hpLeft:P0} far3 {far3.win:P1} perLevel {perLevel:F1}");
 
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(8));
@@ -828,15 +877,28 @@ namespace GirlAdventure.EditorTools
             Check("duo beats general more often than solo", duoWin >= soloWin && duoWin >= 390, $"solo {soloWin}/400 duo {duoWin}/400");
         }
 
-        /// <summary>2인 AI: 서진은 Fight 와 같고, 지훈은 보스면 MP 있을 때 번개, 아니면 검. 서진이 쓰러지면 지훈만.</summary>
-        static bool FightDuo(PlayerState p, EnemyDef def, System.Random r)
+        /// <summary>사막 젤리는 모래('.')에서만: 오아시스 풀밭·출구 앞(':')은 쉬는 곳.</summary>
+        static bool OnlySand(WorldMap m)
         {
-            var b = new BattleSystem(p, def, r);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if ((m.EncounterRate(x, y) > 0) != (m.At(x, y) == '.')) return false;
+            return true;
+        }
+
+        static bool FightDuo(PlayerState p, EnemyDef def, System.Random r) => FightDuo(p, new List<EnemyDef> { def }, r);
+
+        /// <summary>2인 AI: 서진은 Fight 와 같고(무리면 별빛 폭풍 우선), 지훈은 보스면 MP 있을 때 번개, 아니면 검. 서진이 쓰러지면 지훈만.</summary>
+        static bool FightDuo(PlayerState p, List<EnemyDef> foes, System.Random r)
+        {
+            var b = new BattleSystem(p, foes, r);
+            var def = b.Def;
+            bool group = foes.Count > 1;
             for (int turn = 0; turn < 60; turn++)
             {
                 if (!b.SisterDown)
                 {
-                    Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy : def.Boss && b.CanUse(Cmd.Star) ? Cmd.Star : Cmd.Fire;
+                    Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy : (def.Boss || (group && b.AliveCount > 1)) && b.CanUse(Cmd.Star) ? Cmd.Star : Cmd.Fire;
                     b.Act(c);
                     if (b.EnemyDown) return true;
                 }

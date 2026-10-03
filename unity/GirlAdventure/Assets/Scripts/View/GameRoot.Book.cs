@@ -13,7 +13,7 @@ namespace GirlAdventure.View
     /// </summary>
     public partial class GameRoot
     {
-        const int BookCols = 4;
+        const int BookCols = 4, BookRows = 3;
         const float BookX = 20, BookY = 8, BookW = 920, BookH = 524, CellW = 124, CellH = 136, GridX = 22, GridY = 62, InfoX = 560;
 
         GameObject bookPanel;
@@ -21,7 +21,8 @@ namespace GirlAdventure.View
         Image bookBig;
         readonly List<(Image frame, Image pic, Text name)> bookCells = new List<(Image, Image, Text)>();
         List<EnemyDef> bookEntries;
-        int bookSel, bookClicked = -1;
+        int bookSel, bookClicked = -1, bookTop;     // bookTop: 맨 위에 보이는 줄
+        Text bookUp, bookDown;
         bool bookOpen, bookClose;
 
         void BuildBook()
@@ -32,7 +33,7 @@ namespace GirlAdventure.View
             bookHead = UIKit.Label(win, "Head", "", 24, 16, 520, 36, 24, TextAnchor.UpperLeft, UIKit.Gold, true);
             bookHead.supportRichText = true;
             bookEntries = Bestiary.Entries;
-            for (int i = 0; i < bookEntries.Count; i++)
+            for (int i = 0; i < BookCols * BookRows; i++)
             {
                 float x = GridX + i % BookCols * (CellW + 8), y = GridY + i / BookCols * (CellH + 8);
                 var frame = UIKit.Img(win, "Cell" + i, UIKit.White, x, y, CellW, CellH, false);
@@ -40,12 +41,15 @@ namespace GirlAdventure.View
                 int idx = i;
                 var b = frame.gameObject.AddComponent<Button>();
                 b.transition = Selectable.Transition.None;
-                b.onClick.AddListener(() => bookClicked = idx);
+                b.onClick.AddListener(() => bookClicked = bookTop * BookCols + idx);
                 var pic = UIKit.Img(frame.transform, "Pic", null, 12, 6, CellW - 24, CellH - 38);
                 var name = UIKit.Label(frame.transform, "Name", "", 2, CellH - 30, CellW - 4, 26, 15, TextAnchor.MiddleCenter);
                 name.supportRichText = true;
                 bookCells.Add((frame, pic, name));
             }
+            // 줄이 더 있으면 칸 위·아래에 ▲▼
+            bookUp = UIKit.Label(win, "More Up", "▲", GridX, GridY - 22, BookCols * (CellW + 8) - 8, 20, 16, TextAnchor.MiddleCenter, UIKit.Gold);
+            bookDown = UIKit.Label(win, "More Down", "▼", GridX, GridY + BookRows * (CellH + 8) - 6, BookCols * (CellW + 8) - 8, 20, 16, TextAnchor.MiddleCenter, UIKit.Gold);
             var line = UIKit.Img(win, "Line", UIKit.White, InfoX - 16, 24, 2, BookH - 48, false);
             line.color = new Color(1, 1, 1, .18f);
             bookBig = UIKit.Img(win, "Big", null, InfoX + 60, 30, 220, 200);
@@ -65,10 +69,17 @@ namespace GirlAdventure.View
             bool done = Bestiary.Complete(P);
             bookHead.text = $"몬스터 도감  <size=19><color=#FFFFFF>만남 {Bestiary.SeenCount(P)} · 쓰러뜨림 {Bestiary.BeatenCount(P)} / {Bestiary.Total}</color></size>";
             bookTitle.text = done ? $"칭호 ★ {Bestiary.Title}" : "";
-            for (int i = 0; i < bookEntries.Count; i++)
+            int rows = (bookEntries.Count + BookCols - 1) / BookCols, selRow = bookSel / BookCols;
+            bookTop = Mathf.Clamp(Mathf.Clamp(bookTop, selRow - BookRows + 1, selRow), 0, Mathf.Max(0, rows - BookRows));
+            bookUp.enabled = bookTop > 0;
+            bookDown.enabled = bookTop + BookRows < rows;
+            for (int c = 0; c < bookCells.Count; c++)
             {
+                int i = bookTop * BookCols + c;
+                var (frame, pic, name) = bookCells[c];
+                frame.gameObject.SetActive(i < bookEntries.Count);
+                if (i >= bookEntries.Count) continue;
                 var d = bookEntries[i];
-                var (frame, pic, name) = bookCells[i];
                 bool seen = Bestiary.Seen(P, d), beaten = Bestiary.Beaten(P, d);
                 frame.color = i == bookSel ? new Color(.95f, .76f, .26f, .55f) : new Color(1, 1, 1, .07f);
                 pic.sprite = JellySprite(d);
@@ -89,6 +100,7 @@ namespace GirlAdventure.View
         {
             bookOpen = true;
             bookSel = 0;
+            bookTop = 0;
             bookClicked = -1;
             bookClose = false;
             RenderBook();
@@ -117,5 +129,6 @@ namespace GirlAdventure.View
         public bool BookOpen => bookOpen;
         public string BookText => bookOpen ? bookHead.text + " | " + bookTitle.text + " | " + bookName.text + " | " + bookInfo.text + " | " + bookDesc.text : "";
         public void DebugBookSelect(int i) { bookSel = Mathf.Clamp(i, 0, bookEntries.Count - 1); RenderBook(); }
+        public int BookTopRow => bookTop;
     }
 }

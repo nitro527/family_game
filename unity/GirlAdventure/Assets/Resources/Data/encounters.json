@@ -4,6 +4,8 @@
     { "Map": "field", "MinFar": 21, "Pool": ["파랑 젤리", "초록 젤리", "초록 젤리", "분홍 젤리"], "Group": 0.2, "MaxGroup": 2 },
     { "Map": "field", "MinFar": 35, "Pool": ["초록 젤리", "분홍 젤리", "분홍 젤리", "큰 초록 젤리", "큰 분홍 젤리"], "Group": 0.3, "MaxGroup": 3 },
     { "Map": "cave",  "MaxY": 99,   "Pool": ["돌멩이 젤리", "돌멩이 젤리", "광물 젤리", "수정 젤리"], "Group": 0.25, "MaxGroup": 2 },
+    { "Map": "desert", "MinFar": 0,  "Pool": ["카우보이 젤리", "카우보이 젤리", "선인장 젤리"], "Group": 0.25, "MaxGroup": 2 },
+    { "Map": "desert", "MinFar": 32, "Pool": ["카우보이 젤리", "선인장 젤리", "선인장 젤리", "큰 선인장 젤리"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "cave",  "MaxY": 9,    "Pool": ["돌멩이 젤리", "광물 젤리", "수정 젤리", "수정 젤리", "큰 돌멩이 젤리"], "Group": 0.3, "MaxGroup": 3 }
   ]
 }

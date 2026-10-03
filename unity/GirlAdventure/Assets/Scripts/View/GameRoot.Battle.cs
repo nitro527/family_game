@@ -542,7 +542,7 @@ namespace GirlAdventure.View
             movingFoe = i;
             StartMove(d.Move);
             sfx.Play("mv_" + moveName);             // 모션마다 다른 소리
-            if (moveName == "shard") StartCoroutine(ShardVolley());
+            if (moveName == "shard") StartCoroutine(ShardVolley(d));
             yield return Talk("enemy_attack", ("enemy", FoeName(i)), ("attack", d.Attack ?? "공격"));
             var e = battle.EnemyAct(i);
             if (e.Dodged)
@@ -852,15 +852,18 @@ namespace GirlAdventure.View
                       Random.Range(.3f, .6f), new Color(.85f, .75f, .6f, .7f));
         }
 
-        IEnumerator ShardVolley()
+        /// <summary>조각 날리기: 수정 젤리는 푸른 수정, 선인장 젤리는 초록 가시 (적 색을 밝게).</summary>
+        IEnumerator ShardVolley(EnemyDef d)
         {
+            var col = new Color(.55f, .95f, 1f);
+            if (d.Look != "crystal" && ColorUtility.TryParseHtmlString(d.Color, out var c)) col = Color.Lerp(c, Color.white, .35f);
             yield return new WaitForSeconds(.35f);
             Vector3 to = Px(HeroX + 20, HeroY - 110);
             for (int i = 0; i < 6; i++)
             {
                 var from = Px(FoeX(movingFoe) - 30, EnemyY - 40 + Random.Range(-40, 40));
                 var vel = (to - from) / .35f + new Vector3(0, Random.Range(-1.5f, 1.5f));
-                Spawn(starSprite, from, vel, .38f, .45f, new Color(.55f, .95f, 1f), 540);
+                Spawn(starSprite, from, vel, .38f, .45f, col, 540);
                 yield return new WaitForSeconds(.05f);
             }
         }

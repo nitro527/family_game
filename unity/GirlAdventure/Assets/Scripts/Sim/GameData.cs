@@ -11,6 +11,7 @@ namespace GirlAdventure.Sim
         public EnemyDef[] Normal;       // 초원 (챕터 1)
         public EnemyDef Boss;           // 킹 젤리
         public EnemyDef[] Cave;         // 동굴 (챕터 2)
+        public EnemyDef[] Desert;       // 사막 (챕터 3)
         public EnemyDef Guard;          // 바위 대장 젤리 (챕터 2 중간 보스, 보물상자 지킴이)
         public EnemyDef General;        // 젤리 장군
     }
@@ -92,6 +93,13 @@ namespace GirlAdventure.Sim
         public static EnemyDef[] Normal { get; private set; }
         public static EnemyDef King { get; private set; }
         public static EnemyDef[] Cave { get; private set; }
+        public static EnemyDef[] Desert { get; private set; }
+
+        /// <summary>그 맵의 일반 적 목록 (출현표 인덱스가 가리키는 곳): 동굴 Cave, 사막 Desert, 나머지(초원·마을) Normal.</summary>
+        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : Normal;
+
+        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : "field";
+        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : MapKind.Field;
         public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
@@ -118,6 +126,7 @@ namespace GirlAdventure.Sim
             King = enemies.Boss;
             King.Boss = true;
             Cave = enemies.Cave;
+            Desert = enemies.Desert ?? new EnemyDef[0];
             Guard = enemies.Guard;
             Guard.Boss = true;
             General = enemies.General;
@@ -130,7 +139,7 @@ namespace GirlAdventure.Sim
             zones.Clear();
             foreach (var z in encounters.Zones)
             {
-                var list = z.Map == "cave" ? Cave : Normal;
+                var list = ListFor(ZoneKind(z.Map));
                 var pool = new int[z.Pool.Length];
                 for (int i = 0; i < pool.Length; i++)
                 {
@@ -150,6 +159,7 @@ namespace GirlAdventure.Sim
             foreach (var d in Cave) yield return d;
             yield return Guard;
             yield return General;
+            foreach (var d in Desert) yield return d;
         }
 
         /// <summary>
@@ -168,12 +178,12 @@ namespace GirlAdventure.Sim
         public static List<EnemyDef> RollEncounter(MapKind kind, int x, int y, Random r)
         {
             var (rate, max) = GroupAt(kind, x, y);
-            return Encounter.Roll(kind == MapKind.Cave ? Cave : Normal, EncounterPool(kind, x, y), rate, max, r);
+            return Encounter.Roll(ListFor(kind), EncounterPool(kind, x, y), rate, max, r);
         }
 
         static (EncounterZone zone, int[] pool) ZoneAt(MapKind kind, int x, int y)
         {
-            string map = kind == MapKind.Cave ? "cave" : "field";
+            string map = ZoneMap(kind);
             (EncounterZone, int[]) found = (null, null);
             foreach (var (z, pool) in zones)
                 if (z.Map == map && (found.Item1 == null || (x + y >= z.MinFar && y <= z.MaxY)))

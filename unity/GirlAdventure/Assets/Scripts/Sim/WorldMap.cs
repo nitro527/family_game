@@ -271,7 +271,7 @@ namespace GirlAdventure.Sim
         public double EncounterRate(int x, int y)
         {
             if (Kind == MapKind.Village) return 0;      // 마을엔 몬스터가 없다
-            if (Kind == MapKind.Desert) return 0;       // 사막 젤리(카우보이·선인장)는 백로그 51 에서
+            if (Kind == MapKind.Desert) return At(x, y) == '.' ? 0.07 : 0;     // 모래밭에만 (오아시스 풀밭·출구 앞은 쉬는 곳)
             char c = At(x, y);
             if (c == ',') return 0.16;
             if (c == '.' || c == 'f') return 0.06;
@@ -282,6 +282,13 @@ namespace GirlAdventure.Sim
         /// <summary>몬스터가 들어오지 않는 곳: 초원 시작 마을 공터, 동굴 입구(':').</summary>
         public bool Safe(int x, int y) =>
             Kind == MapKind.Village || (Kind == MapKind.Field ? x <= 8 && y <= 7 : At(x, y) == ':');
+
+        /// <summary>그 맵 출현표에서 적 하나 (GameData.ListFor(kind) 인덱스).</summary>
+        public static int PickIndex(MapKind kind, int x, int y, Random r)
+        {
+            var pool = GameData.EncounterPool(kind, x, y);
+            return pool[r.Next(pool.Length)];
+        }
 
         /// <summary>멀리 갈수록 강한 젤리가 나온다. GameData.Normal 인덱스를 돌려준다 (초원, 표는 encounters.json).</summary>
         public static int PickEnemyIndex(int x, int y, Random r)

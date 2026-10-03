@@ -31,7 +31,7 @@ namespace GirlAdventure.Sim
         public bool Timid;
 
         /// <summary>이 레벨 이상이면 그 맵 몬스터가 겁먹고 도망간다 (초원: 킹 젤리를 깬 뒤 조금 더, 동굴: 장군을 깬 뒤 조금 더).</summary>
-        public static int TimidLevel(MapKind kind) => kind == MapKind.Cave ? 11 : 7;
+        public static int TimidLevel(MapKind kind) => kind == MapKind.Cave ? 11 : kind == MapKind.Desert ? 16 : 7;
         readonly Random r;
         float spawnTimer;
         int nextId;
@@ -68,7 +68,7 @@ namespace GirlAdventure.Sim
                 var m = new FieldMonster
                 {
                     Id = nextId++, X = x, Y = y, FromX = x, FromY = y, Wait = 1 + (float)r.NextDouble() * 2,
-                    EnemyIndex = Map.Kind == MapKind.Cave ? WorldMap.PickCaveEnemyIndex(x, y, r) : WorldMap.PickEnemyIndex(x, y, r),
+                    EnemyIndex = WorldMap.PickIndex(Map.Kind, x, y, r),
                 };
                 List.Add(m);
                 return m;
