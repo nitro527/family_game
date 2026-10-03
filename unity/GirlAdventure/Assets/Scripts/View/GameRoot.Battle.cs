@@ -236,7 +236,8 @@ namespace GirlAdventure.View
             if (def.Boss) camShake = .45f;      // 보스는 땅이 울리며 솟아오른다
             pose = "ready";
             // 큰 젤리·도감 그림은 머리가 높아 이름표도 위로 (코드 젤리 머리 높이 기준, 1 단위 ≈ 88.6px)
-            enemyLabel.rectTransform.anchoredPosition = new Vector2(battle.Party && def.Boss ? 500 : 360, def.Boss ? -18 : -160 + (HeadUnits(def) * def.Size - JellyHeadUnits) * 1.05f * 88.6f);
+            enemyLabel.rectTransform.anchoredPosition = new Vector2(battle.Party && def.Boss ? (P.Companions.Count >= 2 ? 545 : 500) : 360,   // 보스 이름표: 동료 HUD 창 오른쪽으로 (셋이면 더)
+                                                                     def.Boss ? -18 : -160 + (HeadUnits(def) * def.Size - JellyHeadUnits) * 1.05f * 88.6f);
             enemyLabel.text = GroupBattle ? "" : def.Name;         // 무리는 적마다 작은 이름표 (GroupTags)
             for (int i = 0; i < groupTags.Length; i++) { groupTags[i].text = GroupBattle && i < defs.Count ? FoeName(i) : ""; groupShown[i] = 1; }
             enemyHpShown = 1;
