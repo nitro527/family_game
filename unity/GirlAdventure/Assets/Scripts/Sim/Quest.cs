@@ -48,7 +48,20 @@ namespace GirlAdventure.Sim
 
         /// <summary>이 칸으로 걸어갈 수 있나 (열린 기지 문 포함, 지킴이 자리는 못 지나감).</summary>
         public static bool Walkable(WorldMap m, PlayerState p, int x, int y) =>
-            !GuardAt(m, p, x, y) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)));
+            !GuardAt(m, p, x, y) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)) || (m.At(x, y) == 'Q' && HasLetter(p)));
+
+        /// <summary>
+        /// 리본 편지 (서진이 노트 3 ⭐ "편지 = 퀘스트 아이템, 읽으면 퀘스트 시작, 3스테이지 마법사가 전하는 말", Q-13):
+        /// 사막 출발 자리 옆에 떨어져 있고, 주우면 중요한 아이템이 되며 바로 읽는다. 내용·마법사는 ✏️ 임시 (사막의 마법사가 도움을 청함).
+        /// </summary>
+        public const string LetterItem = "letter";
+        public static bool HasLetter(PlayerState p) => p.Items.Contains(LetterItem);
+        public static bool TakeLetter(PlayerState p)
+        {
+            if (HasLetter(p)) return false;
+            p.Items.Add(LetterItem);
+            return true;
+        }
 
         /// <summary>
         /// 동생 지훈 합류 (백로그 48): 젤리 장군(챕터 2 보스)을 물리치면 합류한다. 이미 합류했거나 아직이면 false.

@@ -37,7 +37,7 @@ namespace GirlAdventure.View
         bool sliding;                           // 얼음 위를 미끄러지는 중 (C5-3): 걷는 그림 대신 선 채로 쭉
         WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap;
         WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
-        SpriteRenderer homeChestSR;
+        SpriteRenderer homeChestSR, letterSR;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
@@ -105,6 +105,7 @@ namespace GirlAdventure.View
 
             chestOpenSR = Prop("ChestOpen", Painter.ChestTexture(true), WorldMap.Chest);
             homeChestSR = Prop("HomeChestOpen", Painter.ChestTexture(true), (0, 0));
+            letterSR = Prop("Letter", Painter.LetterTexture(), WorldMap.DesertLetter);
             wellWaterSR = Prop("WellWater", MapPainter.WellWaterTexture(), WorldMap.TownWell);
             // 남쪽 바위 골짜기의 모래 회오리: PIPOYA 시트 (7,1) 회오리 그림 (대장을 이기면 사라진다)
             sandTwisterSR = new GameObject("SandTwister").AddComponent<SpriteRenderer>();
@@ -170,6 +171,7 @@ namespace GirlAdventure.View
             RefreshHoles();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
+            letterSR.enabled = map.Kind == MapKind.Desert && !Quest.HasLetter(P);
             (int x, int y) hc = map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? map.Find('H') : (-1, -1);
             homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(map.Kind == MapKind.Snow ? Quest.SnowChestId : Quest.HomeChestId(map.Room));
             if (homeChestSR.enabled) homeChestSR.transform.localPosition = new Vector3(hc.x, -hc.y, 0);
@@ -437,6 +439,23 @@ namespace GirlAdventure.View
             busy = false;
         }
 
+        /// <summary>리본 편지를 줍고 바로 읽는다 (서진이 노트 3, Q-13).</summary>
+        IEnumerator LetterRoutine()
+        {
+            if (busy) yield break;
+            busy = true;
+            if (Quest.TakeLetter(P))
+            {
+                sfx.Play("chest");
+                RefreshQuestProps();
+                AutoSave();
+                yield return Talk("letter_find");
+                yield return Talk("letter_read");
+            }
+            HideMessage();
+            busy = false;
+        }
+
         /// <summary>얼음 위 첫 미끄럼이면 한 번 알려 준다 (C5-3).</summary>
         IEnumerator IceHintRoutine()
         {
@@ -562,6 +581,7 @@ namespace GirlAdventure.View
                 else if (c == 'S') StartCoroutine(SignRoutine());
                 else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
                 else if (c == 'h' && map.IsTown && dir == "up" && WorldMap.HouseAtDoor(map.Kind, nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(map.Kind, nx, ny)));
+                else if (c == 'Q' && map.Kind == MapKind.Desert) StartCoroutine(LetterRoutine());
                 else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
                 else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
                 else if (c == 'D') StartCoroutine(DoorRoutine());

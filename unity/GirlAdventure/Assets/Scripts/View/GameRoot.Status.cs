@@ -211,7 +211,8 @@ namespace GirlAdventure.View
             if (P.Chapter < 2) return P.BossDown ? "별빛을 되찾았어요!" : "남동쪽 성의 킹 젤리를 물리치자";
             if (P.Chapter >= 5) return P.Boss5Down ? "눈보라가 그쳤어요! 예티와 친구가 되었어요" : "눈꽃 마을(눈길 동쪽 끝)에서 털옷을 사고, 북동쪽 눈 산 동굴을 살펴보자";
             if (P.Chapter >= 4) return P.Boss4Down ? "화산이 잠잠해졌어요!" : "온천 마을에서 장비를 갖추고, 화산 아래 동굴로 가 보자";
-            if (P.Chapter >= 3) return P.Boss3Down ? "사막에 물이 돌아왔어요!" : "오아시스 마을의 말라 버린 우물… 남쪽 바위 골짜기를 살펴보자";
+            if (P.Chapter >= 3) return P.Boss3Down ? "사막에 물이 돌아왔어요!" : !Quest.HasLetter(P) ? "출발 자리 옆에 반짝이는 편지가 떨어져 있어요. 주워 보자!"
+                                       : "편지 퀘스트: 사막의 마법사의 부탁 — 남쪽 바위 골짜기의 모래 회오리를 찾아가자";
             if (P.Boss2Down) return "동굴에 평화가 찾아왔어요!";
             if (Quest.DoorOpen(P)) return "기지 안쪽의 젤리 장군을 물리치자";
             if (P.HasItem(Quest.KeyItem)) return "열쇠로 동쪽 젤리 기지 문을 열자";

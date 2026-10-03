@@ -1040,6 +1040,19 @@ namespace GirlAdventure.EditorTools
             ExpectBgm("desert");
             yield return .5f;
             Shot("desert_start");
+            // 리본 편지 (서진이 노트 3, Q-13): 출발 자리 동쪽 → 줍고 읽기
+            G.DebugTeleport(WorldMap.DesertLetter.x - 1, WorldMap.DesertLetter.y, "right");
+            yield return .4f;
+            Shot("desert_letter");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return 1.0f;
+            Expect("letter found", G.MessageText.Contains("편지"));
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("사막의 마법사가") || !G.Busy)) yield return x;
+            Shot("letter_read");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("letter quest started", Quest.HasLetter(G.P) && G.DebugWalkable(WorldMap.DesertLetter.x, WorldMap.DesertLetter.y));
+            G.DebugTeleport(WorldMap.DesertStart.x, WorldMap.DesertStart.y, "down");
+            yield return .3f;
             Keys.Hold(KeyCode.DownArrow, true); yield return .35f; Keys.Hold(KeyCode.DownArrow, false);     // 오른쪽은 표지판
             yield return .5f;
             Shot("desert_walk");

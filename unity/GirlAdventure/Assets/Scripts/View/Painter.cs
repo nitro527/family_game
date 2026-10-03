@@ -49,6 +49,30 @@ namespace GirlAdventure.View
             return R.ToTexture(readable: ReadableForTests);
         }
 
+        /// <summary>리본 묶인 편지 두루마리 (서진이 노트 3): 크림색 두루마리 + 빨간 리본 + 반짝.</summary>
+        public static Texture2D LetterTexture()
+        {
+            var R = new Raster(Tile, Tile);
+            R.Ellipse(25, 40, 17, 4, new Color32(0, 0, 0, 60));
+            R.Rect(9, 22, 30, 14, Ink);
+            R.Rect(11, 24, 26, 10, Raster.Hex("#FFF4D8"));
+            R.Rect(11, 27, 26, 1.2f, Raster.Hex("#D8C8A0"));
+            R.Rect(11, 30, 22, 1.2f, Raster.Hex("#D8C8A0"));
+            foreach (float ex in new[] { 9f, 39f })                                    // 말린 끝
+            {
+                R.Ellipse(ex, 29, 4.5f, 8, Ink);
+                R.Ellipse(ex, 29, 3, 6.5f, Raster.Hex("#F0E2B8"));
+            }
+            Color32 red = Raster.Hex("#E8405A");
+            R.Rect(22, 22, 4, 14, red);                                                // 리본
+            R.Polygon(new[] { new Vector2(24, 23), new Vector2(15, 16), new Vector2(16, 26) }, red, Ink, 1.5f);
+            R.Polygon(new[] { new Vector2(24, 23), new Vector2(33, 16), new Vector2(32, 26) }, red, Ink, 1.5f);
+            R.Circle(24, 23, 2.5f, Raster.Hex("#B82840"));
+            R.Line(40, 8, 40, 16, 1.5f, Raster.Hex("#FFFFFF"));                       // 반짝
+            R.Line(36, 12, 44, 12, 1.5f, Raster.Hex("#FFFFFF"));
+            return R.ToTexture(readable: ReadableForTests);
+        }
+
         /// <summary>킹 젤리 성 (초원 오른쪽 아래).</summary>
         internal static void Castle(Raster R)
         {

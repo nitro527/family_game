@@ -480,6 +480,7 @@ namespace GirlAdventure.EditorTools
             Boss4Tests();
             QuickStartTests();
             HomeTests();
+            LetterTests();
             SnowTests();
             SnowJellyTests();
             SnowTownTests();
@@ -725,6 +726,23 @@ namespace GirlAdventure.EditorTools
             Check("snow chest: pendant once, gear but not sold", sc1 == ChestResult.Got && Quest.OpenSnowChest(sp, out _) == ChestResult.Empty && sp.Gear.Contains("snow_pendant")
                   && sw == "눈꽃 목걸이" && Equipment.IsGear("snow_pendant") && !Shop.Goods(MapKind.LavaTown).Contains("snow_pendant"));
             Check("snow song + talk", Music.Get("snow")?.Name == "snow" && GameData.HasTalk("ch5_intro") && GameData.HasTalk("sign_snow"));
+        }
+
+        /// <summary>리본 편지 (서진이 노트 3, Q-13): 사막 출발 자리 옆, 주우기 전엔 막힘·뒤엔 지나감, 한 번만, 대사·아이템.</summary>
+        static void LetterTests()
+        {
+            var m = WorldMap.Desert();
+            Npcs.Place(m);
+            var l = WorldMap.DesertLetter;
+            var p = PlayerState.NewGame("l"); p.Chapter = 3;
+            var r = Reach(m, WorldMap.DesertStart);
+            bool near = r[l.x - 1, l.y] || r[l.x + 1, l.y] || r[l.x, l.y - 1] || r[l.x, l.y + 1];
+            bool before = Quest.Walkable(m, p, l.x, l.y);
+            bool took = Quest.TakeLetter(p), again = Quest.TakeLetter(p);
+            Check("letter: next to the desert start, blocks until taken, once, key item + talk",
+                  m.At(l.x, l.y) == 'Q' && near && !before && took && !again && Quest.Walkable(m, p, l.x, l.y) && Quest.HasLetter(p)
+                  && GameData.HasItemDef(Quest.LetterItem) && GameData.HasTalk("letter_find") && GameData.HasTalk("letter_read")
+                  && PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave()))).Items.Contains(Quest.LetterItem));
         }
 
         /// <summary>집 안 (P-5): 마을 집 문마다 방, 문 앞이 마을에서 닿음, 방 안 주민·상자·침대·책장에 닿음, 상자 한 번, 집 안 저장은 문 앞으로.</summary>
