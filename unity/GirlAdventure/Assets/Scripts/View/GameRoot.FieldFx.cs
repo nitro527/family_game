@@ -93,7 +93,7 @@ namespace GirlAdventure.View
         Sprite[] flowerSprites;
         readonly List<(SpriteRenderer sr, float phase)> flowers = new List<(SpriteRenderer, float)>();
         Color waveTint = Color.white;
-        float ambientTimer;
+        float ambientTimer, darkBoxTimer;
         readonly List<SpriteRenderer> clouds = new List<SpriteRenderer>();
 
         /// <summary>꽃잎 모양 (작은 타원 두 겹).</summary>
@@ -176,6 +176,21 @@ namespace GirlAdventure.View
                     float a = t * 9f, r = .25f + Random.value * .5f;
                     var sr = SpawnField(puffSprite, b + new Vector3(Mathf.Cos(a) * r, .1f, 0), new Vector3(-Mathf.Sin(a) * 2.2f, Random.Range(1.2f, 2.2f)), 1.1f,
                                         Random.Range(.3f, .5f), Random.value < .5f ? new Color(.62f, .45f, .26f, .8f) : new Color(.8f, .66f, .44f, .75f));   // 모래보다 진한 갈색
+                    sr.sortingOrder = 5;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
+            }
+
+            // 어두운 상자 (노트 3): 보라·파랑 기운이 펄펄
+            if (map.Kind == MapKind.Underworld)
+            {
+                darkBoxTimer -= dt;
+                if (darkBoxTimer <= 0)
+                {
+                    darkBoxTimer = .12f;
+                    var b = FeetAt(WorldMap.UnderDarkBox.x, WorldMap.UnderDarkBox.y) + new Vector3(Random.Range(-.35f, .35f), .5f, 0);
+                    var sr = SpawnField(puffSprite, b, new Vector3(Random.Range(-.15f, .15f), Random.Range(.5f, .9f)), 1.6f, Random.Range(.12f, .2f),
+                                        Random.value < .5f ? new Color(.7f, .45f, 1f, .8f) : new Color(.45f, .7f, 1f, .8f));
                     sr.sortingOrder = 5;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }

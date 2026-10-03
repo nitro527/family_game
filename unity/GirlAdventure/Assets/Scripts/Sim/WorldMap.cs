@@ -18,7 +18,7 @@ namespace GirlAdventure.Sim
     /// 사막 — '.' 모래  ':' 동굴 출구 앞(안전)  'R' 바위 언덕  'Y' 선인장  'g' 오아시스 풀밭  'w' 오아시스 물  'p' 야자나무
     ///        'X' 동굴 출구(챕터 2 동굴에서 나온 곳)  'F' 오아시스 샘물  'S' 표지판  'V' 오아시스 마을 입구(밟으면 마을로)
     ///        'B' 카우보이 젤리 대장 자리 (남쪽 바위 골짜기, 밟으면 보스전)  'Q' 리본 편지 (서진이 노트 3)
-    /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 'l' 램프 'c' 관 (서진이 노트 4), 그 밖엔 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
+    /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 'l' 램프 'c' 관 (서진이 노트 4) 'Z' 어두운 상자 (노트 3), 그 밖엔 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
     /// 용암 땅 (챕터 4, 사용자 2026-10-03) — 'B' 화산 동굴 입구(화산 젤리 대장)  '.' 잿빛 땅  ':' 출발 자리(안전)  'R' 검은 바위  'L' 용암  'b' 돌다리  'K' 화산(4×4)  'F' 온천  'S' 표지판
     /// 눈 덮인 땅 (챕터 5, 서진이 2026-10-03) — '.' 눈밭  ':' 출발 자리(안전)  '=' 밟힌 눈길  'i' 꽁꽁 언 호수  'P' 눈 덮인 전나무  'R' 바위  'n' 눈사람  'K' 눈 산(4×4)  'B' 눈 산 동굴 입구(예티)  'V' 눈꽃 마을 문  'F' 모닥불(회복)  'S' 표지판
     /// 눈꽃 마을 (챕터 5, ✏️ 임시 이름) — '.' 눈밭  '=' 눈길  'P' 전나무  'h' 통나무집  'i' 스케이트 연못(그냥 걸어 다님)  'F' 모닥불(회복)  'M' 털옷 가게  'S' 표지판  'E' 출구  'N' 마을 사람
@@ -61,7 +61,8 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y)[] SnowTownHouses = { (7, 5), (23, 4), (7, 14), (25, 14) };
         public const int SnowTownInn = 1;
         // 지하세계: 밧줄(UnderExit) 바로 아래에서 시작
-        public static readonly (int x, int y) UnderExit = (5, 3), UnderStart = (5, 4), UnderSpring = (8, 3), UnderSign = (3, 6);
+        public static readonly (int x, int y) UnderExit = (5, 3), UnderStart = (5, 4), UnderSpring = (8, 3), UnderSign = (3, 6),
+                                                    UnderDarkBox = (33, 3);   // 동쪽 끝 작은 굴 구석: 어두운 상자 (서진이 노트 3 "아직 미스테리", Q-14)
         // 오아시스 마을 (챕터 3, 백로그 52): 사막 오아시스 동쪽 입구(TownGate) ↔ 마을 아래쪽 출구(TownExit)
         public static readonly (int x, int y) TownGate = (32, 10), TownStart = (18, 19), TownExit = (18, 20),
                                                     TownWell = (18, 10), TownSign = (20, 18), TownShop = (12, 10);
@@ -99,7 +100,7 @@ namespace GirlAdventure.Sim
             int inn = town == MapKind.Village ? InnHouse : town == MapKind.Oasis ? TownInn : town == MapKind.LavaTown ? LavaTownInn : SnowTownInn;
             return room - first == inn;
         }
-        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQ";
+        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQZ";
         // 집 안 (P-5): 방 하나 (바닥 13..21 × 8..14), 아래 벽 가운데 문
         public static readonly (int x, int y) HomeDoor = (17, 15), HomeStart = (17, 14);
         /// <summary>그 마을의 집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호(AllHouses), 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
@@ -493,6 +494,7 @@ namespace GirlAdventure.Sim
             m.Set(UnderExit.x, UnderExit.y, 'U');
             m.Set(UnderSpring.x, UnderSpring.y, 'F');
             m.Set(UnderSign.x, UnderSign.y, 'S');
+            m.Set(UnderDarkBox.x, UnderDarkBox.y, 'Z');
             return m;
         }
 

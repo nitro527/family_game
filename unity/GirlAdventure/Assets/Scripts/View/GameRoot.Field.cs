@@ -582,6 +582,7 @@ namespace GirlAdventure.View
                 else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
                 else if (c == 'h' && map.IsTown && dir == "up" && WorldMap.HouseAtDoor(map.Kind, nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(map.Kind, nx, ny)));
                 else if (c == 'Q' && map.Kind == MapKind.Desert) StartCoroutine(LetterRoutine());
+                else if (c == 'Z' && map.Kind == MapKind.Underworld) StartCoroutine(TalkOnce("dark_box"));
                 else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
                 else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
                 else if (c == 'D') StartCoroutine(DoorRoutine());

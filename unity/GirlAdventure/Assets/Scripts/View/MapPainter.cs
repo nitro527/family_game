@@ -1287,6 +1287,7 @@ namespace GirlAdventure.View
                 for (int y = 0; y < WorldMap.H; y++)
                     for (int x = 0; x < WorldMap.W; x++)
                         if (m.At(x, y) == 'l') list.Add((new Vector2(x + .5f, y + .6f), new Color(1f, .8f, .4f), 2.4f));     // 램프 불빛
+                        else if (m.At(x, y) == 'Z') list.Add((new Vector2(x + .5f, y + .6f), new Color(.65f, .4f, 1f), 2.8f));   // 어두운 상자의 보랏빛
                 return list;
             }
             list.Add((new Vector2(WorldMap.CaveSpring.x + .5f, WorldMap.CaveSpring.y + .6f), new Color(.4f, .85f, 1f), 3.2f));
@@ -1435,8 +1436,27 @@ namespace GirlAdventure.View
                 {
                     if (m.At(x, y) == 'l') GhostLamp(R, x * T, y * T);
                     else if (m.At(x, y) == 'c') Coffin(R, x * T, y * T);
+                    else if (m.At(x, y) == 'Z') DarkBox(R, x * T, y * T);
                 }
             return R;
+        }
+
+        /// <summary>어두운 상자 (서진이 노트 3 "어두운 기운이 펄펄~ 뭐가 있죠?" — 아직 미스테리): 보랏빛 상자 + 쇠사슬 + 자물쇠.</summary>
+        static void DarkBox(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 24, Y + 40, 22, 9, new Color32(150, 80, 255, 70));                     // 바닥에 번진 기운
+            R.Rect(X + 5, Y + 16, 38, 26, Ink);
+            R.Rect(X + 7, Y + 18, 34, 22, H("#3A2458"));
+            R.Ellipse(X + 24, Y + 17, 19, 8, Ink);
+            R.Ellipse(X + 24, Y + 17, 17, 6, H("#4E3274"));
+            R.Rect(X + 7, Y + 26, 34, 3, H("#24163A"));
+            R.Line(X + 7, Y + 20, X + 41, Y + 38, 3, H("#8A8A9A"));                             // 쇠사슬 (X 자)
+            R.Line(X + 41, Y + 20, X + 7, Y + 38, 3, H("#8A8A9A"));
+            R.Rect(X + 19, Y + 25, 10, 10, Ink);                                                // 자물쇠
+            R.Rect(X + 20, Y + 26, 8, 8, H("#6A4AA8"));
+            R.Circle(X + 24, Y + 30, 1.6f, Ink);
+            foreach (var (dx, dy) in new[] { (9f, 12f), (36f, 8f), (24f, 4f) })                // 피어오르는 기운
+                R.Circle(X + dx, Y + dy, 3, new Color32(120, 170, 255, 120));
         }
 
         /// <summary>유령이 나오는 램프 (호리병 모양 금빛 램프 + 주둥이에서 피어오르는 연기).</summary>

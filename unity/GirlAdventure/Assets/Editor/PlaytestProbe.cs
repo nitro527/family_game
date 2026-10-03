@@ -1153,6 +1153,14 @@ namespace GirlAdventure.EditorTools
                 foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
                 G.NoGroups = false;
                 G.DebugMobs(true, true);
+                // 어두운 상자 (노트 3, Q-14): 동쪽 끝 굴 구석, 부딪히면 "아직은 열 수 없어요"
+                G.DebugTeleport(WorldMap.UnderDarkBox.x - 1, WorldMap.UnderDarkBox.y, "right");
+                yield return .8f;
+                Shot("under_dark_box");
+                Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+                yield return 1.0f;
+                Expect("dark box talks", G.MessageText.Contains("상자"));
+                foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
                 G.DebugTeleport(WorldMap.UnderStart.x, WorldMap.UnderStart.y, "up");
                 yield return .3f;
                 Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);

@@ -481,6 +481,7 @@ namespace GirlAdventure.EditorTools
             QuickStartTests();
             HomeTests();
             LetterTests();
+            DarkBoxTests();
             SnowTests();
             SnowJellyTests();
             SnowTownTests();
@@ -726,6 +727,16 @@ namespace GirlAdventure.EditorTools
             Check("snow chest: pendant once, gear but not sold", sc1 == ChestResult.Got && Quest.OpenSnowChest(sp, out _) == ChestResult.Empty && sp.Gear.Contains("snow_pendant")
                   && sw == "눈꽃 목걸이" && Equipment.IsGear("snow_pendant") && !Shop.Goods(MapKind.LavaTown).Contains("snow_pendant"));
             Check("snow song + talk", Music.Get("snow")?.Name == "snow" && GameData.HasTalk("ch5_intro") && GameData.HasTalk("sign_snow"));
+        }
+
+        /// <summary>어두운 상자 (서진이 노트 3 "아직 미스테리", Q-14): 지하세계 동쪽 끝 굴 구석, 닿을 수 있고 막힘, 대사.</summary>
+        static void DarkBoxTests()
+        {
+            var u = WorldMap.Underworld();
+            var r = Reach(u, WorldMap.UnderStart);
+            var b = WorldMap.UnderDarkBox;
+            Check("dark box: underworld corner, reachable side, blocks, talk", u.At(b.x, b.y) == 'Z' && u.Blocked(b.x, b.y)
+                  && (r[b.x - 1, b.y] || r[b.x, b.y + 1]) && GameData.HasTalk("dark_box"));
         }
 
         /// <summary>리본 편지 (서진이 노트 3, Q-13): 사막 출발 자리 옆, 주우기 전엔 막힘·뒤엔 지나감, 한 번만, 대사·아이템.</summary>
