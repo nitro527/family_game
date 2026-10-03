@@ -220,13 +220,13 @@
   {
    "id": "yeti",
    "name": "예티",
-   "region": "?",
-   "tier": "?",
+   "region": "눈 덮인 곳 (눈 산 동굴 ✏️)",
+   "tier": "보스",
    "sheet": "yeti_jelly_great_king.png",
    "slot": 1,
    "idea": "daughter_note_02",
    "sketch": "yeti.png",
-   "ingame": null,
+   "ingame": "예티",
    "desc": "복슬복슬 눈 괴물. 이름은 아직 고민 중!"
   },
   {

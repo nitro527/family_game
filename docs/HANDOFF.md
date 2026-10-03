@@ -1,18 +1,20 @@
 # 다시 시작하기 (인수인계)
 
-마지막 갱신: 2026-10-03 밤 — **챕터 4 까지 완성, 서진이 시험 플레이를 위해 멈춤** (사용자: "챕터 4 끝까지 만들고 한번 멈춰 딸 플레이 하게"). 빌드 `unity/Build/GirlAdventure.exe`(145MB), 메모 양식 [PLAYTEST_NOTE.md](PLAYTEST_NOTE.md). 다시 시작하면 메모를 백로그로 옮기는 것부터.
+마지막 갱신: 2026-10-04 — **챕터 5(눈 덮인 곳·예티)까지 완성**, 시험 플레이 메모 1차(P-1~6) 반영, 별빛 마을 집 안, 타이틀 "챕터 고르기". 빌드 `unity/Build/GirlAdventure.exe`(148MB), 메모 양식 [PLAYTEST_NOTE.md](PLAYTEST_NOTE.md).
+사용자 지시 (10-03): "당분간 나로부터 받을 정보 없을 테니 알아서 전반적인 게임 퀄리티를 향상시켜" → 🙋 질문에 막히지 말고 ✏️ 임시로 진행.
 주말 회고·다음 할 일·확장 검토·**작업 방식 비교와 사용자 체크리스트(§6)** 는 → [REVIEW_2026-09-27.md](REVIEW_2026-09-27.md)
 
-## 주말에 다시 시작할 때 (순서대로)
+## 다시 시작할 때 (순서대로)
 1. Unity Hub 로그인 확인 (배치 모드 검증에 필요)
-2. (2026-10-03 부터) 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 사용자가 이 대화에서 명령하면 백로그 항목을 하나씩 처리
-3. 다음 개발 항목 (Claude 가 계획하며 진행 — 사용자 지시 10-03 "앞으로 뭘할지도 니가 계속 계획하면서 진행해봐"): `docs/BACKLOG.md` 맨 위 **C4 챕터 4** 의 남은 것
-   - C4-1~9 모두 완료 (C4-8 빌드·메모도). 다음은 시험 플레이 메모 → 백로그, 그 뒤 PLAN_NEXT / 🙋 답
-   - 동료는 `party.json` (지훈 jihun·아빠 dad), 화면은 동료 배열(`AllyView`·`Follower`·`allyHuds`), 동료 공용 대사 `ally_*`(얼굴 `ally_brave`), 지훈은 예전 `bro_*`
-   - 마을 드나들기: `WorldMap.HasTown(chapter)`(지금 1·3), `ForPlayer`, View `SurfaceMap`·`TravelRoutine`(챕터 3 = 사막) — 챕터 4 마을을 넣을 때 여기들
-   - 밸런스: SmokeTest `[BALANCE LAVA]`·`FightDuo`(셋 AI), `python tools/balance.py --skill N`. 프로브 난수는 `GameRoot.SeedOverride` 로 고정
-   - 세이브 버전 올리면 SmokeTest `SaveSafetyTests` 에 예시 JSON 추가 (지금 v13)
-4. 그 뒤: PLAN_NEXT.md (58 편지 퀘스트 🙋, 62 지훈 기술 🙋, 엄마 합류 시점 🙋…) · 🙋 답을 기다리는 것: 지하세계·용암 괴물 디자인(서진이), 새 주문(56), 기술·마을·보스 이름
+2. 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 이 대화에서 사용자 명령 / 알아서 퀄리티 개선
+3. `docs/BACKLOG.md` 맨 위부터 (P·C5·C4·U 는 모두 완료). 다음 후보: 전반 퀄리티(아래 Q 섹션), PLAN_NEXT, 🙋 답 반영
+   - 동료는 `party.json` (지훈 jihun·아빠 dad), 화면은 동료 배열(`AllyView`·`Follower`·`allyHuds`), 동료 공용 대사 `ally_*`, 지훈은 예전 `bro_*`
+   - 챕터 추가 자리: `WorldMap.LastChapter`(지금 5)·`ForChapter`·`HasTown`·`ForPlayer`, `Quest.StartChapterN`·`QuickStart`(챕터 고르기 레벨·장비), View `SurfaceMap`·`TravelRoutine`·`StartNextChapter`·`ChapterNRoutine`·`ShowEnding`
+   - 맵 종류: Field·Cave·Village·Desert·Oasis·Underworld·Lava·LavaTown·Home(집 안)·Snow·SnowTown. 얼음 미끄럼 `WorldMap.Slippery/SlideEnd`
+   - 밸런스: SmokeTest `[BALANCE SNOW]`·`[BALANCE BOSS5]`·`FightDuo`(셋 AI), `python tools/balance.py --skill N`. 프로브 난수는 `GameRoot.SeedOverride`
+   - 세이브 버전 올리면 SmokeTest `SaveSafetyTests` 에 예시 JSON 추가 (지금 v15)
+   - 그림 확인: SmokeTest 가 `unity/playtest/under_monsters.png`·`snow_jellies.png`·`map_snow.png` 를 만든다 (`ExportSheet`)
+4. 🙋 답을 기다리는 것 (PLAYTEST_NOTE 맨 아래): 새 주문(56), 지훈·아빠 기술 이름, 마을·보스 이름, 엄마 합류 시점, 용암·눈 괴물 디자인, 예티 이름·성격
 5. 그림(Gemini) 작업은 **대화 세션에서만** (자동 루틴 불가). PC 잠금 상태면 클립보드가 막혀 못 함
 
 ## 프로젝트 한눈에
