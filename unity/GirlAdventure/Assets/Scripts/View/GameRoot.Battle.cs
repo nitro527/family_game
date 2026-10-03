@@ -679,6 +679,11 @@ namespace GirlAdventure.View
             {
                 if (battle.Foes[i].Down || battle.PlayerDown) continue;
                 yield return FoeAttack(i);
+                if (battle.Foes[i].Def.Twice && !battle.Foes[i].Down && !battle.PlayerDown)      // 빠른 적은 한 번 더 (이단 유령)
+                {
+                    yield return Talk("enemy_fast", ("enemy", FoeName(i)));
+                    yield return FoeAttack(i);
+                }
             }
         }
 
@@ -689,7 +694,7 @@ namespace GirlAdventure.View
             yield return new WaitForSeconds(.25f);
             movingFoe = i;
             StartMove(d.Move);
-            sfx.Play("mv_" + moveName);             // 모션마다 다른 소리
+            sfx.Play(d.Shape == "skeleton" ? "creak" : "mv_" + moveName);    // 모션마다 다른 소리 (해골은 삐거덕)
             if (moveName == "shard") StartCoroutine(ShardVolley(d));
             yield return Talk("enemy_attack", ("enemy", FoeName(i)), ("attack", d.Attack ?? "공격"));
             var e = battle.EnemyAct(i);

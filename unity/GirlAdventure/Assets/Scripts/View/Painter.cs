@@ -170,11 +170,20 @@ namespace GirlAdventure.View
         /// 젤리 몬스터 (텍스처 2배 해상도). 바닥 중앙이 (160, bottomY).
         /// 보스는 왕관이 추가된다. 동굴 젤리는 Look 에 따라 돌 껍데기 / 수정 결정 / 장군 투구를 두른다.
         /// </summary>
+        /// <summary>테스트용: 켜면 젤리 텍스처를 읽을 수 있게 남긴다 (그림 모음 내보내기).</summary>
+        public static bool ReadableForTests;
+
         public static Texture2D Jelly(EnemyDef def, out Vector2 pivot)
         {
             const int W = 320, Hh = 420, k = 2;
             float bottom = 400;
             var R = new Raster(W, Hh);
+            if (!string.IsNullOrEmpty(def.Shape))      // 젤리가 아닌 괴물 (서진이 노트 4: 지하세계)
+            {
+                Creature(R, def, W / 2f, bottom);
+                pivot = new Vector2(.5f, 1 - bottom / Hh);
+                return R.ToTexture(readable: ReadableForTests);
+            }
             float w = 130 * k, h = 110 * k, cx = W / 2f;
             var pts = new List<Vector2> { new Vector2(cx - w / 2, bottom) };
             Raster.Bezier(pts, new Vector2(cx - w / 2, bottom), new Vector2(cx - w * .62f, bottom - h * .55f), new Vector2(cx - w * .12f, bottom - h * .7f), new Vector2(cx, bottom - h));
@@ -226,7 +235,144 @@ namespace GirlAdventure.View
                 R.Circle(cx + 44, cy - 2, 7, Raster.Hex("#5FD07A"));
             }
             pivot = new Vector2(.5f, 1 - bottom / Hh);
-            return R.ToTexture();
+            return R.ToTexture(readable: ReadableForTests);
+        }
+
+        // ------------------------------------------------------------------ 지하세계 괴물 (서진이 노트 4, 2026-10-03)
+        static void Creature(Raster R, EnemyDef def, float cx, float bottom)
+        {
+            Color32 c0 = Raster.Hex(def.Color), c1 = Raster.Hex(def.Dark);
+            switch (def.Shape)
+            {
+                case "ghost": Ghost(R, cx, bottom, c0, c1, false); break;
+                case "ghost2": Ghost(R, cx, bottom, c0, c1, true); break;
+                case "skeleton": Skeleton(R, cx, bottom, c0, c1); break;
+                case "bat": Bat(R, cx, bottom, c0, c1); break;
+                case "worm": Worm(R, cx, bottom, c0, c1); break;
+            }
+        }
+
+        /// <summary>
+        /// 유령: 둥근 머리에서 꼬리가 아래로 흘러 램프로 이어진다 (램프에서 나옴), 웃으며 감은 눈 (^ ^).
+        /// 이단 유령(ghost2): 토끼 같은 두 귀, 크고 까만 눈, 털처럼 삐죽한 꼬리 — 램프 없이 둥둥.
+        /// </summary>
+        static void Ghost(Raster R, float cx, float bottom, Color32 c0, Color32 c1, bool tier2)
+        {
+            float hy = bottom - (tier2 ? 230 : 250), hr = tier2 ? 92 : 88;
+            var tail = new List<Vector2>();
+            float tx = tier2 ? cx + 70 : cx - 40, ty = bottom - (tier2 ? 30 : 46);
+            // 꼬리 끝: 이단 유령은 둥둥 뜬 꼬리, 유령은 램프 주둥이 끝으로 이어진다 (램프에서 나옴)
+            float ex = tier2 ? tx : tx - 54, ey = tier2 ? ty : bottom - 36;
+            Raster.Bezier(tail, new Vector2(cx - hr * .85f, hy + 30), new Vector2(cx - hr * .7f, hy + 140), new Vector2(ex - 10, ey - 70), new Vector2(ex, ey), 14);
+            Raster.Bezier(tail, new Vector2(ex, ey), new Vector2(ex + 40, ey - 50), new Vector2(cx + hr * .6f, hy + 120), new Vector2(cx + hr * .85f, hy + 30), 14);
+            R.Polygon(tail.ToArray(), (x, y) => Color32.Lerp(c0, c1, Mathf.Clamp01((y - hy) / (bottom - hy))), Ink, 8);
+            if (tier2)                                                      // 털처럼 삐죽한 꼬리 끝
+                for (int i = 0; i < 6; i++) R.Line(tx - 6 + i * 4, ty - 4, tx + 8 + i * 6, ty + 12 - i, 4, Ink);
+            if (tier2)                                                      // 토끼 귀
+                foreach (int s in new[] { -1, 1 })
+                {
+                    R.Ellipse(cx + s * 46, hy - hr * .95f, 26, 50, Ink);
+                    R.Ellipse(cx + s * 46, hy - hr * .95f, 20, 44, c0);
+                    R.Ellipse(cx + s * 46, hy - hr * .9f, 9, 26, Raster.Hex("#FFC8DC"));
+                }
+            R.Circle(cx, hy, hr + 5, Ink);
+            R.Circle(cx, hy, hr, c0);
+            R.Ellipse(cx - hr * .35f, hy - hr * .45f, hr * .22f, hr * .14f, new Color32(255, 255, 255, 200));
+            if (tier2)                                                      // 크고 까만 눈
+                foreach (int s in new[] { -1, 1 })
+                {
+                    R.Ellipse(cx + s * 34, hy + 4, 24, 30, Raster.Hex("#120C1A"));
+                    R.Circle(cx + s * 34 - 6, hy - 8, 6, Raster.Hex("#FFFFFF"));
+                }
+            else
+                foreach (int s in new[] { -1, 1 })                         // 웃으며 감은 눈 ^ ^
+                {
+                    R.Line(cx + s * 32 - 14, hy + 4, cx + s * 32, hy - 10, 6, Ink);
+                    R.Line(cx + s * 32, hy - 10, cx + s * 32 + 14, hy + 4, 6, Ink);
+                }
+            R.Ellipse(cx, hy + 40, 12, 8, Ink);                             // 작은 입
+            R.Ellipse(cx - 56, hy + 26, 16, 9, Raster.Hex("#FF9EC0", 120));
+            R.Ellipse(cx + 56, hy + 26, 16, 9, Raster.Hex("#FF9EC0", 120));
+            if (!tier2)                                                     // 램프 (꼬리가 여기서 나온다)
+            {
+                R.Ellipse(tx + 10, bottom - 16, 48, 22, Ink);
+                R.Ellipse(tx + 10, bottom - 16, 43, 17, Raster.Hex("#E8B83A"));
+                R.Ellipse(tx - 8, bottom - 22, 16, 6, Raster.Hex("#FFE27A"));
+                R.Line(tx - 30, bottom - 22, tx - 56, bottom - 34, 10, Ink);    // 주둥이
+                R.Line(tx - 30, bottom - 22, tx - 54, bottom - 33, 6, Raster.Hex("#E8B83A"));
+                R.Ellipse(tx + 58, bottom - 20, 12, 14, Ink);                    // 손잡이
+                R.Ellipse(tx + 58, bottom - 20, 6, 8, new Color32(0, 0, 0, 0));
+            }
+        }
+
+        /// <summary>해골 (관에서 나오고 삐거덕): 동그란 해골 머리(까만 눈구멍·이빨) + 뼈 몸통·팔다리, 뼈 끝은 동글.</summary>
+        static void Skeleton(Raster R, float cx, float bottom, Color32 bone, Color32 boneD)
+        {
+            void Bone(float x0, float y0, float x1, float y1)
+            {
+                R.Line(x0, y0, x1, y1, 16, Ink);
+                R.Line(x0, y0, x1, y1, 10, bone);
+                foreach (var (x, y) in new[] { (x0, y0), (x1, y1) }) { R.Circle(x, y, 11, Ink); R.Circle(x, y, 7, bone); }
+            }
+            float hipY = bottom - 110, neckY = bottom - 215;
+            Bone(cx - 24, hipY, cx - 34, bottom - 14);                     // 다리
+            Bone(cx + 24, hipY, cx + 34, bottom - 14);
+            R.Ellipse(cx, (hipY + neckY) / 2, 44, 58, Ink);                 // 몸통 (갈비뼈)
+            R.Ellipse(cx, (hipY + neckY) / 2, 38, 52, bone);
+            for (int i = 0; i < 4; i++) R.Line(cx - 30, neckY + 24 + i * 22, cx + 30, neckY + 24 + i * 22, 5, boneD);
+            Bone(cx - 40, neckY + 20, cx - 104, neckY - 46);               // 팔 (만세)
+            Bone(cx + 40, neckY + 20, cx + 100, neckY + 50);
+            float hy = neckY - 64;
+            R.Circle(cx, hy, 66, Ink);
+            R.Circle(cx, hy, 60, bone);
+            R.Rect(cx - 34, hy + 34, 68, 34, Ink);                          // 턱
+            R.Rect(cx - 28, hy + 34, 56, 28, bone);
+            for (int i = 0; i < 4; i++) R.Rect(cx - 24 + i * 14, hy + 40, 3, 20, Ink);   // 이빨 사이
+            foreach (int s in new[] { -1, 1 }) R.Ellipse(cx + s * 22, hy + 2, 13, 19, Raster.Hex("#141018"));
+        }
+
+        /// <summary>박쥐: 동그란 몸 + 뾰족 귀 + 물결 모양 날개 + 작은 송곳니.</summary>
+        static void Bat(Raster R, float cx, float bottom, Color32 c0, Color32 c1)
+        {
+            float cy = bottom - 170;
+            foreach (int s in new[] { -1, 1 })
+            {
+                var wing = new[] { new Vector2(cx + s * 40, cy - 20), new Vector2(cx + s * 150, cy - 70), new Vector2(cx + s * 140, cy + 10), new Vector2(cx + s * 112, cy - 4),
+                                   new Vector2(cx + s * 98, cy + 34), new Vector2(cx + s * 74, cy + 16), new Vector2(cx + s * 50, cy + 40) };
+                R.Polygon(wing, (x, y) => Color32.Lerp(c1, c0, Mathf.Clamp01((y - cy + 70) / 110)), Ink, 7);
+                R.Polygon(new[] { new Vector2(cx + s * 20, cy - 50), new Vector2(cx + s * 52, cy - 104), new Vector2(cx + s * 60, cy - 40) }, c0, Ink, 6);   // 귀
+            }
+            R.Circle(cx, cy, 64, Ink);
+            R.Circle(cx, cy, 58, c0);
+            foreach (int s in new[] { -1, 1 })
+            {
+                R.Ellipse(cx + s * 22, cy - 8, 13, 16, Raster.Hex("#FFE27A"));
+                R.Circle(cx + s * 22, cy - 6, 6, Ink);
+                R.Polygon(new[] { new Vector2(cx + s * 12, cy + 26), new Vector2(cx + s * 20, cy + 26), new Vector2(cx + s * 16, cy + 40) }, Raster.Hex("#FFFFFF"), Ink, 2);   // 송곳니
+            }
+            R.Ellipse(cx + 24, bottom - 14, 40, 8, new Color32(0, 0, 0, 60));
+        }
+
+        /// <summary>지렁이: 땅에서 꿈틀 올라온 마디 몸 (분홍 마디가 활처럼), 맨 위 마디에 얼굴.</summary>
+        static void Worm(Raster R, float cx, float bottom, Color32 c0, Color32 c1)
+        {
+            R.Ellipse(cx - 40, bottom - 10, 70, 14, Raster.Hex("#5A4636"));          // 흙 구멍
+            int n = 8;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)(n - 1);
+                float x = cx - 60 + Mathf.Sin(t * Mathf.PI * .9f) * 90 + t * 40, y = bottom - 20 - t * 230;
+                float rr = 40 - t * 6;
+                R.Circle(x, y, rr + 5, Ink);
+                R.Circle(x, y, rr, i % 2 == 0 ? c0 : c1);
+                if (i == n - 1)
+                {
+                    foreach (int s in new[] { -1, 1 }) { R.Circle(x + s * 14, y - 4, 7, Ink); R.Circle(x + s * 14 - 2, y - 6, 2.5f, Raster.Hex("#FFFFFF")); }
+                    R.Ellipse(x, y + 16, 8, 5, Ink);
+                    R.Ellipse(x - 26, y + 10, 9, 6, Raster.Hex("#FF7FA0", 140));
+                    R.Ellipse(x + 26, y + 10, 9, 6, Raster.Hex("#FF7FA0", 140));
+                }
+            }
         }
 
         static float Grain(float x, float y) => Mathf.Sin(x * .21f + y * .13f) * Mathf.Sin(x * .07f - y * .19f);

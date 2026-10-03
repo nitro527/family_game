@@ -19,9 +19,11 @@
     { "Name": "큰 선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 150, "Atk": 21, "Exp": 40, "Gold": 30, "Move": "shard", "Attack": "왕가시 따끔따끔 발사", "Tier": 2, "Art": "desert_cactus", "Desc": "선인장 젤리가 크게 자란 2단 젤리. 가시가 더 길어요." }
   ],
   "Under": [
-    { "Name": "그림자 젤리", "Color": "#6A5AA8", "Dark": "#3A2E6A", "Hp": 42, "Atk": 13, "Exp": 26, "Gold": 18, "Move": "hop", "Attack": "스르륵 그림자 덮치기", "Desc": "✏️ 지하세계 임시 젤리. 서진이가 새 모습을 그려 줄 거예요!" },
-    { "Name": "반딧불 젤리", "Color": "#B8F06A", "Dark": "#6AA83A", "Hp": 36, "Atk": 12, "Exp": 24, "Gold": 26, "Move": "shard", "Attack": "반짝 불빛 쏘기", "Look": "crystal", "Desc": "✏️ 지하세계 임시 젤리. 몸이 반딧불처럼 빛나요." },
-    { "Name": "큰 그림자 젤리", "Color": "#6A5AA8", "Dark": "#3A2E6A", "Hp": 70, "Atk": 16, "Exp": 45, "Gold": 35, "Move": "slam", "Attack": "쿵 그림자 누르기", "Tier": 2, "Desc": "✏️ 그림자 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." }
+    {"Name": "박쥐", "Color": "#5A4A7A", "Dark": "#2E2448", "Hp": 32, "Atk": 11, "Exp": 18, "Gold": 14, "Move": "hop", "Attack": "파닥파닥 날개 치기", "Shape": "bat", "Desc": "지하세계 천장에 거꾸로 매달려 있다가 파닥파닥 날아와요. (서진이 메모)"},
+    {"Name": "지렁이", "Color": "#E89AA0", "Dark": "#B86A70", "Hp": 38, "Atk": 10, "Exp": 18, "Gold": 12, "Move": "spin", "Attack": "꿈틀꿈틀 휘감기", "Shape": "worm", "Desc": "땅속에서 꿈틀꿈틀 올라오는 지렁이. (서진이 메모)"},
+    {"Name": "유령", "Color": "#E8E4FF", "Dark": "#A8A0D8", "Hp": 50, "Atk": 14, "Exp": 28, "Gold": 22, "Move": "hop", "Attack": "스르륵 램프 바람", "Shape": "ghost", "Desc": "램프에서 스르륵 나오는 유령. 어려워요! (서진이 그림)"},
+    {"Name": "해골", "Color": "#F4F0E2", "Dark": "#C8C0A8", "Hp": 55, "Atk": 15, "Exp": 30, "Gold": 26, "Move": "tackle", "Attack": "삐거덕 뼈 휘두르기", "Shape": "skeleton", "Desc": "관에서 나오는 해골. 움직일 때마다 삐거덕 소리가 나요. (서진이 그림)"},
+    {"Name": "이단 유령", "Color": "#E8E4FF", "Dark": "#A8A0D8", "Hp": 80, "Atk": 16, "Exp": 50, "Gold": 35, "Move": "charge", "Attack": "쌩쌩 유령 돌진", "Shape": "ghost2", "Tier": 2, "Evade": 0.35, "Twice": true, "Desc": "유령의 2단. 공격을 잘 피하고 아주 빨라서 두 번씩 공격해요! (서진이 그림)"}
   ],
   "Lava": [
     { "Name": "숯 젤리", "Color": "#3A3436", "Dark": "#1E1A1C", "Hp": 175, "Atk": 29, "Exp": 28, "Gold": 22, "Move": "slam", "Attack": "뜨끈뜨끈 몸통 누르기", "Look": "ember", "Desc": "✏️ 용암 땅 임시 젤리. 까만 몸에 주황빛 금이 갔어요. 서진이가 새 모습을 그려 줄 거예요!" },

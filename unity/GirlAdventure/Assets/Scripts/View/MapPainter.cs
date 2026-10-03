@@ -946,6 +946,9 @@ namespace GirlAdventure.View
                 list.Add((new Vector2(m.Spring.x + .5f, m.Spring.y + .6f), new Color(.7f, .5f, 1f), 3.2f));
                 list.Add((new Vector2(WorldMap.UnderExit.x + .5f, WorldMap.UnderExit.y + .2f), new Color(1f, .95f, .8f), 3.6f));   // 밧줄 위에서 새는 햇빛
                 list.Add((new Vector2(20.5f, 5.2f), new Color(.6f, .45f, 1f), 3.4f));                                              // 지하 호수
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                        if (m.At(x, y) == 'l') list.Add((new Vector2(x + .5f, y + .6f), new Color(1f, .8f, .4f), 2.4f));     // 램프 불빛
                 return list;
             }
             list.Add((new Vector2(WorldMap.CaveSpring.x + .5f, WorldMap.CaveSpring.y + .6f), new Color(.4f, .85f, 1f), 3.2f));
@@ -969,7 +972,7 @@ namespace GirlAdventure.View
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
-            var floor = Mask(m, "_:FSHDBrwCMo");
+            var floor = Mask(m, "_:FSHDBrwCMolc");
             var safe = Mask(m, ":FSM");
             var water = Mask(m, "w");
             var deep = Erode(water);
@@ -1089,7 +1092,35 @@ namespace GirlAdventure.View
                 for (int k = 0; k < 4; k++) R.Circle(rx, Y + 6 + k * 10, 2.2f, H("#8A6A3A"));
             }
             R.Ellipse(X + 24, Y + 42, 14, 4, H("#3A2E4A"));
+            for (int y = 0; y < WorldMap.H; y++)                              // 유령 램프·해골 관 (서진이 노트 4)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    if (m.At(x, y) == 'l') GhostLamp(R, x * T, y * T);
+                    else if (m.At(x, y) == 'c') Coffin(R, x * T, y * T);
+                }
             return R;
+        }
+
+        /// <summary>유령이 나오는 램프 (호리병 모양 금빛 램프 + 주둥이에서 피어오르는 연기).</summary>
+        static void GhostLamp(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 42, 18, 5, new Color32(0, 0, 0, 90));
+            R.Ellipse(X + 24, Y + 34, 17, 9, Ink);
+            R.Ellipse(X + 24, Y + 34, 14, 7, H("#E8B83A"));
+            R.Ellipse(X + 18, Y + 31, 5, 2, H("#FFE27A"));
+            R.Line(X + 10, Y + 32, X + 2, Y + 26, 5, H("#C8982A"));
+            R.Ellipse(X + 40, Y + 32, 5, 6, H("#C8982A"));
+            R.Ellipse(X + 4, Y + 16, 6, 9, H("#E8E4FF", 120));                // 연기
+            R.Ellipse(X + 8, Y + 4, 8, 7, H("#E8E4FF", 90));
+        }
+
+        /// <summary>해골이 나오는 관 (나무 관, 금빛 테두리, 뚜껑이 살짝 열림).</summary>
+        static void Coffin(Raster R, float X, float Y)
+        {
+            var pts = new[] { new Vector2(X + 24, Y + 2), new Vector2(X + 38, Y + 12), new Vector2(X + 34, Y + 46), new Vector2(X + 14, Y + 46), new Vector2(X + 10, Y + 12) };
+            R.Polygon(pts, H("#6B4424"), Ink, 3);
+            R.Polygon(new[] { new Vector2(X + 24, Y + 6), new Vector2(X + 34, Y + 13), new Vector2(X + 31, Y + 42), new Vector2(X + 17, Y + 42), new Vector2(X + 14, Y + 13) }, H("#8A5A30"), H("#E8B83A"), 2);
+            R.Line(X + 14, Y + 13, X + 6, Y + 8, 3, H("#3A2418"));            // 살짝 열린 뚜껑 틈
         }
 
         static void Boulder(Raster R, float X, float Y, float v)

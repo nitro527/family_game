@@ -20,6 +20,12 @@ namespace GirlAdventure.Sim
         public string Art;                  // 몬스터 도감 그림 이름 (Resources/Monsters/<Art>.png). 없으면 코드로 그린 젤리
         public string Backdrop;             // 전투 배경 이름 (Resources/Battle/, 없으면 맵 기본 배경)
         public string Desc;                 // 몬스터 도감 설명 (docs/monsters/monsters.json desc 에서)
+        public string Shape;                // 젤리가 아닌 모양 (Shapes 중 하나, 서진이 노트 4 지하세계 괴물) — 비면 젤리
+        public double Evade;                // 잘 피함: 한 마리를 노리는 공격이 이 확률로 더 빗나간다 (이단 유령 "잘 피함")
+        public bool Twice;                  // 빠름: 적 차례에 두 번 공격한다 (이단 유령 "빠름")
+
+        /// <summary>View 가 그릴 줄 아는 젤리가 아닌 모양: 유령(램프에서 나옴)·이단 유령(토끼 귀)·해골·박쥐·지렁이.</summary>
+        public static readonly string[] Shapes = { "", "ghost", "ghost2", "skeleton", "bat", "worm" };
 
         /// <summary>View 가 그릴 줄 아는 겉모습: 돌 껍데기, 수정 결정, 장군 투구, (마을 사람) 밀짚모자·리본·터번·카우보이 모자, (용암 땅) 용암 딱지·숯 불씨.</summary>
         public static readonly string[] Looks = { "", "rock", "ore", "crystal", "general", "hat", "bow", "turban", "cowboy", "magma", "ember" };
@@ -158,6 +164,7 @@ namespace GirlAdventure.Sim
                 case Cmd.Fire:
                     o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
                     if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; break; }
+                    if (Evades(o.Target)) { o.Missed = true; break; }        // 잘 피하는 적
                     o.Damages = new int[Foes.Count];
                     o.Damage = o.Damages[o.Target] = Roll(s, power);
                     break;
@@ -218,6 +225,9 @@ namespace GirlAdventure.Sim
             return best;
         }
 
+        /// <summary>잘 피하는 적인가 (Evade 가 있을 때만 주사위를 굴린다 — 다른 적의 전투 결과는 예전 그대로).</summary>
+        bool Evades(int foe) => foe >= 0 && foe < Foes.Count && Foes[foe].Def.Evade > 0 && r.NextDouble() < Foes[foe].Def.Evade;
+
         /// <summary>동생이 이 명령을 쓸 수 있나: 검은 늘, 번개는 MP 가 있으면.</summary>
         public bool BroCanUse(Cmd c) => MemberCanUse(BroIndex, c);
 
@@ -254,6 +264,7 @@ namespace GirlAdventure.Sim
             o.SkillUp = SkillLevels.Use(P, c);
             o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
             if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; return o; }
+            if (Evades(o.Target)) { o.Missed = true; return o; }            // 잘 피하는 적
             o.Damages = new int[Foes.Count];
             o.Damage = o.Damages[o.Target] = SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
             Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
@@ -296,7 +307,11 @@ namespace GirlAdventure.Sim
         {
             var list = new List<EnemyOutcome>();
             for (int i = 0; i < Foes.Count && !PlayerDown; i++)
-                if (!Foes[i].Down) list.Add(EnemyAct(i));
+                if (!Foes[i].Down)
+                {
+                    list.Add(EnemyAct(i));
+                    if (Foes[i].Def.Twice && !PlayerDown) list.Add(EnemyAct(i));   // 빠른 적은 한 번 더
+                }
             NewRound();
             return list;
         }

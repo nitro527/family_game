@@ -18,7 +18,7 @@ namespace GirlAdventure.Sim
     /// 사막 — '.' 모래  ':' 동굴 출구 앞(안전)  'R' 바위 언덕  'Y' 선인장  'g' 오아시스 풀밭  'w' 오아시스 물  'p' 야자나무
     ///        'X' 동굴 출구(챕터 2 동굴에서 나온 곳)  'F' 오아시스 샘물  'S' 표지판  'V' 오아시스 마을 입구(밟으면 마을로)
     ///        'B' 카우보이 젤리 대장 자리 (남쪽 바위 골짜기, 밟으면 보스전)
-    /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
+    /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 'l' 램프 'c' 관 (서진이 노트 4), 그 밖엔 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
     /// 용암 땅 (챕터 4, 사용자 2026-10-03) — 'B' 화산 동굴 입구(화산 젤리 대장)  '.' 잿빛 땅  ':' 출발 자리(안전)  'R' 검은 바위  'L' 용암  'b' 돌다리  'K' 화산(4×4)  'F' 온천  'S' 표지판
     /// 온천 마을 (챕터 4, ✏️ 임시 이름) — '.' 잿빛 땅  'R' 바위  'h' 돌집  'w' 온천 웅덩이  'F' 온천(회복)  'M' 대장간(가게)  'S' 표지판  'E' 출구  'N' 마을 사람
     /// 오아시스 마을 (✏️ 임시 이름) — '.' 모래  'R' 바위  'h' 흙벽돌 집  't' 천막(2×2)  'u' 마른 우물  'p' 야자  'M' 가게  'S' 표지판  'E' 출구  'N' 마을 사람
@@ -60,7 +60,7 @@ namespace GirlAdventure.Sim
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
         public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
-        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLK";
+        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc";
 
         public readonly MapKind Kind;
         /// <summary>이 맵의 수상한 구멍 칸 (초원·동굴).</summary>
@@ -333,6 +333,8 @@ namespace GirlAdventure.Sim
             m.Fill(5, 15, 8, 16, '_');
             m.Fill(26, 6, 30, 7, '_');          // 동쪽 끝 작은 굴
             m.Fill(31, 3, 33, 8, '_');
+            foreach (var (x, y) in new[] { (16, 3), (25, 8), (11, 14), (29, 18), (33, 7) }) m.Set(x, y, 'l');   // 유령이 나오는 램프 (서진이 노트 4)
+            foreach (var (x, y) in new[] { (14, 19), (23, 15), (27, 13), (31, 4) }) m.Set(x, y, 'c');           // 해골이 나오는 관
             m.Set(UnderExit.x, UnderExit.y, 'U');
             m.Set(UnderSpring.x, UnderSpring.y, 'F');
             m.Set(UnderSign.x, UnderSign.y, 'S');

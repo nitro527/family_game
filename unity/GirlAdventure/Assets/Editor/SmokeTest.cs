@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "lavatown_enter", "sign_lavatown", "npc_lava_elder", "npc_springkeeper", "npc_smith", "npc_lava_kid", "ally_equip_on", "ally_equip_off", "boss4_meet", "ch4_clear", "boss_gate_warn", "boss_gate_later", "ending_card4", "npc_lava_elder_end", "npc_lava_kid_end", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "lavatown_enter", "sign_lavatown", "npc_lava_elder", "npc_springkeeper", "npc_smith", "npc_lava_kid", "ally_equip_on", "ally_equip_off", "boss4_meet", "ch4_clear", "boss_gate_warn", "boss_gate_later", "enemy_fast", "ending_card4", "npc_lava_elder_end", "npc_lava_kid_end", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -148,7 +148,7 @@ namespace GirlAdventure.EditorTools
             foreach (var d in GameData.AllEnemies())
             {
                 if (d.Tier < 2) continue;
-                var small = new List<EnemyDef>(GameData.AllEnemies()).Find(e => e.Tier < 2 && "큰 " + e.Name == d.Name);
+                var small = new List<EnemyDef>(GameData.AllEnemies()).Find(e => e.Tier < 2 && ("큰 " + e.Name == d.Name || "이단 " + e.Name == d.Name));   // 서진이는 2단을 "이단 ○○" 이라고도 부른다
                 if (small == null || small.Color != d.Color || small.Look != d.Look || d.Hp <= small.Hp || d.Atk < small.Atk || d.Exp <= small.Exp || d.Size <= 1) badTier += d.Name + " ";
             }
             bool nearSmall = true;
@@ -841,9 +841,52 @@ namespace GirlAdventure.EditorTools
                   && u.At(u.Spring.x, u.Spring.y) == 'F' && u.At(u.SignPos.x, u.SignPos.y) == 'S' && unreached == 0 && free > 200 && u.SecretHole.x < 0,
                   $"free {free} unreached {unreached}");
             var under = GameData.Under;
-            Check("underworld jellies (placeholder): 3 incl. tier 2, encounters near & far", under.Length == 3 && Array.Exists(under, d => d.Tier == 2)
+            Check("underworld monsters (서진이 노트 4): 5 kinds with shapes, ghost2 = tier 2 evade + twice", under.Length == 5 && Array.TrueForAll(under, d => Array.IndexOf(EnemyDef.Shapes, d.Shape ?? "") > 0)
+                  && Array.Exists(under, d => d.Tier == 2 && d.Shape == "ghost2" && d.Evade > 0 && d.Twice)
                   && GameData.ListFor(MapKind.Underworld) == under && GameData.EncounterPool(MapKind.Underworld, 20, 18).Length > 0
                   && u.EncounterRate(20, 16) > 0 && u.EncounterRate(WorldMap.UnderStart.x, WorldMap.UnderStart.y) == 0);
+            // 그림 확인용: 지하세계 괴물 다섯을 한 장으로 (unity/playtest/under_monsters.png)
+            try
+            {
+                var sheet = new Texture2D(320 * under.Length, 420, TextureFormat.RGBA32, false);
+                var clear = new Color32[sheet.width * sheet.height];
+                for (int i = 0; i < clear.Length; i++) clear[i] = new Color32(60, 50, 80, 255);
+                sheet.SetPixels32(clear);
+                Painter.ReadableForTests = true;
+                for (int i = 0; i < under.Length; i++)
+                {
+                    var t = Painter.Jelly(under[i], out _);
+                    var px = t.GetPixels32();
+                    var dst = sheet.GetPixels32();
+                    for (int y = 0; y < t.height; y++)
+                        for (int x = 0; x < t.width; x++)
+                        {
+                            var c = px[y * t.width + x];
+                            if (c.a > 0) { int k = y * sheet.width + i * 320 + x; dst[k] = Color32.Lerp(dst[k], new Color32(c.r, c.g, c.b, 255), c.a / 255f); }
+                        }
+                    sheet.SetPixels32(dst);
+                }
+                System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../playtest/under_monsters.png")), sheet.EncodeToPNG());
+            }
+            catch (Exception e) { Debug.LogWarning("under_monsters.png: " + e.Message); }
+            finally { Painter.ReadableForTests = false; }
+
+            // 잘 피함·빠름: 이단 유령은 리본 파이어가 더 자주 빗나가고, 적 차례에 두 번 공격
+            var g2 = Array.Find(under, d => d.Twice);
+            var tp = PlayerState.NewGame("e"); tp.GainExp(PlayerState.NextExp(9));
+            int missN = 0, missE = 0, hitsTwice = 0;
+            var rr = new System.Random(4);
+            for (int i = 0; i < 2000; i++)
+            {
+                tp.Hp = tp.MaxHp;
+                if (new BattleSystem(tp, GameData.Under[0], rr).Act(Cmd.Fire).Missed) missN++;
+                var eb = new BattleSystem(tp, g2, rr);
+                if (eb.Act(Cmd.Fire).Missed) missE++;
+                tp.Hp = tp.MaxHp;
+                if (eb.EnemyTurn().Count == 2) hitsTwice++;
+            }
+            Check("evade + twice: ghost2 dodges more, attacks twice", missE > missN + 400 && hitsTwice == 2000, $"miss normal {missN} ghost2 {missE} twice {hitsTwice}");
+
             // 세이브 v12: 지하세계 안 위치 그대로, 챕터 1 이어도
             p.Underground = true; (p.X, p.Y) = (20, 16);
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));

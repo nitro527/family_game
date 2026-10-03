@@ -41,7 +41,8 @@ namespace GirlAdventure.View
             Add("mv_slam", Wave.Triangle, .06f, .28f, 260, 390, 520);            // 붕 (뛰어오름)
             Add("mv_shard", Wave.Triangle, .04f, .22f, 1760, 2349, 1976, 2637);  // 챙챙
             Add("mv_charge", Wave.Saw, .05f, .14f, 180, 240, 320, 420);          // 우우웅 (달려옴)
-            Add("thud", Wave.Square, .08f, .30f, 95, 70, 55);                    // 쿵
+            Add("thud", Wave.Square, .08f, .30f, 95, 70, 55);
+            Add("creak", Wave.Saw, .06f, .16f, 330, 290, 350, 270);              // 삐거덕 (해골, 서진이 노트 4)                    // 쿵
         }
 
         void Add(string name, Wave wave, float noteDur, float vol, params float[] freqs)
