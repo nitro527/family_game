@@ -26,17 +26,17 @@
     {"Name": "이단 유령", "Color": "#E8E4FF", "Dark": "#A8A0D8", "Hp": 80, "Atk": 16, "Exp": 50, "Gold": 35, "Move": "charge", "Attack": "쌩쌩 유령 돌진", "Shape": "ghost2", "Tier": 2, "Evade": 0.35, "Twice": true, "Desc": "유령의 2단. 공격을 잘 피하고 아주 빨라서 두 번씩 공격해요! (서진이 그림)"}
   ],
   "Lava": [
-    { "Name": "숯 젤리", "Color": "#3A3436", "Dark": "#1E1A1C", "Hp": 175, "Atk": 29, "Exp": 28, "Gold": 22, "Move": "slam", "Attack": "뜨끈뜨끈 몸통 누르기", "Look": "ember", "Desc": "✏️ 용암 땅 임시 젤리. 까만 몸에 주황빛 금이 갔어요. 서진이가 새 모습을 그려 줄 거예요!" },
-    { "Name": "용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 200, "Atk": 31, "Exp": 32, "Gold": 26, "Move": "charge", "Attack": "부글부글 용암 돌진", "Look": "magma", "Desc": "✏️ 용암 땅 임시 젤리. 머리 위에 작은 불꽃이 일렁여요." },
-    { "Name": "큰 용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 310, "Atk": 35, "Exp": 50, "Gold": 40, "Move": "charge", "Attack": "펄펄 끓는 용암 돌진", "Look": "magma", "Tier": 2, "Desc": "✏️ 용암 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." }
+    { "Name": "숯 젤리", "Color": "#3A3436", "Dark": "#1E1A1C", "Hp": 175, "Atk": 29, "Exp": 28, "Gold": 22, "Move": "slam", "Attack": "뜨끈뜨끈 몸통 누르기", "Look": "ember", "Desc": "용암 땅 임시 젤리. 까만 몸에 주황빛 금이 갔어요. 서진이가 새 모습을 그려 줄 거예요!" },
+    { "Name": "용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 200, "Atk": 31, "Exp": 32, "Gold": 26, "Move": "charge", "Attack": "부글부글 용암 돌진", "Look": "magma", "Desc": "용암 땅 임시 젤리. 머리 위에 작은 불꽃이 일렁여요." },
+    { "Name": "큰 용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 310, "Atk": 35, "Exp": 50, "Gold": 40, "Move": "charge", "Attack": "펄펄 끓는 용암 돌진", "Look": "magma", "Tier": 2, "Desc": "용암 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." }
   ],
   "Snow": [
-    {"Name": "눈송이 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 240, "Atk": 36, "Exp": 40, "Gold": 30, "Move": "hop", "Attack": "펑펑 눈송이 몸통 박치기", "Look": "frost", "Desc": "✏️ 눈 덮인 땅 임시 젤리. 머리에 눈이 소복이 쌓였어요. 서진이가 새 모습을 그려 줄 거예요!"},
-    {"Name": "고드름 젤리", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Hp": 260, "Atk": 39, "Exp": 44, "Gold": 34, "Move": "charge", "Attack": "뾰족뾰족 고드름 돌진", "Look": "icicle", "Desc": "✏️ 눈 덮인 땅 임시 젤리. 머리에 고드름 왕관을 썼어요."},
-    {"Name": "큰 눈송이 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 420, "Atk": 44, "Exp": 72, "Gold": 55, "Move": "slam", "Attack": "데굴데굴 큰 눈덩이 굴리기", "Look": "frost", "Tier": 2, "Desc": "✏️ 눈송이 젤리가 눈을 굴려 크게 자란 2단 젤리. 서진이 디자인을 기다려요."}
+    {"Name": "눈송이 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 240, "Atk": 36, "Exp": 40, "Gold": 40, "Move": "hop", "Attack": "펑펑 눈송이 몸통 박치기", "Look": "frost", "Desc": "눈 덮인 땅 임시 젤리. 머리에 눈이 소복이 쌓였어요. 서진이가 새 모습을 그려 줄 거예요!"},
+    {"Name": "고드름 젤리", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Hp": 260, "Atk": 39, "Exp": 44, "Gold": 45, "Move": "charge", "Attack": "뾰족뾰족 고드름 돌진", "Look": "icicle", "Desc": "눈 덮인 땅 임시 젤리. 머리에 고드름 왕관을 썼어요."},
+    {"Name": "큰 눈송이 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 420, "Atk": 44, "Exp": 72, "Gold": 70, "Move": "slam", "Attack": "데굴데굴 큰 눈덩이 굴리기", "Look": "frost", "Tier": 2, "Desc": "눈송이 젤리가 눈을 굴려 크게 자란 2단 젤리. 서진이 디자인을 기다려요."}
   ],
   "SnowBoss": {"Name": "예티", "Color": "#E8F0FF", "Dark": "#A8C0E0", "Hp": 2650, "Atk": 50, "Exp": 600, "Gold": 700, "Boss": true, "Move": "slam", "Attack": "쿵쿵 눈보라 발구르기", "Backdrop": "snow_boss", "Art": "yeti", "Desc": "눈 산 동굴에 사는 복슬복슬 눈 괴물. 혼자 너무 외로워서 눈보라를 일으켰대요. (서진이 그림, 이름은 고민 중!)"},
-  "LavaBoss": { "Name": "화산 젤리 대장", "Color": "#E8401A", "Dark": "#8A1A0A", "Hp": 1850, "Atk": 41, "Exp": 400, "Gold": 500, "Boss": true, "Move": "slam", "Attack": "화산 쿵쿵 누르기", "Look": "magma", "Backdrop": "lava_boss", "Desc": "✏️ 화산 속에서 자다 깨어 심술이 난 대장 젤리. 서진이가 새 모습을 그려 줄 거예요!" },
+  "LavaBoss": { "Name": "화산 젤리 대장", "Color": "#E8401A", "Dark": "#8A1A0A", "Hp": 1850, "Atk": 41, "Exp": 400, "Gold": 500, "Boss": true, "Move": "slam", "Attack": "화산 쿵쿵 누르기", "Look": "magma", "Backdrop": "lava_boss", "Desc": "화산 속에서 자다 깨어 심술이 난 대장 젤리. 서진이가 새 모습을 그려 줄 거예요!" },
   "DesertBoss": { "Name": "카우보이 젤리 대장", "Color": "#E8A860", "Dark": "#B06A30", "Hp": 820, "Atk": 28, "Exp": 200, "Gold": 250, "Boss": true, "Move": "spin", "Attack": "회오리 올가미 모래바람", "Backdrop": "desert_boss", "Art": "desert_cowboy", "Desc": "올가미를 빙빙 돌려 모래바람을 일으키는 사막의 대장 젤리. 오아시스 물을 혼자 다 가지려 했어요." },
   "Guard": { "Name": "바위 대장 젤리", "Color": "#8C7B6B", "Dark": "#54483E", "Hp": 170, "Atk": 13, "Exp": 45, "Gold": 40, "Boss": true, "Move": "slam", "Attack": "바위 굴리기", "Look": "rock", "Backdrop": "cave_guard", "Desc": "젤리 장군의 보물상자를 지키는 바위 같은 젤리. 쿵쿵!" },
   "General": { "Name": "젤리 장군", "Color": "#FF9A3C", "Dark": "#C0602A", "Hp": 240, "Atk": 13, "Exp": 120, "Gold": 150, "Boss": true, "Move": "charge", "Attack": "돌격", "Look": "general", "Backdrop": "cave_boss", "Desc": "동굴 젤리 기지의 대장. 뿔 투구를 쓰고 돌격해요." }

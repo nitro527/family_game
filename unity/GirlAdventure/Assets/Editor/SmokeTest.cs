@@ -73,6 +73,12 @@ namespace GirlAdventure.EditorTools
 
         static void DataTests()
         {
+            // 게임에 보이는 글자에 개발용 표시(✏️·⭐·🙋)가 없어야 한다 — 맑은 고딕엔 그림 글자가 없어 네모로 보인다 (Q-11)
+            string marks = "";
+            foreach (var ta in Resources.LoadAll<TextAsset>("Data"))
+                foreach (var mk in new[] { "✏", "⭐", "🙋" })
+                    if (ta.text.Contains(mk)) marks += ta.name + " ";
+            Check("no dev marks (pencil/star/hand) in game text", marks == "", marks);
             try { DataLoader.Load(true); }
             catch (Exception e) { Check("data loads", false, e.Message); return; }
             Check("data loads", GameData.Loaded);

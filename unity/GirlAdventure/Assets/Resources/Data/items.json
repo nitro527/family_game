@@ -20,9 +20,9 @@
     { "Id": "lion_shield", "Name": "황금 사자 방패", "Kind": "dad_shield", "Def": 5, "Price": 220, "Shops": "lavatown", "Desc": "가족을 지키는 금빛 사자 방패" },
     { "Id": "key",    "Name": "기지 열쇠", "Kind": "key", "Desc": "젤리 기지의 문을 여는 반짝이는 열쇠" },
     {"Id": "snow_pendant", "Name": "눈꽃 목걸이", "Kind": "acc", "Atk": 2, "Def": 4, "Price": 300, "Shops": "treasure", "Desc": "꽁꽁 언 호수 한가운데 상자에 들어 있던 반짝이는 눈꽃 목걸이 (가게에서는 안 팔아요)"},
-    {"Id": "snow_wand", "Name": "눈꽃 지팡이", "Kind": "weapon", "Atk": 18, "Price": 420, "Shops": "snowtown", "Desc": "끝에 커다란 눈꽃 결정이 달린 지팡이 ✏️"},
-    {"Id": "fur_cape", "Name": "하얀 털 망토", "Kind": "armor", "Def": 11, "Price": 380, "Shops": "snowtown", "Desc": "눈보라도 막아 주는 폭신한 털 망토 ✏️"},
-    {"Id": "ice_sword", "Name": "얼음 칼", "Kind": "bro_weapon", "Atk": 13, "Price": 340, "Shops": "snowtown", "Desc": "녹지 않는 얼음으로 만든 지훈이의 칼 ✏️"},
-    {"Id": "frost_blade", "Name": "서리 장검", "Kind": "dad_weapon", "Atk": 10, "Price": 360, "Shops": "snowtown", "Desc": "서리가 반짝이는 아빠의 장검 ✏️"}
+    {"Id": "snow_wand", "Name": "눈꽃 지팡이", "Kind": "weapon", "Atk": 18, "Price": 420, "Shops": "snowtown", "Desc": "끝에 커다란 눈꽃 결정이 달린 지팡이"},
+    {"Id": "fur_cape", "Name": "하얀 털 망토", "Kind": "armor", "Def": 11, "Price": 380, "Shops": "snowtown", "Desc": "눈보라도 막아 주는 폭신한 털 망토"},
+    {"Id": "ice_sword", "Name": "얼음 칼", "Kind": "bro_weapon", "Atk": 13, "Price": 340, "Shops": "snowtown", "Desc": "녹지 않는 얼음으로 만든 지훈이의 칼"},
+    {"Id": "frost_blade", "Name": "서리 장검", "Kind": "dad_weapon", "Atk": 10, "Price": 360, "Shops": "snowtown", "Desc": "서리가 반짝이는 아빠의 장검"}
   ]
 }
