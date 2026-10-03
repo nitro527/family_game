@@ -1,13 +1,13 @@
 # 다시 시작하기 (인수인계)
 
-마지막 갱신: 2026-10-03 — **이번 주부터 자동 루틴 없이 대화에서 진행** (사용자가 주기적으로 명령). 49~53 챕터 3 전체(동생 합류 화면·사막 맵·사막 젤리·오아시스 마을·사막 보스), 54·55 스킬 레벨(계산·화면) 완료. 사용자 요청(10-03) **숨겨진 구멍 → 지하세계**(U-1) 완료 — 지하 괴물은 서진이 디자인 대기(U-2 🙋). 세이브 안전장치(U-3)·지훈 자동 공격(U-4)·합동 공격과 지하세계 곡(U-5)·파티 일반화(U-6) 완료. **챕터 4 = 용암 땅 + 아빠 합류**(사용자 결정) — C4-1~5 완료, 다음 C4-6 용암 젤리. **10-03 저녁 빌드 `unity/Build/GirlAdventure.exe`** + 시험 플레이 메모 양식 [PLAYTEST_NOTE.md](PLAYTEST_NOTE.md). 앞으로의 제안·🙋 질문은 [PLAN_NEXT.md](PLAN_NEXT.md).
+마지막 갱신: 2026-10-03 밤 — **챕터 4 까지 완성, 서진이 시험 플레이를 위해 멈춤** (사용자: "챕터 4 끝까지 만들고 한번 멈춰 딸 플레이 하게"). 빌드 `unity/Build/GirlAdventure.exe`(145MB), 메모 양식 [PLAYTEST_NOTE.md](PLAYTEST_NOTE.md). 다시 시작하면 메모를 백로그로 옮기는 것부터.
 주말 회고·다음 할 일·확장 검토·**작업 방식 비교와 사용자 체크리스트(§6)** 는 → [REVIEW_2026-09-27.md](REVIEW_2026-09-27.md)
 
 ## 주말에 다시 시작할 때 (순서대로)
 1. Unity Hub 로그인 확인 (배치 모드 검증에 필요)
 2. (2026-10-03 부터) 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 사용자가 이 대화에서 명령하면 백로그 항목을 하나씩 처리
 3. 다음 개발 항목 (Claude 가 계획하며 진행 — 사용자 지시 10-03 "앞으로 뭘할지도 니가 계속 계획하면서 진행해봐"): `docs/BACKLOG.md` 맨 위 **C4 챕터 4** 의 남은 것
-   - **C4-7a 용암 땅 쉼터 마을** ✏️ → **C4-7b 용암 보스 + 챕터 4 끝** ✏️ → **C4-8 빌드 + PLAYTEST_NOTE 챕터 4 줄**
+   - C4-1~9 모두 완료 (C4-8 빌드·메모도). 다음은 시험 플레이 메모 → 백로그, 그 뒤 PLAN_NEXT / 🙋 답
    - 동료는 `party.json` (지훈 jihun·아빠 dad), 화면은 동료 배열(`AllyView`·`Follower`·`allyHuds`), 동료 공용 대사 `ally_*`(얼굴 `ally_brave`), 지훈은 예전 `bro_*`
    - 마을 드나들기: `WorldMap.HasTown(chapter)`(지금 1·3), `ForPlayer`, View `SurfaceMap`·`TravelRoutine`(챕터 3 = 사막) — 챕터 4 마을을 넣을 때 여기들
    - 밸런스: SmokeTest `[BALANCE LAVA]`·`FightDuo`(셋 AI), `python tools/balance.py --skill N`. 프로브 난수는 `GameRoot.SeedOverride` 로 고정
