@@ -48,6 +48,10 @@
     { "Id": "shop_nogold",  "Lines": [ { "Text": "\"어머, 골드가 모자라는구나. 젤리를 물리치면 골드를 얻을 수 있단다.\"", "Face": "pout" } ] },
     { "Id": "shop_full",    "Lines": [ { "Text": "\"가방이 꽉 찼구나! {item:은/는} {max}개까지 들 수 있단다.\"", "Face": "surprised" } ] },
     { "Id": "shop_bye",     "Lines": [ { "Text": "\"조심해서 다녀오렴! 또 오렴~\"", "Face": "smile", "Hold": 0.8 } ] },
+    { "Id": "boss_gate_warn", "Lines": [
+      { "Text": "성문 너머에서 쿵… 쿵… 킹 젤리의 발소리가 들려요. 아직 조금 무서워요.", "Face": "surprised" },
+      { "Text": "레벨 {lv}이 되면 이길 수 있을 것 같아요. 그래도 들어갈까?", "Face": "pout" } ] },
+    { "Id": "boss_gate_later", "Lines": [ { "Text": "좋아, 초원에서 조금 더 연습하고 오자! 사탕도 챙기고!", "Face": "smile" } ] },
     { "Id": "boss_gate", "Lines": [
       { "Text": "성문 앞에 거대한 그림자가… 킹 젤리다!", "Face": "surprised" } ] },
 

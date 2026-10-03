@@ -719,6 +719,22 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             Expect("back to field after slot tests", G.Current == GameRoot.Mode.Field && G.P.Lv == savedLv);
 
+            // 킹 젤리 성문 (P-4): Lv5 전이면 "조금 더 강해지고 올까?" → 물러나기
+            if (G.P.Lv < GameRoot.KingReadyLevel)
+            {
+                G.DebugMobs(true, true);
+                G.DebugTeleport(WorldMap.Gate.x, WorldMap.Gate.y - 1, "down");
+                yield return .3f;
+                Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+                foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+                yield return .3f;
+                Shot("king_gate_warn");
+                Keys.Press(KeyCode.Return);            // 기본 = 조금 더 강해지고 올래
+                foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+                Expect("king gate asks below Lv5 and lets you step back", G.Current == GameRoot.Mode.Field && G.P.Y == WorldMap.Gate.y - 1 && !G.P.BossDown);
+            }
+            else Log("king gate warn skipped (already Lv5)");
+
             // 보스 → 엔딩
             G.DebugBattle(true);
             yield return (Func<bool>)(() => G.EnemyAppearing);

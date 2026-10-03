@@ -1,7 +1,7 @@
 {
   "Normal": [
-    { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 3, "Exp": 4,  "Gold": 3,  "Move": "tackle", "Attack": "몸통 박치기", "Art": "jelly_blue", "Desc": "제일 처음 만나는 젤리. 말랑말랑 겁이 많아요." },
-    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 12, "Atk": 4, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프", "Art": "jelly_green", "Desc": "장난꾸러기 젤리. 통통 뛰어올라 부딪혀요." },
+    { "Name": "파랑 젤리", "Color": "#4AA8FF", "Dark": "#2A6FC0", "Hp": 8,  "Atk": 2, "Exp": 4,  "Gold": 3,  "Move": "tackle", "Attack": "몸통 박치기", "Art": "jelly_blue", "Desc": "제일 처음 만나는 젤리. 말랑말랑 겁이 많아요." },
+    { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 12, "Atk": 3, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프", "Art": "jelly_green", "Desc": "장난꾸러기 젤리. 통통 뛰어올라 부딪혀요." },
     { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 18, "Atk": 6, "Exp": 10, "Gold": 7, "Move": "spin",   "Attack": "빙글빙글 회전", "Art": "jelly_pink", "Desc": "화가 잔뜩 난 젤리. 셋 중에 제일 세요!" },
     { "Name": "큰 초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 19, "Atk": 6, "Exp": 11, "Gold": 9,  "Move": "hop",    "Attack": "쿵쿵 점프", "Tier": 2, "Art": "jelly_green", "Desc": "초록 젤리가 크게 자란 2단 젤리. 쿵쿵 점프가 아파요." },
     { "Name": "큰 분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 27, "Atk": 8, "Exp": 17, "Gold": 13, "Move": "spin",   "Attack": "왕 빙글빙글 회전", "Tier": 2, "Art": "jelly_pink", "Desc": "분홍 젤리가 크게 자란 2단 젤리. 성에서 먼 곳에 살아요." }

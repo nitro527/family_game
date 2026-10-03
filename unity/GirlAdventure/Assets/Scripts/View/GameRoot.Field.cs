@@ -843,9 +843,30 @@ namespace GirlAdventure.View
             busy = false;
         }
 
+        /// <summary>킹 젤리에게 도전하기 좋은 레벨 (서진이 시험 플레이: "4렙에는 힘들고 5렙은 할만했음", P-4).</summary>
+        public const int KingReadyLevel = 5;
+
         IEnumerator BossGateRoutine()
         {
             busy = true;
+            if (P.Lv < KingReadyLevel)                  // 아직 약하면 물어본다 (그래도 들어갈 수 있다)
+            {
+                yield return Talk("boss_gate_warn", ("lv", KingReadyLevel));
+                ShowMessageWindow(true);
+                choiceIndex = 1;
+                yield return Choose("그래도 들어간다!", "조금 더 강해지고 올래");
+                if (choicePicked != 0)
+                {
+                    (P.X, P.Y) = (moveFrom.x, moveFrom.y);   // 한 걸음 물러난다
+                    facing = "up";
+                    moveT = -1;
+                    UpdatePlayerVisual();
+                    yield return Talk("boss_gate_later");
+                    HideMessage();
+                    busy = false;
+                    yield break;
+                }
+            }
             yield return Talk("boss_gate");
             yield return BattleRoutine(GameData.King);
         }

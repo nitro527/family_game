@@ -23,33 +23,29 @@ namespace GirlAdventure.View
             return s;
         }
 
-        /// <summary>구멍 그림 (48×48, 칸 하나). 흙 테두리 + 까만 구멍, 빈 구멍은 바닥과 자갈이 보인다.</summary>
+        /// <summary>
+        /// 구멍 그림 (48×48, 칸 하나) — 서진이 시험 플레이 메모 "그냥 구멍을 원했는데 바가지처럼 생겨서 별로" (P-2):
+        /// 둥근 흙 턱 없이 땅에 뚫린 까만 구멍. 가장자리만 살짝 어둡게 번지고 금 몇 줄, 안쪽 벽이 조금 보인다.
+        /// 들여다본 구멍은 얕은 바닥과 자갈이 보인다.
+        /// </summary>
         static Texture2D HoleTexture(bool cave, bool empty)
         {
             var R = new Raster(Painter.Tile, Painter.Tile);
-            Color32 rimD = Raster.Hex(cave ? "#3E3446" : "#5E4128"), rim = Raster.Hex(cave ? "#6A5D72" : "#8C6440"), rimL = Raster.Hex(cave ? "#8E82A0" : "#B08458");
-            R.Ellipse(25, 33, 21, 12, new Color32(0, 0, 0, 60));             // 그림자
-            R.Ellipse(24, 30, 20, 12.5f, rimD);
-            R.Ellipse(24, 29, 19, 11, rim);
-            R.Ellipse(23, 27, 15, 7, rimL);                                   // 위쪽 흙 턱 하이라이트
-            R.Ellipse(24, 31, 14.5f, 8, Raster.Hex("#120C18"));               // 구멍
+            Color32 shade = cave ? new Color32(20, 14, 26, 90) : new Color32(40, 26, 12, 90), crack = cave ? Raster.Hex("#2A2232") : Raster.Hex("#4A3420");
+            R.Ellipse(24, 30, 20, 12, shade);                                  // 가장자리가 살짝 어둡게 번진 땅
+            R.Ellipse(24, 30, 16.5f, 9.5f, Raster.Hex("#0C0810"));             // 구멍
+            R.Ellipse(24, 26.5f, 13, 4, cave ? Raster.Hex("#2E2638") : Raster.Hex("#3A2814"));   // 위쪽 안벽 (조금 보인다)
+            R.Ellipse(24, 31, 13, 7, Raster.Hex("#05030A"));
+            R.Line(6, 28, 1, 25, 1.4f, crack);                                 // 금
+            R.Line(41, 33, 47, 36, 1.4f, crack);
+            R.Line(40, 25, 44, 21, 1.2f, crack);
             if (empty)
             {
-                R.Ellipse(24, 33, 10, 5, Raster.Hex(cave ? "#3A3240" : "#3E2C1C"));   // 들여다본 뒤: 얕은 바닥이 보인다
-                R.Circle(20, 33, 1.8f, Raster.Hex(cave ? "#77698A" : "#7A5C40"));
-                R.Circle(27, 34, 1.4f, Raster.Hex(cave ? "#77698A" : "#7A5C40"));
+                R.Ellipse(24, 32, 9, 4.5f, Raster.Hex(cave ? "#3A3240" : "#3E2C1C"));    // 들여다본 뒤: 얕은 바닥
+                R.Circle(20, 32, 1.6f, Raster.Hex(cave ? "#77698A" : "#7A5C40"));
+                R.Circle(27, 33, 1.3f, Raster.Hex(cave ? "#77698A" : "#7A5C40"));
             }
-            else
-            {
-                R.Ellipse(24, 33, 10, 5, Raster.Hex("#000000"));
-                R.Ellipse(24, 28.5f, 11, 2.2f, new Color32(150, 90, 220, 90));  // 보랏빛 기운이 감도는 입구
-            }
-            // 테두리 흙덩이
-            foreach (var (x, y, r) in new[] { (6f, 30f, 2.4f), (42f, 31f, 2f), (12f, 39f, 1.8f), (37f, 39f, 2.2f) })
-            {
-                R.Circle(x, y, r, rimD);
-                R.Circle(x - .5f, y - .5f, r * .6f, rimL);
-            }
+            else R.Ellipse(24, 29, 10, 2f, new Color32(150, 90, 220, 70));    // 보랏빛 기운이 살짝
             return R.ToTexture();
         }
 
