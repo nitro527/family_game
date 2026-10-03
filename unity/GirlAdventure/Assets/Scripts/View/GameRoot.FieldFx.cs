@@ -158,7 +158,7 @@ namespace GirlAdventure.View
                            Random.Range(.2f, .32f), Random.value < .5f ? new Color(.75f, .95f, 1f) : Color.white, Random.Range(-90, 90));
             }
 
-            // 떠다니는 것: 초원은 바람에 날리는 꽃잎, 동굴은 반딧불 같은 빛 먼지
+            // 떠다니는 것: 초원은 바람에 날리는 꽃잎, 동굴은 반딧불 같은 빛 먼지, 사막은 옆으로 날리는 모래 바람
             ambientTimer -= dt;
             var camPos = cam.transform.position;
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
@@ -170,6 +170,15 @@ namespace GirlAdventure.View
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
                     var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.15f, .15f), Random.Range(.05f, .3f)), Random.Range(2.5f, 4.5f),
                                         Random.Range(.08f, .16f), Random.value < .6f ? new Color(.5f, .95f, 1f, .9f) : new Color(1f, .8f, 1f, .9f));
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
+                else if (map.Kind == MapKind.Desert)
+                {
+                    ambientTimer = .1f;
+                    var p = new Vector3(camPos.x - halfW - .3f, camPos.y + Random.Range(-halfH, halfH), 0);
+                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(2.2f, 3.6f), Random.Range(-.2f, .15f)), Random.Range(4f, 6f),
+                                        Random.Range(.05f, .11f), new Color(1f, .9f, .68f, .55f));
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }

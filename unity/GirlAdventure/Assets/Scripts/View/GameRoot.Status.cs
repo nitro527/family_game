@@ -175,6 +175,7 @@ namespace GirlAdventure.View
         string Goal()
         {
             if (P.Chapter < 2) return P.BossDown ? "별빛을 되찾았어요!" : "남동쪽 성의 킹 젤리를 물리치자";
+            if (P.Chapter >= 3) return "동쪽 오아시스까지 가 보자";       // ✏️ 사막 마을(52)·보스(53) 생기면 바꾼다
             if (P.Boss2Down) return "동굴에 평화가 찾아왔어요!";
             if (Quest.DoorOpen(P)) return "기지 안쪽의 젤리 장군을 물리치자";
             if (P.HasItem(Quest.KeyItem)) return "열쇠로 동쪽 젤리 기지 문을 열자";

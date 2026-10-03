@@ -190,7 +190,7 @@ namespace GirlAdventure.Sim
             p.Boss2Down = s.Boss2Down;
             // 옛 세이브(버전 5 이하)에서 이미 열쇠를 얻었으면 지킴이는 쓰러진 것으로 친다
             p.GuardDown = s.GuardDown || (s.Items != null && System.Array.IndexOf(s.Items, Quest.KeyItem) >= 0);
-            p.Chapter = Math.Max(1, Math.Min(2, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1
+            p.Chapter = Math.Max(1, Math.Min(WorldMap.LastChapter, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1
             if (s.Items != null) p.Items.AddRange(s.Items);
             if (s.Opened != null) p.Opened.AddRange(s.Opened);
             if (s.Bag != null)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
-    public enum MapKind { Field, Cave, Village }
+    public enum MapKind { Field, Cave, Village, Desert }
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
@@ -15,6 +15,8 @@ namespace GirlAdventure.Sim
     ///        초원의 'V' = 별빛 마을 입구 (밟으면 마을로)
     ///        초원·동굴 'o' = 수상한 구멍 (부딪혀 들여다보면 사탕 또는 2단 괴물, Holes)
     /// 마을 — '.' 풀밭 'f' 꽃 '=' 길 'T' 숲 'h' 집 'u' 우물 'x' 울타리 'S' 표지판 'M' 사탕 가게 'E' 출구(밟으면 초원으로) 'N' 마을 사람
+    /// 사막 — '.' 모래  ':' 동굴 출구 앞(안전)  'R' 바위 언덕  'Y' 선인장  'g' 오아시스 풀밭  'w' 오아시스 물  'p' 야자나무
+    ///        'X' 동굴 출구(챕터 2 동굴에서 나온 곳)  'F' 오아시스 샘물  'S' 표지판
     /// </summary>
     public class WorldMap
     {
@@ -29,26 +31,30 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y) VillageGate = (10, 2), VillageStart = (18, 19), VillageExit = (18, 20),
                                                     Well = (18, 10), VillageSign = (20, 18),
                                                     VillageShop = (12, 10);    // 사탕 가게: 동서 길 바로 위 (백로그 40 — 초원에서 옮겨 옴)
+        // 사막 (챕터 3): 왼쪽 동굴 출구로 나와서 시작 (맵 위쪽이면 HUD 창에 가려서 조금 아래), 가운데 동쪽 오아시스
+        public static readonly (int x, int y) DesertStart = (4, 15), DesertCave = (3, 13), DesertSign = (5, 14),
+                                                    Oasis = (24, 10), OasisSpring = (20, 11);
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
         public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
-        const string Blocking = "TwCFSHD#rMNhuxo";
+        const string Blocking = "TwCFSHD#rMNhuxoRYpX";
 
         public readonly MapKind Kind;
         /// <summary>이 맵의 수상한 구멍 칸 (초원·동굴).</summary>
         public List<(int x, int y)> Holes { get; private set; } = new List<(int x, int y)>();
         readonly char[,] tiles = new char[W, H];
 
-        public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : CaveStart;
-        /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리).</summary>
-        public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : CaveSpring;
-        public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : Kind == MapKind.Village ? VillageSign : CaveSign;
+        public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : Kind == MapKind.Desert ? DesertStart : CaveStart;
+        /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리, 사막은 오아시스 샘).</summary>
+        public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : Kind == MapKind.Desert ? OasisSpring : CaveSpring;
+        public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : Kind == MapKind.Village ? VillageSign : Kind == MapKind.Desert ? DesertSign : CaveSign;
         /// <summary>사탕 가게 (초원에는 없다 — 마을 가게를 쓴다).</summary>
         public (int x, int y) ShopPos => Kind == MapKind.Village ? VillageShop : Kind == MapKind.Cave ? CaveShop : (-1, -1);
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
         public (int x, int y) RevivePoint => (Spring.x - 1, Spring.y + 1);
 
-        public static WorldMap ForChapter(int chapter) => chapter >= 2 ? Cave() : new WorldMap();
+        public const int LastChapter = 3;
+        public static WorldMap ForChapter(int chapter) => chapter >= 3 ? Desert() : chapter == 2 ? Cave() : new WorldMap();
         /// <summary>지금 있어야 할 맵 (마을은 챕터 1 에서만).</summary>
         public static WorldMap ForPlayer(int chapter, bool inVillage) => inVillage && chapter <= 1 ? Village() : ForChapter(chapter);
 
@@ -185,6 +191,58 @@ namespace GirlAdventure.Sim
             return m;
         }
 
+        /// <summary>
+        /// 챕터 3 사막 (백로그 50): 바위 언덕으로 둘러싸인 모래밭. 서쪽 동굴 출구(챕터 2 동굴에서 나온 곳) 앞에서 출발,
+        /// 동쪽 가운데 오아시스(풀밭·물·야자·샘물), 군데군데 바위 언덕과 선인장. 사막 마을·보스 자리는 52·53 에서.
+        /// </summary>
+        public static WorldMap Desert()
+        {
+            var m = new WorldMap(MapKind.Desert);
+            m.Fill(0, 0, W - 1, H - 1, '.');
+            // 바위산 테두리 (두 칸, 모서리는 들쭉날쭉)
+            m.Fill(0, 0, W - 1, 1, 'R'); m.Fill(0, H - 2, W - 1, H - 1, 'R');
+            m.Fill(0, 0, 1, H - 1, 'R'); m.Fill(W - 2, 0, W - 1, H - 1, 'R');
+            foreach (var (x, y) in new[] { (2, 2), (3, 2), (2, 3), (33, 2), (32, 2), (33, 3), (2, 21), (2, 20), (3, 21), (33, 21), (32, 21), (33, 20), (17, 2), (18, 2), (26, 21), (27, 21) })
+                m.Set(x, y, 'R');
+            // 바위 언덕 무리
+            m.Fill(10, 3, 12, 5, 'R'); m.Set(10, 5, '.'); m.Set(12, 3, '.');
+            m.Fill(14, 17, 16, 19, 'R'); m.Set(16, 17, '.');
+            m.Fill(29, 15, 31, 17, 'R'); m.Set(31, 15, '.');
+            m.Fill(7, 18, 8, 20, 'R');
+            m.Fill(19, 4, 20, 5, 'R');
+            // 동굴 출구 + 앞 공터 (안전)
+            m.Fill(2, 12, 4, 13, 'R');
+            m.Set(DesertCave.x, DesertCave.y, 'X');
+            m.Fill(2, 14, 6, 16, ':');
+            m.Set(DesertSign.x, DesertSign.y, 'S');
+            // 오아시스: 풀밭 → 물 → 야자, 서쪽 물가에 샘물
+            m.Ellipse(Oasis.x, Oasis.y, 4.6, 3.2, 'g', ".");
+            m.Ellipse(Oasis.x, Oasis.y, 2.4, 1.5, 'w', "g");
+            foreach (var (x, y) in new[] { (20, 9), (28, 9), (22, 7), (26, 7), (21, 12), (27, 12), (24, 13) }) m.Set(x, y, 'p');
+            m.Set(OasisSpring.x, OasisSpring.y, 'F');
+            // 선인장: 출구 앞과 오아시스 둘레는 비워 둔다
+            var r = new Random(5);
+            for (int n = 0, tries = 0; n < 26 && tries < 2000; tries++)
+            {
+                int x = 3 + r.Next(30), y = 3 + r.Next(18);
+                if (m.tiles[x, y] != '.' || Math.Abs(x - DesertStart.x) + Math.Abs(y - DesertStart.y) <= 4 || (x >= 16 && x <= 31 && y >= 5 && y <= 15)) continue;
+                m.Set(x, y, 'Y');
+                n++;
+            }
+            return m;
+        }
+
+        /// <summary>타원 안의 칸을 c 로 (only 에 든 글자 칸만).</summary>
+        void Ellipse(int cx, int cy, double rx, double ry, char c, string only)
+        {
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    double dx = (x - cx) / rx, dy = (y - cy) / ry;
+                    if (dx * dx + dy * dy <= 1 && only.IndexOf(tiles[x, y]) >= 0) tiles[x, y] = c;
+                }
+        }
+
         void Fill(int x0, int y0, int x1, int y1, char c)
         {
             for (int y = y0; y <= y1; y++)
@@ -195,7 +253,7 @@ namespace GirlAdventure.Sim
         /// <summary>마을 사람 칸 (풀밭·꽃 칸에만).</summary>
         public void SetNpc(int x, int y)
         {
-            if (x >= 0 && y >= 0 && x < W && y < H && ".f:_".IndexOf(tiles[x, y]) >= 0) tiles[x, y] = 'N';
+            if (x >= 0 && y >= 0 && x < W && y < H && ".f:_g".IndexOf(tiles[x, y]) >= 0) tiles[x, y] = 'N';
         }
 
         void Set(int x, int y, char c)
@@ -203,7 +261,7 @@ namespace GirlAdventure.Sim
             if (x >= 0 && y >= 0 && x < W && y < H) tiles[x, y] = c;
         }
 
-        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? (Kind == MapKind.Cave ? '#' : 'T') : tiles[x, y];
+        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? (Kind == MapKind.Cave ? '#' : Kind == MapKind.Desert ? 'R' : 'T') : tiles[x, y];
 
         public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0;
 
@@ -213,6 +271,7 @@ namespace GirlAdventure.Sim
         public double EncounterRate(int x, int y)
         {
             if (Kind == MapKind.Village) return 0;      // 마을엔 몬스터가 없다
+            if (Kind == MapKind.Desert) return 0;       // 사막 젤리(카우보이·선인장)는 백로그 51 에서
             char c = At(x, y);
             if (c == ',') return 0.16;
             if (c == '.' || c == 'f') return 0.06;

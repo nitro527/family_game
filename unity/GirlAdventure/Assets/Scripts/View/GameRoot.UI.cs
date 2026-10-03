@@ -127,7 +127,7 @@ namespace GirlAdventure.View
             hudName.text = $"{P.Name} · 마법사 Lv {P.Lv}";
             hudHp.text = $"HP {P.Hp}/{P.MaxHp}";
             hudGold.text = $"{P.Gold} G";
-            hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}" + (P.HasItem(Quest.KeyItem) ? "  <color=#F2C443>열쇠</color>" : "");
+            hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}" + (P.Chapter == 2 && P.HasItem(Quest.KeyItem) ? "  <color=#F2C443>열쇠</color>" : "");     // 열쇠는 동굴(챕터 2)에서만
             hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
             hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;
             if (P.Hp <= 0) hudHp.text = "<color=#FF6060>HP 0 (쓰러짐)</color>";
@@ -497,7 +497,7 @@ namespace GirlAdventure.View
             var again = UIKit.Button(t, "Again", "처음부터 다시", 430, 390, 250, 60, 24, new Color32(150, 110, 255, 255));
             again.onClick.AddListener(ShowTitle);
             nextChapterBtn = UIKit.Button(t, "Chapter2", "▶ 챕터 2 시작!", 430, 462, 250, 56, 24, new Color32(110, 190, 255, 255));
-            nextChapterBtn.onClick.AddListener(StartChapter2);
+            nextChapterBtn.onClick.AddListener(StartNextChapter);
             // 무료 에셋 출처 (docs/thirdparty_assets.md)
             UIKit.Label(t, "Credits", "그림 도움\nPipoya · Kalponic Studio · Kenney", 690, 470, 250, 50, 14,
                 TextAnchor.LowerRight, new Color(1, 1, 1, .55f), false);
@@ -512,7 +512,9 @@ namespace GirlAdventure.View
             bool ch2 = P.Boss2Down;
             endHead.text = ch2 ? "챕터 2 완료!" : "모험 완료!";
             endText.text = FillText(GameData.Talk(ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
-            nextChapterBtn.gameObject.SetActive(P.Chapter == 1);
+            bool next = P.Chapter < WorldMap.LastChapter;
+            nextChapterBtn.gameObject.SetActive(next);
+            if (next) nextChapterBtn.GetComponentInChildren<Text>().text = $"▶ 챕터 {P.Chapter + 1} 시작!";
             endingShownAt = Time.time;
             endingPanel.SetActive(true);
         }

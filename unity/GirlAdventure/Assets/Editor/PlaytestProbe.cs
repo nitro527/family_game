@@ -928,7 +928,7 @@ namespace GirlAdventure.EditorTools
             var spot = G.DebugOpenSpot(6);
             G.DebugTeleport(spot.x, spot.y, "right");
             yield return .3f;
-            Expect("brother on field (on sister's tile after teleport)", G.BroFieldVisible && G.BroTile == new Vector2Int(G.P.X, G.P.Y));
+            Expect("brother on field (behind sister after teleport)", G.BroFieldVisible && G.BroTile == new Vector2Int(G.P.X - 1, G.P.Y), $"bro {G.BroTile} sis ({G.P.X},{G.P.Y})");
             Keys.Hold(KeyCode.RightArrow, true); yield return .45f; Keys.Hold(KeyCode.RightArrow, false);
             yield return .4f;
             Shot("bro_follow_right");
@@ -964,6 +964,49 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             Expect("after party battle both standing", G.P.Hp > 0 && G.P.BroHp > 0 && G.Current == GameRoot.Mode.Field);
+
+            // 챕터 3 사막 (백로그 50): 챕터 2 완료 화면 → "챕터 3 시작" → 동굴 출구 앞 → 오아시스·선인장·바위 → 사막 전투 배경
+            G.DebugChapter2Clear();
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return 1.8f;
+            Expect("chapter 2 end offers chapter 3", G.NextChapterLabel.Contains("챕터 3"), G.NextChapterLabel);
+            Shot("ch3_button");
+            Keys.Press(KeyCode.Return);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("모래밭") || G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            yield return .8f;
+            Shot("ch3_intro");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("chapter 3 in the desert with brother", G.P.Chapter == 3 && G.MapKindNow == MapKind.Desert && G.BroFieldVisible
+                   && G.P.X == WorldMap.DesertStart.x && G.P.Y == WorldMap.DesertStart.y);
+            ExpectBgm("desert");
+            yield return .5f;
+            Shot("desert_start");
+            Keys.Hold(KeyCode.DownArrow, true); yield return .35f; Keys.Hold(KeyCode.DownArrow, false);     // 오른쪽은 표지판
+            yield return .5f;
+            Shot("desert_walk");
+            G.DebugTeleport(WorldMap.OasisSpring.x - 1, WorldMap.OasisSpring.y + 1, "right");
+            yield return .8f;
+            Shot("desert_oasis");
+            int rx = 12;
+            while (rx < 20 && !G.DebugWalkable(rx, 16)) rx++;     // 선인장 자리는 피해서
+            G.DebugTeleport(rx, 16, "up");
+            yield return .8f;
+            Shot("desert_rocks");
+            G.DebugTeleport(WorldMap.DesertSign.x, WorldMap.DesertSign.y + 1, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return 1.3f;
+            Shot("desert_sign");
+            Expect("desert sign talks about the oasis", G.MessageText.Contains("오아시스"), G.MessageText);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugGroupBattle(2);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .3f;
+            Shot("desert_battle");
+            Expect("desert battle backdrop", G.BattleBackdropName == "desert", G.BattleBackdropName);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            ExpectBgm("desert");
         }
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>

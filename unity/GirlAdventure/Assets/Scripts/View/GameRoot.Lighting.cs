@@ -77,7 +77,9 @@ namespace GirlAdventure.View
             if (vignette != null)
             {
                 vignette.enabled = Current == Mode.Field;
-                vignette.color = new Color(0, 0, 0, map.Kind == MapKind.Cave ? .6f : .38f);
+                vignette.color = map.Kind == MapKind.Cave ? new Color(0, 0, 0, .6f)
+                               : map.Kind == MapKind.Desert ? new Color(.35f, .2f, .05f, .3f)      // 사막: 따뜻한 햇볕 테두리
+                               : new Color(0, 0, 0, .38f);
             }
             if (!darkSR.enabled) return;
             int w = WorldMap.W * LPT, h = WorldMap.H * LPT;

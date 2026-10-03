@@ -31,6 +31,7 @@ namespace GirlAdventure.EditorTools
             BestiaryTests();
             BoyArtTests();
             BrotherTests();
+            DesertTests();
             ShopTests();
             ItemTests();
             GearTests();
@@ -105,7 +106,7 @@ namespace GirlAdventure.EditorTools
             Check("monster art loads", badArt == "" && arts >= 1, $"arts={arts} {badArt}");
             // 전투 배경 그림: 맵 기본(meadow/cave) + 적이 정한 것 모두 1280×720 으로 들어와야 함 (NPOT 늘림 없음)
             string badBg = "";
-            var bgNames = new List<string> { "meadow", "cave" };
+            var bgNames = new List<string> { "meadow", "cave", "desert" };
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())
                     if (!string.IsNullOrEmpty(d.Backdrop)) bgNames.Add(d.Backdrop);
@@ -293,6 +294,45 @@ namespace GirlAdventure.EditorTools
                 System.IO.File.WriteAllBytes("../playtest/map_field.png", tex.EncodeToPNG());
                 UnityEngine.Object.DestroyImmediate(tex);
             }
+        }
+
+        /// <summary>챕터 3 사막 (백로그 50): 맵 모양, 모든 빈 칸이 이어짐, 챕터 3 시작(지훈 함께), 세이브.</summary>
+        static void DesertTests()
+        {
+            var m = WorldMap.Desert();
+            var st = WorldMap.DesertStart;
+            Check("desert: kind, start walkable & safe, cave exit near start", m.Kind == MapKind.Desert && !m.Blocked(st.x, st.y) && m.At(st.x, st.y) == ':'
+                  && m.At(WorldMap.DesertCave.x, WorldMap.DesertCave.y) == 'X' && m.Blocked(WorldMap.DesertCave.x, WorldMap.DesertCave.y)
+                  && WorldMap.ForChapter(3).Kind == MapKind.Desert && WorldMap.ForPlayer(3, true).Kind == MapKind.Desert);
+            int water = 0, cactus = 0, palms = 0, free = 0, unreached = 0;
+            var reach = Reach(m, st);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char c = m.At(x, y);
+                    if (c == 'w') water++;
+                    if (c == 'Y') cactus++;
+                    if (c == 'p') palms++;
+                    if (!m.Blocked(x, y)) { free++; if (!reach[x, y]) unreached++; }
+                }
+            Check("desert: oasis water, palms, cacti", water >= 8 && palms >= 5 && cactus >= 20, $"water {water} palms {palms} cactus {cactus}");
+            Check("desert: every open tile reachable from start", unreached == 0 && free > 400, $"free {free} unreached {unreached}");
+            var rv = m.RevivePoint;
+            Check("desert: oasis spring + revive point reachable, sign", m.Spring == WorldMap.OasisSpring && m.At(m.Spring.x, m.Spring.y) == 'F'
+                  && reach[rv.x, rv.y] && m.At(m.SignPos.x, m.SignPos.y) == 'S' && m.SpawnPoint == st);
+            Check("desert: edges are rock, no encounters yet (51)", m.At(-1, 5) == 'R' && m.Blocked(0, 0) && m.EncounterRate(10, 10) == 0);
+
+            var p = PlayerState.NewGame("t");
+            p.GainExp(PlayerState.NextExp(8));
+            p.Boss2Down = true; p.Chapter = 2; p.Hp = 1;
+            Quest.StartChapter3(p);
+            Check("chapter 3 start: desert entrance, brother joined, healed", p.Chapter == 3 && (p.X, p.Y) == st && p.BrotherJoined && p.Hp == p.MaxHp && p.BroHp == p.BroMaxHp);
+            p.X = WorldMap.Oasis.x - 5; p.Y = WorldMap.Oasis.y;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("chapter 3 save/load keeps desert spot", q.Chapter == 3 && q.X == p.X && q.Y == p.Y && q.BrotherJoined, $"{q.Chapter} ({q.X},{q.Y})");
+            var bad = p.ToSave(); bad.X = 0; bad.Y = 0;
+            var r = PlayerState.FromSave(bad);
+            Check("chapter 3 bad spot → desert start", (r.X, r.Y) == st);
         }
 
         /// <summary>BFS: from 에서 걸어서 닿는 칸.</summary>
@@ -1072,13 +1112,13 @@ namespace GirlAdventure.EditorTools
         static void MusicTests()
         {
             Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
-            foreach (var name in new[] { "title", "field", "village", "cave", "battle", "boss", "ending" })
+            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "battle", "boss", "ending" })
             {
                 var s = Music.Get(name);
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village";     // A-B 16마디 곡
+                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert";     // A-B 16마디 곡
                 Check($"bgm {name} loops cleanly", (longSong ? lead == 128 : lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;

@@ -27,7 +27,7 @@ namespace GirlAdventure.View
         Vector2Int broTile, broFrom;
         string broFacing = "down";
         float moveT = -1, walkT;
-        WorldMap fieldMap, caveMap, villageMap;
+        WorldMap fieldMap, caveMap, villageMap, desertMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
@@ -45,14 +45,16 @@ namespace GirlAdventure.View
             fieldMap = map;
             caveMap = WorldMap.Cave();
             villageMap = WorldMap.Village();
+            desertMap = WorldMap.Desert();
             mobs = new FieldMonsters(rng);
             Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
             Npcs.Place(caveMap);
             Npcs.Place(villageMap);
+            Npcs.Place(desertMap);
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new[] { fieldMap, caveMap, villageMap })
+            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap })
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -127,7 +129,7 @@ namespace GirlAdventure.View
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
-            var want = P.Chapter >= 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+            var want = P.Chapter >= 3 ? desertMap : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
@@ -326,8 +328,8 @@ namespace GirlAdventure.View
             AutoSave();
         }
 
-        /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village".</summary>
-        string MapSong => map.Kind == MapKind.Cave ? "cave" : map.Kind == MapKind.Village ? "village" : "field";
+        /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
+        string MapSong => map.Kind == MapKind.Cave ? "cave" : map.Kind == MapKind.Village ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -342,8 +344,8 @@ namespace GirlAdventure.View
             (P.X, P.Y) = toVillage ? WorldMap.VillageStart : (WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1);
             facing = toVillage ? "up" : "down";
             moveT = -1;
-            ResetBrother();
             ApplyMap();
+            ResetBrother();
             bgm.Play(MapSong);
             RefreshQuestProps();
             UpdatePlayerVisual();
@@ -487,8 +489,23 @@ namespace GirlAdventure.View
         /// <summary>지훈 그림 크기: 서진의 0.84배 (설정집: 3.5등신, 누나 어깨 높이).</summary>
         const float BroFieldScale = .84f;
 
-        /// <summary>맵에 들어오거나 순간 이동하면 지훈은 서진 칸에서 다시 시작 (걸으면 뒤로 빠져나온다).</summary>
-        void ResetBrother() => broTile = broFrom = new Vector2Int(P.X, P.Y);
+        /// <summary>
+        /// 맵에 들어오거나 순간 이동하면 지훈은 서진 등 뒤 칸에 선다 (막혔으면 옆 칸, 다 막혔으면 서진 칸에 숨어 있다가 걸으면 나온다).
+        /// </summary>
+        void ResetBrother()
+        {
+            var here = new Vector2Int(P.X, P.Y);
+            broTile = broFrom = here;
+            if (map == null) return;
+            var back = facing == "up" ? Vector2Int.up : facing == "down" ? Vector2Int.down : facing == "left" ? Vector2Int.right : Vector2Int.left;   // 타일 y 는 아래로 +
+            var side = new Vector2Int(back.y, back.x);
+            foreach (var d in new[] { back, side, -side })
+            {
+                var t = here + d;
+                if (Quest.Walkable(map, P, t.x, t.y) && mobs.At(t.x, t.y) == null) { broTile = broFrom = t; break; }
+            }
+            broFacing = facing;
+        }
 
         static int Manhattan(Vector2Int a, Vector2Int b) => Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
 
@@ -502,7 +519,7 @@ namespace GirlAdventure.View
             if (broFieldSR.enabled != on) { broFieldSR.enabled = on; broShadowSR.enabled = on; }
             if (!on) return;
             var here = new Vector2Int(P.X, P.Y);
-            if (moveT < 0 && Manhattan(broTile, here) > 1) broTile = broFrom = here;
+            if (moveT < 0 && Manhattan(broTile, here) > 1) ResetBrother();
             bool walking = moveT >= 0 && broFrom != broTile;
             if (walking)
             {
@@ -699,7 +716,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.Village ? "sign_village" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }

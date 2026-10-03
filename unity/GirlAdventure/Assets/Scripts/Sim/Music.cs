@@ -90,6 +90,22 @@ namespace GirlAdventure.Sim
             },
             new Song
             {
+                Name = "desert", Bpm = 108,
+                // 사막 (챕터 3): 레 프리지안 도미넌트로 신비롭게, 낙타 걸음 같은 쿵-짝 리듬.
+                // A (뜨거운 모래) → B (솔단조, 오아시스 그늘에서 한숨 돌렸다가 파♯·미♭ 으로 다시 사막으로)
+                Lead = "D5.2 D#5 F#5 G5.2 A5.2 | A#5 A5 G5 F#5 G5.4 | F#5.2 G5 F#5 D#5.2 F#5.2 | D5.6 R.2 |" +
+                       "A5.2 A#5 A5 G5.2 F#5.2 | G5 A5 A#5 C6 A5.4 | G5 F#5 D#5 F#5 G5.2 F#5.2 | D5.6 R.2 |" +
+                       "G5.2 A#5.2 D6.3 C6 | A#5.2 A5.2 G5.4 | F5.2 G5.2 A5.2 C6.2 | A5.6 R.2 |" +
+                       "G5.2 A#5.2 D6.3 D#6 | D6.2 C6.2 A#5.4 | A5 A#5 A5 G5 F#5.2 D#5.2 | D5.6 R.2",
+                Bass = "D2.2 A2.2 D3.2 A2.2 | D2.2 A2.2 D3.2 A2.2 | D#2.2 A#2.2 D#3.2 A#2.2 | D2.2 A2.2 D3.2 A2.2 |" +
+                       "D2.2 A2.2 D3.2 A2.2 | C2.2 G2.2 C3.2 G2.2 | D#2.2 A#2.2 D2.2 A2.2 | D2.2 A2.2 D2.4 |" +
+                       "G2.2 D3.2 G3.2 D3.2 | G2.2 D3.2 G3.2 D3.2 | F2.2 C3.2 F3.2 C3.2 | F2.2 C3.2 F3.2 C3.2 |" +
+                       "G2.2 D3.2 G3.2 D3.2 | D#2.2 A#2.2 D#3.2 A#2.2 | D2.2 A2.2 D3.2 A2.2 | D2.2 A2.2 D2.4",
+                Drums = "k..hk.h.k..hk.h.k..hk.h.k.hhs.h." + "k..hk.h.k..hk.h.k..hk.h.k.hhs.s." +
+                        "k..hs.h.k..hs.h.k..hs.h.k..hs.hh" + "k..hs.h.k..hs.h.k.hhs.h.k.s.s.s.",
+            },
+            new Song
+            {
                 Name = "village", Bpm = 92, SoftLead = true,
                 // 별빛 마을: 삼각파로 느긋하게. A (사장조) → B (마단조로 살짝 저녁빛, 라 7화음으로 A 로 돌아간다)
                 Lead = "G5.2 B5.2 D6.3 B5 | C6.2 A5.2 F#5.4 | G5.2 E5.2 D5.2 G5.2 | A5.6 R.2 |" +

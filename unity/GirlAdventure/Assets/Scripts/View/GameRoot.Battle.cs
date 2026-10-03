@@ -97,7 +97,7 @@ namespace GirlAdventure.View
         Sprite Backdrop(EnemyDef def)
         {
             bool cave = map.Kind == MapKind.Cave;
-            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : cave ? "cave" : "meadow";
+            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : cave ? "cave" : map.Kind == MapKind.Desert ? "desert" : "meadow";
             if (!backdrops.TryGetValue(name, out var s))
             {
                 var tex = Resources.Load<Texture2D>("Battle/" + name);

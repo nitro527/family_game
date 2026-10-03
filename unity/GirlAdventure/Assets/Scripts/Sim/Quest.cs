@@ -61,6 +61,19 @@ namespace GirlAdventure.Sim
             return true;
         }
 
+        /// <summary>
+        /// 챕터 2 를 깬 뒤 챕터 3 으로: 동생 지훈과 함께(혹시 합류 전이면 여기서 합류) 회복하고 사막의 동굴 출구 앞에서 출발.
+        /// </summary>
+        public static void StartChapter3(PlayerState p)
+        {
+            TryJoinBrother(p);
+            p.Chapter = 3;
+            p.InVillage = false;
+            p.RestoreAll();
+            p.X = WorldMap.DesertStart.x;
+            p.Y = WorldMap.DesertStart.y;
+        }
+
         /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>
         public static void StartChapter2(PlayerState p)
         {

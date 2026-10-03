@@ -28,7 +28,7 @@ namespace GirlAdventure.Sim
         public NpcTalk[] Talks;             // 조건 붙은 대사 (위에서부터 먼저 맞는 것)
         public bool Inn;                    // 여관 주인: 말 걸면 묵을지 묻는다 (Sim.Inn)
 
-        public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : MapKind.Field;
+        public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : Map == "desert" ? MapKind.Desert : MapKind.Field;
 
         /// <summary>그림용 젤리 정의 (View 가 Painter.Jelly 로 그린다).</summary>
         public EnemyDef AsJelly() => new EnemyDef { Name = Name, Color = Color, Dark = Dark, Look = Look, Hp = 1, Atk = 1, Exp = 1, Move = "hop", Attack = "-" };

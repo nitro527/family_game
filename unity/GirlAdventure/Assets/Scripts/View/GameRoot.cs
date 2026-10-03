@@ -78,7 +78,7 @@ namespace GirlAdventure.View
                     break;
                 case Mode.Field: TickField(); break;
                 case Mode.Ending:
-                    if (P.Chapter == 1 && Time.time - endingShownAt > 1.5f && (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter) || Keys.Down(KeyCode.Z))) StartChapter2();
+                    if (P.Chapter < WorldMap.LastChapter && Time.time - endingShownAt > 1.5f && (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter) || Keys.Down(KeyCode.Z))) StartNextChapter();
                     break;
                 case Mode.Battle: TickBattle(); break;
             }
@@ -201,14 +201,25 @@ namespace GirlAdventure.View
             AutoSave();
         }
 
-        void StartChapter2()
+        /// <summary>완료 화면의 "챕터 N 시작": 챕터 1 → 동굴, 챕터 2 → 사막 (지훈과 함께).</summary>
+        void StartNextChapter()
         {
-            if (Current != Mode.Ending || P.Chapter != 1) return;
+            if (Current != Mode.Ending || P.Chapter >= WorldMap.LastChapter) return;
             confirmFrame = Time.frameCount;
-            Quest.StartChapter2(P);
+            bool toDesert = P.Chapter == 2;
+            if (toDesert) Quest.StartChapter3(P); else Quest.StartChapter2(P);
             facing = "down";
             sfx.Play("start");
-            StartCoroutine(Chapter2Routine());
+            StartCoroutine(toDesert ? Chapter3Routine() : Chapter2Routine());
+        }
+
+        IEnumerator Chapter3Routine()
+        {
+            EnterField();
+            busy = true;
+            yield return Talk("ch3_intro");
+            HideMessage();
+            busy = false;
         }
 
         IEnumerator Chapter2Routine()
@@ -410,6 +421,20 @@ namespace GirlAdventure.View
         }
 
         public void DebugSetHp(int hp) { P.Hp = Mathf.Clamp(hp, 1, P.MaxHp); RefreshHud(); }
+
+        /// <summary>플레이테스트용: 챕터 2 완료 연출부터 (지훈이 이미 합류했으면 합류 대사는 건너뜀).</summary>
+        public void DebugChapter2Clear()
+        {
+            StopAllCoroutines();
+            LeaveBattleStage();
+            P.Boss2Down = true;
+            busy = true;
+            StartCoroutine(Chapter2ClearRoutine());
+        }
+
+        public string NextChapterLabel => nextChapterBtn != null && nextChapterBtn.gameObject.activeSelf ? nextChapterBtn.GetComponentInChildren<UnityEngine.UI.Text>().text : "";
+        public string BattleBackdropName => bgSR != null && bgSR.sprite != null ? bgSR.sprite.texture.name : "";
+        public MapKind MapKindNow => map.Kind;
 
         public void DebugEnding()
         {

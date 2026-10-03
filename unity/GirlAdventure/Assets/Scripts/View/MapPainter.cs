@@ -21,7 +21,8 @@ namespace GirlAdventure.View
         /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
-            m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : tiles != null ? TiledField(m, tiles) : Field(m);
+            m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
+            : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
         static float Hash(int x, int y, int s)
@@ -229,6 +230,134 @@ namespace GirlAdventure.View
             R.Stamp(t.Sheet, 5 * T, 6 * T, 2 * T, 2 * T, gx - 2 * T, gy, 2);
             VillageArch(R, WorldMap.VillageGate.x * T, WorldMap.VillageGate.y * T);
             return R;
+        }
+
+        // ------------------------------------------------------------------ 사막 (챕터 3)
+        /// <summary>모래로 그리는 칸 (오아시스 풀밭·물·야자·샘물 말고 전부).</summary>
+        const string SandChars = ".:RYXS";
+
+        /// <summary>
+        /// 사막: 풀밭 바탕 → 모래 오토타일(오아시스 둘레는 풀 경계가 생긴다) → 오아시스 물 → 바위 언덕 오토타일
+        /// → 동굴 출구·샘물·표지판 → 선인장·야자(위 줄부터). 타일이 없으면 모래·바위를 단색 + 노이즈로.
+        /// </summary>
+        static Raster Desert(WorldMap m, FieldTiles t)
+        {
+            var R = new Raster(WorldMap.W * T, WorldMap.H * T);
+            bool tiled = t != null && t.Sand != null && t.Rock != null;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    if (tiled)
+                    {
+                        R.Stamp(t.Sheet, 0, 0, T, T, x * T, y * T);
+                        if (SandChars.IndexOf(ch) >= 0) AutoTile(R, t.Sand, m, SandChars, x, y);
+                        else if (ch == 'w') AutoTile(R, t.Water, m, "w", x, y);
+                    }
+                    else
+                        for (int py = 0; py < T; py++)
+                            for (int px = 0; px < T; px++)
+                            {
+                                float n = Fbm((x * T + px) / 30f, (y * T + py) / 30f, 61);
+                                Color32 c = SandChars.IndexOf(ch) >= 0 ? Lerp(H("#E2C48A"), H("#F0D9A6"), n) : ch == 'w' ? H("#3FA7D6") : Lerp(H("#6DB050"), H("#8CC860"), n);
+                                R.Blend(x * T + px, y * T + py, c);
+                            }
+                }
+            // 모래 물결 무늬: 바람 자국 몇 줄 (칸마다 해시로)
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == '.' && Hash(x, y, 71) < .35f)
+                    {
+                        float ox = x * T + 8 + Hash(x, y, 72) * 20, oy = y * T + 14 + Hash(x, y, 73) * 22;
+                        R.Line(ox, oy, ox + 12, oy - 2, 1.6f, H("#C9A66A", 120));
+                        R.Line(ox + 12, oy - 2, ox + 22, oy + 1, 1.6f, H("#C9A66A", 120));
+                        if (Hash(x, y, 74) < .3f) R.Circle(ox + 4, oy + 10, 2.2f, H("#A88A5A"));     // 조약돌
+                    }
+            // 바위 언덕: 위 칸부터 (아래 줄이 위 줄을 덮게)
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if ("RX".IndexOf(m.At(x, y)) >= 0)
+                    {
+                        if (tiled) AutoTile(R, t.Rock, m, "RX", x, y);
+                        else { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#A8865A")); }
+                    }
+            var cave = WorldMap.DesertCave;
+            CaveMouth(R, cave.x * T, cave.y * T);
+            Fountain(R, WorldMap.OasisSpring.x * T, WorldMap.OasisSpring.y * T, false);
+            Sign(R, WorldMap.DesertSign.x * T, WorldMap.DesertSign.y * T);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    if (ch == 'Y') Cactus(R, x, y);
+                    else if (ch == 'p') Palm(R, x, y);
+                }
+            return R;
+        }
+
+        /// <summary>바위 언덕에 뚫린 동굴 출구 (챕터 2 동굴에서 나온 곳): 어두운 아치 + 돌 테두리 + 안쪽 푸른 수정 빛.</summary>
+        static void CaveMouth(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 24, Y + 34, 21, 18, H("#5A4026"));                  // 돌 테두리
+            R.Ellipse(X + 24, Y + 36, 16, 15, H("#1A1210"));                  // 어둠
+            R.Rect(X + 8, Y + 36, 32, 12, H("#1A1210"));
+            R.Ellipse(X + 24, Y + 40, 9, 6, H("#2E6A7A", 150));               // 안쪽 수정 빛
+            R.Circle(X + 20, Y + 38, 2, H("#9FE8FF", 200));
+            R.Rect(X + 6, Y + 44, 36, 4, H("#C9A66A"));                      // 문턱 모래
+        }
+
+        /// <summary>선인장 (사구아로): 몸통 + 양팔(높이가 칸마다 다름) + 세로 줄무늬, 가끔 분홍 꽃.</summary>
+        static void Cactus(Raster R, int tx, int ty)
+        {
+            float v = Hash(tx, ty, 81), v2 = Hash(tx, ty, 82);
+            float cx = tx * T + 24 + (v - .5f) * 8, top = ty * T + 2 + v2 * 6, bot = ty * T + 44;
+            Color32 dark = H("#1F5A2C"), mid = Lerp(H("#3E9A4A"), H("#4FA84A"), v), lite = H("#7CCB6E");
+            R.Ellipse(cx + 6, bot, 14, 4, new Color32(0, 0, 0, 70));         // 그림자
+            float ly = top + 16 + v * 8, ry = top + 10 + v2 * 8;            // 팔이 붙는 높이
+            void Arm(float side, float y0, float up)
+            {
+                R.Line(cx, y0, cx + side * 12, y0, 9, dark);
+                R.Line(cx + side * 12, y0, cx + side * 12, y0 - up, 9, dark);
+                R.Line(cx, y0, cx + side * 12, y0, 6, mid);
+                R.Line(cx + side * 12, y0, cx + side * 12, y0 - up, 6, mid);
+            }
+            Arm(-1, ly, 9 + v * 6);
+            if (v2 > .25f) Arm(1, ry, 7 + v2 * 6);
+            R.Line(cx, top + 6, cx, bot - 2, 15, dark);                       // 몸통 외곽
+            R.Line(cx, top + 6, cx, bot - 2, 12, mid);
+            R.Line(cx - 3, top + 8, cx - 3, bot - 4, 2.5f, lite);             // 빛 받는 줄
+            R.Line(cx + 2, top + 9, cx + 2, bot - 4, 1.2f, dark);
+            for (int i = 0; i < 5; i++)                                       // 가시
+                R.Circle(cx + (i % 2 == 0 ? -6 : 6), top + 12 + i * 6, .9f, H("#F4F0D0"));
+            if (v > .6f) { R.Circle(cx, top + 2, 3.2f, H("#FF7FB0")); R.Circle(cx, top + 2, 1.3f, H("#FFE27A")); }
+        }
+
+        /// <summary>야자나무: 살짝 휜 줄기(마디 줄) + 늘어진 잎 6장 + 코코넛. 칸 위로 높이 솟는다.</summary>
+        static void Palm(Raster R, int tx, int ty)
+        {
+            float v = Hash(tx, ty, 91);
+            float bx = tx * T + 24, by = ty * T + 44, lean = (v - .5f) * 14;
+            float hx = bx + lean, hy = ty * T - 14;                          // 잎이 모이는 꼭대기
+            R.Ellipse(bx + 10, by, 18, 5, new Color32(0, 0, 0, 70));
+            for (int i = 0; i < 8; i++)                                       // 줄기 (아래 → 위로 굵기 줄임)
+            {
+                float k0 = i / 8f, k1 = (i + 1) / 8f;
+                float x0 = Mathf.Lerp(bx, hx, k0 * k0), y0 = Mathf.Lerp(by, hy, k0), x1 = Mathf.Lerp(bx, hx, k1 * k1), y1 = Mathf.Lerp(by, hy, k1);
+                R.Line(x0, y0, x1, y1, 9 - i * .5f, H("#5E3B1C"));
+                R.Line(x0, y0, x1, y1, 6 - i * .4f, i % 2 == 0 ? H("#9A6A3A") : H("#B07E48"));
+            }
+            for (int i = 0; i < 6; i++)                                       // 잎
+            {
+                float a = (i / 6f) * Mathf.PI * 2 + v;
+                float ex = hx + Mathf.Cos(a) * 26, ey = hy + Mathf.Sin(a) * 12 + 12;    // 바깥으로 갈수록 아래로 처진다
+                float mx = hx + Mathf.Cos(a) * 14, my = hy + Mathf.Sin(a) * 6 - 4;
+                R.Line(hx, hy, mx, my, 7, H("#1E6A2C"));
+                R.Line(mx, my, ex, ey, 6, H("#1E6A2C"));
+                R.Line(hx, hy, mx, my, 4.5f, H("#3FAE4A"));
+                R.Line(mx, my, ex, ey, 3.5f, H("#5CC85A"));
+            }
+            R.Circle(hx - 4, hy + 4, 3.5f, H("#6B4424"));
+            R.Circle(hx + 3, hy + 5, 3.5f, H("#7A4E2A"));
         }
 
         // ------------------------------------------------------------------ 별빛 마을

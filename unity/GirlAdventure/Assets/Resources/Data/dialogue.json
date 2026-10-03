@@ -92,6 +92,13 @@
       { "Text": "별빛이 돌아오고 며칠 뒤, 마을 뒷산 동굴에서 젤리들이 몰려나오기 시작했어요!", "Face": "surprised" },
       { "Text": "동굴 깊은 곳에 젤리 기지가 있대요. 기지 문을 열려면 열쇠가 필요하대요!", "Face": "smile" },
       { "Text": "{name:은/는} 별 지팡이를 꼭 쥐고 어두운 동굴로 들어갔어요. 챕터 2, 모험 시작!", "Face": "cast" } ] },
+    { "Id": "ch3_intro", "Lines": [
+      { "Text": "동굴 반대쪽 끝으로 나오자… 눈앞에 끝없는 모래밭이 펼쳐졌다!", "Face": "surprised", "Hold": 1.5 },
+      { "Text": "누나, 여기 엄청 뜨거워! 모래가 반짝반짝해!", "Face": "bro_surprised", "Hold": 1.4 },
+      { "Text": "저 멀리 동쪽에 야자나무가 보여요. 오아시스가 있나 봐요!", "Face": "smile" },
+      { "Text": "{name:와/과} {bro}, 둘이 함께하는 챕터 3, 사막 모험 시작!", "Face": "bro_determined" } ] },
+    { "Id": "sign_ch3", "Lines": [
+      { "Text": "표지판: \"여기는 모래 사막. 동쪽으로 가면 오아시스. 선인장 가시 조심!\"", "Face": "smile" } ] },
     { "Id": "sign_ch2", "Lines": [
       { "Text": "표지판: \"젤리 기지는 동굴 동쪽 끝! 열쇠는 서쪽 굴 끝 보물상자에 있다는 소문이…\"", "Face": "smile" } ] },
     { "Id": "guard_meet", "Lines": [

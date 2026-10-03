@@ -23,6 +23,7 @@ namespace GirlAdventure.View
     public class FieldTiles
     {
         public TileImage Sheet, Grass, Path, Water, Forest;
+        public TileImage Sand, Rock;        // 사막 (챕터 3): 모래(풀밭 경계 포함)·갈색 바위 언덕. 없으면 사막은 코드로 그린다
 
         /// <summary>메인 스레드에서 불러온다. 하나라도 없으면 null (→ 코드로 그린 맵).</summary>
         public static FieldTiles Load()
@@ -33,7 +34,8 @@ namespace GirlAdventure.View
                 if (t == null || !t.isReadable) { Debug.LogWarning($"[Tiles] Resources/Tiles/{n} 없음 또는 읽기 불가"); return null; }
                 return new TileImage(t);
             }
-            var f = new FieldTiles { Sheet = L("pipo_sheet"), Grass = L("pipo_at_kusa"), Path = L("pipo_at_miti"), Water = L("pipo_at_umi"), Forest = L("pipo_at_mori") };
+            var f = new FieldTiles { Sheet = L("pipo_sheet"), Grass = L("pipo_at_kusa"), Path = L("pipo_at_miti"), Water = L("pipo_at_umi"), Forest = L("pipo_at_mori"),
+                                     Sand = L("pipo_at_sabaku"), Rock = L("pipo_at_yama2") };
             return f.Sheet != null && f.Grass != null && f.Path != null && f.Water != null && f.Forest != null ? f : null;
         }
     }
