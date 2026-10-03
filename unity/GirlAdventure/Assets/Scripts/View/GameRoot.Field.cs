@@ -21,11 +21,17 @@ namespace GirlAdventure.View
         string facing = "down";
         Vector2Int moveFrom;
         // 동생 지훈 (합류 뒤): DQ 대열처럼 서진이 방금 있던 칸을 한 걸음 늦게 따라온다
-        SpriteRenderer broFieldSR, broShadowSR;
-        Sprite[] broSide;
-        Sprite broFront, broBack;
-        Vector2Int broTile, broFrom;
-        string broFacing = "down";
+        /// <summary>대열의 동료 한 명 (합류 순서대로 앞사람이 있던 칸을 한 걸음 늦게 따라온다, DQ 대열).</summary>
+        class Follower
+        {
+            public string id;
+            public SpriteRenderer sr, shadow;
+            public Sprite[] side;
+            public Sprite front, back;
+            public Vector2Int tile, from;
+            public string facing = "down";
+        }
+        readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
         WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
@@ -84,19 +90,6 @@ namespace GirlAdventure.View
             backFrames = new[] { Art.Get("walk_back", FieldCharHeight), Art.Get("walk_back2", FieldCharHeight), Art.Get("walk_back3", FieldCharHeight) };
             playerSR.sprite = frontFrames[1];
 
-            broShadowSR = new GameObject("BroShadow").AddComponent<SpriteRenderer>();
-            broShadowSR.transform.SetParent(fieldRoot, false);
-            broShadowSR.sprite = shadowSR.sprite;
-            broShadowSR.color = shadowSR.color;
-            broShadowSR.transform.localScale = new Vector3(.8f, .27f, 1);
-            broShadowSR.sortingOrder = 1;
-            broFieldSR = new GameObject("Brother").AddComponent<SpriteRenderer>();
-            broFieldSR.transform.SetParent(fieldRoot, false);
-            broFieldSR.sortingOrder = 2;
-            float bh = FieldCharHeight * BroFieldScale;
-            broSide = new[] { Art.Get("Boy/walk_side1", bh), Art.Get("Boy/walk_side2", bh), Art.Get("Boy/walk_side3", bh), Art.Get("Boy/walk_side4", bh) };
-            broFront = Art.Get("Boy/walk_front", bh);
-            broBack = Art.Get("Boy/walk_back", bh);
 
             chestOpenSR = Prop("ChestOpen", Painter.ChestTexture(true), WorldMap.Chest);
             wellWaterSR = Prop("WellWater", MapPainter.WellWaterTexture(), WorldMap.TownWell);
@@ -490,8 +483,7 @@ namespace GirlAdventure.View
             }
             moveFrom = new Vector2Int(P.X, P.Y);
             // 지훈은 서진이 떠난 칸으로 (멀리 떨어져 있었으면 그 칸에서 바로 시작)
-            broFrom = Manhattan(broTile, moveFrom) <= 1 ? broTile : moveFrom;
-            broTile = moveFrom;
+            ShiftFollowers(moveFrom);
             P.X = nx; P.Y = ny;
             moveT = 0;
             SpawnDust(moveFrom.x, moveFrom.y, dx, dy);
@@ -528,7 +520,7 @@ namespace GirlAdventure.View
             playerSR.transform.localPosition = feet + new Vector3(sway, bob, 0);
             playerSR.transform.localRotation = Quaternion.Euler(0, 0, lean);
             shadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
-            UpdateBrotherVisual(k, moving);
+            UpdateFollowers(k, moving);
 
             // 카메라: 맵 밖이 보이지 않게 가둔다
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
@@ -539,76 +531,145 @@ namespace GirlAdventure.View
 
         Vector2 playerTilePos;
 
-        /// <summary>지훈 그림 크기: 서진의 0.84배 (설정집: 3.5등신, 누나 어깨 높이).</summary>
-        const float BroFieldScale = .84f;
+        /// <summary>동료가 바뀌면(합류) 대열 그림을 맞춘다: 그림 크기는 party.json FieldScale (지훈 0.84, 아빠 1.15).</summary>
+        void SyncFollowers()
+        {
+            for (int i = 0; i < P.Companions.Count; i++)
+            {
+                var c = P.Companions[i];
+                if (i < followers.Count && followers[i].id == c.Id) continue;
+                var f = followers.Find(x => x.id == c.Id);
+                if (f == null)
+                {
+                    f = new Follower { id = c.Id };
+                    f.shadow = new GameObject(c.Id + "Shadow").AddComponent<SpriteRenderer>();
+                    f.shadow.transform.SetParent(fieldRoot, false);
+                    f.shadow.sprite = shadowSR.sprite;
+                    f.shadow.color = shadowSR.color;
+                    f.shadow.transform.localScale = new Vector3(.8f * Mathf.Max(1, c.Def.FieldScale), .27f, 1);
+                    f.shadow.sortingOrder = 1;
+                    f.sr = new GameObject(c.Id).AddComponent<SpriteRenderer>();
+                    f.sr.transform.SetParent(fieldRoot, false);
+                    f.sr.sortingOrder = 2;
+                    float h = FieldCharHeight * c.Def.FieldScale;
+                    string a = c.Def.Art;
+                    f.side = new[] { Art.Get(a + "/walk_side1", h), Art.Get(a + "/walk_side2", h), Art.Get(a + "/walk_side3", h), Art.Get(a + "/walk_side4", h) };
+                    f.front = Art.Get(a + "/walk_front", h);
+                    f.back = Art.Get(a + "/walk_back", h);
+                    f.tile = f.from = new Vector2Int(P.X, P.Y);
+                }
+                else followers.Remove(f);
+                followers.Insert(Mathf.Min(i, followers.Count), f);
+            }
+            while (followers.Count > P.Companions.Count)       // 새 게임 등으로 동료가 줄면 그림을 치운다
+            {
+                var f = followers[followers.Count - 1];
+                Destroy(f.sr.gameObject); Destroy(f.shadow.gameObject);
+                followers.RemoveAt(followers.Count - 1);
+            }
+        }
+
+        /// <summary>서진이 한 칸 걸으면: 첫 동료는 서진이 떠난 칸으로, 다음 동료는 앞 동료가 떠난 칸으로 (멀리 떨어져 있었으면 그 칸에서 바로).</summary>
+        void ShiftFollowers(Vector2Int leaderFrom)
+        {
+            SyncFollowers();
+            var target = leaderFrom;
+            foreach (var f in followers)
+            {
+                var old = f.tile;
+                f.from = Manhattan(f.tile, target) <= 1 ? f.tile : target;
+                f.tile = target;
+                target = old;
+            }
+        }
 
         /// <summary>
-        /// 맵에 들어오거나 순간 이동하면 지훈은 서진 등 뒤 칸에 선다 (막혔으면 옆 칸, 다 막혔으면 서진 칸에 숨어 있다가 걸으면 나온다).
+        /// 맵에 들어오거나 순간 이동하면 동료들은 서진 등 뒤로 줄을 선다 (막혔으면 옆 칸, 다 막혔으면 앞사람 칸에 숨어 있다가 걸으면 나온다).
         /// </summary>
         void ResetBrother()
         {
-            var here = new Vector2Int(P.X, P.Y);
-            broTile = broFrom = here;
-            if (map == null) return;
+            if (P == null) return;
+            SyncFollowers();
+            var lead = new Vector2Int(P.X, P.Y);
             var back = facing == "up" ? Vector2Int.up : facing == "down" ? Vector2Int.down : facing == "left" ? Vector2Int.right : Vector2Int.left;   // 타일 y 는 아래로 +
             var side = new Vector2Int(back.y, back.x);
-            foreach (var d in new[] { back, side, -side })
+            var taken = new HashSet<Vector2Int> { lead };
+            foreach (var f in followers)
             {
-                var t = here + d;
-                if (Quest.Walkable(map, P, t.x, t.y) && mobs.At(t.x, t.y) == null && !map.IsRope(t.x, t.y) && !map.IsDoorway(t.x, t.y)) { broTile = broFrom = t; break; }   // 밧줄·출입구 칸은 비워 둔다
+                f.tile = f.from = lead;
+                if (map != null)
+                    foreach (var d in new[] { back, side, -side })
+                    {
+                        var t = lead + d;
+                        if (!taken.Contains(t) && Quest.Walkable(map, P, t.x, t.y) && mobs.At(t.x, t.y) == null && !map.IsRope(t.x, t.y) && !map.IsDoorway(t.x, t.y))
+                        { f.tile = f.from = t; break; }   // 밧줄·출입구 칸은 비워 둔다
+                    }
+                taken.Add(f.tile);
+                f.facing = facing;
+                lead = f.tile;
             }
-            broFacing = facing;
         }
 
         static int Manhattan(Vector2Int a, Vector2Int b) => Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
 
         /// <summary>
-        /// 필드의 지훈: 서진과 같은 걸음(moveT)으로 broFrom → broTile 을 걷는다.
-        /// 순간 이동·맵 이동으로 두 칸 넘게 떨어지면 서진 칸으로 붙는다 (서진 뒤에 숨어 있다가 걸으면 나온다).
+        /// 필드의 동료들: 서진과 같은 걸음(moveT)으로 from → tile 을 걷는다.
+        /// 순간 이동·맵 이동으로 앞사람과 두 칸 넘게 떨어지면 다시 줄을 세운다.
         /// </summary>
-        void UpdateBrotherVisual(float k, bool moving)
+        void UpdateFollowers(float k, bool moving)
         {
-            bool on = P != null && P.BrotherJoined;
-            if (broFieldSR.enabled != on) { broFieldSR.enabled = on; broShadowSR.enabled = on; }
-            if (!on) return;
+            if (P == null) return;
+            if (followers.Count != P.Companions.Count) { SyncFollowers(); ResetBrother(); }
+            var lead = new Vector2Int(P.X, P.Y);
+            bool apart = false;
+            foreach (var f in followers) { if (moveT < 0 && Manhattan(f.tile, lead) > 1) apart = true; lead = f.tile; }
+            if (apart) ResetBrother();
             var here = new Vector2Int(P.X, P.Y);
-            if (moveT < 0 && Manhattan(broTile, here) > 1) ResetBrother();
-            bool walking = moveT >= 0 && broFrom != broTile;
-            if (walking)
+            for (int i = 0; i < followers.Count; i++)
             {
-                var d = broTile - broFrom;
-                broFacing = d.x > 0 ? "right" : d.x < 0 ? "left" : d.y < 0 ? "up" : "down";
+                var f = followers[i];
+                bool on = fieldRoot.gameObject.activeSelf;
+                f.sr.enabled = f.shadow.enabled = on;
+                bool walking = moveT >= 0 && f.from != f.tile;
+                if (walking)
+                {
+                    var d = f.tile - f.from;
+                    f.facing = d.x > 0 ? "right" : d.x < 0 ? "left" : d.y < 0 ? "up" : "down";
+                }
+                else if (f.tile == here) f.facing = facing;
+                float bx = walking ? Mathf.Lerp(f.from.x, f.tile.x, k) : f.tile.x;
+                float by = walking ? Mathf.Lerp(f.from.y, f.tile.y, k) : f.tile.y;
+                var feet = FeetAt(bx, by) + new Vector3(0, 0, .002f * (i + 1));    // 같은 줄이면 앞사람 뒤에
+                float bob = 0, lean = 0;
+                float wt = walkT + .07f * (i + 1);                                   // 발걸음이 살짝씩 어긋나게
+                if (f.facing == "left" || f.facing == "right")
+                {
+                    f.sr.sprite = f.side[moving ? (int)(wt / .11f) % 4 : 0];
+                    f.sr.flipX = f.facing == "left";
+                    bob = moving ? Mathf.Abs(Mathf.Sin(wt * 12)) * .08f : Mathf.Sin(Time.time * 2.5f + 1 + i) * .02f;
+                }
+                else
+                {
+                    // 앞뒤 걷기 그림은 한 장뿐이라 통통 튀고 좌우로 기우뚱하며 걷는다
+                    f.sr.sprite = f.facing == "up" ? f.back : f.front;
+                    f.sr.flipX = false;
+                    float ph = wt * Mathf.PI / .22f;
+                    bob = moving ? Mathf.Abs(Mathf.Cos(ph)) * .1f : Mathf.Sin(Time.time * 2.5f + 1 + i) * .02f;
+                    lean = moving ? Mathf.Sin(ph) * 6f : 0;
+                }
+                f.sr.transform.localPosition = feet + new Vector3(0, bob, 0);
+                f.sr.transform.localRotation = Quaternion.Euler(0, 0, lean);
+                f.shadow.transform.localPosition = feet + new Vector3(0, .02f, 0);
             }
-            else if (broTile == here) broFacing = facing;
-            float bx = walking ? Mathf.Lerp(broFrom.x, broTile.x, k) : broTile.x;
-            float by = walking ? Mathf.Lerp(broFrom.y, broTile.y, k) : broTile.y;
-            var feet = FeetAt(bx, by) + new Vector3(0, 0, .002f);      // 같은 줄이면 누나 뒤에
-            float bob = 0, lean = 0;
-            float wt = walkT + .07f;                                    // 누나와 발걸음이 살짝 어긋나게
-            if (broFacing == "left" || broFacing == "right")
-            {
-                broFieldSR.sprite = broSide[moving ? (int)(wt / .11f) % 4 : 0];
-                broFieldSR.flipX = broFacing == "left";
-                bob = moving ? Mathf.Abs(Mathf.Sin(wt * 12)) * .08f : Mathf.Sin(Time.time * 2.5f + 1) * .02f;
-            }
-            else
-            {
-                // 앞뒤 걷기 그림은 한 장뿐이라 통통 튀고 좌우로 기우뚱하며 걷는다
-                broFieldSR.sprite = broFacing == "up" ? broBack : broFront;
-                broFieldSR.flipX = false;
-                float ph = wt * Mathf.PI / .22f;
-                bob = moving ? Mathf.Abs(Mathf.Cos(ph)) * .1f : Mathf.Sin(Time.time * 2.5f + 1) * .02f;
-                lean = moving ? Mathf.Sin(ph) * 6f : 0;
-            }
-            broFieldSR.transform.localPosition = feet + new Vector3(0, bob, 0);
-            broFieldSR.transform.localRotation = Quaternion.Euler(0, 0, lean);
-            broShadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
         }
 
-        // ---- 프로브용
-        public bool BroFieldVisible => broFieldSR != null && broFieldSR.enabled;
-        public Vector2Int BroTile => broTile;
-        public string BroFacing => broFacing;
+        // ---- 프로브용 (첫 동료 = 지훈)
+        Follower BroFollower => followers.Find(f => f.id == Party.Brother);
+        public bool BroFieldVisible => BroFollower != null && BroFollower.sr.enabled;
+        public Vector2Int BroTile => BroFollower?.tile ?? new Vector2Int(P.X, P.Y);
+        public string BroFacing => BroFollower?.facing ?? facing;
+        public Vector2Int FollowerTile(string id) => followers.Find(f => f.id == id)?.tile ?? new Vector2Int(-1, -1);
+        public bool FollowerVisible(string id) => followers.Find(f => f.id == id)?.sr.enabled ?? false;
 
         void OnArrive()
         {

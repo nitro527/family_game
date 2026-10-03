@@ -298,11 +298,15 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지훈이 명령을 고르는 차례인가 (명령창이 지훈 것).</summary>
-        public bool BroCommandTurn => CommandOpen && broTurn;
+        public bool BroCommandTurn => CommandOpen && allyTurn >= 0;      // 동료(지훈·아빠) 명령 차례
+        public string CommandAllyId => CommandOpen && allyTurn >= 0 ? P.Companions[allyTurn].Id : "";
         /// <summary>전투 무대가 보이는 중 (보스를 이긴 뒤 컷신은 무대를 치우고 Mode.Battle 인 채로 진행).</summary>
         public bool OnBattleStage => battleRoot != null && battleRoot.gameObject.activeSelf;
-        public bool BroHudShown => broHud != null && broHud.activeSelf;
-        public bool BroInBattle => broSR != null && broSR.gameObject.activeSelf && battleRoot.gameObject.activeSelf;
+        public bool BroHudShown => allyHuds.Count > 0 && allyHuds[0].win.activeSelf;
+        public int AllyHudCount { get { int n = 0; foreach (var h in allyHuds) if (h.win.activeSelf) n++; return n; } }
+        public bool BroInBattle => AllyInBattle(Party.Brother);
+        public bool AllyInBattle(string id) => allyViews.TryGetValue(id, out var v) && v.sr.gameObject.activeSelf && battleRoot.gameObject.activeSelf;
+        public void DebugJoin(string id) { P.Join(id); RefreshHud(); ResetBrother(); UpdatePlayerVisual(); }
 
         public bool DebugWalkable(int x, int y) => Quest.Walkable(map, P, x, y);
 
@@ -354,6 +358,7 @@ namespace GirlAdventure.View
         }
 
         public void DebugSetEnemyHp(int hp) { if (battle != null) battle.EnemyHp = hp; }
+        public void DebugSetAllFoesHp(int hp) { if (battle != null) foreach (var f in battle.Foes) f.Hp = hp; }
 
         public bool EnemyAppearing => enemyAppear < 1;
         public bool HurtFlashing => hurtFlash > 0;

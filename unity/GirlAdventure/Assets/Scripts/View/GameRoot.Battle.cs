@@ -14,16 +14,46 @@ namespace GirlAdventure.View
     {
         static readonly Vector3 Stage = new Vector3(1000, 0, 0);
         const float HeroHeightPx = 275, HeroY = 428, EnemyX = 560, EnemyY = 345;
-        // 동생 지훈 (합류 뒤): 서진 오른쪽 앞, 누나 어깨 높이쯤 (설정집 3.5등신)
-        const float BroX = 278, BroY = 434, BroHeightPx = 218;
-        /// <summary>서진의 무대 x: 혼자면 가운데 왼쪽, 지훈과 함께면 한 칸 왼쪽으로 비켜 선다.</summary>
-        float HeroX => battle != null && battle.Party ? 140 : 215;
+        // 동료 (합류 순서): 둘이면 지훈이 서진 오른쪽 앞, 셋이면 아빠가 왼쪽 뒤·서진 가운데·지훈 오른쪽 앞 (파티 일반화, 챕터 4)
+        int NAllies => battle != null ? P.Companions.Count : 0;
+        /// <summary>서진의 무대 x: 혼자면 가운데 왼쪽, 동료가 있으면 비켜 선다.</summary>
+        float HeroX => NAllies >= 2 ? 195 : NAllies == 1 ? 140 : 215;
+        float AllyX(int i) => NAllies >= 2 ? (i == 0 ? 312 : 82) : 278;
+        float AllyY(int i) => NAllies >= 2 && i == 1 ? 440 : 434;
+        float BroX => AllyX(BroIndex);
+        int BroIndex => P.Companions.FindIndex(c => c.Id == Party.Brother);
+
+        /// <summary>동료 한 명의 전투 그림·자세·흔들림.</summary>
+        class AllyView
+        {
+            public SpriteRenderer sr;
+            public readonly Dictionary<string, Sprite> poses = new Dictionary<string, Sprite>();
+            public string pose = "ready";
+            public float shake, lunge;
+        }
+        readonly Dictionary<string, AllyView> allyViews = new Dictionary<string, AllyView>();
+
+        AllyView AV(int i)
+        {
+            var c = P.Companions[i];
+            if (!allyViews.TryGetValue(c.Id, out var v))
+            {
+                v = new AllyView { sr = NewSR("Ally_" + c.Id, c.Id == Party.Brother ? 3 : 2) };    // 뒤에 서는 동료는 서진보다 뒤
+                foreach (var p in new[] { "ready", "attack", "damage", "victory", "guard" })
+                    if (Resources.Load<Texture2D>($"{c.Def.Art}/battle_{p}") != null) v.poses[p] = Art.Get($"{c.Def.Art}/battle_{p}", c.Def.BattleHeight / 48f);
+                allyViews[c.Id] = v;
+            }
+            return v;
+        }
+        Sprite AllyPose(AllyView v, string p) => v.poses.TryGetValue(p, out var s) ? s : v.poses["ready"];
+
+        // 지훈 자세 (합동 공격·예전 코드가 쓰는 통로)
+        AllyView BroView => BroIndex >= 0 ? AV(BroIndex) : null;
+        string broPose { get => BroView?.pose ?? "ready"; set { var v = BroView; if (v != null) v.pose = value; } }
+        float broLunge { get => BroView?.lunge ?? 0; set { var v = BroView; if (v != null) v.lunge = value; } }
 
         Transform battleRoot;
-        SpriteRenderer bgSR, heroSR, broSR;
-        readonly Dictionary<string, Sprite> broPoses = new Dictionary<string, Sprite>();
-        string broPose = "ready";
-        float broShake, broLunge;
+        SpriteRenderer bgSR, heroSR;
         // 적 1~3마리 (몬스터 무리). 한 마리 전투는 0번 칸만 쓴다
         readonly SpriteRenderer[] foeSR = new SpriteRenderer[BattleSystem.MaxFoes];
         SpriteRenderer enemySR => foeSR[0];
@@ -74,9 +104,6 @@ namespace GirlAdventure.View
             heroSR = NewSR("Heroine", 3);
             foreach (var p in new[] { "ready", "cast", "damage", "victory" })
                 poses[p] = Art.Get("battle_" + p, HeroHeightPx / 48f);
-            broSR = NewSR("Brother", 3);
-            foreach (var p in new[] { "ready", "attack", "damage", "victory" })
-                broPoses[p] = Art.Get("Boy/battle_" + p, BroHeightPx / 48f);
             glowSprite = Art.FromTexture(Painter.Glow(), new Vector2(.5f, .5f), 64);
             starSprite = Art.FromTexture(Painter.Star(), new Vector2(.5f, .5f), 64);
             battleRoot.gameObject.SetActive(false);
@@ -143,7 +170,8 @@ namespace GirlAdventure.View
         float FoeX(int i)
         {
             int n = battle != null ? battle.Foes.Count : 1;
-            return n <= 1 ? EnemyX : n == 2 ? (i == 0 ? 440 : 575) : 355 + i * 110;     // 오른쪽 명령·선택창(x 630~)에 안 가리게
+            float shift = NAllies >= 2 ? 30 : 0;    // 셋이 서면 적이 조금 오른쪽으로
+            return shift + (n <= 1 ? EnemyX : n == 2 ? (i == 0 ? 440 : 575) : 355 + i * 110);     // 오른쪽 명령·선택창(x 630~)에 안 가리게
         }
 
         /// <summary>적 칸 i 의 크기 (보스 1.75, 큰 젤리 ×1.3, 무리일수록 조금 작게).</summary>
@@ -195,8 +223,13 @@ namespace GirlAdventure.View
                 foeSR[i].transform.localScale = Vector3.one * FoeScale(i);
             }
             heroShake = heroLunge = hurtFlash = camShake = 0;
-            broSR.gameObject.SetActive(battle.Party);
-            broPose = "ready"; broShake = broLunge = 0;
+            foreach (var v in allyViews.Values) v.sr.gameObject.SetActive(false);
+            for (int a = 0; a < P.Companions.Count; a++)
+            {
+                var v = AV(a);
+                v.sr.gameObject.SetActive(true);
+                v.pose = "ready"; v.shake = v.lunge = 0;
+            }
             movingFoe = 0; targetMark = -1; pickingTarget = false;
             moveP = 1; fxFrozen = false;
             enemyAppear = def.Boss ? -.45f : -.65f;   // 음수 = 소용돌이가 걷힐 때(.35초)까지 숨어서 기다림
@@ -216,17 +249,21 @@ namespace GirlAdventure.View
             while (true)
             {
                 battleOver = false;
+                battle.NewRound();                  // 지키기는 한 차례만
                 if (!battle.SisterDown)
                 {
                     yield return SisterTurn();
                     if (battleOver) yield break;
                     if (turnRetry) continue;
                 }
-                if (battle.Party && !battle.BrotherDown)
+                bool over = false;
+                for (int a = 0; a < P.Companions.Count && !over; a++)
                 {
-                    yield return BrotherTurn();
-                    if (battleOver) yield break;
+                    if (battle.AllyDown(a)) continue;
+                    yield return AllyTurn(a);
+                    over = battleOver;
                 }
+                if (over) yield break;
                 yield return EnemyTurn();
                 if (battle.PlayerDown) { yield return Defeat(); yield break; }
             }
@@ -263,29 +300,33 @@ namespace GirlAdventure.View
                 }
                 var o = battle.Act(chosenCmd.Value, item, target);
                 yield return PlayerTurn(o);
-                if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, false);
+                if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, -1);
                 yield return AfterAct(o);
                 turnRetry = o.Failed && !battleOver;
                 yield break;
             }
         }
 
-        /// <summary>지훈 차례: 검 휘두르기 · 번개 (적이 여럿이면 대상 고르기) · 도망.</summary>
-        IEnumerator BrotherTurn()
+        /// <summary>
+        /// 동료 a 의 차례: 명령(party.json 기술 · 도망) → 대상 고르기(적이 여럿이면, 지키기는 대상 없음) → 행동.
+        /// 지훈은 "지훈 자동 공격" 설정이면 명령창 없이, 행동 뒤 가끔 합동 공격.
+        /// </summary>
+        IEnumerator AllyTurn(int a)
         {
-            if (Settings.BroAuto)                   // 지훈 자동 공격: 명령창 없이 바로
+            bool bro = P.Companions[a].Id == Party.Brother;
+            if (bro && Settings.BroAuto)            // 지훈 자동 공격: 명령창 없이 바로
             {
                 var (ac, at) = battle.BroAuto();
-                var ao = battle.BroAct(ac, at);
-                yield return BrotherAct(ao);
-                if (ao.SkillUp > 0) yield return SkillUpRoutine(ao.Cmd, ao.SkillUp, true);
+                var ao = battle.MemberAct(a, ac, at);
+                yield return AllyAct(a, ao);
+                if (ao.SkillUp > 0) yield return SkillUpRoutine(ao.Cmd, ao.SkillUp, a);
                 yield return AfterAct(ao);
                 if (!battleOver) yield return MaybeCombo(ao.Target);
                 yield break;
             }
             while (true)
             {
-                yield return AskCommand(true);
+                yield return AskCommand(a);
                 var c = chosenCmd.Value;
                 PlayerOutcome o;
                 if (c == Cmd.Run)
@@ -296,20 +337,32 @@ namespace GirlAdventure.View
                 else
                 {
                     int target = -1;
-                    if (battle.AliveCount > 1)
+                    if (c != Cmd.Guard && battle.AliveCount > 1)
                     {
                         yield return PickTarget();
                         if (pickedTarget < 0) continue;     // 그만두기 → 다시 명령 고르기
                         target = pickedTarget;
                     }
-                    o = battle.BroAct(c, target);
-                    yield return BrotherAct(o);
-                    if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, true);
+                    o = battle.MemberAct(a, c, target);
+                    yield return AllyAct(a, o);
+                    if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, a);
                 }
                 yield return AfterAct(o);
-                if (!battleOver && c != Cmd.Run) yield return MaybeCombo(o.Target);
+                if (bro && !battleOver && c != Cmd.Run) yield return MaybeCombo(o.Target);
                 yield break;
             }
+        }
+
+        /// <summary>동료 대사: 지훈은 예전 "bro_*" (누나를 부르는 말투), 다른 동료는 공용 "ally_*" ({ally} = 이름, 얼굴은 그 동료).</summary>
+        IEnumerator TalkAlly(int a, string key, params (string key, object val)[] vars)
+        {
+            var c = P.Companions[a];
+            if (c.Id == Party.Brother) { yield return Talk("bro_" + key, vars); yield break; }
+            var all = new (string, object)[vars.Length + 1];
+            all[0] = ("ally", c.Def.Name);
+            vars.CopyTo(all, 1);
+            allyFaceDef = c.Def;
+            yield return Talk("ally_" + key, all);
         }
 
         /// <summary>한 사람의 행동 뒤: 도망·승리면 전투 끝(battleOver), 무리 중 쓰러진 적은 사라지고 이름표도 지운다.</summary>
@@ -364,11 +417,12 @@ namespace GirlAdventure.View
         /// <summary>
         /// 스킬 레벨업 (백로그 55): 쓴 사람 둘레로 금빛 별이 회오리치며 솟고 "Lv2!" 글자 → "리본 파이어가 Lv2 가 되었다!".
         /// </summary>
-        IEnumerator SkillUpRoutine(Cmd c, int lv, bool bro)
+        IEnumerator SkillUpRoutine(Cmd c, int lv, int ally)
         {
-            float x = bro ? BroX : HeroX;
+            bool isAlly = ally >= 0;
+            float x = isAlly ? AllyX(ally) : HeroX;
             sfx.Play("lvup");
-            var center = Px(x, (bro ? BroY : HeroY) - 100);
+            var center = Px(x, (isAlly ? AllyY(ally) : HeroY) - 100);
             Spawn(glowSprite, center, Vector3.zero, .9f, 2.4f, new Color(1f, .9f, .45f, .6f));
             for (int i = 0; i < 18; i++)
             {
@@ -377,34 +431,55 @@ namespace GirlAdventure.View
                       .9f, .32f, i % 2 == 0 ? new Color(1f, .86f, .3f) : new Color(.8f, .95f, 1f), 360);
             }
             Pop($"{GameData.Skill(c).Name} Lv{lv}!", x + 30, 200, UIKit.Gold, 34);
-            if (bro) broPose = "victory"; else pose = "victory";
-            yield return Talk(bro ? "bro_skill_up" : "skill_up", ("skill", GameData.Skill(c).Name), ("lv", lv));
-            if (bro) broPose = "ready"; else pose = "ready";
+            if (isAlly) AV(ally).pose = "victory"; else pose = "victory";
+            if (isAlly) yield return TalkAlly(ally, "skill_up", ("skill", GameData.Skill(c).Name), ("lv", lv));
+            else yield return Talk("skill_up", ("skill", GameData.Skill(c).Name), ("lv", lv));
+            if (isAlly) AV(ally).pose = "ready"; else pose = "ready";
         }
 
-        /// <summary>지훈의 검(앞으로 뛰어들며 베기) · 번개(하늘에서 내리꽂힘) 연출.</summary>
-        /// <summary>프로브용: 지훈이 행동한 횟수.</summary>
+        /// <summary>프로브용: 지훈이 행동한 횟수, 동료 모두가 행동한 횟수, 아빠가 지킨 횟수.</summary>
         public int BroActCount { get; private set; }
+        public int AllyActCount { get; private set; }
+        public int GuardCount { get; private set; }
 
-        IEnumerator BrotherAct(PlayerOutcome o)
+        /// <summary>동료 행동 연출: 검(뛰어들며 베기) · 번개(하늘에서 내리꽂힘) · 지키기(방패 자세 + 금빛 사자 방패 빛).</summary>
+        IEnumerator AllyAct(int a, PlayerOutcome o)
         {
-            BroActCount++;
+            var v = AV(a);
+            if (P.Companions[a].Id == Party.Brother) BroActCount++;
+            AllyActCount++;
+            if (o.Cmd == Cmd.Guard)
+            {
+                GuardCount++;
+                v.pose = "guard";
+                sfx.Play("chest");
+                var at = Px(AllyX(a) + 30, AllyY(a) - 120);
+                Spawn(glowSprite, at, Vector3.zero, 1f, 3.2f, new Color(1f, .85f, .35f, .55f));
+                for (int i = 0; i < 12; i++)
+                {
+                    float ang = i / 12f * Mathf.PI * 2;
+                    Spawn(starSprite, at + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 1.2f, Vector3.zero, .7f, .3f, new Color(1f, .9f, .5f), 200);
+                }
+                yield return TalkAlly(a, "guard");
+                yield break;
+            }
             bool bolt = o.Cmd == Cmd.Bolt;
-            broPose = "attack"; broLunge = 1;
+            v.pose = "attack"; v.lunge = 1;
             RefreshHud();
-            yield return Talk(bolt ? "bro_bolt" : "bro_cast", ("skill", GameData.Skill(o.Cmd).Name));
+            if (bolt) yield return TalkAlly(a, "bolt", ("skill", GameData.Skill(o.Cmd).Name));
+            else yield return TalkAlly(a, "cast", ("skill", GameData.Skill(o.Cmd).Name));
             if (bolt) yield return Lightning(o.Target);
             else { sfx.Play("mv_spin"); yield return SlashArc(o.Target); }
             if (o.Missed)
             {
-                broPose = "ready"; sfx.Play("miss");
-                yield return Talk("bro_miss");
+                v.pose = "ready"; sfx.Play("miss");
+                yield return TalkAlly(a, "miss");
                 yield break;
             }
             HitFoe(o.Target, o.Damage, bolt);
             RefreshHud();
-            yield return Talk("bro_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
-            broPose = "ready";
+            yield return TalkAlly(a, "hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
+            v.pose = "ready";
         }
 
         IEnumerator PlayerTurn(PlayerOutcome o)
@@ -587,7 +662,7 @@ namespace GirlAdventure.View
             }
             labels[targetOrder.Count] = "그만두기";
             ShowMessageWindow(true);
-            SetFace(broTurn ? "bro_smile" : "smile");
+            SetFace(allyTurn >= 0 ? "ally_smile" : "smile");
             msgText.text = "어느 젤리를 노릴까?";
             choiceIndex = 0;
             pickingTarget = true;
@@ -620,20 +695,23 @@ namespace GirlAdventure.View
             var e = battle.EnemyAct(i);
             if (e.Dodged)
             {
-                yield return Talk(e.OnBrother ? "bro_dodge" : "dodge");
+                if (e.Ally >= 0) yield return TalkAlly(e.Ally, "dodge");
+                else yield return Talk("dodge");
                 yield break;
             }
-            if (e.OnBrother)
+            if (e.Ally >= 0)
             {
-                sfx.Play("hurt");
-                broPose = "damage"; broShake = .35f;
-                hurtFlash = HurtFlashTime;
+                var v = AV(e.Ally);
+                sfx.Play(e.Guarded ? "thud" : "hurt");
+                v.pose = e.Guarded ? "guard" : "damage"; v.shake = e.Guarded ? .2f : .35f;
+                if (!e.Guarded) hurtFlash = HurtFlashTime;
                 camShake = Mathf.Max(camShake, d.Boss ? .3f : .15f);
                 RefreshHud();
-                Pop(e.Damage.ToString(), BroX, 240, new Color32(255, 107, 107, 255));
-                yield return Talk("bro_hurt", ("dmg", e.Damage));
-                if (battle.BrotherDown && !battle.PlayerDown) yield return Talk("bro_down");
-                else broPose = "ready";
+                Pop(e.Damage.ToString(), AllyX(e.Ally), 240, new Color32(255, 107, 107, 255));
+                if (e.Guarded) yield return TalkAlly(e.Ally, "guarded", ("dmg", e.Damage));
+                else yield return TalkAlly(e.Ally, "hurt", ("dmg", e.Damage));
+                if (battle.AllyDown(e.Ally) && !battle.PlayerDown) yield return TalkAlly(e.Ally, "down");
+                else v.pose = battle.Guarding == e.Ally ? "guard" : "ready";
                 yield break;
             }
             sfx.Play("hurt");
@@ -653,7 +731,8 @@ namespace GirlAdventure.View
             for (int i = 0; i < foeFading.Length; i++) foeFading[i] = true;
             bgm.Stop();                // DQ 처럼 승리 팡파르만 들리게
             sfx.Play("win");
-            pose = "victory"; broPose = "victory";
+            pose = "victory";
+            for (int a = 0; a < P.Companions.Count; a++) AV(a).pose = "victory";
             P.WakeUpAfterBattle();              // 둘 중 쓰러졌던 사람은 HP 1 로 일어난다
             RefreshHud();
             enemyLabel.text = "";
@@ -772,19 +851,21 @@ namespace GirlAdventure.View
             if (party && battle.SisterDown) heroSR.sprite = poses["damage"];
             heroSR.color = party && battle.SisterDown ? new Color(.55f, .55f, .65f, .8f) : Color.white;   // 쓰러지면 흐리게
 
-            // 동생 지훈 (합류 뒤)
-            if (party)
+            // 동료들 (합류 순서)
+            for (int ai = 0; party && ai < P.Companions.Count; ai++)
             {
-                bool down = battle.BrotherDown;
-                broSR.sprite = broPoses[down ? "damage" : broPose];
-                float bsx = broShake > 0 ? Random.Range(-1f, 1f) * broShake : 0;
-                float blunge = broLunge > 0 ? Mathf.Sin(broLunge * Mathf.PI) * 1.4f : 0;     // 검은 더 크게 뛰어든다
-                float bbreathe = broPose == "ready" && !down ? Mathf.Sin(battleT * 2.9f + 1) * .05f : 0;
-                float bjump = broPose == "victory" ? Mathf.Abs(Mathf.Sin(battleT * 6 + .8f)) * .3f : 0;
-                broSR.transform.position = Px(BroX, BroY) + new Vector3(bsx + blunge, bbreathe + bjump, 0);
-                broSR.color = down ? new Color(.55f, .55f, .65f, .8f) : Color.white;
-                broShake = Mathf.Max(0, broShake - dt);
-                broLunge = Mathf.Max(0, broLunge - dt * 3);
+                var v = AV(ai);
+                bool down = battle.AllyDown(ai);
+                string pz = down ? "damage" : battle.Guarding == ai && v.pose == "ready" ? "guard" : v.pose;
+                v.sr.sprite = AllyPose(v, pz);
+                float bsx = v.shake > 0 ? Random.Range(-1f, 1f) * v.shake : 0;
+                float blunge = v.lunge > 0 ? Mathf.Sin(v.lunge * Mathf.PI) * 1.4f : 0;     // 검은 더 크게 뛰어든다
+                float bbreathe = v.pose == "ready" && !down ? Mathf.Sin(battleT * 2.9f + 1 + ai) * .05f : 0;
+                float bjump = v.pose == "victory" ? Mathf.Abs(Mathf.Sin(battleT * 6 + .8f + ai)) * .3f : 0;
+                v.sr.transform.position = Px(AllyX(ai), AllyY(ai)) + new Vector3(bsx + blunge, bbreathe + bjump, 0);
+                v.sr.color = down ? new Color(.55f, .55f, .65f, .8f) : Color.white;
+                v.shake = Mathf.Max(0, v.shake - dt);
+                v.lunge = Mathf.Max(0, v.lunge - dt * 3);
             }
 
             // 적 (1~3마리): 모션은 공격 중인 적(movingFoe)만, 등장은 다 같이

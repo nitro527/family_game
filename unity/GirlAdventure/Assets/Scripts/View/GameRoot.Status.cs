@@ -101,18 +101,29 @@ namespace GirlAdventure.View
                 mid.Append(id != null ? $"{GameData.ItemName(id)} <size=15><color=#9AA3C7>{Equipment.BonusText(id)}</color></size>\n"
                                       : "<color=#9AA3C7>(없음)</color>\n");
             }
-            if (P.BrotherJoined)                    // 지훈 칼·방패는 한 줄로 (효과는 장비 바꾸기에서)
+            foreach (var c in P.Companions)             // 동료 장비는 한 줄씩 (효과는 장비 바꾸기에서)
             {
-                string w = Equipment.In(P, "bro_weapon"), sh = Equipment.In(P, "bro_shield");
-                string Name(string id) => id != null ? GameData.ItemName(id) : "<color=#9AA3C7>없음</color>";
-                mid.Append($"  <color=#9AA3C7>지훈</color> {Name(w)} <color=#9AA3C7>·</color> {Name(sh)}\n");
+                var names = new System.Collections.Generic.List<string>();
+                foreach (var slot in c.Def.GearSlots ?? new string[0])
+                {
+                    string id = Equipment.In(P, slot);
+                    names.Add(id != null ? GameData.ItemName(id) : "<color=#9AA3C7>없음</color>");
+                }
+                mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", names)}" + "\n");
             }
             mid.Append("<color=#F2C443>주문</color> <size=15><color=#9AA3C7>스킬 레벨 · 다음 레벨까지</color></size>\n");
             mid.Append(SkillLine(Cmd.Fire)).Append(SkillLine(Cmd.Star));
             if (BattleSystem.Knows(P, Cmd.Heal)) mid.Append(SkillLine(Cmd.Heal));
-            if (P.BrotherJoined)                    // 지훈 기술은 한 줄로
-                mid.Append($"  <color=#9AA3C7>지훈</color> {GameData.Skill(Cmd.Slash).Name.Split(' ')[0]} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, Cmd.Slash)}</color></size>"
-                         + $" <color=#9AA3C7>·</color> {GameData.Skill(Cmd.Bolt).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, Cmd.Bolt)}</color></size>\n");
+            foreach (var c in P.Companions)             // 동료 기술은 한 줄씩 (자라는 기술은 Lv 도)
+            {
+                var parts = new System.Collections.Generic.List<string>();
+                foreach (var k in c.Def.Skills ?? new string[0])
+                    if (System.Enum.TryParse<Cmd>(k, out var cmd) && SkillLevels.Grows(cmd))
+                        parts.Add($"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color></size>");
+                    else if (System.Enum.TryParse<Cmd>(k, out var cmd2)) parts.Add(GameData.Skill(cmd2).Name);
+                mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", parts)}" + "\n");
+            }
+            stMid.fontSize = P.Companions.Count >= 2 ? 17 : 19;   // 동료가 둘이면 줄이 많아 조금 작게
             stMid.text = mid.ToString();
 
             var sb = new System.Text.StringBuilder();

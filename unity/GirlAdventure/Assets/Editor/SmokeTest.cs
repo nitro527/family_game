@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -155,7 +155,7 @@ namespace GirlAdventure.EditorTools
             foreach (int i in GameData.EncounterPool(MapKind.Field, 3, 4)) nearSmall &= GameData.Normal[i].Tier < 2;
             foreach (int i in GameData.EncounterPool(MapKind.Field, 10, 11)) nearSmall &= GameData.Normal[i].Tier < 2;
             Check("big jelly = stronger same color, far only", badTier == "" && nearSmall && GameData.Normal[GameData.EncounterPool(MapKind.Field, 20, 15)[4]].Tier == 2, badTier);
-            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", PlayerState.DefaultName), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기"), ("bro", PlayerState.BrotherName) };
+            var vars = new (string, object)[] { ("item", "기지 열쇠"), ("name", PlayerState.DefaultName), ("enemy", "킹 젤리"), ("skill", "불"), ("attack", "몸통 박치기"), ("dmg", 3), ("heal", 5), ("exp", 7), ("lv", 2), ("gold", 12), ("candy", 3), ("price", 8), ("max", 9), ("count", 2), ("mp", 12), ("atk", 9), ("def", 2), ("slot", "무기"), ("bro", PlayerState.BrotherName), ("ally", "아빠") };
             foreach (var id in TalkIds)
             {
                 bool ok = GameData.HasTalk(id);
@@ -175,6 +175,15 @@ namespace GirlAdventure.EditorTools
                     foreach (var l in GameData.Talk(id))
                     {
                         if (string.IsNullOrEmpty(l.Face)) continue;
+                        if (l.Face.StartsWith("ally_"))         // 동료 공용 대사: 모든 동료에게 그 얼굴이 있어야 한다 (brave = 동료마다 BraveFace)
+                        {
+                            foreach (var cd in Party.All)
+                            {
+                                string fn = l.Face.Substring(5) == "brave" ? cd.BraveFace : l.Face.Substring(5);
+                                if (Resources.Load<Texture2D>(cd.Art + "/face_" + fn) == null) noFace += $"{id}:{cd.Id}/{fn} ";
+                            }
+                            continue;
+                        }
                         string path = GameRoot.FacePath(l.Face);
                         if (Resources.Load<Texture2D>(path.Contains("/") ? path : "Girl/" + path) == null) noFace += $"{id}:{l.Face} ";
                     }
@@ -186,7 +195,12 @@ namespace GirlAdventure.EditorTools
                         foreach (var wrong in new[] { ":와/과}", ":는/은}", ":가/이}", ":를/을}", ":야/아}", "}와 ", "}과 ", "</color>와", "</color>과" })
                             if (l.Text.Contains(wrong)) badJosa += $"{id}({wrong}) ";
             Check("dialogue josa pairs batchim-first (서진과, not 서진와)", badJosa == "" && GameData.Fill("{name:과/와}", ("name", "서진")) == "서진과", badJosa);
-            Check("dialogue faces exist (girl + bro_)", noFace == "" && GameRoot.FacePath("bro_cry") == "Boy/face_cry", noFace);
+            Check("dialogue faces exist (girl + bro_)", noFace == "" && GameRoot.FacePath("bro_cry") == "Boy/face_cry" && GameRoot.FacePath("dad_serious") == "Dad/face_serious", noFace);
+            string noArt = "";
+            foreach (var cd in Party.All)
+                foreach (var n in new[] { "battle_ready", "battle_attack", "battle_damage", "battle_victory", "walk_front", "walk_back", "walk_side1", "walk_side4", "hero", "face_smile" })
+                    if (Resources.Load<Texture2D>(cd.Art + "/" + n) == null) noArt += cd.Art + "/" + n + " ";
+            Check("companion art present (battle·walk·face for every party.json member)", noArt == "", noArt);
             Check("fill josa", GameData.Fill("{name:이/가} {enemy:을/를} {x}", ("name", "첫째"), ("enemy", "킹 젤리")) == "첫째가 킹 젤리를 {x}");
         }
 

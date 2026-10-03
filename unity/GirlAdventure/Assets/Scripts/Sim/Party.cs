@@ -18,6 +18,8 @@ namespace GirlAdventure.Sim
         public string[] Skills;             // 전투 명령 (Cmd 이름, 순서대로 명령창에) — 도망은 명령창이 따로 붙인다
         public string[] GearSlots;          // 장비 부위 (items.json Kind) — 서진 장비와 같은 Equipped 표에 들어간다
         public string[] GearNames;          // 부위 이름 (상태 창·장비 메뉴)
+        public float BattleHeight = 218;    // 전투 그림 높이 (무대 px, 서진 275)
+        public float FieldScale = .84f;     // 필드 그림 크기 (서진 = 1)
     }
 
     [Serializable]

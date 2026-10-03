@@ -1095,6 +1095,44 @@ namespace GirlAdventure.EditorTools
                 ExpectBgm("desert");
             }
 
+            // 가족 셋 (챕터 4 준비 C4-3): 아빠가 합류하면 대열 셋, HUD 셋, 3인 전투 (아빠 지키기)
+            G.DebugJoin("dad");
+            G.DebugMobs(true, true);
+            var fs = G.DebugOpenSpot(6);
+            G.DebugTeleport(fs.x, fs.y, "right");
+            yield return .3f;
+            Keys.Hold(KeyCode.RightArrow, true); yield return .6f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return .5f;
+            Shot("family_follow");
+            var dadTile = G.FollowerTile("dad");
+            Expect("family line: dad follows behind jihun", G.FollowerVisible("dad") && G.AllyHudCount == 2
+                   && Math.Abs(dadTile.x - G.BroTile.x) + Math.Abs(dadTile.y - G.BroTile.y) == 1, $"bro {G.BroTile} dad {dadTile}");
+            G.DebugGroupBattle(2);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .3f;
+            Shot("family_battle");
+            G.DebugSetAllFoesHp(70);                   // 아빠 차례가 오도록 넉넉히
+            Expect("3-person battle: dad on stage", G.AllyInBattle("dad") && G.AllyInBattle(Party.Brother));
+            int guards0 = G.GuardCount;
+            for (int i = 0; i < 120 && G.Current == GameRoot.Mode.Battle && G.OnBattleStage && G.GuardCount == guards0; i++)
+            {
+                if (G.CommandAllyId == "dad") { foreach (var x in Choose(1)) yield return x; }   // 아빠: 지키기
+                else if (G.CommandOpen) { foreach (var x in Choose(0)) yield return x; }
+                else Keys.Press(KeyCode.Z);
+                yield return .25f;
+                if (G.MessageText.Contains("사자 방패를 들고")) Shot("dad_guard");
+            }
+            Expect("dad used guard (lion shield)", G.GuardCount > guards0);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("사자 방패로 막아") || G.Current != GameRoot.Mode.Battle)) yield return x;
+            if (G.MessageText.Contains("사자 방패로 막아")) Shot("dad_guarded");
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Keys.Press(KeyCode.Escape);
+            yield return .6f;
+            Shot("status_family");
+            Keys.Press(KeyCode.Escape);
+            yield return .4f;
+
             // 오아시스 마을 (백로그 52): 사막 동쪽 문 → 마을 → 마을 어른 → 가게에서 지훈 칼 → 상태 창 → 나가기
             G.DebugMobs(true, true);
             G.DebugTeleport(WorldMap.TownGate.x - 1, WorldMap.TownGate.y, "right");
