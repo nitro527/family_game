@@ -22,7 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -678,6 +678,108 @@ namespace GirlAdventure.View
                 for (int y = 0; y < WorldMap.H; y++)
                     for (int x = 0; x < WorldMap.W; x++)
                         if (m.At(x, y) == 'T') AutoTile(R, t.Forest, m, "T", x, y);
+            return R;
+        }
+
+        /// <summary>
+        /// 집 안 (P-5): 까만 바깥, 짙은 나무 테두리 벽, 지붕 색을 닮은 줄무늬 벽지 + 징두리 판자, 나무 바닥, 둥근 깔개,
+        /// 창문 둘(햇살), 침대(이불은 지붕 색)·책장·식탁(빵)·보물상자, 문은 바깥 햇빛이 비치는 문틀과 빨간 발판.
+        /// </summary>
+        static Raster Home(WorldMap m)
+        {
+            var R = new Raster(WorldMap.W * T, WorldMap.H * T);
+            R.Rect(0, 0, WorldMap.W * T, WorldMap.H * T, H("#0A0710"));
+            int roof = m.Room >= 0 && m.Room < WorldMap.Houses.Length ? WorldMap.Houses[m.Room].roof : 0;
+            string[][] papers = { new[] { "#F7DCD4", "#EBC4BA", "#D8574A" }, new[] { "#DAE5F7", "#BFCDEA", "#4A7BD8" }, new[] { "#DCF0D4", "#BFDDB3", "#4FA85A" } };
+            var pc = papers[roof % 3];
+            float L = 12 * T, Tp = 6 * T, Wd = 11 * T, Ht = 10 * T;
+            R.Rect(L - 4, Tp - 4, Wd + 8, Ht + 8, Ink);                                   // 바깥 테두리
+            R.Rect(L, Tp, Wd, Ht, H("#5A3A24"));                                            // 벽 (나무)
+            R.Rect(L + 6, Tp + 6, Wd - 12, Ht - 12, H("#6E4A2E"));
+            // 벽지 (위 벽 두 줄) + 줄무늬 + 징두리 판자
+            float fx = 13 * T, fy = 8 * T, fw = 9 * T, fh = 7 * T;
+            R.Rect(fx, Tp + 4, fw, 2 * T - 4, H(pc[0]));
+            for (float x = fx + 10; x < fx + fw; x += 24) R.Rect(x, Tp + 4, 6, 2 * T - 26, H(pc[1]));
+            R.Rect(fx, fy - 24, fw, 24, H("#B07A4A"));
+            R.Rect(fx, fy - 26, fw, 4, H("#8A5A32"));
+            for (float x = fx + 20; x < fx + fw; x += 40) R.Rect(x, fy - 22, 2, 20, H("#8A5A32"));
+            // 바닥 (판자)
+            R.Rect(fx, fy, fw, fh, H("#C99560"));
+            for (int j = 0; j < 14; j++)
+            {
+                float y = fy + j * 24;
+                R.Rect(fx, y, fw, 2, H("#A87442"));
+                for (float x = fx + (j % 2 == 0 ? 30 : 70); x < fx + fw; x += 96) R.Rect(x, y, 2, 24, H("#A87442"));
+            }
+            R.Rect(fx, fy, fw, 8, new Color32(0, 0, 0, 50));                                // 벽 아래 그늘
+            // 창문 둘 (햇살이 바닥까지)
+            foreach (int wx in new[] { 14, 20 })
+            {
+                if (m.At(wx, 7) != 'W') continue;
+                float X = wx * T, Y = Tp + 10;
+                R.Polygon(new[] { new Vector2(X + 6, fy), new Vector2(X + T - 6, fy), new Vector2(X + T + 26, fy + 2.4f * T), new Vector2(X + 30, fy + 2.4f * T) },
+                          new Color32(255, 240, 190, 45));
+                R.Rect(X + 4, Y, T - 8, T - 6, H("#6B4A30"));
+                R.Rect(X + 8, Y + 4, T - 16, T - 14, H("#9FD8FF"));
+                R.Rect(X + 8, Y + 4, T - 16, 10, H("#C8ECFF"));
+                R.Rect(X + T / 2 - 2, Y + 4, 4, T - 14, H("#6B4A30"));
+                R.Rect(X + 8, Y + (T - 10) / 2, T - 16, 3, H("#6B4A30"));
+                R.Rect(X, Y + T - 8, T, 6, H("#8A5A32"));
+            }
+            // 깔개
+            R.Ellipse(17.5f * T, 11.6f * T, 2.6f * T, 1.5f * T, H(pc[2]));
+            R.Ellipse(17.5f * T, 11.6f * T, 2.6f * T - 8, 1.5f * T - 8, H(pc[1]));
+            R.Ellipse(17.5f * T, 11.6f * T, 1.6f * T, .8f * T, H(pc[0]));
+            // 문: 바깥 햇빛 + 빨간 발판
+            float dx = WorldMap.HomeDoor.x * T, dy = WorldMap.HomeDoor.y * T;
+            R.Rect(dx + 2, dy, T - 4, T, H("#4A2E18"));
+            R.Rect(dx + 7, dy, T - 14, T - 4, H("#FFF2C8"));
+            R.Rect(dx + 7, dy + T - 16, T - 14, 12, H("#9FD87A"));
+            R.Rect(dx + 6, dy - 18, T - 12, 14, H("#C84A4A"));
+            for (int i = 0; i < 3; i++) R.Rect(dx + 10, dy - 15 + i * 4, T - 20, 1.5f, H("#E88080"));
+            // 가구
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char c = m.At(x, y);
+                    float X = x * T, Y = y * T;
+                    if (c == 'k' && m.At(x, y + 1) == 'k')
+                    {
+                        R.Ellipse(X + T / 2 + 4, Y + 2 * T - 2, T / 2, 8, new Color32(0, 0, 0, 60));
+                        R.Rect(X + 3, Y - 6, T - 6, 2 * T + 2, Ink);
+                        R.Rect(X + 5, Y - 4, T - 10, 2 * T - 2, H("#9A6238"));             // 나무 틀
+                        R.Rect(X + 8, Y + 4, T - 16, 2 * T - 14, H("#FFFFFF"));            // 시트
+                        R.Ellipse(X + T / 2, Y + 14, T / 2 - 10, 9, H("#FFF6E8"));         // 베개
+                        R.Rect(X + 8, Y + 30, T - 16, 2 * T - 40, H(pc[2]));               // 이불
+                        R.Rect(X + 8, Y + 30, T - 16, 6, H(pc[1]));
+                        for (int i = 0; i < 3; i++) R.Circle(X + 15 + i * 9, Y + 56 + (i % 2) * 14, 2.5f, H(pc[0]));
+                    }
+                    else if (c == 'q')
+                    {
+                        R.Rect(X + 2, Y - T + 10, T - 4, 2 * T - 10, Ink);
+                        R.Rect(X + 4, Y - T + 12, T - 8, 2 * T - 14, H("#8A5A32"));
+                        string[] books = { "#D8574A", "#4A7BD8", "#4FA85A", "#F0C040", "#A060D0", "#E88A40" };
+                        for (int row = 0; row < 3; row++)
+                        {
+                            float sy = Y - T + 16 + row * 26;
+                            R.Rect(X + 6, sy + 20, T - 12, 4, H("#5A3A24"));
+                            for (int b = 0; b < 5; b++)
+                                R.Rect(X + 8 + b * 7, sy + 4 + ((b + row) % 3) * 2, 6, 16 - ((b + row) % 3) * 2, H(books[(b + row * 2) % books.Length]));
+                        }
+                    }
+                    else if (c == 'a')
+                    {
+                        R.Ellipse(X + T / 2 + 3, Y + T - 4, T / 2, 7, new Color32(0, 0, 0, 60));
+                        R.Rect(X + 10, Y + 24, 5, 20, H("#6B4A30"));
+                        R.Rect(X + T - 15, Y + 24, 5, 20, H("#6B4A30"));
+                        R.Ellipse(X + T / 2, Y + 22, T / 2 - 1, 15, Ink);
+                        R.Ellipse(X + T / 2, Y + 21, T / 2 - 3, 13, H("#FFFFFF"));          // 식탁보
+                        R.Ellipse(X + T / 2, Y + 21, T / 2 - 9, 8, H("#F4E8E8"));
+                        R.Ellipse(X + T / 2 - 6, Y + 19, 8, 5, H("#D89A50"));               // 빵
+                        R.Circle(X + T / 2 + 9, Y + 18, 4, H("#E84A6A"));                 // 사과
+                    }
+                    else if (c == 'H') Painter.Chest(R, X, Y, false);
+                }
             return R;
         }
 

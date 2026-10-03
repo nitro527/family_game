@@ -470,6 +470,7 @@ namespace GirlAdventure.EditorTools
             LavaTownTests();
             Boss4Tests();
             QuickStartTests();
+            HomeTests();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -505,6 +506,47 @@ namespace GirlAdventure.EditorTools
             float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
             Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
+        }
+
+        /// <summary>집 안 (P-5): 마을 집 문마다 방, 문 앞이 마을에서 닿음, 방 안 주민·상자·침대·책장에 닿음, 상자 한 번, 집 안 저장은 문 앞으로.</summary>
+        static void HomeTests()
+        {
+            var v = WorldMap.Village();
+            Npcs.Place(v);
+            var vr = Reach(v, WorldMap.VillageStart);
+            string bad = "";
+            int residents = 0;
+            for (int i = 0; i < WorldMap.Houses.Length; i++)
+            {
+                var (hx, hy, _) = WorldMap.Houses[i];
+                var front = WorldMap.HomeDoorFront(i);
+                if (v.At(hx + 1, hy + 1) != 'h' || WorldMap.HouseAtDoor(hx + 1, hy + 1) != i || v.Blocked(front.x, front.y) || !vr[front.x, front.y]) bad += $"door{i} ";
+                var m = WorldMap.Home(i);
+                Npcs.Place(m);
+                var r = Reach(m, WorldMap.HomeStart);
+                bool Near(int x, int y) => (x > 0 && r[x - 1, y]) || (x < WorldMap.W - 1 && r[x + 1, y]) || (y < WorldMap.H - 1 && r[x, y + 1]) || (y > 0 && r[x, y - 1]);
+                if (m.Kind != MapKind.Home || m.Room != i || m.At(WorldMap.HomeDoor.x, WorldMap.HomeDoor.y) != 'E' || !r[WorldMap.HomeDoor.x, WorldMap.HomeDoor.y]) bad += $"room{i} ";
+                for (int y = 0; y < WorldMap.H; y++)
+                    for (int x = 0; x < WorldMap.W; x++)
+                    {
+                        char c = m.At(x, y);
+                        if ((c == 'H' || c == 'q' || c == 'N' || (c == 'k' && m.At(x, y + 1) != 'k')) && !Near(x, y)) bad += $"{i}:{c}@{x},{y} ";
+                        if (m.EncounterRate(x, y) > 0) bad += $"{i}:enc@{x},{y} ";
+                    }
+                foreach (var n in Npcs.On(m)) { residents++; if (!GameData.HasTalk(n.Talk)) bad += n.Id + ":talk "; }
+                if ((m.Find('H').x >= 0) != Quest.HasHomeChest(i)) bad += $"chest{i} ";
+            }
+            Check("homes: every village house opens to a room, door front reachable, furniture & residents reachable, no monsters", bad == "" && residents == WorldMap.Houses.Length, bad);
+            var p = PlayerState.NewGame("h");
+            int candy0 = p.Candy, gold0 = p.Gold;
+            var r0 = Quest.OpenHomeChest(p, 0, out var what0);
+            var r0b = Quest.OpenHomeChest(p, 0, out _);
+            Quest.OpenHomeChest(p, 3, out var what3);
+            Check("home chests: candy once, gold, inn none", r0 == ChestResult.Got && r0b == ChestResult.Empty && p.Candy == candy0 + 2 && what0 == "사탕 2개"
+                  && p.Gold == gold0 + 30 && what3 == "30 골드" && Quest.OpenHomeChest(p, WorldMap.InnHouse, out _) == ChestResult.Sealed, $"{what0} / {what3}");
+            p.InVillage = true; p.Home = 2; (p.X, p.Y) = WorldMap.HomeStart;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("saving inside a house loads at its door in the village", q.InVillage && q.Home == -1 && (q.X, q.Y) == WorldMap.HomeDoorFront(2) && q.Opened.Contains(Quest.HomeChestId(0)), $"{q.X},{q.Y}");
         }
 
         /// <summary>챕터 고르기 (사용자 2026-10-03): 그 챕터 레벨·동료·장비·출발 자리, 앞 보스는 깬 것으로, 세이브로 되살아남.</summary>

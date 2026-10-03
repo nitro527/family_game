@@ -132,6 +132,9 @@ namespace GirlAdventure.Sim
 
         public PlayerState() { Candy = MaxCandy; }
 
+        /// <summary>집 안이면 몇 번째 집 (-1 이면 밖). 저장하지 않는다 — 집 안에서 저장하면 그 집 문 앞으로 적는다.</summary>
+        public int Home = -1;
+
         /// <summary>가방 속 소모품 개수.</summary>
         public int Count(string id) => bag.TryGetValue(id, out var n) ? n : 0;
 
@@ -190,7 +193,7 @@ namespace GirlAdventure.Sim
 
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
-            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = X, Y = Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, Boss3Down = Boss3Down, Boss4Down = Boss4Down, SavedAt = savedAt,
+            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = Home >= 0 ? WorldMap.HomeDoorFront(Home).x : X, Y = Home >= 0 ? WorldMap.HomeDoorFront(Home).y : Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, Boss3Down = Boss3Down, Boss4Down = Boss4Down, SavedAt = savedAt,
             Chapter = Chapter, InVillage = InVillage, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
             Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),

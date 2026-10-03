@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
-    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown }
+    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home }
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
@@ -21,6 +21,7 @@ namespace GirlAdventure.Sim
     /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 'l' 램프 'c' 관 (서진이 노트 4), 그 밖엔 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
     /// 용암 땅 (챕터 4, 사용자 2026-10-03) — 'B' 화산 동굴 입구(화산 젤리 대장)  '.' 잿빛 땅  ':' 출발 자리(안전)  'R' 검은 바위  'L' 용암  'b' 돌다리  'K' 화산(4×4)  'F' 온천  'S' 표지판
     /// 온천 마을 (챕터 4, ✏️ 임시 이름) — '.' 잿빛 땅  'R' 바위  'h' 돌집  'w' 온천 웅덩이  'F' 온천(회복)  'M' 대장간(가게)  'S' 표지판  'E' 출구  'N' 마을 사람
+    /// 집 안 (P-5, 별빛 마을 집 5채) — ' ' 바깥(까맘)  'W' 벽  '.' 나무 바닥  'k' 침대(위아래 두 칸)  'q' 책장(벽에 붙음)  'a' 식탁  'H' 보물상자  'E' 문(밟으면 마을로)  'N' 주민 젤리
     /// 오아시스 마을 (✏️ 임시 이름) — '.' 모래  'R' 바위  'h' 흙벽돌 집  't' 천막(2×2)  'u' 마른 우물  'p' 야자  'M' 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// </summary>
     public class WorldMap
@@ -60,7 +61,19 @@ namespace GirlAdventure.Sim
         /// <summary>마을 집: 왼쪽 위 칸(3×2 칸)과 지붕 색 번호(0 빨강 1 파랑 2 초록).</summary>
         public static readonly (int x, int y, int roof)[] Houses = { (8, 6, 0), (13, 5, 1), (22, 5, 2), (25, 13, 0), (9, 13, 1) };
         public const int InnHouse = 2;          // 초록 지붕 집 = 여관 (주인 젤리는 문 앞 오른쪽, npcs.json)
-        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc";
+        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc Wkqa";
+        // 집 안 (P-5): 방 하나 (바닥 13..21 × 8..14), 아래 벽 가운데 문
+        public static readonly (int x, int y) HomeDoor = (17, 15), HomeStart = (17, 14);
+        /// <summary>집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호, 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
+        public static int HouseAtDoor(int x, int y)
+        {
+            for (int i = 0; i < Houses.Length; i++) if (x == Houses[i].x + 1 && y == Houses[i].y + 1) return i;
+            return -1;
+        }
+        /// <summary>집 문 바로 앞 (마을, 나오면 여기 서서 아래를 본다).</summary>
+        public static (int x, int y) HomeDoorFront(int house) => (Houses[house].x + 1, Houses[house].y + 2);
+        /// <summary>집 안 맵이면 몇 번째 집인지 (아니면 -1).</summary>
+        public int Room { get; private set; } = -1;
 
         public readonly MapKind Kind;
         /// <summary>이 맵의 수상한 구멍 칸 (초원·동굴).</summary>
@@ -69,7 +82,7 @@ namespace GirlAdventure.Sim
 
         public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : Kind == MapKind.Desert ? DesertStart
                                             : Kind == MapKind.Oasis ? TownStart : Kind == MapKind.Underworld ? UnderStart : Kind == MapKind.Lava ? LavaStart
-                                            : Kind == MapKind.LavaTown ? LavaTownStart : CaveStart;
+                                            : Kind == MapKind.LavaTown ? LavaTownStart : Kind == MapKind.Home ? HomeStart : CaveStart;
         /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리, 사막은 오아시스 샘, 오아시스 마을은 마른 우물).</summary>
         public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : Kind == MapKind.Desert ? OasisSpring
                                         : Kind == MapKind.Oasis ? TownWell : Kind == MapKind.Underworld ? UnderSpring : Kind == MapKind.Lava ? LavaSpring
@@ -216,6 +229,37 @@ namespace GirlAdventure.Sim
         }
 
         WorldMap(MapKind kind) { Kind = kind; }
+
+        /// <summary>
+        /// 별빛 마을 집 안 (P-5, 서진이 시험 플레이 "집에 들어갈 수 있으면 더 좋을 것 같음"): 작은 방 하나.
+        /// 침대·책장·식탁, 여관(InnHouse)은 침대 셋, 다른 집은 보물상자 하나 (Quest.HomeChests). 집마다 침대가 왼쪽/오른쪽.
+        /// </summary>
+        public static WorldMap Home(int room)
+        {
+            var m = new WorldMap(MapKind.Home) { Room = room };
+            m.Fill(0, 0, W - 1, H - 1, ' ');
+            m.Fill(12, 6, 22, 15, 'W');
+            m.Fill(13, 8, 21, 14, '.');
+            m.Set(HomeDoor.x, HomeDoor.y, 'E');
+            bool left = room % 2 == 0;
+            int bed = left ? 13 : 21;
+            m.Set(bed, 8, 'k'); m.Set(bed, 9, 'k');
+            if (room == InnHouse)
+                foreach (int bx in new[] { 15, 17 }) { m.Set(bx, 8, 'k'); m.Set(bx, 9, 'k'); }
+            else m.Set(left ? 21 : 13, 8, 'H');
+            m.Set(left ? 16 : 18, 7, 'q');
+            m.Set(left ? 18 : 16, 11, 'a');
+            return m;
+        }
+
+        /// <summary>그 글자가 처음 나오는 칸 (없으면 (-1, -1)).</summary>
+        public (int x, int y) Find(char c)
+        {
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    if (tiles[x, y] == c) return (x, y);
+            return (-1, -1);
+        }
 
         /// <summary>
         /// 챕터 2 동굴: 입구 → 동쪽 굴 → 큰 동굴(지하 샘) → 서쪽 굴 끝 보물상자(열쇠)
@@ -453,7 +497,7 @@ namespace GirlAdventure.Sim
 
         public double EncounterRate(int x, int y)
         {
-            if (IsTown) return 0;                       // 마을엔 몬스터가 없다
+            if (IsTown || Kind == MapKind.Home) return 0;   // 마을·집 안엔 몬스터가 없다
             if (Kind == MapKind.Desert) return At(x, y) == '.' ? 0.07 : 0;
             if (Kind == MapKind.Lava) return At(x, y) == '.' ? 0.07 : 0;     // 잿빛 땅에서만 (돌다리·출발 자리·온천 둘레는 쉬는 곳)     // 모래밭에만 (오아시스 풀밭·출구 앞은 쉬는 곳)
             char c = At(x, y);
@@ -465,7 +509,7 @@ namespace GirlAdventure.Sim
 
         /// <summary>몬스터가 들어오지 않는 곳: 초원 시작 마을 공터, 동굴 입구(':').</summary>
         public bool Safe(int x, int y) =>
-            IsTown || (Kind == MapKind.Field ? x <= 8 && y <= 7 : At(x, y) == ':');
+            IsTown || Kind == MapKind.Home || (Kind == MapKind.Field ? x <= 8 && y <= 7 : At(x, y) == ':');
 
         /// <summary>그 맵 출현표에서 적 하나 (GameData.ListFor(kind) 인덱스).</summary>
         public static int PickIndex(MapKind kind, int x, int y, Random r)

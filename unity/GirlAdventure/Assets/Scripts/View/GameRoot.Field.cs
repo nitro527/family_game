@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using GirlAdventure.Sim;
 using UnityEngine;
 
@@ -34,6 +35,8 @@ namespace GirlAdventure.View
         readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
         WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap;
+        WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
+        SpriteRenderer homeChestSR;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
@@ -56,6 +59,8 @@ namespace GirlAdventure.View
             underMap = WorldMap.Underworld();
             lavaMap = WorldMap.Lava();
             lavaTownMap = WorldMap.LavaTown();
+            homeMaps = new WorldMap[WorldMap.Houses.Length];
+            for (int i = 0; i < homeMaps.Length; i++) { homeMaps[i] = WorldMap.Home(i); Npcs.Place(homeMaps[i]); }
             mobs = new FieldMonsters(rng);
             Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
             Npcs.Place(caveMap);
@@ -67,7 +72,7 @@ namespace GirlAdventure.View
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap })
+            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap }.Concat(homeMaps))
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -95,6 +100,7 @@ namespace GirlAdventure.View
 
 
             chestOpenSR = Prop("ChestOpen", Painter.ChestTexture(true), WorldMap.Chest);
+            homeChestSR = Prop("HomeChestOpen", Painter.ChestTexture(true), (0, 0));
             wellWaterSR = Prop("WellWater", MapPainter.WellWaterTexture(), WorldMap.TownWell);
             // 남쪽 바위 골짜기의 모래 회오리: PIPOYA 시트 (7,1) 회오리 그림 (대장을 이기면 사라진다)
             sandTwisterSR = new GameObject("SandTwister").AddComponent<SpriteRenderer>();
@@ -138,7 +144,7 @@ namespace GirlAdventure.View
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
-            var want = P.Underground ? underMap : SurfaceMap;
+            var want = P.Underground ? underMap : P.Home >= 0 && P.Home < homeMaps.Length ? homeMaps[P.Home] : SurfaceMap;
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
@@ -160,6 +166,9 @@ namespace GirlAdventure.View
             RefreshHoles();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
+            (int x, int y) hc = map.Kind == MapKind.Home ? map.Find('H') : (-1, -1);
+            homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(Quest.HomeChestId(map.Room));
+            if (homeChestSR.enabled) homeChestSR.transform.localPosition = new Vector3(hc.x, -hc.y, 0);
             wellWaterSR.enabled = map.Kind == MapKind.Oasis && P.Boss3Down;      // 사막 보스를 이기면 마른 우물에 물이 찬다
             sandTwisterSR.enabled = map.Kind == MapKind.Desert && !P.Boss3Down && sandTwisterSR.sprite != null;
             bool guard = cave && Quest.GuardAlive(P);
@@ -343,7 +352,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => map.Kind == MapKind.Home ? "village" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -371,6 +380,64 @@ namespace GirlAdventure.View
             yield return Fade(1, 0, .3f);
             HideSwirl();
             if (toVillage) { yield return Talk(lava ? "lavatown_enter" : desert ? "oasis_enter" : "village_enter"); HideMessage(); }
+            busy = false;
+        }
+
+        /// <summary>
+        /// 집 드나들기 (P-5): 마을 집 문에 위로 부딪히면 그 집 안 (문 바로 위, 위를 보고), 집 안 문을 밟으면 그 집 문 앞 (아래를 보고).
+        /// room = -1 이면 나가기.
+        /// </summary>
+        IEnumerator HomeRoutine(int room)
+        {
+            busy = true;
+            sfx.Play("step");
+            yield return Fade(0, 1, .25f);
+            int from = P.Home;
+            P.Home = room;
+            if (room >= 0) { (P.X, P.Y) = WorldMap.HomeStart; facing = "up"; }
+            else { (P.X, P.Y) = WorldMap.HomeDoorFront(Mathf.Max(0, from)); facing = "down"; }
+            moveT = -1;
+            ApplyMap();
+            ResetBrother();
+            bgm.Play(MapSong);
+            RefreshQuestProps();
+            UpdatePlayerVisual();
+            mobs.Grace = 1f;
+            yield return Fade(1, 0, .25f);
+            HideSwirl();
+            if (room >= 0) { yield return Talk("home_enter"); HideMessage(); }
+            busy = false;
+        }
+
+        /// <summary>집 안 보물상자 (P-5): 집마다 하나, 한 번만.</summary>
+        IEnumerator HomeChestRoutine(int x, int y)
+        {
+            if (busy) yield break;
+            busy = true;
+            var r = Quest.OpenHomeChest(P, map.Room, out var what);
+            if (r == ChestResult.Got)
+            {
+                sfx.Play("chest");
+                RefreshQuestProps();
+                var c = FeetAt(x, y) + new Vector3(0, .6f, 0);
+                for (int i = 0; i < 10; i++)
+                    SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
+                AutoSave();
+                RefreshHud();
+                yield return Talk("chest_open", ("item", what));
+            }
+            else yield return Talk("chest_empty");
+            HideMessage();
+            busy = false;
+        }
+
+        /// <summary>대사 하나만 (침대·책장 같은 것에 부딪혔을 때).</summary>
+        IEnumerator TalkOnce(string id)
+        {
+            if (busy) yield break;
+            busy = true;
+            yield return Talk(id);
+            HideMessage();
             busy = false;
         }
 
@@ -478,11 +545,14 @@ namespace GirlAdventure.View
                 char c = map.At(nx, ny);
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
-                else if (c == 'H') StartCoroutine(ChestRoutine(nx, ny));
+                else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
+                else if (c == 'h' && map.Kind == MapKind.Village && dir == "up" && WorldMap.HouseAtDoor(nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(nx, ny)));
+                else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
+                else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
                 else if (c == 'D') StartCoroutine(DoorRoutine());
                 else if (c == 'o') StartCoroutine(HoleRoutine(nx, ny));
                 else if (c == 'M') StartCoroutine(ShopRoutine());
-                else if (c == 'N') { var npc = Npcs.At(map.Kind, nx, ny); if (npc != null) StartCoroutine(NpcRoutine(npc)); }
+                else if (c == 'N') { var npc = Npcs.At(map, nx, ny); if (npc != null) StartCoroutine(NpcRoutine(npc)); }
                 return;
             }
             moveFrom = new Vector2Int(P.X, P.Y);
@@ -530,6 +600,11 @@ namespace GirlAdventure.View
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
             float cx = Mathf.Clamp(rx + .5f, halfW, WorldMap.W - halfW);
             float cy = Mathf.Clamp(-(ry + .5f), -WorldMap.H + halfH, -halfH);
+            if (map.Kind == MapKind.Home)           // 집 안: 방 전체가 보이게 고정 (왼쪽 위 HUD 창 옆으로 비켜서)
+            {
+                cx = 11.8f + halfW - 2 * halfW * .28f;
+                cy = -11.2f;
+            }
             cam.transform.position = new Vector3(cx, cy, -10);
         }
 
@@ -685,6 +760,7 @@ namespace GirlAdventure.View
             if (here == 'B' && !P.Boss4Down && map.Kind == MapKind.Lava) { StartCoroutine(Boss4Routine()); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
+            if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'E') { StartCoroutine(HomeRoutine(-1)); return; }
             if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(!map.IsTown)); return; }
             var mob = mobs.At(P.X, P.Y);
             if (mob != null && mobs.Grace <= 0) StartMobBattle(mob);

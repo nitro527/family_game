@@ -90,6 +90,24 @@ namespace GirlAdventure.Sim
             p.Y = WorldMap.LavaStart.y;
         }
 
+        /// <summary>별빛 마을 집 안 보물상자 (P-5, 집 번호 순): 사탕·물약·(여관은 없음)·골드·달님 사탕. ✏️ 임시</summary>
+        public static readonly (string id, int n)[] HomeChests = { ("candy", 2), ("potion", 1), (null, 0), ("gold", 30), ("moon", 1) };
+        public static string HomeChestId(int room) => "home" + room;
+        public static bool HasHomeChest(int room) => room >= 0 && room < HomeChests.Length && HomeChests[room].id != null;
+
+        /// <summary>집 안 보물상자를 연다. what = 얻은 것 이름 ("사탕 2개", "30 골드").</summary>
+        public static ChestResult OpenHomeChest(PlayerState p, int room, out string what)
+        {
+            what = null;
+            if (!HasHomeChest(room)) return ChestResult.Sealed;
+            if (p.Opened.Contains(HomeChestId(room))) return ChestResult.Empty;
+            p.Opened.Add(HomeChestId(room));
+            var (id, n) = HomeChests[room];
+            if (id == "gold") { p.GainGold(n); what = n + " 골드"; }
+            else { p.AddItem(id, n); what = GameData.ItemName(id) + " " + n + "개"; }
+            return ChestResult.Got;
+        }
+
         /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
         public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13 };
         /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>

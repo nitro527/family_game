@@ -26,7 +26,7 @@ namespace GirlAdventure.View
         {
             foreach (var v in npcViews) { Destroy(v.body.gameObject); Destroy(v.shadow.gameObject); }
             npcViews.Clear();
-            foreach (var n in Npcs.On(map.Kind))
+            foreach (var n in Npcs.On(map))
             {
                 var body = new GameObject("Npc_" + n.Id).AddComponent<SpriteRenderer>();
                 body.transform.SetParent(fieldRoot, false);

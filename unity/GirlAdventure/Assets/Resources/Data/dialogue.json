@@ -21,6 +21,15 @@
     { "Id": "inn_bye", "Lines": [ { "Text": "여관 주인 젤리: 또 놀러 오세요~" } ] },
     { "Id": "sign_village", "Lines": [
       { "Text": "표지판: \"여기는 별빛 마을. 아래로 나가면 초원이에요.\"", "Face": "smile" } ] },
+    { "Id": "home_enter", "Lines": [ { "Text": "실례합니다~!", "Face": "smile", "Hold": 0.8 } ] },
+    { "Id": "home_bed", "Lines": [ { "Text": "푹신푹신한 침대다. 남의 침대니까 눕지는 말자!", "Face": "smile" } ] },
+    { "Id": "home_shelf", "Lines": [ { "Text": "책장에 그림책이 가득하다. 『용감한 꼬마 마법사』… 어디서 들어 본 이야기 같다!", "Face": "laugh" } ] },
+    { "Id": "npc_home_granny", "Lines": [ { "Text": "할머니 젤리: 어머나, 귀여운 손님이네. 저기 상자에 사탕을 넣어 뒀단다. 가져가렴." } ] },
+    { "Id": "npc_home_baby", "Lines": [ { "Text": "아기 젤리: 뽀요! 뽀요요!" }, { "Text": "아기 젤리가 방긋 웃었다.", "Face": "laugh" } ] },
+    { "Id": "npc_home_guest", "Lines": [ { "Text": "여행자 젤리: 초원 여기저기에 수상한 구멍이 있지?" }, { "Text": "여행자 젤리: 소문인데, 구멍을 하나도 빠짐없이 들여다보면 무슨 일이 생긴대!" } ] },
+    { "Id": "npc_home_reader", "Lines": [ { "Text": "책벌레 젤리: 책에서 읽었는데, 킹 젤리는 레벨 5쯤 되면 이길 수 있대!" } ] },
+    { "Id": "npc_home_reader_after", "Lines": [ { "Text": "책벌레 젤리: 몬스터 도감을 다 채우면 칭호를 받을 수 있대. 다 모아 봐!" } ] },
+    { "Id": "npc_home_cook", "Lines": [ { "Text": "요리사 젤리: 보글보글~ 젤리 스튜를 끓이는 중이야. 냄새 좋지?" }, { "Text": "요리사 젤리: 상자 안의 달님 사탕? 다 먹지 말고 꼭 필요할 때 먹으렴!" } ] },
     { "Id": "village_enter", "Lines": [
       { "Text": "별빛 마을에 들어왔다!", "Face": "smile", "Hold": 0.9 } ] },
     { "Id": "npc_guide_ready", "Lines": [ { "Text": "밀짚모자 젤리: {name}, 많이 강해졌구나! 이제 남동쪽 킹 젤리의 성에 가 봐도 되겠어." } ] },

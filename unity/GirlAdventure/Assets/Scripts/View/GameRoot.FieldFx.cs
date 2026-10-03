@@ -86,7 +86,7 @@ namespace GirlAdventure.View
                     }
             }
             waveTint = cave ? new Color(.55f, 1f, .95f) : Color.white;
-            foreach (var c in clouds) c.enabled = !cave;
+            foreach (var c in clouds) c.enabled = !cave && map.Kind != MapKind.Home;
         }
 
         Sprite petalSprite;
@@ -150,7 +150,7 @@ namespace GirlAdventure.View
 
             // 샘물: 별가루가 퐁퐁 솟는다
             sparkleTimer -= dt;
-            if (sparkleTimer <= 0 && (map.Kind != MapKind.Oasis || P.Boss3Down))      // 오아시스 마을 우물은 사막 보스를 이길 때까지 말라 있다
+            if (sparkleTimer <= 0 && map.Kind != MapKind.Home && (map.Kind != MapKind.Oasis || P.Boss3Down))      // 오아시스 마을 우물은 사막 보스를 이길 때까지 말라 있다
             {
                 sparkleTimer = .22f;
                 var c = FeetAt(map.Spring.x, map.Spring.y) + new Vector3(Random.Range(-.3f, .3f), .5f, 0);
@@ -193,6 +193,15 @@ namespace GirlAdventure.View
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
                     var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.15f, .15f), Random.Range(.05f, .3f)), Random.Range(2.5f, 4.5f),
                                         Random.Range(.08f, .16f), Random.value < .6f ? new Color(.5f, .95f, 1f, .9f) : new Color(1f, .8f, 1f, .9f));
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
+                else if (map.Kind == MapKind.Home)
+                {
+                    ambientTimer = .5f;                 // 집 안: 창으로 든 햇살에 먼지가 반짝
+                    var p = new Vector3(Random.Range(13.5f, 21.5f), -Random.Range(8.5f, 14f), 0);
+                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.08f, .08f), Random.Range(.02f, .12f)), Random.Range(2.5f, 4f),
+                                        Random.Range(.04f, .07f), new Color(1f, .95f, .75f, .7f));
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }

@@ -40,6 +40,11 @@
     { "Id": "miner", "Map": "cave", "X": 2, "Y": 20, "Name": "광부 젤리", "Color": "#D8B48A", "Dark": "#A07850", "Look": "hat",
       "Talk": "npc_miner",
       "Talks": [ { "If": "boss2", "Talk": "npc_miner_end" }, { "If": "door", "Talk": "npc_miner_door" },
-                 { "If": "key", "Talk": "npc_miner_key" }, { "If": "guard", "Talk": "npc_miner_guard" } ] }
+                 { "If": "key", "Talk": "npc_miner_key" }, { "If": "guard", "Talk": "npc_miner_guard" } ] },
+    {"Id": "home_granny", "Map": "home", "Room": 0, "X": 20, "Y": 10, "Name": "할머니 젤리", "Color": "#F2C4D8", "Dark": "#C88AA6", "Look": "bow", "Talk": "npc_home_granny"},
+    {"Id": "home_baby", "Map": "home", "Room": 1, "X": 14, "Y": 11, "Name": "아기 젤리", "Color": "#BFF0C8", "Dark": "#7CC48A", "Look": "", "Talk": "npc_home_baby"},
+    {"Id": "home_guest", "Map": "home", "Room": 2, "X": 20, "Y": 9, "Name": "여행자 젤리", "Color": "#FFE08A", "Dark": "#D0A84E", "Look": "hat", "Talk": "npc_home_guest"},
+    {"Id": "home_reader", "Map": "home", "Room": 3, "X": 20, "Y": 10, "Name": "책벌레 젤리", "Color": "#B8C8FF", "Dark": "#7888D0", "Look": "", "Talk": "npc_home_reader", "TalkAfter": "npc_home_reader_after"},
+    {"Id": "home_cook", "Map": "home", "Room": 4, "X": 20, "Y": 10, "Name": "요리사 젤리", "Color": "#FFFFFF", "Dark": "#C8C0B8", "Look": "hat", "Talk": "npc_home_cook"}
   ]
 }
