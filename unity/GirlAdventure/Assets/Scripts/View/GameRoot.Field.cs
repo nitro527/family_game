@@ -145,6 +145,14 @@ namespace GirlAdventure.View
             return s;
         }
 
+        /// <summary>그 맵의 그림(텍스처)을 메모리에서 내린다.</summary>
+        void ReleaseMapSprite(WorldMap m)
+        {
+            if (m == map || !mapSprites.TryGetValue(m, out var sp)) return;
+            mapSprites.Remove(m);
+            if (sp != null) { Destroy(sp.texture); Destroy(sp); }
+        }
+
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
@@ -404,6 +412,7 @@ namespace GirlAdventure.View
             else { (P.X, P.Y) = WorldMap.HomeDoorFront(Mathf.Max(0, from)); facing = "down"; }
             moveT = -1;
             ApplyMap();
+            if (room < 0 && from >= 0 && from < homeMaps.Length) ReleaseMapSprite(homeMaps[from]);   // 나온 집 그림은 풀어 둔다 (다시 들어가면 또 그림, Q-16)
             ResetBrother();
             bgm.Play(MapSong);
             RefreshQuestProps();
