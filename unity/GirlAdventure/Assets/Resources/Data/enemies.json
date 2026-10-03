@@ -14,9 +14,9 @@
     { "Name": "큰 돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 38, "Atk": 11, "Exp": 24, "Gold": 16, "Move": "slam",  "Attack": "쿵쾅쿵쾅 누르기", "Look": "rock", "Tier": 2, "Art": "cave_rock", "Desc": "돌멩이 젤리가 크게 자란 2단 젤리. 동굴 깊은 곳에 살아요." }
   ],
   "Desert": [
-    { "Name": "카우보이 젤리", "Color": "#E8A860", "Dark": "#B06A30", "Hp": 80, "Atk": 17, "Exp": 22, "Gold": 20, "Move": "spin", "Attack": "올가미 빙빙 던지기", "Art": "desert_cowboy", "Desc": "올가미 밧줄을 빙빙 돌리는 사막의 젤리. 윙크!" },
-    { "Name": "선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 95, "Atk": 18, "Exp": 25, "Gold": 16, "Move": "shard", "Attack": "가시 따끔 발사", "Art": "desert_cactus", "Desc": "가시가 따끔따끔. 머리에 분홍 꽃이 피었어요." },
-    { "Name": "큰 선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 150, "Atk": 21, "Exp": 40, "Gold": 30, "Move": "shard", "Attack": "왕가시 따끔따끔 발사", "Tier": 2, "Art": "desert_cactus", "Desc": "선인장 젤리가 크게 자란 2단 젤리. 가시가 더 길어요." }
+    { "Name": "카우보이 젤리", "Color": "#E8A860", "Dark": "#B06A30", "Hp": 80, "Atk": 17, "Exp": 22, "Gold": 25, "Move": "spin", "Attack": "올가미 빙빙 던지기", "Art": "desert_cowboy", "Desc": "올가미 밧줄을 빙빙 돌리는 사막의 젤리. 윙크!" },
+    { "Name": "선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 95, "Atk": 18, "Exp": 25, "Gold": 20, "Move": "shard", "Attack": "가시 따끔 발사", "Art": "desert_cactus", "Desc": "가시가 따끔따끔. 머리에 분홍 꽃이 피었어요." },
+    { "Name": "큰 선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 150, "Atk": 21, "Exp": 40, "Gold": 38, "Move": "shard", "Attack": "왕가시 따끔따끔 발사", "Tier": 2, "Art": "desert_cactus", "Desc": "선인장 젤리가 크게 자란 2단 젤리. 가시가 더 길어요." }
   ],
   "Under": [
     {"Name": "박쥐", "Color": "#5A4A7A", "Dark": "#2E2448", "Hp": 32, "Atk": 11, "Exp": 18, "Gold": 14, "Move": "hop", "Attack": "파닥파닥 날개 치기", "Shape": "bat", "Desc": "지하세계 천장에 거꾸로 매달려 있다가 파닥파닥 날아와요. (서진이 메모)"},
@@ -26,9 +26,9 @@
     {"Name": "이단 유령", "Color": "#E8E4FF", "Dark": "#A8A0D8", "Hp": 80, "Atk": 16, "Exp": 50, "Gold": 35, "Move": "charge", "Attack": "쌩쌩 유령 돌진", "Shape": "ghost2", "Tier": 2, "Evade": 0.35, "Twice": true, "Desc": "유령의 2단. 공격을 잘 피하고 아주 빨라서 두 번씩 공격해요! (서진이 그림)"}
   ],
   "Lava": [
-    { "Name": "숯 젤리", "Color": "#3A3436", "Dark": "#1E1A1C", "Hp": 175, "Atk": 29, "Exp": 28, "Gold": 22, "Move": "slam", "Attack": "뜨끈뜨끈 몸통 누르기", "Look": "ember", "Desc": "용암 땅 임시 젤리. 까만 몸에 주황빛 금이 갔어요. 서진이가 새 모습을 그려 줄 거예요!" },
-    { "Name": "용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 200, "Atk": 31, "Exp": 32, "Gold": 26, "Move": "charge", "Attack": "부글부글 용암 돌진", "Look": "magma", "Desc": "용암 땅 임시 젤리. 머리 위에 작은 불꽃이 일렁여요." },
-    { "Name": "큰 용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 310, "Atk": 35, "Exp": 50, "Gold": 40, "Move": "charge", "Attack": "펄펄 끓는 용암 돌진", "Look": "magma", "Tier": 2, "Desc": "용암 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." }
+    { "Name": "숯 젤리", "Color": "#3A3436", "Dark": "#1E1A1C", "Hp": 175, "Atk": 29, "Exp": 28, "Gold": 30, "Move": "slam", "Attack": "뜨끈뜨끈 몸통 누르기", "Look": "ember", "Desc": "용암 땅 임시 젤리. 까만 몸에 주황빛 금이 갔어요. 서진이가 새 모습을 그려 줄 거예요!" },
+    { "Name": "용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 200, "Atk": 31, "Exp": 32, "Gold": 35, "Move": "charge", "Attack": "부글부글 용암 돌진", "Look": "magma", "Desc": "용암 땅 임시 젤리. 머리 위에 작은 불꽃이 일렁여요." },
+    { "Name": "큰 용암 젤리", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 310, "Atk": 35, "Exp": 50, "Gold": 54, "Move": "charge", "Attack": "펄펄 끓는 용암 돌진", "Look": "magma", "Tier": 2, "Desc": "용암 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." }
   ],
   "Snow": [
     {"Name": "눈송이 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 240, "Atk": 36, "Exp": 40, "Gold": 40, "Move": "hop", "Attack": "펑펑 눈송이 몸통 박치기", "Look": "frost", "Desc": "눈 덮인 땅 임시 젤리. 머리에 눈이 소복이 쌓였어요. 서진이가 새 모습을 그려 줄 거예요!"},

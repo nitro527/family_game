@@ -486,6 +486,7 @@ namespace GirlAdventure.EditorTools
             SnowJellyTests();
             SnowTownTests();
             Boss5Tests();
+            ProgressionReport();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -521,6 +522,40 @@ namespace GirlAdventure.EditorTools
             float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
             Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
+        }
+
+        /// <summary>
+        /// 성장 곡선 점검 (PLAN 61, Q-15): 챕터마다 "도착 레벨 → 보스 레벨" 까지 근처 싸움 몇 번, 그동안 버는 골드와 그 챕터 가게 장비 값.
+        /// 장비를 다 사려면 몇 번 더 싸워야 하나. 로그 [PROGRESSION] 으로만 보고, 크게 어긋날 때만 실패 (한 챕터 60번 넘게 싸워야 하면).
+        /// </summary>
+        static void ProgressionReport()
+        {
+            var rows = new[]
+            {
+                (ch: 1, kind: MapKind.Field, x: 12, y: 10, from: 1, to: 5, shop: MapKind.Village),
+                (ch: 2, kind: MapKind.Cave, x: 12, y: 14, from: 5, to: 8, shop: MapKind.Cave),
+                (ch: 3, kind: MapKind.Desert, x: 12, y: 12, from: 8, to: 11, shop: MapKind.Oasis),
+                (ch: 4, kind: MapKind.Lava, x: 12, y: 12, from: 11, to: 14, shop: MapKind.LavaTown),
+                (ch: 5, kind: MapKind.Snow, x: 12, y: 14, from: 14, to: 18, shop: MapKind.SnowTown),
+            };
+            string worst = "";
+            foreach (var row in rows)
+            {
+                var r = new System.Random(900 + row.ch);
+                double exp = 0, gold = 0;
+                const int n = 4000;
+                for (int i = 0; i < n; i++)
+                    foreach (var e in GameData.RollEncounter(row.kind, row.x, row.y, r)) { exp += e.Exp; gold += e.Gold; }
+                exp /= n; gold /= n;
+                int need = PlayerState.NextExp(row.to - 1) - PlayerState.NextExp(row.from - 1);
+                double fights = need / exp;
+                int gear = 0;
+                foreach (var id in Shop.Goods(row.shop)) if (Equipment.IsGear(id)) gear += GameData.ItemPrice(id);
+                double gearFights = gear / Math.Max(1, gold);
+                Debug.Log($"[PROGRESSION] ch{row.ch} {row.kind} Lv{row.from}->{row.to}: {fights:F1} fights (exp {exp:F1}/fight, gold {gold:F1}/fight) | shop gear {gear}G = {gearFights:F1} fights of gold");
+                if (fights > 60 || gearFights > 60) worst += $"ch{row.ch} ";
+            }
+            Check("progression: no chapter needs more than 60 fights for level or gear", worst == "", worst);
         }
 
         /// <summary>예티 (C5-5): 눈 산 동굴 입구, 데이터·그림, 세이브 v15, 마을 대사, 셋 + 털옷 가게 장비 밸런스.</summary>
