@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>서진이 몬스터 노트</title>
+<style>
+  :root { --ink: #2a2440; --soft: #8e86b0; --line: #c9c2e4; --gold: #e0a92e; --paper: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #efeaf8; color: var(--ink); font-family: "Malgun Gothic", "맑은 고딕", sans-serif; }
+  .page { width: 210mm; min-height: 297mm; margin: 12px auto; background: var(--paper); padding: 14mm 14mm 10mm; display: flex; flex-direction: column; gap: 6mm; }
+  h1 { margin: 0; font-size: 26pt; letter-spacing: 2px; }
+  h1 small { font-size: 12pt; color: var(--soft); margin-left: 8px; letter-spacing: 0; }
+  .row { display: flex; gap: 5mm; }
+  .field { flex: 1; border: 2px solid var(--line); border-radius: 10px; padding: 3mm 4mm; min-height: 17mm; }
+  .field b { display: block; font-size: 12pt; margin-bottom: 2mm; }
+  .field span { color: var(--soft); font-size: 10pt; }
+  .draw { flex: 1; border: 3px dashed var(--line); border-radius: 14px; min-height: 120mm; position: relative; }
+  .draw b { position: absolute; top: 3mm; left: 4mm; font-size: 13pt; }
+  .stars { font-size: 22pt; color: var(--line); letter-spacing: 6px; }
+  .checks { display: flex; flex-wrap: wrap; gap: 3mm 6mm; font-size: 12pt; }
+  .checks i { display: inline-block; width: 5mm; height: 5mm; border: 2px solid var(--soft); border-radius: 3px; vertical-align: -1mm; margin-right: 2mm; }
+  .foot { font-size: 9pt; color: var(--soft); text-align: right; }
+  .tip { position: fixed; right: 16px; bottom: 16px; background: var(--ink); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px; }
+  @media print { body { background: #fff; } .page { margin: 0; } .tip { display: none; } }
+  @media (max-width: 820px) { .page { width: auto; min-height: auto; margin: 0; padding: 16px; } .row { flex-direction: column; } }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>몬스터 노트 <small>꼬마 마법사 첫째의 모험</small></h1>
+    <div class="row">
+      <div class="field"><b>몬스터 이름</b></div>
+      <div class="field"><b>사는 곳</b><span>초원 · 동굴 · 사막 · 지하세계 · 용암 땅 · 눈 덮인 곳 · 새로운 곳?</span></div>
+    </div>
+    <div class="draw"><b>그림 그리기</b></div>
+    <div class="row">
+      <div class="field"><b>얼마나 셀까?</b><div class="stars">☆☆☆☆☆</div><span>색칠한 별이 많을수록 세요</span></div>
+      <div class="field"><b>무슨 색?</b></div>
+    </div>
+    <div class="row">
+      <div class="field"><b>특기 (어떻게 공격할까?)</b></div>
+      <div class="field"><b>좋아하는 것 · 싫어하는 것</b></div>
+    </div>
+    <div class="field">
+      <b>어떤 몬스터?</b>
+      <div class="checks">
+        <label><i></i>착해요</label><label><i></i>나빠요</label><label><i></i>잘 피해요</label><label><i></i>빨라요</label>
+        <label><i></i>2단도 있어요</label><label><i></i>보스예요</label><label><i></i>친구가 될 수 있어요</label>
+      </div>
+    </div>
+    <div class="field"><b>더 하고 싶은 말</b></div>
+    <div class="foot">다 그리면 사진을 찍어 주세요 → docs/ideas/ 에 넣고 게임에 넣을게요!</div>
+  </div>
+  <div class="tip">Ctrl+P 로 인쇄해요 (A4 한 장)</div>
+</body>
+</html>
