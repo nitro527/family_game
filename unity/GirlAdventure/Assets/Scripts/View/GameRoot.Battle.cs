@@ -280,6 +280,7 @@ namespace GirlAdventure.View
                 yield return BrotherAct(ao);
                 if (ao.SkillUp > 0) yield return SkillUpRoutine(ao.Cmd, ao.SkillUp, true);
                 yield return AfterAct(ao);
+                if (!battleOver) yield return MaybeCombo(ao.Target);
                 yield break;
             }
             while (true)
@@ -306,6 +307,7 @@ namespace GirlAdventure.View
                     if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, true);
                 }
                 yield return AfterAct(o);
+                if (!battleOver && c != Cmd.Run) yield return MaybeCombo(o.Target);
                 yield break;
             }
         }
@@ -323,6 +325,40 @@ namespace GirlAdventure.View
                     sfx.Play("win");
                     yield return Talk("win", ("enemy", FoeName(i)));
                 }
+        }
+
+        /// <summary>프로브용: 0 이상이면 합동 공격 주사위 대신 (1 = 늘 나옴, 0 = 안 나옴). 합동 공격이 나온 횟수.</summary>
+        public int DebugCombo = -1;
+        public int ComboCount { get; private set; }
+
+        /// <summary>
+        /// 합동 공격 (PLAN_NEXT 72): 지훈 차례 뒤 가끔 — 둘이 함께 뛰어들고, 금빛·분홍 별이 겹쳐 터지며 큰 피해.
+        /// </summary>
+        IEnumerator MaybeCombo(int target)
+        {
+            bool go = DebugCombo >= 0 ? DebugCombo > 0 && battle.Party && !battle.SisterDown && !battle.BrotherDown && !battle.EnemyDown : battle.ComboReady();
+            if (!go) yield break;
+            ComboCount++;
+            sfx.Play("star");
+            pose = "cast"; broPose = "attack";
+            heroLunge = 1; broLunge = 1;
+            yield return Talk("combo");
+            var o = battle.Combo(target);
+            if (o.Failed) { pose = "ready"; broPose = "ready"; yield break; }
+            var at = Px(FoeX(o.Target), EnemyY - 60);
+            Spawn(glowSprite, at, Vector3.zero, .5f, 3.4f, new Color(1f, .9f, .6f, .85f));
+            for (int i = 0; i < 20; i++)
+            {
+                float a = i / 20f * Mathf.PI * 2;
+                Spawn(starSprite, at, new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3f, 5f), .6f, .35f,
+                      i % 2 == 0 ? new Color(1f, .85f, .3f) : new Color(1f, .55f, .85f), 420);
+            }
+            camShake = Mathf.Max(camShake, .3f);
+            HitFoe(o.Target, o.Damage, true);
+            RefreshHud();
+            yield return Talk("combo_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
+            pose = "ready"; broPose = "ready";
+            yield return AfterAct(o);
         }
 
         /// <summary>

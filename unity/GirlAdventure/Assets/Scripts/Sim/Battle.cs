@@ -74,6 +74,8 @@ namespace GirlAdventure.Sim
     public class BattleSystem
     {
         public const double DodgeRate = 0.10;
+        /// <summary>합동 공격 (PLAN_NEXT 72): 둘 다 서 있을 때 지훈이 행동한 뒤 가끔 둘이 함께 한 번 더 친다.</summary>
+        public const double ComboRate = 0.15;
         public const int MaxFoes = 3;
         public static int StarCost => GameData.Skill(Cmd.Star).Mp;
         public static int CandyHeal => GameData.Item(Shop.CandyId).Hp;
@@ -187,6 +189,20 @@ namespace GirlAdventure.Sim
         /// 보스에게는 MP 가 있으면 번개, 아니면 검. 대상은 HP 가 가장 적게 남은 적 (하나씩 쓰러뜨리게).
         /// </summary>
         public (Cmd cmd, int target) BroAuto() => (Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());
+
+        /// <summary>합동 공격이 나오나 (둘 다 서 있고 적이 남았을 때 ComboRate 확률). 혼자일 때는 주사위를 굴리지 않는다.</summary>
+        public bool ComboReady() => Party && !SisterDown && !BrotherDown && !EnemyDown && r.NextDouble() < ComboRate;
+
+        /// <summary>합동 공격: 서진 공격력 + 지훈 공격력 + 0~5, 빗나가지 않는다. 대상이 없거나 쓰러졌으면 가장 약한 적.</summary>
+        public PlayerOutcome Combo(int target = -1)
+        {
+            var o = new PlayerOutcome { Cmd = Cmd.Slash, Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : WeakestAlive() };
+            if (o.Target < 0) { o.Failed = true; return o; }
+            o.Damages = new int[Foes.Count];
+            o.Damage = o.Damages[o.Target] = P.Atk + P.BroAtk + r.Next(0, 6);
+            Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
+            return o;
+        }
 
         /// <summary>살아 있는 적 중 HP 가 가장 적은 적 번호 (같으면 앞쪽, 모두 쓰러졌으면 -1).</summary>
         public int WeakestAlive()

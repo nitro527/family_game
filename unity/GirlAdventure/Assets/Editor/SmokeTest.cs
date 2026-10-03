@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -178,6 +178,14 @@ namespace GirlAdventure.EditorTools
                         string path = GameRoot.FacePath(l.Face);
                         if (Resources.Load<Texture2D>(path.Contains("/") ? path : "Girl/" + path) == null) noFace += $"{id}:{l.Face} ";
                     }
+            // 조사 표기: 받침 있는 쪽이 앞 ({name:과/와}, {x:은/는}). 거꾸로 쓰거나 이름 뒤에 조사를 그냥 붙이면 "서진와" 가 된다
+            string badJosa = "";
+            foreach (var id in TalkIds)
+                if (GameData.HasTalk(id))
+                    foreach (var l in GameData.Talk(id))
+                        foreach (var wrong in new[] { ":와/과}", ":는/은}", ":가/이}", ":를/을}", ":야/아}", "}와 ", "}과 ", "</color>와", "</color>과" })
+                            if (l.Text.Contains(wrong)) badJosa += $"{id}({wrong}) ";
+            Check("dialogue josa pairs batchim-first (서진과, not 서진와)", badJosa == "" && GameData.Fill("{name:과/와}", ("name", "서진")) == "서진과", badJosa);
             Check("dialogue faces exist (girl + bro_)", noFace == "" && GameRoot.FacePath("bro_cry") == "Boy/face_cry", noFace);
             Check("fill josa", GameData.Fill("{name:이/가} {enemy:을/를} {x}", ("name", "첫째"), ("enemy", "킹 젤리")) == "첫째가 킹 젤리를 {x}");
         }
@@ -458,6 +466,21 @@ namespace GirlAdventure.EditorTools
             var (gc, gt) = group.BroAuto();
             group.Foes[2].Hp = 0;
             Check("brother auto: bolt on boss (MP), slash otherwise, weakest foe first", bolt && slashNoMp && gc == Cmd.Slash && gt == 2 && group.WeakestAlive() == 0);
+
+            // 합동 공격 (PLAN_NEXT 72): 둘 다 서 있을 때만 약 15%, 피해 = 둘의 공격력 합 + 0~5
+            var duo = new BattleSystem(p, GameData.DesertBoss, new System.Random(5));
+            int n = 0;
+            for (int i = 0; i < 4000; i++) if (duo.ComboReady()) n++;
+            var c = duo.Combo();
+            p.Hp = 0;
+            bool noneDown = !new BattleSystem(p, GameData.DesertBoss, new System.Random(6)).ComboReady();
+            p.Hp = p.MaxHp;
+            var solo = PlayerState.NewGame("s");
+            bool noneSolo = true;
+            var sb = new BattleSystem(solo, GameData.King, new System.Random(7));
+            for (int i = 0; i < 200; i++) noneSolo &= !sb.ComboReady();
+            Check("combo: ~15% with both standing, never solo/downed, damage = atk sum + 0..5", n > 450 && n < 750 && noneDown && noneSolo
+                  && c.Damage >= p.Atk + p.BroAtk && c.Damage <= p.Atk + p.BroAtk + 5, $"rate {n}/4000 dmg {c.Damage}");
         }
 
         /// <summary>
@@ -1185,6 +1208,7 @@ namespace GirlAdventure.EditorTools
                 {
                     b.BroAct(def.Boss && b.BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash);
                     if (b.EnemyDown) return true;
+                    if (b.ComboReady()) { b.Combo(); if (b.EnemyDown) return true; }      // 합동 공격 (화면과 같은 규칙)
                 }
                 b.EnemyTurn();
                 if (b.PlayerDown) return false;

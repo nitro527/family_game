@@ -1074,10 +1074,13 @@ namespace GirlAdventure.EditorTools
                 // 지훈 자동 공격 (PLAN_NEXT 71): 켜 두면 지훈 명령창이 한 번도 안 뜬다
                 G.DebugSetBroAuto(true);
                 broCmdSeen = false;
-                int broActs0 = G.BroActCount;
+                int broActs0 = G.BroActCount, combo0 = G.ComboCount;
+                G.DebugCombo = 1;                           // 합동 공격 (PLAN_NEXT 72) 도 같이 확인
                 G.DebugSetEnemyHp(200);                     // 지훈 차례가 오도록 넉넉히
                 foreach (var x in FightUntilOver(false)) yield return x;
                 Expect("brother auto attack: acted without a command window", !broCmdSeen && G.BroActCount > broActs0, $"acts {G.BroActCount - broActs0}");
+                Expect("combo attack happened (sister + brother)", G.ComboCount > combo0 && comboShot);
+                G.DebugCombo = -1;
                 G.DebugSetBroAuto(false);
                 foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
                 G.NoGroups = false;
@@ -1183,7 +1186,7 @@ namespace GirlAdventure.EditorTools
             Expect("town well has water again", G.MapKindNow == MapKind.Oasis && G.WellWaterShown && !G.SandTwisterShown);
         }
 
-        static bool skillUpSeen, broCmdSeen;
+        static bool skillUpSeen, broCmdSeen, comboShot;
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
@@ -1215,6 +1218,7 @@ namespace GirlAdventure.EditorTools
                 yield return .3f;
                 if (G.MessageText.Contains("레벨이 올랐다!") && !G.MessageText.Contains("스킬") && lvShot++ == 0) Shot("levelup");
                 if (G.MessageText.Contains("스킬 레벨이 올랐다") && !skillUpSeen) { skillUpSeen = true; Shot("skill_up"); }
+                if (G.MessageText.Contains("둘이 함께 공격") && !comboShot) { comboShot = true; Shot("combo"); }
             }
         }
 
