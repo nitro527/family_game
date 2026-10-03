@@ -19,6 +19,7 @@ namespace GirlAdventure.Sim
         public EnemyDef General;        // 젤리 장군
         public EnemyDef DesertBoss;     // 카우보이 젤리 대장 (챕터 3 보스)
         public EnemyDef LavaBoss;       // 화산 젤리 대장 (챕터 4 보스, ✏️)
+        public EnemyDef SnowBoss;       // 예티 (챕터 5 보스, 서진이 도감 그림)
     }
 
     /// <summary>명령 하나의 수치. 피해 = Atk × AtkMul + Bonus + (0 ~ Rand-1).</summary>
@@ -118,6 +119,7 @@ namespace GirlAdventure.Sim
         public static EnemyDef General { get; private set; }
         public static EnemyDef DesertBoss { get; private set; }
         public static EnemyDef LavaBoss { get; private set; }
+        public static EnemyDef SnowBoss { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
         static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
@@ -156,6 +158,8 @@ namespace GirlAdventure.Sim
             if (DesertBoss != null) DesertBoss.Boss = true;
             LavaBoss = enemies.LavaBoss;
             if (LavaBoss != null) LavaBoss.Boss = true;
+            SnowBoss = enemies.SnowBoss;
+            if (SnowBoss != null) SnowBoss.Boss = true;
             skills.Clear();
             SkillLevelUses = skillTable.LevelUses ?? new int[0];
             SkillPowerPerLevel = skillTable.PowerPerLevel;
@@ -192,6 +196,7 @@ namespace GirlAdventure.Sim
             foreach (var d in Lava) yield return d;
             if (LavaBoss != null) yield return LavaBoss;
             foreach (var d in Snow) yield return d;
+            if (SnowBoss != null) yield return SnowBoss;
         }
 
         /// <summary>

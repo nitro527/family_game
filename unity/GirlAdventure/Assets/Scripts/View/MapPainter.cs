@@ -484,7 +484,7 @@ namespace GirlAdventure.View
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
             var lake = Mask(m, "i");
-            var path = Mask(m, "=");
+            var path = Mask(m, "=B");
             Color32 s0 = H("#E4ECF7"), s1 = H("#FBFDFF"), shade = H("#BCCBE2"), trod = H("#AFBFD6");
             Color32 i0 = H("#94CDEB"), i1 = H("#D0EEFA"), irim = H("#7AA2C4");
             for (int py = 0; py < h; py++)
@@ -670,10 +670,12 @@ namespace GirlAdventure.View
             R.Polygon(new[] { new Vector2(X + w * .48f, Y - 10), new Vector2(X + w * .7f, Y + h * .3f), new Vector2(X + w * .6f, Y + h * .24f),
                               new Vector2(X + w * .5f, Y + h * .34f), new Vector2(X + w * .38f, Y + h * .22f), new Vector2(X + w * .27f, Y + h * .31f) }, H("#FFFFFF"));
             R.Polygon(new[] { new Vector2(X + w * .2f, Y + h * .45f), new Vector2(X + w * .26f, Y + h * .58f), new Vector2(X + w * .2f, Y + h * .55f), new Vector2(X + w * .14f, Y + h * .58f) }, H("#FFFFFF"));
-            float dx = X + 2 * T + T / 2f, dy = Y + h;                                   // 동굴 입구 (눈길 끝 위)
-            R.Ellipse(dx - T / 2f, dy - 14, 22, 26, Ink);
-            R.Ellipse(dx - T / 2f, dy - 12, 18, 22, H("#1A2030"));
-            R.Rect(dx - T / 2f - 24, dy - 4, 48, 6, H("#7F8FA8"));
+            float dx = (WorldMap.SnowBossDoor.x + .5f) * T, dy = Y + h;                     // 동굴 입구 (눈길 끝, 예티 자리 바로 위)
+            R.Ellipse(dx, dy - 14, 24, 28, Ink);
+            R.Ellipse(dx, dy - 12, 20, 24, H("#1A2030"));
+            R.Rect(dx - 26, dy - 4, 52, 6, H("#7F8FA8"));
+            for (int i = 0; i < 5; i++)                                                      // 입구 고드름
+                R.Polygon(new[] { new Vector2(dx - 16 + i * 8, dy - 36 + (i % 2) * 3), new Vector2(dx - 13 + i * 8, dy - 24 + (i % 2) * 4), new Vector2(dx - 10 + i * 8, dy - 36 + (i % 2) * 3) }, H("#CFEFFF"));
         }
 
         /// <summary>모닥불 (눈 덮인 땅의 회복 자리): 눈 녹은 자리 + 돌 + 장작 + 불꽃.</summary>

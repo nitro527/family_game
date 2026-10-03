@@ -788,6 +788,7 @@ namespace GirlAdventure.View
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
             if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }
             if (here == 'B' && !P.Boss4Down && map.Kind == MapKind.Lava) { StartCoroutine(Boss4Routine()); return; }
+            if (here == 'B' && !P.Boss5Down && map.Kind == MapKind.Snow) { StartCoroutine(Boss5Routine()); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
             if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'E') { StartCoroutine(HomeRoutine(-1)); return; }
@@ -982,6 +983,14 @@ namespace GirlAdventure.View
             busy = true;
             yield return Talk("boss2_meet");
             yield return BattleRoutine(GameData.General);
+        }
+
+        /// <summary>예티 (C5-5): 눈 산 동굴 입구에서 눈보라 → 예티가 걸어 나온다.</summary>
+        IEnumerator Boss5Routine()
+        {
+            busy = true;
+            yield return Talk("boss5_meet");
+            yield return BattleRoutine(GameData.SnowBoss);
         }
 
         IEnumerator Boss4Routine()

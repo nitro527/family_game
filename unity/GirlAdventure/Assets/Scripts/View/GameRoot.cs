@@ -240,6 +240,19 @@ namespace GirlAdventure.View
             sfx.Play("lvup");
         }
 
+        /// <summary>챕터 5 끝 (C5-5): 예티와 친구가 되는 대사 → 번쩍 → 챕터 5 완료 카드.</summary>
+        IEnumerator Chapter5ClearRoutine()
+        {
+            yield return Talk("ch5_clear");
+            yield return Flash(.6f);
+            HideMessage();
+            AutoSave();
+            Current = Mode.Ending;
+            ShowEnding();
+            bgm.Play("ending");
+            sfx.Play("lvup");
+        }
+
         /// <summary>챕터 4 끝 (C4-7b): 화산이 잠잠해지는 대사 → 번쩍 → 챕터 4 완료 카드.</summary>
         IEnumerator Chapter4ClearRoutine()
         {
@@ -567,6 +580,7 @@ namespace GirlAdventure.View
         public void DebugSetBroAuto(bool on) => Settings.SetBroAuto(on);
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
+        public void DebugNearSnowBoss() => DebugTeleport(WorldMap.SnowBossDoor.x, WorldMap.SnowBossDoor.y + 1, "up");
         public void DebugNearLavaBoss() => DebugTeleport(WorldMap.VolcanoDoor.x, WorldMap.VolcanoDoor.y + 1, "up");
         public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");
 

@@ -1457,6 +1457,28 @@ namespace GirlAdventure.EditorTools
             Expect("won against the icicle jelly", G.Current == GameRoot.Mode.Field && G.P.Chapter == 5);
             G.DebugBackToField();
             yield return .5f;
+            // 예티 (C5-5): 눈 산 동굴 입구 → 예티 → 눈보라가 그침 → 챕터 5 완료
+            G.DebugMobs(true, true);
+            G.DebugNearSnowBoss();
+            yield return .6f;
+            Shot("snow_boss_door");
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .4f;
+            Shot("boss5_battle");
+            Expect("yeti battle", G.BattleEnemy == GameData.SnowBoss && G.BattleBackdropName == "snow_boss", G.BattleBackdropName);
+            ExpectBgm("boss");
+            G.DebugSetEnemyHp(60);                     // 흐름만 확인 (난이도는 SmokeTest [BALANCE BOSS5])
+            foreach (var x in FightUntilOver(true)) yield return x;
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("그쳤") || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .6f;
+            Shot("ch5_friend");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return 1.2f;
+            Shot("ch5_clear");
+            Expect("chapter 5 cleared (last chapter for now)", G.P.Boss5Down && G.EndingHead.Contains("챕터 5") && G.NextChapterLabel == "", G.EndingHead);
+            G.DebugMobs(false, false);
+            yield return .5f;
 
             // 챕터 고르기 (사용자 2026-10-03): 타이틀 맨 아래 버튼 → 챕터 목록 → 용암 땅으로 바로 (3번 칸)
             G.DebugToTitle();

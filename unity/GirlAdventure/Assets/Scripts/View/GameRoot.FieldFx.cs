@@ -198,9 +198,10 @@ namespace GirlAdventure.View
                 }
                 else if (map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown)
                 {
-                    ambientTimer = .05f;                // 눈 덮인 땅: 펑펑 내리는 눈
-                    var p = new Vector3(camPos.x + Random.Range(-halfW - 1, halfW), camPos.y + halfH + .3f, 0);
-                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(.05f, .45f), Random.Range(-1.1f, -.6f)), Random.Range(9f, 12f),
+                    bool calm = P.Boss5Down;            // 눈 덮인 땅: 예티와 친구가 되기 전엔 옆으로 몰아치는 눈보라, 뒤엔 사뿐사뿐
+                    ambientTimer = calm ? .09f : .035f;
+                    var p = new Vector3(camPos.x + Random.Range(-halfW - (calm ? 1 : 4), halfW), camPos.y + halfH + .3f, 0);
+                    var sr = SpawnField(puffSprite, p, calm ? new Vector3(Random.Range(.05f, .3f), Random.Range(-.9f, -.5f)) : new Vector3(Random.Range(1.2f, 2.2f), Random.Range(-1.6f, -1.0f)), Random.Range(9f, 12f),
                                         Random.Range(.05f, .1f), new Color(1f, 1f, 1f, .92f));
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;

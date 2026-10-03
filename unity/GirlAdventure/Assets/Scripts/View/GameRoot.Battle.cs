@@ -769,6 +769,13 @@ namespace GirlAdventure.View
                 P.GuardDown = true;             // 보물상자를 열 수 있게 된다 (EndBattle → EnterField 가 지킴이 그림을 치우고 저장)
                 yield return Talk("guard_down");
             }
+            else if (def == GameData.SnowBoss)
+            {
+                P.Boss5Down = true;
+                LeaveBattleStage();
+                yield return Chapter5ClearRoutine();
+                yield break;
+            }
             else if (def == GameData.LavaBoss)
             {
                 P.Boss4Down = true;

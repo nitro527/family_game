@@ -474,6 +474,7 @@ namespace GirlAdventure.EditorTools
             SnowTests();
             SnowJellyTests();
             SnowTownTests();
+            Boss5Tests();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -509,6 +510,43 @@ namespace GirlAdventure.EditorTools
             float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
             Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
+        }
+
+        /// <summary>예티 (C5-5): 눈 산 동굴 입구, 데이터·그림, 세이브 v15, 마을 대사, 셋 + 털옷 가게 장비 밸런스.</summary>
+        static void Boss5Tests()
+        {
+            var m = WorldMap.Snow();
+            var b = WorldMap.SnowBossDoor;
+            var reach = Reach(m, WorldMap.SnowStart);
+            var boss = GameData.SnowBoss;
+            Check("yeti: door below the snow peak, reachable, data + art", m.At(b.x, b.y) == 'B' && reach[b.x, b.y] && m.At(b.x, b.y - 1) == 'K'
+                  && boss != null && boss.Boss && boss.Art == "yeti" && boss.Backdrop == "snow_boss" && Resources.Load<Texture2D>("Monsters/yeti") != null
+                  && Resources.Load<Texture2D>("Battle/snow_boss") != null,
+                  $"tile {m.At(b.x, b.y)} reach {reach[b.x, b.y]} above {m.At(b.x, b.y - 1)} boss {boss?.Name} art {boss?.Art} bg {boss?.Backdrop} tex {Resources.Load<Texture2D>("Monsters/yeti") != null}/{Resources.Load<Texture2D>("Battle/snow_boss") != null}");
+            var p = PlayerState.NewGame("t"); p.Boss5Down = true; p.Chapter = 5;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("boss5 saved (v15), snow elder thanks", SaveData.CurrentVersion >= 15 && q.Boss5Down
+                  && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.SnowTown)).Find(n => n.Id == "snow_elder"), q) == "npc_snow_elder_end");
+            float Win(int lv, bool gear)
+            {
+                var r = new System.Random(555);
+                int wins = 0;
+                for (int run = 0; run < 400; run++)
+                {
+                    var d = PlayerState.NewGame("d");
+                    d.GainExp(PlayerState.NextExp(lv - 1));
+                    d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad");
+                    var kit = gear ? new[] { "snow_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield" }
+                                   : new[] { "flame_wand", "lava_robe", "flame_sword", "bro_shield", "lion_blade", "lion_shield" };
+                    foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
+                    d.Candy = 6;
+                    if (FightDuo(d, new List<EnemyDef> { boss }, r)) wins++;
+                }
+                return wins / 400f;
+            }
+            float g18 = Win(18, true), g17 = Win(17, true), n17 = Win(17, false);
+            Debug.Log($"[BALANCE BOSS5] trio Lv18+snow gear={g18:P1} Lv17+snow gear={g17:P1} Lv17 lava gear only={n17:P1}");
+            Check("yeti balance (Lv18+gear ≥95%, Lv17+gear ≥80%, without new gear <70%)", g18 >= .95f && g17 >= .8f && n17 < .7f, $"g18 {g18:P1} g17 {g17:P1} n17 {n17:P1}");
         }
 
         /// <summary>눈꽃 마을 (C5-4): 눈길 끝 문, 마을 모든 칸 이어짐(마을 사람 놓은 뒤), 마을 사람·여관, 털옷 가게 새 장비, 드나들기.</summary>
@@ -975,6 +1013,7 @@ namespace GirlAdventure.EditorTools
                 (8, "{\"Version\":8,\"Name\":\"a\",\"Lv\":7,\"Exp\":150,\"Hp\":50,\"Mp\":20,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":2,\"BossDown\":true,\"Seen\":[\"파랑 젤리\",\"없는 젤리\"],\"Beaten\":[\"파랑 젤리\"]}"),
                 (9, "{\"Version\":9,\"Name\":\"a\",\"Lv\":9,\"Exp\":240,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":28,\"Y\":3,\"Chapter\":2,\"BossDown\":true,\"Boss2Down\":true,\"GuardDown\":true,\"BrotherJoined\":true,\"BroHp\":0,\"BroMp\":5}"),
                 (10, "{\"Version\":10,\"Name\":\"a\",\"Lv\":11,\"Exp\":340,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":4,\"Y\":15,\"Chapter\":3,\"BossDown\":true,\"Boss2Down\":true,\"Boss3Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5}"),
+                (14, "{\"Version\":14,\"Name\":\"a\",\"Lv\":14,\"Exp\":1100,\"Hp\":90,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Boss4Down\":true,\"Party\":[\"jihun:90:10\",\"dad:100:5\"]}"),
                 (13, "{\"Version\":13,\"Name\":\"a\",\"Lv\":12,\"Exp\":700,\"Hp\":80,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Party\":[\"jihun:90:10\",\"dad:0:5\"]}"),
                 (12, "{\"Version\":12,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":20,\"Y\":16,\"Chapter\":3,\"Underground\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":40,\"BroMp\":3}"),
                 (11, "{\"Version\":11,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":18,\"Y\":17,\"Chapter\":3,\"InVillage\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5,\"SkillUses\":[\"Fire:31\",\"Bolt:2\"]}"),
