@@ -27,7 +27,7 @@ namespace GirlAdventure.View
         Vector2Int broTile, broFrom;
         string broFacing = "down";
         float moveT = -1, walkT;
-        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap;
+        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
@@ -47,16 +47,18 @@ namespace GirlAdventure.View
             villageMap = WorldMap.Village();
             desertMap = WorldMap.Desert();
             townMap = WorldMap.OasisTown();
+            underMap = WorldMap.Underworld();
             mobs = new FieldMonsters(rng);
             Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
             Npcs.Place(caveMap);
             Npcs.Place(villageMap);
             Npcs.Place(desertMap);
             Npcs.Place(townMap);
+            Npcs.Place(underMap);
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap, townMap })
+            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap, townMap, underMap })
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -140,7 +142,7 @@ namespace GirlAdventure.View
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
-            var want = P.Chapter >= 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+            var want = P.Underground ? underMap : SurfaceMap;
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
@@ -151,6 +153,9 @@ namespace GirlAdventure.View
             mobs.Reset(map, P.X, P.Y);
             SyncMobViews();
         }
+
+        /// <summary>지하세계가 아닐 때 있어야 할 맵 (챕터·마을 안).</summary>
+        WorldMap SurfaceMap => P.Chapter >= 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
 
         /// <summary>연 상자·열린 문·보물상자 지킴이 그림.</summary>
         void RefreshQuestProps()
@@ -342,7 +347,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.Kind == MapKind.Cave ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -369,6 +374,39 @@ namespace GirlAdventure.View
             yield return Fade(1, 0, .3f);
             HideSwirl();
             if (toVillage) { yield return Talk(desert ? "oasis_enter" : "village_enter"); HideMessage(); }
+            busy = false;
+        }
+
+        /// <summary>
+        /// 지하세계 드나들기 (사용자 요청 2026-10-03): 숨겨진 구멍을 밟으면 어두워졌다가 지하세계 밧줄 아래로,
+        /// 밧줄을 밟으면 위 맵(챕터의 들판·동굴·사막)의 숨겨진 구멍 옆으로 올라온다.
+        /// </summary>
+        IEnumerator UnderworldRoutine(bool down)
+        {
+            busy = true;
+            sfx.Play(down ? "mv_hop" : "step");
+            yield return Fade(0, 1, down ? .5f : .3f);
+            P.Underground = down;
+            if (down) { (P.X, P.Y) = WorldMap.UnderStart; facing = "down"; }
+            else
+            {
+                var up = SurfaceMap;
+                var (hx, hy) = up.SecretHole;
+                (P.X, P.Y) = Quest.Walkable(up, P, hx, hy + 1) ? (hx, hy + 1) : (hx, hy);
+                facing = "down";
+            }
+            moveT = -1;
+            ApplyMap();
+            ResetBrother();
+            bgm.Play(MapSong);
+            RefreshQuestProps();
+            UpdatePlayerVisual();
+            mobs.Grace = 2f;
+            AutoSave();
+            yield return Fade(1, 0, .4f);
+            HideSwirl();
+            yield return Talk(down ? "under_enter" : "under_leave");
+            HideMessage();
             busy = false;
         }
 
@@ -517,7 +555,7 @@ namespace GirlAdventure.View
             foreach (var d in new[] { back, side, -side })
             {
                 var t = here + d;
-                if (Quest.Walkable(map, P, t.x, t.y) && mobs.At(t.x, t.y) == null) { broTile = broFrom = t; break; }
+                if (Quest.Walkable(map, P, t.x, t.y) && mobs.At(t.x, t.y) == null && !map.IsRope(t.x, t.y) && !map.IsDoorway(t.x, t.y)) { broTile = broFrom = t; break; }   // 밧줄·출입구 칸은 비워 둔다
             }
             broFacing = facing;
         }
@@ -579,6 +617,8 @@ namespace GirlAdventure.View
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
             if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }
+            if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
+            if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
             if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(!map.IsTown)); return; }
             var mob = mobs.At(P.X, P.Y);
             if (mob != null && mobs.Grace <= 0) StartMobBattle(mob);
@@ -732,7 +772,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }

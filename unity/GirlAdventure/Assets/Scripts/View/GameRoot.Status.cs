@@ -191,6 +191,7 @@ namespace GirlAdventure.View
         /// <summary>진행 상황에 맞는 한 줄 목표 (5살도 길을 잃지 않게).</summary>
         string Goal()
         {
+            if (P.Underground) return "지하세계를 탐험하자! 입구 방의 밧줄로 위로 돌아갈 수 있어요";
             if (P.Chapter < 2) return P.BossDown ? "별빛을 되찾았어요!" : "남동쪽 성의 킹 젤리를 물리치자";
             if (P.Chapter >= 3) return P.Boss3Down ? "사막에 물이 돌아왔어요!" : "오아시스 마을의 말라 버린 우물… 남쪽 바위 골짜기를 살펴보자";
             if (P.Boss2Down) return "동굴에 평화가 찾아왔어요!";

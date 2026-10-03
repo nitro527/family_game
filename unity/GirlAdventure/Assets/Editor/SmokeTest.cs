@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -106,7 +106,7 @@ namespace GirlAdventure.EditorTools
             Check("monster art loads", badArt == "" && arts >= 1, $"arts={arts} {badArt}");
             // 전투 배경 그림: 맵 기본(meadow/cave) + 적이 정한 것 모두 1280×720 으로 들어와야 함 (NPOT 늘림 없음)
             string badBg = "";
-            var bgNames = new List<string> { "meadow", "cave", "desert" };
+            var bgNames = new List<string> { "meadow", "cave", "desert", "underworld" };
             if (enemiesOk)
                 foreach (var d in GameData.AllEnemies())
                     if (!string.IsNullOrEmpty(d.Backdrop)) bgNames.Add(d.Backdrop);
@@ -439,6 +439,45 @@ namespace GirlAdventure.EditorTools
             Check("inn heals brother too", Inn.Stay(p) && p.BroHp == p.BroMaxHp && p.Hp == p.MaxHp);
             Boss3Tests();
             SkillLevelTests();
+            UnderworldTests();
+        }
+
+        /// <summary>숨겨진 구멍 → 지하세계 (사용자 요청 2026-10-03).</summary>
+        static void UnderworldTests()
+        {
+            var p = PlayerState.NewGame("u");
+            foreach (var m in new[] { new WorldMap(), WorldMap.Cave(), WorldMap.Desert() })
+            {
+                var (sx, sy) = m.SecretHole;
+                var reach = Reach(m, m.SpawnPoint);
+                Check($"{m.Kind}: secret hole spot on open floor, reachable, holes exist", sx >= 0 && !m.Blocked(sx, sy) && reach[sx, sy] && !m.Holes.Contains((sx, sy))
+                      && m.Holes.Count >= 3 && m.EncounterRate(sx, sy) > 0, $"({sx},{sy}) holes {m.Holes.Count}");
+                bool closed = !Holes.SecretOpen(p, m);
+                foreach (var (hx, hy) in m.Holes.GetRange(0, m.Holes.Count - 1)) p.Opened.Add(Holes.Key(m.Kind, hx, hy));
+                bool stillClosed = !Holes.SecretOpen(p, m);
+                var last = m.Holes[m.Holes.Count - 1];
+                Holes.Look(p, m, last.x, last.y, 0, out _);
+                Check($"{m.Kind}: secret hole opens only after every hole is looked into", closed && stillClosed && Holes.SecretOpen(p, m));
+            }
+            var u = WorldMap.Underworld();
+            var ur = Reach(u, WorldMap.UnderStart);
+            int free = 0, unreached = 0;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (!u.Blocked(x, y)) { free++; if (!ur[x, y]) unreached++; }
+            Check("underworld: rope exit, start safe, spring, sign, all reachable, cave-like", u.IsRope(WorldMap.UnderExit.x, WorldMap.UnderExit.y) && u.IsCaveLike
+                  && !u.Blocked(WorldMap.UnderStart.x, WorldMap.UnderStart.y) && u.Safe(WorldMap.UnderStart.x, WorldMap.UnderStart.y)
+                  && u.At(u.Spring.x, u.Spring.y) == 'F' && u.At(u.SignPos.x, u.SignPos.y) == 'S' && unreached == 0 && free > 200 && u.SecretHole.x < 0,
+                  $"free {free} unreached {unreached}");
+            var under = GameData.Under;
+            Check("underworld jellies (placeholder): 3 incl. tier 2, encounters near & far", under.Length == 3 && Array.Exists(under, d => d.Tier == 2)
+                  && GameData.ListFor(MapKind.Underworld) == under && GameData.EncounterPool(MapKind.Underworld, 20, 18).Length > 0
+                  && u.EncounterRate(20, 16) > 0 && u.EncounterRate(WorldMap.UnderStart.x, WorldMap.UnderStart.y) == 0);
+            // 세이브 v12: 지하세계 안 위치 그대로, 챕터 1 이어도
+            p.Underground = true; (p.X, p.Y) = (20, 16);
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("underground saved (v12)", SaveData.CurrentVersion >= 12 && q.Underground && q.X == 20 && q.Y == 16 && !q.InVillage
+                  && WorldMap.ForPlayer(q.Chapter, q.InVillage, q.Underground).Kind == MapKind.Underworld);
         }
 
         /// <summary>스킬 레벨 (백로그 54): 숙련도 → 레벨, 위력, 레벨업 알림, 지훈 기술, 세이브 v11, 옛 세이브.</summary>
@@ -483,7 +522,7 @@ namespace GirlAdventure.EditorTools
             var bad = p.ToSave(); bad.SkillUses = new[] { "Fire:-3", "Nope:5", "Run:4", "Star:7", "junk" };
             var badBack = PlayerState.FromSave(bad);
             var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":10,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
-            Check("skill uses saved (v11), bad entries dropped, old save zero", SaveData.CurrentVersion == 11 && SkillLevels.Uses(back, Cmd.Fire) == SkillLevels.Uses(p, Cmd.Fire)
+            Check("skill uses saved (v11), bad entries dropped, old save zero", SaveData.CurrentVersion >= 11 && SkillLevels.Uses(back, Cmd.Fire) == SkillLevels.Uses(p, Cmd.Fire)
                   && badBack.SkillUses.Count == 1 && SkillLevels.Uses(badBack, Cmd.Star) == 7 && old.SkillUses.Count == 0);
         }
 

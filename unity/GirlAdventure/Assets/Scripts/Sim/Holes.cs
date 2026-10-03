@@ -16,16 +16,31 @@ namespace GirlAdventure.Sim
         /// <summary>구멍을 놓고 싶은 자리 (그 칸이 바닥이 아니면 가까운 바닥 칸으로).</summary>
         static readonly (int x, int y)[] FieldWish = { (12, 8), (19, 12), (33, 8), (20, 21) };
         static readonly (int x, int y)[] CaveWish = { (9, 3), (21, 10), (2, 12) };
+        static readonly (int x, int y)[] DesertWish = { (9, 6), (27, 18), (14, 12) };
 
-        public static bool Has(MapKind k) => k == MapKind.Field || k == MapKind.Cave;
+        public static bool Has(MapKind k) => k == MapKind.Field || k == MapKind.Cave || k == MapKind.Desert;
+
+        /// <summary>이 맵의 수상한 구멍을 모두 들여다봤나 (숨겨진 구멍이 열리는 조건).</summary>
+        public static bool AllLooked(PlayerState p, WorldMap m)
+        {
+            if (m.Holes.Count == 0) return false;
+            foreach (var (x, y) in m.Holes) if (!Looked(p, m.Kind, x, y)) return false;
+            return true;
+        }
+
+        /// <summary>숨겨진 구멍(지하세계 입구)이 열렸나: 그 맵에 자리가 있고, 구멍을 다 들여다봤으면.</summary>
+        public static bool SecretOpen(PlayerState p, WorldMap m) => m.SecretHole.x >= 0 && AllLooked(p, m);
+
+        /// <summary>"숨겨진 구멍이 열렸다" 알림을 이미 봤나 (맵마다 한 번, 세이브 Opened 에 "secret:맵").</summary>
+        public static string AnnouncedKey(MapKind k) => "secret:" + k;
 
         /// <summary>맵에 구멍 칸을 놓고 놓은 자리를 돌려준다 (맵 생성 때 WorldMap 이 부른다).</summary>
         internal static List<(int x, int y)> Place(WorldMap m, Action<int, int> set)
         {
             var list = new List<(int, int)>();
             if (!Has(m.Kind)) return list;
-            string floor = m.Kind == MapKind.Cave ? "_" : ".,f";
-            foreach (var (wx, wy) in m.Kind == MapKind.Cave ? CaveWish : FieldWish)
+            string floor = m.Kind == MapKind.Cave ? "_" : m.Kind == MapKind.Desert ? "." : ".,f";
+            foreach (var (wx, wy) in m.Kind == MapKind.Cave ? CaveWish : m.Kind == MapKind.Desert ? DesertWish : FieldWish)
             {
                 // 바라는 칸부터 거리 0,1,2 로 넓혀 가며 첫 바닥 칸
                 bool done = false;
@@ -70,7 +85,7 @@ namespace GirlAdventure.Sim
         /// <summary>구멍에서 나오는 2단 괴물: 초원은 큰 초록 젤리(시작 근처에서도 이길 만한 쪽), 동굴은 큰 돌멩이 젤리.</summary>
         public static EnemyDef BigMonster(MapKind k)
         {
-            var pool = k == MapKind.Cave ? GameData.Cave : GameData.Normal;
+            var pool = GameData.ListFor(k);
             foreach (var e in pool) if (e.Tier >= 2) return e;
             return pool[pool.Length - 1];
         }

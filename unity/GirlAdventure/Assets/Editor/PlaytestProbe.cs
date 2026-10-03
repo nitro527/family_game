@@ -1031,6 +1031,60 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             ExpectBgm("desert");
 
+            // 숨겨진 구멍 → 지하세계 (사용자 요청 2026-10-03): 사막 구멍을 마지막 하나까지 들여다보면 보랏빛 구멍이 열린다
+            G.DebugMobs(true, true);
+            G.DebugLookAllHolesButOne();
+            Expect("secret hole closed before the last hole", !G.SecretHoleShown);
+            var lastHole = G.DebugHoleApproach(true);
+            Expect("last desert hole approachable", lastHole.dir != null);
+            if (lastHole.dir != null)
+            {
+                G.DebugHoleRoll = 0;
+                G.DebugTeleport(lastHole.x, lastHole.y, lastHole.dir);
+                yield return .3f;
+                var hk = lastHole.dir == "up" ? KeyCode.UpArrow : lastHole.dir == "down" ? KeyCode.DownArrow : lastHole.dir == "left" ? KeyCode.LeftArrow : KeyCode.RightArrow;
+                Keys.Hold(hk, true); yield return .15f; Keys.Hold(hk, false);
+                foreach (var x in SkipTalk(() => G.MessageText.Contains("보랏빛"))) yield return x;
+                yield return .5f;
+                Expect("secret hole opened after the last hole", G.SecretHoleShown && G.MessageText.Contains("보랏빛"), G.MessageText);
+                foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+                G.DebugHoleRoll = -1;
+                var sh = G.SecretHolePos;
+                G.DebugTeleport(sh.x, sh.y - 1, "down");
+                yield return .6f;
+                Shot("secret_hole");
+                Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+                foreach (var x in SkipTalk(() => G.MessageText.Contains("지하세계"))) yield return x;
+                yield return .6f;
+                Shot("under_enter");
+                foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+                Expect("went down to the underworld", G.MapKindNow == MapKind.Underworld && G.P.Underground && G.BroFieldVisible);
+                ExpectBgm("cave");
+                G.DebugMobs(true, true);
+                G.DebugTeleport(20, 16, "right");
+                G.NoGroups = true;
+                G.DebugSpawnMob(21, 16, 0);
+                yield return .6f;
+                Shot("under_field");
+                Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+                foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+                yield return .3f;
+                Shot("under_battle");
+                Expect("underworld jelly battle", G.BattleEnemy == GameData.Under[0] && G.BattleBackdropName == "underworld", G.BattleBackdropName);
+                foreach (var x in FightUntilOver(false)) yield return x;
+                foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+                G.NoGroups = false;
+                G.DebugMobs(true, true);
+                G.DebugTeleport(WorldMap.UnderStart.x, WorldMap.UnderStart.y, "up");
+                yield return .3f;
+                Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+                foreach (var x in SkipTalk(() => G.MapKindNow == MapKind.Desert && !G.Busy)) yield return x;
+                yield return .4f;
+                Expect("climbed back up beside the secret hole", G.MapKindNow == MapKind.Desert && !G.P.Underground
+                       && Math.Abs(G.P.X - sh.x) + Math.Abs(G.P.Y - sh.y) <= 1);
+                ExpectBgm("desert");
+            }
+
             // 오아시스 마을 (백로그 52): 사막 동쪽 문 → 마을 → 마을 어른 → 가게에서 지훈 칼 → 상태 창 → 나가기
             G.DebugMobs(true, true);
             G.DebugTeleport(WorldMap.TownGate.x - 1, WorldMap.TownGate.y, "right");

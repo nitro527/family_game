@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 11;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도
+        public const int CurrentVersion = 12;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도, 12: 지하세계
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -24,6 +24,7 @@ namespace GirlAdventure.Sim
         public bool BrotherJoined;      // 버전 9: 동생 지훈 합류
         public int BroHp, BroMp;
         public string[] SkillUses;      // 버전 11: 스킬 숙련도 "Fire:12"
+        public bool Underground;        // 버전 12: 지하세계 안에서 저장 (X, Y 는 지하세계 좌표)
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
@@ -57,6 +58,7 @@ namespace GirlAdventure.Sim
         public bool Boss3Down;              // 카우보이 젤리 대장 (챕터 3) — 사막에 물이 돌아온다
         public int Chapter = 1;
         public bool InVillage;              // 별빛 마을 맵 안 (챕터 1)
+        public bool Underground;            // 지하세계 안 (숨겨진 구멍으로 내려옴)
         public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
         public List<string> Gear = new List<string>();      // 가진 장비 id
@@ -166,6 +168,7 @@ namespace GirlAdventure.Sim
             Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),
             BrotherJoined = BrotherJoined, BroHp = BroHp, BroMp = BroMp,
             SkillUses = SkillEntries(),
+            Underground = Underground,
         };
 
         string[] SkillEntries()
@@ -238,7 +241,9 @@ namespace GirlAdventure.Sim
                 p.BroMp = Math.Max(0, Math.Min(s.BroMp, p.BroMaxMp));
             }
             p.InVillage = s.InVillage && WorldMap.HasTown(p.Chapter);
-            var map = WorldMap.ForPlayer(p.Chapter, p.InVillage);
+            p.Underground = s.Underground;
+            if (p.Underground) p.InVillage = false;
+            var map = WorldMap.ForPlayer(p.Chapter, p.InVillage, p.Underground);
             (p.X, p.Y) = map.SpawnPoint;
             if (Quest.Walkable(map, p, s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)
             {

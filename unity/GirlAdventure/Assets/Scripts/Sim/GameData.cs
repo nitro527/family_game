@@ -12,6 +12,7 @@ namespace GirlAdventure.Sim
         public EnemyDef Boss;           // 킹 젤리
         public EnemyDef[] Cave;         // 동굴 (챕터 2)
         public EnemyDef[] Desert;       // 사막 (챕터 3)
+        public EnemyDef[] Under;        // 지하세계 (✏️ 서진이 디자인 전 임시 젤리)
         public EnemyDef Guard;          // 바위 대장 젤리 (챕터 2 중간 보스, 보물상자 지킴이)
         public EnemyDef General;        // 젤리 장군
         public EnemyDef DesertBoss;     // 카우보이 젤리 대장 (챕터 3 보스)
@@ -101,12 +102,13 @@ namespace GirlAdventure.Sim
         public static EnemyDef King { get; private set; }
         public static EnemyDef[] Cave { get; private set; }
         public static EnemyDef[] Desert { get; private set; }
+        public static EnemyDef[] Under { get; private set; }
 
         /// <summary>그 맵의 일반 적 목록 (출현표 인덱스가 가리키는 곳): 동굴 Cave, 사막 Desert, 나머지(초원·마을) Normal.</summary>
-        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : Normal;
+        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : Normal;
 
-        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : "field";
-        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : MapKind.Field;
+        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : kind == MapKind.Underworld ? "under" : "field";
+        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "under" ? MapKind.Underworld : MapKind.Field;
         public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
         public static EnemyDef DesertBoss { get; private set; }
@@ -137,6 +139,7 @@ namespace GirlAdventure.Sim
             King.Boss = true;
             Cave = enemies.Cave;
             Desert = enemies.Desert ?? new EnemyDef[0];
+            Under = enemies.Under ?? new EnemyDef[0];
             Guard = enemies.Guard;
             Guard.Boss = true;
             General = enemies.General;
@@ -175,6 +178,7 @@ namespace GirlAdventure.Sim
             yield return General;
             foreach (var d in Desert) yield return d;
             if (DesertBoss != null) yield return DesertBoss;
+            foreach (var d in Under) yield return d;
         }
 
         /// <summary>

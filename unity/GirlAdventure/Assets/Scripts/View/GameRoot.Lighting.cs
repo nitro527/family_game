@@ -41,7 +41,7 @@ namespace GirlAdventure.View
         {
             foreach (var (sr, _, _) in glows) Destroy(sr.gameObject);
             glows.Clear();
-            bool cave = map.Kind == MapKind.Cave;
+            bool cave = map.IsCaveLike;             // 동굴·지하세계는 어둡다
             darkSR.enabled = cave;
             if (!cave) return;
             int w = WorldMap.W * LPT, h = WorldMap.H * LPT;
@@ -77,7 +77,7 @@ namespace GirlAdventure.View
             if (vignette != null)
             {
                 vignette.enabled = Current == Mode.Field;
-                vignette.color = map.Kind == MapKind.Cave ? new Color(0, 0, 0, .6f)
+                vignette.color = map.IsCaveLike ? new Color(0, 0, 0, .6f)
                                : map.Kind == MapKind.Desert || map.Kind == MapKind.Oasis ? new Color(.35f, .2f, .05f, .3f)      // 사막: 따뜻한 햇볕 테두리
                                : new Color(0, 0, 0, .38f);
             }

@@ -14,6 +14,7 @@ namespace GirlAdventure.View
         readonly Dictionary<(int x, int y), SpriteRenderer> holeViews = new Dictionary<(int x, int y), SpriteRenderer>();
         readonly Dictionary<(MapKind, bool), Sprite> holeSprites = new Dictionary<(MapKind, bool), Sprite>();
         float holeFxT;
+        SpriteRenderer secretSR;                // 숨겨진 구멍 (지하세계 입구): 크고 보랏빛으로 빛나며 맥박치듯 커졌다 작아진다
 
         Sprite HoleSprite(MapKind k, bool empty)
         {
@@ -55,6 +56,7 @@ namespace GirlAdventure.View
         /// <summary>지금 맵의 구멍 그림을 다시 놓는다 (맵이 바뀔 때).</summary>
         void RebuildHoles()
         {
+            RefreshSecretHole();
             foreach (var sr in holeViews.Values) if (sr != null) Destroy(sr.gameObject);
             holeViews.Clear();
             foreach (var h in map.Holes)
@@ -75,8 +77,65 @@ namespace GirlAdventure.View
         }
 
         /// <summary>아직 안 들여다본 구멍에서 보랏빛 기운이 몽글몽글 올라온다.</summary>
+        /// <summary>숨겨진 구멍 그림 (48×48): 보라 테두리 + 깊은 어둠 + 소용돌이 빛.</summary>
+        static Texture2D SecretHoleTexture()
+        {
+            var R = new Raster(Painter.Tile, Painter.Tile);
+            R.Ellipse(24, 30, 23, 15, new Color32(170, 90, 255, 90));
+            R.Ellipse(24, 30, 20, 12.5f, Raster.Hex("#5A2E8A"));
+            R.Ellipse(24, 29, 18, 11, Raster.Hex("#8E5AD8"));
+            R.Ellipse(24, 31, 14.5f, 8.5f, Raster.Hex("#120820"));
+            for (int i = 0; i < 3; i++) R.Ellipse(24, 31, 11 - i * 3.5f, 6 - i * 2, new Color32(190, 120, 255, (byte)(60 + i * 40)));
+            R.Circle(24, 31, 2.2f, Raster.Hex("#F0D8FF"));
+            return R.ToTexture();
+        }
+
+        /// <summary>숨겨진 구멍 그림을 지금 맵·진행에 맞게 (열린 맵에서만 보인다).</summary>
+        void RefreshSecretHole()
+        {
+            if (secretSR == null)
+            {
+                secretSR = new GameObject("SecretHole").AddComponent<SpriteRenderer>();
+                secretSR.transform.SetParent(fieldRoot, false);
+                secretSR.sprite = Art.FromTexture(SecretHoleTexture(), new Vector2(.5f, .5f), Painter.Tile);
+                secretSR.sortingOrder = 1;
+            }
+            bool on = Holes.SecretOpen(P, map);
+            secretSR.enabled = on;
+            if (on) secretSR.transform.localPosition = new Vector3(map.SecretHole.x + .5f, -map.SecretHole.y - .55f, 0);
+        }
+
+        /// <summary>마지막 구멍을 들여다본 뒤 (맵마다 한 번): 쿠르릉 → 숨겨진 구멍이 열렸다.</summary>
+        IEnumerator SecretOpenRoutine()
+        {
+            busy = true;
+            P.Opened.Add(Holes.AnnouncedKey(map.Kind));
+            sfx.Play("thud");
+            camShakeField = .6f;
+            RefreshSecretHole();
+            yield return Talk(P.BrotherJoined ? "secret_hole_open" : "secret_hole_open_solo");
+            HideMessage();
+            AutoSave();
+            busy = false;
+        }
+
+        float camShakeField;
+
         void TickHoles()
         {
+            if (secretSR != null && secretSR.enabled)
+            {
+                float k = 1 + Mathf.Sin(Time.time * 3f) * .08f;
+                secretSR.transform.localScale = new Vector3(k * 1.15f, k, 1);
+                secretSR.transform.Rotate(0, 0, 0);
+            }
+            if (!busy && Current == Mode.Field && moveT < 0 && Holes.SecretOpen(P, map) && !P.Opened.Contains(Holes.AnnouncedKey(map.Kind)))
+                StartCoroutine(SecretOpenRoutine());
+            if (camShakeField > 0)
+            {
+                camShakeField = Mathf.Max(0, camShakeField - Time.deltaTime);
+                if (Settings.Flash) cam.transform.position += (Vector3)(Random.insideUnitCircle * camShakeField * .25f);
+            }
             if ((holeFxT -= Time.deltaTime) > 0 || puffSprite == null) return;
             holeFxT = .25f;
             foreach (var kv in holeViews)
@@ -125,6 +184,23 @@ namespace GirlAdventure.View
                 SpawnField(puffSprite, c, new Vector3(Random.Range(-1.2f, 1.2f), Random.Range(.6f, 1.8f)), .6f, Random.Range(.3f, .5f), new Color(.45f, .3f, .6f, .8f));
             yield return Talk("hole_monster", ("enemy", monster.Name));
             yield return BattleRoutine(monster);
+        }
+
+        // ---- 프로브용: 숨겨진 구멍
+        public bool SecretHoleShown => secretSR != null && secretSR.enabled;
+        public (int x, int y) SecretHolePos => map.SecretHole;
+        /// <summary>이 맵의 구멍을 마지막 하나만 남기고 다 들여다본 것으로 (마지막 하나는 직접 들여다보게).</summary>
+        public (int x, int y) DebugLookAllHolesButOne()
+        {
+            (int x, int y) last = (-1, -1);
+            foreach (var h in map.Holes)
+            {
+                string key = Holes.Key(map.Kind, h.x, h.y);
+                if (last.x < 0 && !P.Opened.Contains(key)) { last = h; continue; }
+                if (!P.Opened.Contains(key)) P.Opened.Add(key);
+            }
+            RefreshHoles();
+            return last;
         }
 
         /// <summary>프로브용: 0 이상이면 구멍 주사위를 이 값으로 (0 = 사탕, .99 = 괴물).</summary>

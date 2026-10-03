@@ -32,6 +32,12 @@ namespace GirlAdventure.View
             px[i] = new Color32(Ch(c.r, d.r), Ch(c.g, d.g), Ch(c.b, d.b), (byte)(oa * 255));
         }
 
+        /// <summary>모든 픽셀 색을 바꾼다 (예: 동굴 그림을 보랏빛 지하세계로).</summary>
+        public void Recolor(Func<Color32, Color32> f)
+        {
+            for (int i = 0; i < px.Length; i++) px[i] = f(px[i]);
+        }
+
         public void Rect(float x, float y, float w, float h, Color32 c)
         {
             for (int yy = Mathf.FloorToInt(y); yy < Mathf.CeilToInt(y + h); yy++)

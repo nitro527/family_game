@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
-    public enum MapKind { Field, Cave, Village, Desert, Oasis }
+    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld }
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
@@ -18,6 +18,7 @@ namespace GirlAdventure.Sim
     /// 사막 — '.' 모래  ':' 동굴 출구 앞(안전)  'R' 바위 언덕  'Y' 선인장  'g' 오아시스 풀밭  'w' 오아시스 물  'p' 야자나무
     ///        'X' 동굴 출구(챕터 2 동굴에서 나온 곳)  'F' 오아시스 샘물  'S' 표지판  'V' 오아시스 마을 입구(밟으면 마을로)
     ///        'B' 카우보이 젤리 대장 자리 (남쪽 바위 골짜기, 밟으면 보스전)
+    /// 지하세계 (숨겨진 구멍, 사용자 요청 2026-10-03) — 동굴과 같은 글자 ('#' 벽 '_' 바닥 ':' 안전 'r' 기둥 'w' 지하 호수 'F' 샘물 'S' 표지판) + 'U' 밧줄(밟으면 위로)
     /// 오아시스 마을 (✏️ 임시 이름) — '.' 모래  'R' 바위  'h' 흙벽돌 집  't' 천막(2×2)  'u' 마른 우물  'p' 야자  'M' 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// </summary>
     public class WorldMap
@@ -37,6 +38,8 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y) DesertStart = (4, 15), DesertCave = (3, 13), DesertSign = (5, 14),
                                                     Oasis = (24, 10), OasisSpring = (20, 11),
                                                     DesertBoss = (24, 20);    // 남쪽 바위 골짜기 끝: 카우보이 젤리 대장 (53)
+        // 지하세계: 밧줄(UnderExit) 바로 아래에서 시작
+        public static readonly (int x, int y) UnderExit = (5, 3), UnderStart = (5, 4), UnderSpring = (8, 3), UnderSign = (3, 6);
         // 오아시스 마을 (챕터 3, 백로그 52): 사막 오아시스 동쪽 입구(TownGate) ↔ 마을 아래쪽 출구(TownExit)
         public static readonly (int x, int y) TownGate = (32, 10), TownStart = (18, 19), TownExit = (18, 20),
                                                     TownWell = (18, 10), TownSign = (20, 18), TownShop = (12, 10);
@@ -56,14 +59,43 @@ namespace GirlAdventure.Sim
         readonly char[,] tiles = new char[W, H];
 
         public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : Kind == MapKind.Desert ? DesertStart
-                                            : Kind == MapKind.Oasis ? TownStart : CaveStart;
+                                            : Kind == MapKind.Oasis ? TownStart : Kind == MapKind.Underworld ? UnderStart : CaveStart;
         /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리, 사막은 오아시스 샘, 오아시스 마을은 마른 우물).</summary>
         public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : Kind == MapKind.Desert ? OasisSpring
-                                        : Kind == MapKind.Oasis ? TownWell : CaveSpring;
+                                        : Kind == MapKind.Oasis ? TownWell : Kind == MapKind.Underworld ? UnderSpring : CaveSpring;
         public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : Kind == MapKind.Village ? VillageSign : Kind == MapKind.Desert ? DesertSign
-                                         : Kind == MapKind.Oasis ? TownSign : CaveSign;
+                                         : Kind == MapKind.Oasis ? TownSign : Kind == MapKind.Underworld ? UnderSign : CaveSign;
         /// <summary>사탕 가게 (초원·사막 바깥에는 없다 — 마을 가게를 쓴다).</summary>
         public (int x, int y) ShopPos => Kind == MapKind.Village ? VillageShop : Kind == MapKind.Cave ? CaveShop : Kind == MapKind.Oasis ? TownShop : (-1, -1);
+        /// <summary>동굴처럼 어둡고 바위벽('#')인 맵 (동굴·지하세계): 어둠·빛·수정 그림을 같이 쓴다.</summary>
+        public bool IsCaveLike => Kind == MapKind.Cave || Kind == MapKind.Underworld;
+
+        /// <summary>
+        /// 숨겨진 구멍 자리 (초원·동굴·사막): 이 맵의 수상한 구멍을 모두 들여다보면 여기에 보랏빛 구멍이 열리고, 밟으면 지하세계로.
+        /// 없으면 (-1, -1). 타일은 그냥 바닥이고, 열렸는지는 Holes.SecretOpen.
+        /// </summary>
+        public (int x, int y) SecretHole { get; private set; } = (-1, -1);
+        static readonly (int x, int y) FieldSecretWish = (16, 15), CaveSecretWish = (17, 19), DesertSecretWish = (12, 8);
+
+        void PlaceSecretHole((int x, int y) wish, string floor)
+        {
+            for (int r = 0; r <= 4; r++)
+                for (int dy = -r; dy <= r; dy++)
+                    for (int dx = -r; dx <= r; dx++)
+                    {
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                        int x = wish.x + dx, y = wish.y + dy;
+                        if (floor.IndexOf(At(x, y)) < 0 || Safe(x, y) || Holes.Contains((x, y))) continue;
+                        bool open = true;               // 사방 중 셋 이상 바닥이어야 (구석에 숨지 않게)
+                        int n = 0;
+                        foreach (var (ax, ay) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) if (floor.IndexOf(At(x + ax, y + ay)) >= 0) n++;
+                        open = n >= 3;
+                        if (!open) continue;
+                        SecretHole = (x, y);
+                        return;
+                    }
+        }
+
         /// <summary>마을 맵 (별빛 마을·오아시스 마을): 몬스터가 없고 출구 'E' 로 나간다.</summary>
         public bool IsTown => Kind == MapKind.Village || Kind == MapKind.Oasis;
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
@@ -73,9 +105,9 @@ namespace GirlAdventure.Sim
         public static WorldMap ForChapter(int chapter) => chapter >= 3 ? Desert() : chapter == 2 ? Cave() : new WorldMap();
         /// <summary>그 챕터에 들어가 볼 마을이 있나 (챕터 1 별빛 마을, 챕터 3 오아시스 마을).</summary>
         public static bool HasTown(int chapter) => chapter <= 1 || chapter >= 3;
-        /// <summary>지금 있어야 할 맵 (마을 안이면 그 챕터의 마을).</summary>
-        public static WorldMap ForPlayer(int chapter, bool inVillage) =>
-            inVillage && chapter <= 1 ? Village() : inVillage && chapter >= 3 ? OasisTown() : ForChapter(chapter);
+        /// <summary>지금 있어야 할 맵 (지하세계 안이면 지하세계, 마을 안이면 그 챕터의 마을).</summary>
+        public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false) =>
+            underground ? Underworld() : inVillage && chapter <= 1 ? Village() : inVillage && chapter >= 3 ? OasisTown() : ForChapter(chapter);
 
         public WorldMap(int seed = 7)
         {
@@ -137,6 +169,7 @@ namespace GirlAdventure.Sim
             for (int x = 8; x <= VillageGate.x; x++) Set(x, VillageGate.y + 1, '=');
             Set(VillageGate.x, VillageGate.y, 'V');
             Holes = Sim.Holes.Place(this, (x, y) => Set(x, y, 'o'));
+            PlaceSecretHole(FieldSecretWish, ".,f");
         }
 
         /// <summary>
@@ -207,6 +240,33 @@ namespace GirlAdventure.Sim
             m.Set(CaveShop.x, CaveShop.y, 'M');
             m.Set(Chest.x, Chest.y, 'H');
             m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));
+            m.PlaceSecretHole(CaveSecretWish, "_");
+            return m;
+        }
+
+        /// <summary>
+        /// 지하세계 (사용자 요청 2026-10-03, 숨겨진 구멍 아래): 밧줄로 내려온 입구 방(안전, 샘물·표지판) → 동쪽 굴 → 지하 호수 큰 동굴
+        /// → 남쪽 큰 동굴 (서쪽 굴로 입구와 이어짐), 동쪽 끝 작은 굴. 괴물은 GameData.Under (✏️ 서진이 디자인 전 임시).
+        /// </summary>
+        public static WorldMap Underworld()
+        {
+            var m = new WorldMap(MapKind.Underworld);
+            m.Fill(0, 0, W - 1, H - 1, '#');
+            m.Fill(2, 2, 9, 7, ':');            // 입구 방 (안전)
+            m.Fill(10, 4, 14, 5, '_');          // 동쪽 굴
+            m.Fill(15, 2, 25, 9, '_');          // 지하 호수 동굴
+            m.Ellipse(20, 5, 3.2, 1.6, 'w', "_");
+            foreach (var (x, y) in new[] { (16, 8), (24, 3), (18, 2) }) m.Set(x, y, 'r');
+            m.Fill(20, 10, 21, 13, '_');        // 아래로
+            m.Fill(8, 13, 30, 20, '_');         // 남쪽 큰 동굴
+            foreach (var (x, y) in new[] { (12, 15), (18, 18), (26, 14), (29, 19), (9, 19) }) m.Set(x, y, 'r');
+            m.Fill(4, 8, 5, 16, '_');           // 입구 방 → 서쪽 굴 → 남쪽 동굴
+            m.Fill(5, 15, 8, 16, '_');
+            m.Fill(26, 6, 30, 7, '_');          // 동쪽 끝 작은 굴
+            m.Fill(31, 3, 33, 8, '_');
+            m.Set(UnderExit.x, UnderExit.y, 'U');
+            m.Set(UnderSpring.x, UnderSpring.y, 'F');
+            m.Set(UnderSign.x, UnderSign.y, 'S');
             return m;
         }
 
@@ -255,6 +315,8 @@ namespace GirlAdventure.Sim
                 m.Set(x, y, 'Y');
                 n++;
             }
+            m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));
+            m.PlaceSecretHole(DesertSecretWish, ".");
             return m;
         }
 
@@ -308,12 +370,15 @@ namespace GirlAdventure.Sim
             if (x >= 0 && y >= 0 && x < W && y < H) tiles[x, y] = c;
         }
 
-        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? (Kind == MapKind.Cave ? '#' : Kind == MapKind.Desert || Kind == MapKind.Oasis ? 'R' : 'T') : tiles[x, y];
+        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? (IsCaveLike ? '#' : Kind == MapKind.Desert || Kind == MapKind.Oasis ? 'R' : 'T') : tiles[x, y];
 
         public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0;
 
         /// <summary>밟으면 다른 맵으로 가는 칸 (초원 'V' → 마을, 마을 'E' → 초원).</summary>
         public bool IsDoorway(int x, int y) => ((Kind == MapKind.Field || Kind == MapKind.Desert) && At(x, y) == 'V') || (IsTown && At(x, y) == 'E');
+
+        /// <summary>지하세계 밧줄 칸 (밟으면 위 맵의 숨겨진 구멍으로 올라간다).</summary>
+        public bool IsRope(int x, int y) => Kind == MapKind.Underworld && At(x, y) == 'U';
 
         public double EncounterRate(int x, int y)
         {

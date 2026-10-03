@@ -22,7 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -235,7 +235,7 @@ namespace GirlAdventure.View
 
         // ------------------------------------------------------------------ 사막 (챕터 3)
         /// <summary>모래로 그리는 칸 (오아시스 풀밭·물·야자·샘물 말고 전부).</summary>
-        const string SandChars = ".:RYXSVB";
+        const string SandChars = ".:RYXSVBo";     // o = 수상한 구멍 (모래 위에 구멍 그림)
 
         /// <summary>
         /// 사막: 풀밭 바탕 → 모래 오토타일(오아시스 둘레는 풀 경계가 생긴다) → 오아시스 물 → 바위 언덕 오토타일
@@ -792,11 +792,19 @@ namespace GirlAdventure.View
         public static List<(Vector2 pos, Color color, float radius)> Lights(WorldMap m)
         {
             var list = new List<(Vector2, Color, float)>();
-            if (m.Kind != MapKind.Cave) return list;
+            if (!m.IsCaveLike) return list;
+            bool under = m.Kind == MapKind.Underworld;
             foreach (var (x, y) in CrystalSpots(m))
             {
-                bool pink = Hash(x, y, 71) < .35f;
+                bool pink = Hash(x, y, 71) < (under ? .7f : .35f);         // 지하세계는 보랏빛·분홍 수정이 더 많다
                 list.Add((new Vector2(x + .5f, y + .85f), pink ? new Color(1f, .5f, .95f) : new Color(.35f, .9f, 1f), 2.6f));
+            }
+            if (under)
+            {
+                list.Add((new Vector2(m.Spring.x + .5f, m.Spring.y + .6f), new Color(.7f, .5f, 1f), 3.2f));
+                list.Add((new Vector2(WorldMap.UnderExit.x + .5f, WorldMap.UnderExit.y + .2f), new Color(1f, .95f, .8f), 3.6f));   // 밧줄 위에서 새는 햇빛
+                list.Add((new Vector2(20.5f, 5.2f), new Color(.6f, .45f, 1f), 3.4f));                                              // 지하 호수
+                return list;
             }
             list.Add((new Vector2(WorldMap.CaveSpring.x + .5f, WorldMap.CaveSpring.y + .6f), new Color(.4f, .85f, 1f), 3.2f));
             list.Add((new Vector2(WorldMap.BaseDoor.x - .7f, WorldMap.BaseDoor.y + .4f), new Color(1f, .6f, .25f), 2.8f));   // 문 옆 횃불
@@ -903,20 +911,42 @@ namespace GirlAdventure.View
             // 수정 (절벽면에 박힌 빛나는 결정)
             foreach (var (x, y) in CrystalSpots(m)) Crystal(R, x * T + 24, y * T + T - 2, Hash(x, y, 71) < .35f, Hash(x, y, 72));
 
-            // 입구 햇빛 줄기 (왼쪽 아래)
-            for (int i = 0; i < 3; i++)
+            // 입구 햇빛 줄기 (왼쪽 아래, 챕터 2 동굴만)
+            for (int i = 0; i < (m.Kind == MapKind.Cave ? 3 : 0); i++)
             {
                 float bx = 40 + i * 70;
                 R.Polygon(new[] { new Vector2(bx, h), new Vector2(bx + 40, h), new Vector2(bx + 150, h - 300), new Vector2(bx + 120, h - 300) },
                           (px, py) => new Color32(255, 244, 210, (byte)(38 * Mathf.Clamp01((py - (h - 300)) / 300f))));
             }
 
-            Fountain(R, WorldMap.CaveSpring.x * T, WorldMap.CaveSpring.y * T, true);
-            Sign(R, WorldMap.CaveSign.x * T, WorldMap.CaveSign.y * T);
+            Fountain(R, m.Spring.x * T, m.Spring.y * T, true);
+            Sign(R, m.SignPos.x * T, m.SignPos.y * T);
+            if (m.Kind != MapKind.Cave) return R;           // 아래는 챕터 2 동굴에만 있는 것
             CandyShop(R, WorldMap.CaveShop.x * T, WorldMap.CaveShop.y * T);
             Painter.Chest(R, WorldMap.Chest.x * T, WorldMap.Chest.y * T, false);
             JellyBase(R, 23, 33, WorldMap.BaseDoor.x, WorldMap.BaseDoor.y);
             Throne(R, WorldMap.BossSpot.x * T, WorldMap.BossSpot.y * T);
+            return R;
+        }
+
+        /// <summary>
+        /// 지하세계: 동굴 그림을 보랏빛으로 물들이고(파랑·빨강을 섞어 보라 쪽으로), 입구 방 천장에서 내려온 밧줄과 새는 햇빛을 얹는다.
+        /// </summary>
+        static Raster Underworld(WorldMap m)
+        {
+            var R = Cave(m);
+            R.Recolor(c => new Color32((byte)Mathf.Min(255, c.r * .85f + c.b * .25f), (byte)(c.g * .7f), (byte)Mathf.Min(255, c.b * 1.05f + c.r * .2f), c.a));
+            float X = WorldMap.UnderExit.x * T, Y = WorldMap.UnderExit.y * T;
+            R.Ellipse(X + 24, Y + 6, 22, 10, H("#FFF4D2", 70));                 // 위에서 새는 빛
+            R.Polygon(new[] { new Vector2(X + 8, Y - 2), new Vector2(X + 40, Y - 2), new Vector2(X + 34, Y + 40), new Vector2(X + 14, Y + 40) },
+                      (px, py) => new Color32(255, 244, 210, (byte)(60 * (1 - Mathf.Clamp01((py - Y) / 44f)))));
+            for (int i = 0; i < 2; i++)                                         // 밧줄 두 가닥 + 매듭
+            {
+                float rx = X + 20 + i * 8;
+                R.Line(rx, Y - 4, rx + (i == 0 ? -1 : 1), Y + 40, 3, H("#C9A064"));
+                for (int k = 0; k < 4; k++) R.Circle(rx, Y + 6 + k * 10, 2.2f, H("#8A6A3A"));
+            }
+            R.Ellipse(X + 24, Y + 42, 14, 4, H("#3A2E4A"));
             return R;
         }
 

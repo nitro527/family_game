@@ -452,6 +452,7 @@ namespace GirlAdventure.View
         /// <summary>플레이테스트용: 사막 보스 자리 바로 위로 옮긴다 (한 걸음 아래로 가면 보스전).</summary>
         public string DebugEnemyLabel => $"{enemyLabel.text}@{enemyLabel.rectTransform.anchoredPosition} a={enemyTagGroup.alpha} appear={enemyAppear} moveP={moveP} frozen={fxFrozen} hpOn={enemyHpBar.transform.parent.gameObject.activeSelf}";
         public bool SandTwisterShown => sandTwisterSR != null && sandTwisterSR.enabled;
+        public void DebugSetUnderground(bool on) { P.Underground = on; ApplyMap(); bgm.Play(MapSong); RefreshQuestProps(); UpdatePlayerVisual(); }
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
         public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");

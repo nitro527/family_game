@@ -49,7 +49,7 @@ namespace GirlAdventure.View
             waves.Clear();
             foreach (var f in fieldFx) if (f.sr) Destroy(f.sr.gameObject);
             fieldFx.Clear();
-            bool cave = map.Kind == MapKind.Cave;
+            bool cave = map.IsCaveLike;
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
@@ -187,7 +187,7 @@ namespace GirlAdventure.View
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
             if (ambientTimer <= 0)
             {
-                if (map.Kind == MapKind.Cave)
+                if (map.IsCaveLike)
                 {
                     ambientTimer = .12f;
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
