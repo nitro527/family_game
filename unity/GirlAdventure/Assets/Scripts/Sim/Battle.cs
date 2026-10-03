@@ -54,7 +54,8 @@ namespace GirlAdventure.Sim
         public int Foe;         // 공격한 적 번호
         public bool Dodged;
         public int Damage;
-        public bool OnBrother;  // 동생 지훈이 맞았다 (아니면 서진)
+        public bool OnBrother;  // 동생 지훈이 맞았다
+        public int Ally;        // 맞은 동료 번호 (P.Companions, -1 = 서진)
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -104,12 +105,15 @@ namespace GirlAdventure.Sim
         public int EnemyHp { get => Foes[0].Hp; set => Foes[0].Hp = value; }
         public bool Boss => Foes.Exists(f => f.Def.Boss);
         public bool EnemyDown => Foes.TrueForAll(f => f.Down);
-        /// <summary>파티가 전멸했나 (혼자면 서진이 쓰러지면, 동생이 있으면 둘 다 쓰러지면 진다).</summary>
-        public bool PlayerDown => P.Hp <= 0 && (!Party || P.BroHp <= 0);
-        /// <summary>동생 지훈이 함께 싸우는 전투 (합류한 뒤).</summary>
-        public bool Party => P.BrotherJoined;
+        /// <summary>파티가 전멸했나 (서진과 동료 모두 쓰러지면 진다).</summary>
+        public bool PlayerDown => P.Hp <= 0 && P.Companions.TrueForAll(c => c.Down);
+        /// <summary>동료와 함께 싸우는 전투 (누구든 합류한 뒤).</summary>
+        public bool Party => P.Companions.Count > 0;
+        /// <summary>동료 i 가 쓰러졌나.</summary>
+        public bool AllyDown(int i) => i < 0 || i >= P.Companions.Count || P.Companions[i].Down;
+        int BroIndex => P.Companions.FindIndex(c => c.Id == Sim.Party.Brother);
         public bool SisterDown => P.Hp <= 0;
-        public bool BrotherDown => !Party || P.BroHp <= 0;
+        public bool BrotherDown => !P.BrotherJoined || P.BroHp <= 0;
         public int AliveCount => Foes.FindAll(f => !f.Down).Count;
         /// <summary>이기면 받는 경험치·골드 (무리는 합계).</summary>
         public int TotalExp { get { int n = 0; foreach (var f in Foes) n += f.Def.Exp; return n; } }
@@ -214,21 +218,33 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>동생이 이 명령을 쓸 수 있나: 검은 늘, 번개는 MP 가 있으면.</summary>
-        public bool BroCanUse(Cmd c) => Party && !BrotherDown && (c == Cmd.Slash || (c == Cmd.Bolt && P.BroMp >= GameData.Skill(c).Mp));
+        public bool BroCanUse(Cmd c) => MemberCanUse(BroIndex, c);
 
         /// <summary>동생 차례: 검 휘두르기(한 마리, 가끔 빗나감) 또는 번개(한 마리에 큰 피해, MP). 결과는 서진과 같은 PlayerOutcome.</summary>
-        public PlayerOutcome BroAct(Cmd c, int target = -1)
+        public PlayerOutcome BroAct(Cmd c, int target = -1) => MemberAct(BroIndex, c, target);
+
+        /// <summary>동료 i 가 이 명령을 쓸 수 있나: 그 동료 기술(party.json Skills)이고, 서 있고, MP 가 있으면.</summary>
+        public bool MemberCanUse(int i, Cmd c)
+        {
+            if (AllyDown(i)) return false;
+            var m = P.Companions[i];
+            return Sim.Party.Knows(m.Def, c) && m.Mp >= GameData.Skill(c).Mp;
+        }
+
+        /// <summary>동료 i 의 공격 기술 (한 마리, 기술의 빗나감·위력·스킬 레벨은 서진 주문과 같은 규칙).</summary>
+        public PlayerOutcome MemberAct(int i, Cmd c, int target = -1)
         {
             var o = new PlayerOutcome { Cmd = c, Target = -1 };
-            if (!BroCanUse(c)) { o.Failed = true; return o; }
+            if (!MemberCanUse(i, c)) { o.Failed = true; return o; }
+            var m = P.Companions[i];
             var s = GameData.Skill(c);
-            P.BroMp -= s.Mp;
+            m.Mp -= s.Mp;
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
             o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
             if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; return o; }
             o.Damages = new int[Foes.Count];
-            o.Damage = o.Damages[o.Target] = SkillLevels.Scale(P.BroAtk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
+            o.Damage = o.Damages[o.Target] = SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
             Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
             return o;
         }
@@ -237,15 +253,24 @@ namespace GirlAdventure.Sim
         public EnemyOutcome EnemyAct(int foe = -1)
         {
             if (foe < 0) foe = FirstAlive();
-            var o = new EnemyOutcome { Foe = foe };
+            var o = new EnemyOutcome { Foe = foe, Ally = -1 };
             if (foe < 0 || Foes[foe].Down) { o.Dodged = true; return o; }
-            // 동생이 있으면 서 있는 사람 중 무작위로 노린다 (혼자일 때는 주사위를 더 굴리지 않아 예전 결과 그대로)
-            if (Party && !BrotherDown) o.OnBrother = SisterDown || r.NextDouble() < .5;
-            if (r.NextDouble() < DodgeRate) { o.Dodged = true; return o; }
-            if (o.OnBrother)
+            // 서 있는 사람 중 무작위로 노린다. 혼자면 주사위를 굴리지 않고, 둘이면 예전처럼 반반 (NextDouble 한 번 — 같은 씨앗이면 같은 결과)
+            var standing = new List<int>();
+            for (int i = 0; i < P.Companions.Count; i++) if (!P.Companions[i].Down) standing.Add(i);
+            if (standing.Count > 0)
             {
-                o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.BroDef);
-                P.BroHp = Math.Max(0, P.BroHp - o.Damage);
+                if (SisterDown) o.Ally = standing.Count == 1 ? standing[0] : standing[r.Next(standing.Count)];
+                else if (standing.Count == 1) o.Ally = r.NextDouble() < .5 ? standing[0] : -1;
+                else { int k = r.Next(standing.Count + 1); o.Ally = k == standing.Count ? -1 : standing[k]; }
+            }
+            o.OnBrother = o.Ally >= 0 && P.Companions[o.Ally].Id == Sim.Party.Brother;
+            if (r.NextDouble() < DodgeRate) { o.Dodged = true; return o; }
+            if (o.Ally >= 0)
+            {
+                var m = P.Companions[o.Ally];
+                o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.DefOf(m));
+                m.Hp = Math.Max(0, m.Hp - o.Damage);
                 return o;
             }
             o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.Def);     // 방어력(장비)만큼 줄지만 최소 1

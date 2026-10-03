@@ -450,6 +450,63 @@ namespace GirlAdventure.EditorTools
             UnderworldTests();
             SaveSafetyTests();
             BroAutoTests();
+            PartyTests();
+        }
+
+        /// <summary>
+        /// 파티 구조 일반화 (PLAN_NEXT 66): party.json 지훈 = 예전 상수, 동료 목록 세이브 v13, 옛 지훈 칸 세이브 변환,
+        /// 가짜 셋째 동료로 3인 규칙 (적은 셋 중 무작위, 모두 쓰러져야 전멸, 동료 기술·장비).
+        /// </summary>
+        static void PartyTests()
+        {
+            var j = Party.Def(Party.Brother);
+            Check("party.json: jihun matches old constants", j != null && j.StartHp == PlayerState.BroStartHp && j.HpPerLevel == PlayerState.BroHpPerLevel
+                  && j.StartMp == PlayerState.BroStartMp && j.MpPerLevel == PlayerState.BroMpPerLevel && j.StartAtk == PlayerState.BroStartAtk
+                  && j.AtkPerLevel == PlayerState.BroAtkPerLevel && j.BaseDef == PlayerState.BroBaseDef && j.Art == "Boy" && j.Face == "bro_"
+                  && Party.Knows(j, Cmd.Slash) && Party.Knows(j, Cmd.Bolt) && Equipment.SlotName("bro_weapon") == "지훈 칼");
+
+            var fake = new CompanionDef { Id = "test_mom", Name = "엄마", Class = "현자", StartHp = 40, HpPerLevel = 5, StartMp = 20, MpPerLevel = 3, StartAtk = 4, AtkPerLevel = 1, BaseDef = 2,
+                                          Skills = new[] { "Slash" }, GearSlots = new[] { "test_mom_staff" }, GearNames = new[] { "지팡이" } };
+            Party.Register(fake);
+            try
+            {
+                var p = PlayerState.NewGame("p");
+                p.GainExp(PlayerState.NextExp(9));
+                p.Boss2Down = true; Quest.TryJoinBrother(p);
+                var mom = p.Join("test_mom");
+                Check("3-person party: order, stats from def, menu slots", p.Companions.Count == 2 && p.Companions[1] == mom && p.MaxHpOf(mom) == 40 + 5 * 9
+                      && mom.Hp == p.MaxHpOf(mom) && p.Join("test_mom") == mom && Equipment.MenuSlots(p).Length == 3 + 2 + 1 && Equipment.SlotName("test_mom_staff") == "엄마 지팡이");
+                var b = new BattleSystem(p, GameData.DesertBoss, new System.Random(8));
+                int sis = 0, bro = 0, m2 = 0;
+                for (int i = 0; i < 3000; i++)
+                {
+                    p.Hp = p.MaxHp; foreach (var c in p.Companions) c.Hp = p.MaxHpOf(c);
+                    var e = b.EnemyAct(0);
+                    if (e.Ally < 0) sis++; else if (e.Ally == 0) bro++; else m2++;
+                }
+                Check("3-person: enemy targets all three", sis > 800 && bro > 800 && m2 > 800, $"{sis}/{bro}/{m2}");
+                p.Hp = 0; p.BroHp = 0; mom.Hp = 5;
+                bool notYet = !b.PlayerDown;
+                var hit = b.EnemyAct(0);
+                mom.Hp = 0;
+                Check("3-person: only the last one standing is hit, defeat when all down", notYet && (hit.Dodged || hit.Ally == 1) && b.PlayerDown);
+                p.Revive();
+                var act = b.MemberAct(1, Cmd.Slash, 0);
+                Check("companion act uses its own skills", !act.Failed && !b.MemberCanUse(1, Cmd.Bolt) && b.MemberCanUse(0, Cmd.Bolt));
+
+                // 세이브 v13: 동료 목록 순서·HP 그대로, 모르는 동료는 버림
+                mom.Hp = 7; p.BroHp = 9;
+                var sd = p.ToSave();
+                var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(sd)));
+                Check("party saved (v13): order + hp", SaveData.CurrentVersion >= 13 && back.Companions.Count == 2 && back.Companions[0].Id == Party.Brother
+                      && back.Companions[1].Id == "test_mom" && back.Member("test_mom").Hp == 7 && back.BroHp == 9);
+                sd.Party = new[] { "jihun:5:1", "nobody:3:3", "jihun:9:9", "bad" };
+                var odd = PlayerState.FromSave(sd);
+                Check("party load: unknown/duplicate/bad entries dropped", odd.Companions.Count == 1 && odd.BroHp == 5);
+            }
+            finally { Party.Unregister("test_mom"); }
+            var legacy = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":12,\"Name\":\"a\",\"Lv\":9,\"Chapter\":2,\"X\":4,\"Y\":20,\"BrotherJoined\":true,\"BroHp\":11,\"BroMp\":2}"));
+            Check("legacy brother fields → companion list", legacy.Companions.Count == 1 && legacy.BrotherJoined && legacy.BroHp == 11 && legacy.BroMp == 2);
         }
 
         /// <summary>지훈 자동 공격 (PLAN_NEXT 71): 보스엔 번개(MP 있으면), 보통 적엔 검, 가장 약한 적부터.</summary>
@@ -502,6 +559,7 @@ namespace GirlAdventure.EditorTools
                 (8, "{\"Version\":8,\"Name\":\"a\",\"Lv\":7,\"Exp\":150,\"Hp\":50,\"Mp\":20,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":2,\"BossDown\":true,\"Seen\":[\"파랑 젤리\",\"없는 젤리\"],\"Beaten\":[\"파랑 젤리\"]}"),
                 (9, "{\"Version\":9,\"Name\":\"a\",\"Lv\":9,\"Exp\":240,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":28,\"Y\":3,\"Chapter\":2,\"BossDown\":true,\"Boss2Down\":true,\"GuardDown\":true,\"BrotherJoined\":true,\"BroHp\":0,\"BroMp\":5}"),
                 (10, "{\"Version\":10,\"Name\":\"a\",\"Lv\":11,\"Exp\":340,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":4,\"Y\":15,\"Chapter\":3,\"BossDown\":true,\"Boss2Down\":true,\"Boss3Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5}"),
+                (12, "{\"Version\":12,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":20,\"Y\":16,\"Chapter\":3,\"Underground\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":40,\"BroMp\":3}"),
                 (11, "{\"Version\":11,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":18,\"Y\":17,\"Chapter\":3,\"InVillage\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5,\"SkillUses\":[\"Fire:31\",\"Bolt:2\"]}"),
             };
             string bad = "";

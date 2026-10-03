@@ -132,7 +132,7 @@ namespace GirlAdventure.Sim
             {
                 items[it.Id] = it;
                 if (it.Kind == "use") consumables.Add(it);
-                else if (Array.IndexOf(Equipment.Slots, it.Kind) >= 0 || Equipment.IsBroSlot(it.Kind)) gear.Add(it);      // 서진 장비 + 지훈 장비
+                else if (Array.IndexOf(Equipment.Slots, it.Kind) >= 0 || Equipment.IsCompanionSlot(it.Kind)) gear.Add(it);      // 서진 장비 + 동료 장비 (party.json)
             }
             Normal = enemies.Normal;
             King = enemies.Boss;

@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 12;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도, 12: 지하세계
+        public const int CurrentVersion = 13;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도, 12: 지하세계, 13: 파티(동료 목록)
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -21,8 +21,9 @@ namespace GirlAdventure.Sim
         public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
         public string[] Gear, Equipped; // 가진 장비 id, 장착한 장비 id
         public string[] Seen, Beaten;   // 버전 8: 도감 — 만난/쓰러뜨린 적 이름
-        public bool BrotherJoined;      // 버전 9: 동생 지훈 합류
+        public bool BrotherJoined;      // 버전 9: 동생 지훈 합류 (버전 13 부터는 Party 가 기준, 옛 버전 호환으로 계속 씀)
         public int BroHp, BroMp;
+        public string[] Party;          // 버전 13: 동료 "id:hp:mp" (합류한 순서)
         public string[] SkillUses;      // 버전 11: 스킬 숙련도 "Fire:12"
         public bool Underground;        // 버전 12: 지하세계 안에서 저장 (X, Y 는 지하세계 좌표)
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
@@ -68,36 +69,61 @@ namespace GirlAdventure.Sim
         /// <summary>스킬 숙련도 (Cmd 이름 → 쓴 횟수, SkillLevels).</summary>
         public Dictionary<string, int> SkillUses = new Dictionary<string, int>();
 
-        // 동생 지훈 (공격형 꼬마 용사, 백로그 48): 레벨은 누나와 같이 오른다 (경험치 공유). 능력치는 레벨에서 계산
+        // ---- 동료 (PLAN_NEXT 66): 서진 + 동료 목록. 정의는 party.json (Sim.Party), 레벨은 서진과 같이 오른다 (경험치 공유)
+        /// <summary>지훈 기본 능력치 (party.json 이 없을 때 쓰는 값 — 데이터와 같아야 한다, SmokeTest 가 확인).</summary>
         public const int BroStartHp = 30, BroHpPerLevel = 7, BroStartMp = 4, BroMpPerLevel = 1, BroStartAtk = 7, BroAtkPerLevel = 3, BroBaseDef = 1;
-        public bool BrotherJoined;
-        public int BroHp, BroMp;
-        public int BroMaxHp => BroStartHp + BroHpPerLevel * (Lv - 1);
-        public int BroMaxMp => BroStartMp + BroMpPerLevel * (Lv - 1);
-        /// <summary>지훈 공격력 = 레벨 + 지훈 칼. 방어력 = 나무 방패 1 + 지훈 방패 (장비는 오아시스 마을 가게).</summary>
-        public int BroAtk => BroStartAtk + BroAtkPerLevel * (Lv - 1) + Equipment.BroAtkBonus(this);
-        public int BroDef => BroBaseDef + Equipment.BroDefBonus(this);
+        /// <summary>합류한 동료 (합류한 순서 = 전투 차례·대열 순서).</summary>
+        public readonly List<Companion> Companions = new List<Companion>();
 
-        /// <summary>동생 합류: 가득 찬 HP·MP 로.</summary>
-        public void JoinBrother()
+        public Companion Member(string id) => Companions.Find(c => c.Id == id);
+        public bool Has(string id) => Member(id) != null;
+        public int MaxHpOf(Companion c) => c.Def.StartHp + c.Def.HpPerLevel * (Lv - 1);
+        public int MaxMpOf(Companion c) => c.Def.StartMp + c.Def.MpPerLevel * (Lv - 1);
+        /// <summary>동료 공격력 = 레벨 + 그 동료 장비. 방어력 = 기본 + 그 동료 장비.</summary>
+        public int AtkOf(Companion c) => c.Def.StartAtk + c.Def.AtkPerLevel * (Lv - 1) + Equipment.CompanionBonus(this, c.Def, true);
+        public int DefOf(Companion c) => c.Def.BaseDef + Equipment.CompanionBonus(this, c.Def, false);
+
+        /// <summary>동료 합류 (이미 있으면 아무것도 안 함): 가득 찬 HP·MP 로, 목록 끝에.</summary>
+        public Companion Join(string id)
         {
-            BrotherJoined = true;
-            BroHp = BroMaxHp;
-            BroMp = BroMaxMp;
+            var have = Member(id);
+            if (have != null) return have;
+            var def = Sim.Party.Def(id);
+            if (def == null) return null;
+            var c = new Companion(def);
+            Companions.Add(c);
+            c.Hp = MaxHpOf(c);
+            c.Mp = MaxMpOf(c);
+            return c;
         }
 
-        /// <summary>전투에서 이겼을 때 쓰러져 있던 사람은 HP 1 로 일어난다 (둘이 싸우다 한 명만 쓰러진 경우).</summary>
+        void FillCompanions() { foreach (var c in Companions) { c.Hp = MaxHpOf(c); c.Mp = MaxMpOf(c); } }
+
+        // ---- 지훈 (예전 이름 그대로 — 화면·테스트가 쓰는 통로. 속은 동료 목록의 "jihun")
+        Companion Bro => Member(Sim.Party.Brother);
+        public bool BrotherJoined => Bro != null;
+        public int BroHp { get => Bro?.Hp ?? 0; set { var b = Bro; if (b != null) b.Hp = value; } }
+        public int BroMp { get => Bro?.Mp ?? 0; set { var b = Bro; if (b != null) b.Mp = value; } }
+        public int BroMaxHp => Bro != null ? MaxHpOf(Bro) : BroStartHp + BroHpPerLevel * (Lv - 1);
+        public int BroMaxMp => Bro != null ? MaxMpOf(Bro) : BroStartMp + BroMpPerLevel * (Lv - 1);
+        public int BroAtk => Bro != null ? AtkOf(Bro) : BroStartAtk + BroAtkPerLevel * (Lv - 1);
+        public int BroDef => Bro != null ? DefOf(Bro) : BroBaseDef;
+
+        /// <summary>동생 합류: 가득 찬 HP·MP 로.</summary>
+        public void JoinBrother() => Join(Sim.Party.Brother);
+
+        /// <summary>전투에서 이겼을 때 쓰러져 있던 사람은 HP 1 로 일어난다 (한 명만 쓰러진 경우).</summary>
         public void WakeUpAfterBattle()
         {
             if (Hp <= 0) Hp = 1;
-            if (BrotherJoined && BroHp <= 0) BroHp = 1;
+            foreach (var c in Companions) if (c.Hp <= 0) c.Hp = 1;
         }
 
-        /// <summary>전멸하고 샘물에서 다시 일어날 때: 둘 다 HP·MP 가득 (사탕·골드는 그대로).</summary>
+        /// <summary>전멸하고 샘물에서 다시 일어날 때: 모두 HP·MP 가득 (사탕·골드는 그대로).</summary>
         public void Revive()
         {
             Hp = MaxHp; Mp = MaxMp;
-            if (BrotherJoined) { BroHp = BroMaxHp; BroMp = BroMaxMp; }
+            FillCompanions();
         }
 
         public bool HasItem(string id) => Items.Contains(id);
@@ -154,7 +180,7 @@ namespace GirlAdventure.Sim
                 BaseAtk += AtkPerLevel;
                 Hp = MaxHp;
                 Mp = MaxMp;
-                if (BrotherJoined) { BroHp = BroMaxHp; BroMp = BroMaxMp; }   // 레벨업하면 동생도 가득
+                FillCompanions();               // 레벨업하면 동료도 가득
                 ups++;
             }
             return ups;
@@ -166,7 +192,8 @@ namespace GirlAdventure.Sim
             Chapter = Chapter, InVillage = InVillage, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
             Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),
-            BrotherJoined = BrotherJoined, BroHp = BroHp, BroMp = BroMp,
+            BrotherJoined = BrotherJoined, BroHp = BroHp, BroMp = BroMp,     // 옛 버전 게임에서 열어도 지훈은 있게
+            Party = Companions.ConvertAll(c => $"{c.Id}:{c.Hp}:{c.Mp}").ToArray(),
             SkillUses = SkillEntries(),
             Underground = Underground,
         };
@@ -234,11 +261,23 @@ namespace GirlAdventure.Sim
                 }
             Bestiary.Load(p.Seen, s.Seen);     // 옛 세이브(버전 7 이하)는 빈 도감
             Bestiary.Load(p.Beaten, s.Beaten);
-            if (s.BrotherJoined)                // 옛 세이브(버전 8 이하)는 합류 전
+            // 동료: 버전 13 은 Party 목록, 그 전(9~12)은 지훈 칸. 모르는 동료·중복은 버리고, HP 0 이하면 가득
+            var entries = new List<(string id, int hp, int mp)>();
+            if (s.Party != null && s.Party.Length > 0)
+                foreach (var e in s.Party)
+                {
+                    var parts = e?.Split(':');
+                    if (parts == null || parts.Length != 3 || !int.TryParse(parts[1], out int hp) || !int.TryParse(parts[2], out int mp)) continue;
+                    entries.Add((parts[0], hp, mp));
+                }
+            else if (s.BrotherJoined) entries.Add((Sim.Party.Brother, s.BroHp, s.BroMp));     // 옛 세이브(버전 8 이하)는 합류 전
+            foreach (var (id, hp, mp) in entries)
             {
-                p.BrotherJoined = true;
-                p.BroHp = s.BroHp <= 0 ? p.BroMaxHp : Math.Min(s.BroHp, p.BroMaxHp);
-                p.BroMp = Math.Max(0, Math.Min(s.BroMp, p.BroMaxMp));
+                if (p.Has(id)) continue;
+                var c = p.Join(id);
+                if (c == null) continue;
+                c.Hp = hp <= 0 ? p.MaxHpOf(c) : Math.Min(hp, p.MaxHpOf(c));
+                c.Mp = Math.Max(0, Math.Min(mp, p.MaxMpOf(c)));
             }
             p.InVillage = s.InVillage && WorldMap.HasTown(p.Chapter);
             p.Underground = s.Underground;
@@ -259,7 +298,7 @@ namespace GirlAdventure.Sim
             Hp = MaxHp;
             Mp = MaxMp;
             Candy = Math.Max(Candy, MaxCandy);
-            if (BrotherJoined) { BroHp = BroMaxHp; BroMp = BroMaxMp; }
+            FillCompanions();
         }
 
         public void GainGold(int amount) => Gold = Math.Max(0, Math.Min(MaxGold, Gold + amount));

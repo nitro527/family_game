@@ -10,31 +10,44 @@ namespace GirlAdventure.Sim
     public static class Equipment
     {
         public static readonly string[] Slots = { "weapon", "armor", "acc" };
-        /// <summary>동생 지훈 장비 (백로그 52, 오아시스 마을 가게): 칼·방패. 서진 장비와 같은 Equipped 표에 부위 이름만 다르게.</summary>
-        public static readonly string[] BroSlots = { "bro_weapon", "bro_shield" };
+        /// <summary>동생 지훈 장비 (백로그 52, 오아시스 마을 가게): 칼·방패. 동료 장비 부위는 party.json GearSlots (서진 장비와 같은 Equipped 표).</summary>
+        public static string[] BroSlots => Party.Def(Party.Brother)?.GearSlots ?? new string[0];
 
-        public static string SlotName(string slot) => slot == "weapon" ? "무기" : slot == "armor" ? "옷" : slot == "bro_weapon" ? "지훈 칼" : slot == "bro_shield" ? "지훈 방패" : "장신구";
+        /// <summary>부위 이름: 서진은 무기·옷·장신구, 동료는 "지훈 칼"처럼 이름 + party.json GearNames.</summary>
+        public static string SlotName(string slot)
+        {
+            if (slot == "weapon") return "무기";
+            if (slot == "armor") return "옷";
+            if (slot == "acc") return "장신구";
+            var d = Party.OwnerOfSlot(slot);
+            if (d == null) return slot;
+            int i = System.Array.IndexOf(d.GearSlots, slot);
+            return d.Name + " " + (d.GearNames != null && i < d.GearNames.Length ? d.GearNames[i] : slot);
+        }
 
-        public static bool IsBroSlot(string slot) => System.Array.IndexOf(BroSlots, slot) >= 0;
+        /// <summary>동료 장비 부위인가 (party.json 의 어느 동료든).</summary>
+        public static bool IsCompanionSlot(string slot) => Party.OwnerOfSlot(slot) != null;
+        public static bool IsBroSlot(string slot) => IsCompanionSlot(slot);
 
-        /// <summary>장비 바꾸기 메뉴의 부위: 서진 3칸 + (합류했으면) 지훈 2칸.</summary>
+        /// <summary>장비 바꾸기 메뉴의 부위: 서진 3칸 + 합류한 동료마다 그 동료 칸.</summary>
         public static string[] MenuSlots(PlayerState p)
         {
-            if (!p.BrotherJoined) return Slots;
-            var all = new string[Slots.Length + BroSlots.Length];
-            Slots.CopyTo(all, 0);
-            BroSlots.CopyTo(all, Slots.Length);
-            return all;
+            var all = new List<string>(Slots);
+            foreach (var c in p.Companions) if (c.Def.GearSlots != null) all.AddRange(c.Def.GearSlots);
+            return all.ToArray();
         }
 
         public static bool IsGear(string id)
         {
             var d = GameData.Item(id);
-            return d != null && (System.Array.IndexOf(Slots, d.Kind) >= 0 || IsBroSlot(d.Kind));
+            return d != null && (System.Array.IndexOf(Slots, d.Kind) >= 0 || IsCompanionSlot(d.Kind));
         }
 
-        /// <summary>지훈 장비인가.</summary>
-        public static bool ForBrother(string id) => IsGear(id) && IsBroSlot(GameData.Item(id).Kind);
+        /// <summary>동료 장비인가 (지훈 칼처럼).</summary>
+        public static bool ForBrother(string id) => IsGear(id) && IsCompanionSlot(GameData.Item(id).Kind);
+
+        /// <summary>이 장비를 쓰는 동료 정의 (서진 장비면 null).</summary>
+        public static CompanionDef OwnerOf(string id) => IsGear(id) ? Party.OwnerOfSlot(GameData.Item(id).Kind) : null;
 
         /// <summary>가진 장비를 장착한다 (같은 부위에 있던 것은 벗는다). 안 가진 것이면 false.</summary>
         public static bool Equip(PlayerState p, string id)
@@ -60,17 +73,22 @@ namespace GirlAdventure.Sim
             return list;
         }
 
-        public static int AtkBonus(PlayerState p) => Sum(p, true, false);
-        public static int DefBonus(PlayerState p) => Sum(p, false, false);
-        public static int BroAtkBonus(PlayerState p) => Sum(p, true, true);
-        public static int BroDefBonus(PlayerState p) => Sum(p, false, true);
+        /// <summary>서진 장비 합 (서진 부위만).</summary>
+        public static int AtkBonus(PlayerState p) => Sum(p, true, null);
+        public static int DefBonus(PlayerState p) => Sum(p, false, null);
+        public static int BroAtkBonus(PlayerState p) => CompanionBonus(p, Party.Def(Party.Brother), true);
+        public static int BroDefBonus(PlayerState p) => CompanionBonus(p, Party.Def(Party.Brother), false);
+        /// <summary>그 동료 부위에 낀 장비 합.</summary>
+        public static int CompanionBonus(PlayerState p, CompanionDef d, bool atk) => d == null ? 0 : Sum(p, atk, d);
 
-        static int Sum(PlayerState p, bool atk, bool bro)
+        /// <summary>owner 가 null 이면 서진 부위, 아니면 그 동료 부위의 장비 합.</summary>
+        static int Sum(PlayerState p, bool atk, CompanionDef owner)
         {
             int s = 0;
             foreach (var kv in p.Equipped)
             {
-                if (IsBroSlot(kv.Key) != bro) continue;
+                bool mine = owner == null ? System.Array.IndexOf(Slots, kv.Key) >= 0 : owner.GearSlots != null && System.Array.IndexOf(owner.GearSlots, kv.Key) >= 0;
+                if (!mine) continue;
                 var d = GameData.Item(kv.Value);
                 if (d != null) s += atk ? d.Atk : d.Def;
             }

@@ -9,6 +9,7 @@ namespace GirlAdventure.View
         public static void Load(bool force = false)
         {
             if (GameData.Loaded && !force) return;
+            Party.Set(Read<PartyTable>("party"));      // 동료 장비 부위를 알아야 items.json 장비를 고를 수 있어 GameData 보다 먼저
             GameData.Set(
                 Read<EnemyTable>("enemies"),
                 Read<SkillTable>("skills"),
