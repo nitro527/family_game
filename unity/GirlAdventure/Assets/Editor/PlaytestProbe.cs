@@ -1087,6 +1087,37 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Expect("left the town to the desert gate", G.MapKindNow == MapKind.Desert && !G.P.InVillage && G.P.X == WorldMap.TownGate.x - 1 && G.P.Y == WorldMap.TownGate.y);
             ExpectBgm("desert");
+
+            // 사막 보스 (백로그 53): 골짜기 모래 회오리 → 카우보이 젤리 대장 → 물이 돌아옴 → 챕터 3 완료 → 마을 우물에 물
+            G.DebugMobs(true, true);
+            G.DebugNearDesertBoss();
+            yield return 1.0f;
+            Shot("desert_boss_swirl");
+            Expect("sand twister marks the boss canyon", G.SandTwisterShown);
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
+            yield return .4f;
+            Shot("boss3_battle");
+            Log("LABEL " + G.DebugEnemyLabel);
+            Expect("desert boss battle", G.BattleEnemy == GameData.DesertBoss && G.BattleBackdropName == "desert_boss", G.BattleBackdropName);
+            ExpectBgm("boss");
+            G.DebugSetEnemyHp(25);                     // 흐름만 확인 (난이도는 SmokeTest [BALANCE BOSS3])
+            foreach (var x in FightUntilOver(true)) yield return x;
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("물길이 다시") || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .6f;
+            Shot("ch3_water_back");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return 1.2f;
+            Shot("ch3_clear");
+            Expect("chapter 3 cleared (no next chapter yet)", G.P.Boss3Down && G.Current == GameRoot.Mode.Ending && G.EndingHead.Contains("챕터 3") && G.NextChapterLabel == "", G.EndingHead);
+            ExpectBgm("ending");
+            G.DebugBackToField();
+            G.DebugSetVillage(true);
+            G.DebugMobs(true, true);
+            G.DebugTeleport(WorldMap.TownWell.x, WorldMap.TownWell.y + 2, "up");
+            yield return .8f;
+            Shot("town_well_water");
+            Expect("town well has water again", G.MapKindNow == MapKind.Oasis && G.WellWaterShown && !G.SandTwisterShown);
         }
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>

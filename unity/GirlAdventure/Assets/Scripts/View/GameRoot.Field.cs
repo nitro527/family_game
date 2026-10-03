@@ -14,7 +14,7 @@ namespace GirlAdventure.View
         const float StepTime = .17f, FieldCharHeight = 1.75f, MobHeight = 1.15f;
 
         Transform fieldRoot;
-        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR;
+        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR, wellWaterSR, sandTwisterSR;
         const float GuardHeight = 1.6f;         // 보물상자 지킴이는 보통 젤리보다 크게
         Sprite[] sideFrames;
         Sprite[] frontFrames, backFrames;       // 앞/뒤 걷기: 한 발 → 두 발 모음 → 반대 발 → 두 발 모음 (tools/make_walk_frames.py)
@@ -97,6 +97,15 @@ namespace GirlAdventure.View
             broBack = Art.Get("Boy/walk_back", bh);
 
             chestOpenSR = Prop("ChestOpen", Painter.ChestTexture(true), WorldMap.Chest);
+            wellWaterSR = Prop("WellWater", MapPainter.WellWaterTexture(), WorldMap.TownWell);
+            // 남쪽 바위 골짜기의 모래 회오리: PIPOYA 시트 (7,1) 회오리 그림 (대장을 이기면 사라진다)
+            sandTwisterSR = new GameObject("SandTwister").AddComponent<SpriteRenderer>();
+            sandTwisterSR.transform.SetParent(fieldRoot, false);
+            var sheet = Resources.Load<Texture2D>("Tiles/pipo_sheet");
+            if (sheet != null)
+                sandTwisterSR.sprite = Sprite.Create(sheet, new Rect(7 * Painter.Tile, sheet.height - 2 * Painter.Tile, Painter.Tile, Painter.Tile), new Vector2(.5f, .05f), Painter.Tile / 1.8f);
+            sandTwisterSR.sortingOrder = 2;
+            sandTwisterSR.enabled = false;
             doorOpenSR = Prop("DoorOpen", MapPainter.OpenDoorTexture(), (WorldMap.BaseDoor.x, WorldMap.BaseDoor.y - 1));
             BuildFieldFx();
             BuildLighting();
@@ -150,6 +159,8 @@ namespace GirlAdventure.View
             RefreshHoles();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
+            wellWaterSR.enabled = map.Kind == MapKind.Oasis && P.Boss3Down;      // 사막 보스를 이기면 마른 우물에 물이 찬다
+            sandTwisterSR.enabled = map.Kind == MapKind.Desert && !P.Boss3Down && sandTwisterSR.sprite != null;
             bool guard = cave && Quest.GuardAlive(P);
             if (guard && guardSR == null)
             {
@@ -567,6 +578,7 @@ namespace GirlAdventure.View
             char here = map.At(P.X, P.Y);
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
+            if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }
             if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(!map.IsTown)); return; }
             var mob = mobs.At(P.X, P.Y);
             if (mob != null && mobs.Grace <= 0) StartMobBattle(mob);
@@ -737,6 +749,13 @@ namespace GirlAdventure.View
             busy = true;
             yield return Talk("boss2_meet");
             yield return BattleRoutine(GameData.General);
+        }
+
+        IEnumerator Boss3Routine()
+        {
+            busy = true;
+            yield return Talk("boss3_meet");
+            yield return BattleRoutine(GameData.DesertBoss);
         }
     }
 }

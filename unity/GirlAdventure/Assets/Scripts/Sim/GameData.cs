@@ -14,6 +14,7 @@ namespace GirlAdventure.Sim
         public EnemyDef[] Desert;       // 사막 (챕터 3)
         public EnemyDef Guard;          // 바위 대장 젤리 (챕터 2 중간 보스, 보물상자 지킴이)
         public EnemyDef General;        // 젤리 장군
+        public EnemyDef DesertBoss;     // 카우보이 젤리 대장 (챕터 3 보스)
     }
 
     /// <summary>명령 하나의 수치. 피해 = Atk × AtkMul + Bonus + (0 ~ Rand-1).</summary>
@@ -102,6 +103,7 @@ namespace GirlAdventure.Sim
         static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : MapKind.Field;
         public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
+        public static EnemyDef DesertBoss { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
         static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
@@ -131,6 +133,8 @@ namespace GirlAdventure.Sim
             Guard.Boss = true;
             General = enemies.General;
             General.Boss = true;
+            DesertBoss = enemies.DesertBoss;
+            if (DesertBoss != null) DesertBoss.Boss = true;
             skills.Clear();
             foreach (var s in skillTable.Skills)
                 skills[(Cmd)Enum.Parse(typeof(Cmd), s.Cmd)] = s;
@@ -160,6 +164,7 @@ namespace GirlAdventure.Sim
             yield return Guard;
             yield return General;
             foreach (var d in Desert) yield return d;
+            if (DesertBoss != null) yield return DesertBoss;
         }
 
         /// <summary>

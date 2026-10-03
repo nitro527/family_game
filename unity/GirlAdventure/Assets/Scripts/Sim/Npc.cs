@@ -13,7 +13,7 @@ namespace GirlAdventure.Sim
     public class NpcTalk
     {
         /// <summary>조건: 쉼표로 여러 개(모두 맞아야 함), 앞에 '!' 면 반대.
-        /// boss(킹 젤리) boss2(젤리 장군) guard(바위 대장) key(기지 열쇠 가짐) door(기지 문 열림) chN(챕터 N 이상) lvN(레벨 N 이상)</summary>
+        /// boss(킹 젤리) boss2(젤리 장군) boss3(카우보이 젤리 대장) guard(바위 대장) key(기지 열쇠 가짐) door(기지 문 열림) chN(챕터 N 이상) lvN(레벨 N 이상)</summary>
         public string If;
         public string Talk;
     }
@@ -91,6 +91,7 @@ namespace GirlAdventure.Sim
             {
                 case "boss": return p.BossDown;
                 case "boss2": return p.Boss2Down;
+                case "boss3": return p.Boss3Down;
                 case "guard": return p.GuardDown;
                 case "key": return p.HasItem(Quest.KeyItem);
                 case "door": return Quest.DoorOpen(p);

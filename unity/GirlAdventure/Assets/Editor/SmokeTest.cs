@@ -437,6 +437,47 @@ namespace GirlAdventure.EditorTools
             Check("brother gear + town position saved", q.BroAtk == p.BroAtk && q.BroDef == p.BroDef && q.InVillage && q.X == p.X && q.Y == p.Y);
             p.BroHp = 1; p.Hp = 1;
             Check("inn heals brother too", Inn.Stay(p) && p.BroHp == p.BroMaxHp && p.Hp == p.MaxHp);
+            Boss3Tests();
+        }
+
+        /// <summary>사막 보스 (백로그 53): 골짜기 자리, 세이브 v10, 이긴 뒤 마을 사람 대사, 2인 밸런스.</summary>
+        static void Boss3Tests()
+        {
+            var m = WorldMap.Desert();
+            var b = WorldMap.DesertBoss;
+            var reach = Reach(m, WorldMap.DesertStart);
+            var boss = GameData.DesertBoss;
+            Check("desert boss: tile reachable, data (boss, art, backdrop)", m.At(b.x, b.y) == 'B' && !m.Blocked(b.x, b.y) && reach[b.x, b.y]
+                  && boss != null && boss.Boss && boss.Art == "desert_cowboy" && boss.Backdrop == "desert_boss" && m.EncounterRate(b.x, b.y) == 0);
+            var p = PlayerState.NewGame("t");
+            p.GainExp(PlayerState.NextExp(10));
+            p.Boss2Down = true; Quest.StartChapter3(p);
+            Check("boss3 word false before", Npcs.Holds("boss3", p) == false && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.Oasis)).Find(n => n.Id == "elder"), p) == "npc_elder");
+            p.Boss3Down = true;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            Check("boss3 saved (v10), elder thanks", SaveData.CurrentVersion == 10 && q.Boss3Down
+                  && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.Oasis)).Find(n => n.Id == "elder"), q) == "npc_elder_end");
+
+            // 2인 밸런스: 장비(태양 지팡이·모래바람 망토·지훈 칼·방패) Lv12 이면 거의 이기고, 장비 없는 Lv11 은 더 어렵다
+            float Win(int lv, bool gear)
+            {
+                var r = new System.Random(123);
+                int wins = 0;
+                for (int run = 0; run < 400; run++)
+                {
+                    var d = PlayerState.NewGame("d");
+                    d.GainExp(PlayerState.NextExp(lv - 1));
+                    d.Boss2Down = true; Quest.TryJoinBrother(d);
+                    if (gear)
+                        foreach (var id in new[] { "sun_wand", "sand_cape", "bro_sword", "bro_shield" }) { d.Gear.Add(id); Equipment.Equip(d, id); }
+                    d.Candy = 5;
+                    if (FightDuo(d, boss, r)) wins++;
+                }
+                return wins / 400f;
+            }
+            float g12 = Win(12, true), n11 = Win(11, false), g11 = Win(11, true);
+            Debug.Log($"[BALANCE BOSS3] Lv12+gear={g12:P1} Lv11+gear={g11:P1} Lv11 no gear={n11:P1}");
+            Check("desert boss balance (장비 사면 이긴다: Lv12+gear ≥95%, Lv11+gear ≥80%, 장비 없으면 어렵다 <70%)", g12 >= .95f && g11 >= .8f && n11 < .7f, $"g12 {g12:P1} g11 {g11:P1} n11 {n11:P1}");
         }
 
         /// <summary>BFS: from 에서 걸어서 닿는 칸.</summary>

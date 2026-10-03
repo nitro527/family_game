@@ -18,6 +18,7 @@
     { "Name": "선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 95, "Atk": 18, "Exp": 25, "Gold": 16, "Move": "shard", "Attack": "가시 따끔 발사", "Art": "desert_cactus", "Desc": "가시가 따끔따끔. 머리에 분홍 꽃이 피었어요." },
     { "Name": "큰 선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 150, "Atk": 21, "Exp": 40, "Gold": 30, "Move": "shard", "Attack": "왕가시 따끔따끔 발사", "Tier": 2, "Art": "desert_cactus", "Desc": "선인장 젤리가 크게 자란 2단 젤리. 가시가 더 길어요." }
   ],
+  "DesertBoss": { "Name": "카우보이 젤리 대장", "Color": "#E8A860", "Dark": "#B06A30", "Hp": 820, "Atk": 28, "Exp": 200, "Gold": 250, "Boss": true, "Move": "spin", "Attack": "회오리 올가미 모래바람", "Backdrop": "desert_boss", "Art": "desert_cowboy", "Desc": "올가미를 빙빙 돌려 모래바람을 일으키는 사막의 대장 젤리. 오아시스 물을 혼자 다 가지려 했어요." },
   "Guard": { "Name": "바위 대장 젤리", "Color": "#8C7B6B", "Dark": "#54483E", "Hp": 170, "Atk": 13, "Exp": 45, "Gold": 40, "Boss": true, "Move": "slam", "Attack": "바위 굴리기", "Look": "rock", "Backdrop": "cave_guard", "Desc": "젤리 장군의 보물상자를 지키는 바위 같은 젤리. 쿵쿵!" },
   "General": { "Name": "젤리 장군", "Color": "#FF9A3C", "Dark": "#C0602A", "Hp": 240, "Atk": 13, "Exp": 120, "Gold": 150, "Boss": true, "Move": "charge", "Attack": "돌격", "Look": "general", "Backdrop": "cave_boss", "Desc": "동굴 젤리 기지의 대장. 뿔 투구를 쓰고 돌격해요." }
 }

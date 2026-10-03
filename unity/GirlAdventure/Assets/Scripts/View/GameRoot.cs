@@ -187,6 +187,19 @@ namespace GirlAdventure.View
             sfx.Play("lvup");
         }
 
+        /// <summary>챕터 3 끝 (백로그 53): 물이 돌아오는 대사 → 화면이 하얗게 번쩍 → 챕터 3 완료 카드.</summary>
+        IEnumerator Chapter3ClearRoutine()
+        {
+            yield return Talk("ch3_clear");
+            yield return Flash(.6f);
+            HideMessage();
+            AutoSave();
+            Current = Mode.Ending;
+            ShowEnding();
+            bgm.Play("ending");
+            sfx.Play("lvup");
+        }
+
         /// <summary>
         /// 동생 지훈 합류 (백로그 49): 철창에서 구해 주는 대사 → "용사 지훈 합류!" 컷인 → 동료가 되었다.
         /// late 는 옛 세이브(이미 보스를 이김)를 이어할 때: 짧은 대사만.
@@ -435,6 +448,13 @@ namespace GirlAdventure.View
         public string NextChapterLabel => nextChapterBtn != null && nextChapterBtn.gameObject.activeSelf ? nextChapterBtn.GetComponentInChildren<UnityEngine.UI.Text>().text : "";
         public string BattleBackdropName => bgSR != null && bgSR.sprite != null ? bgSR.sprite.texture.name : "";
         public MapKind MapKindNow => map.Kind;
+
+        /// <summary>플레이테스트용: 사막 보스 자리 바로 위로 옮긴다 (한 걸음 아래로 가면 보스전).</summary>
+        public string DebugEnemyLabel => $"{enemyLabel.text}@{enemyLabel.rectTransform.anchoredPosition} a={enemyTagGroup.alpha} appear={enemyAppear} moveP={moveP} frozen={fxFrozen} hpOn={enemyHpBar.transform.parent.gameObject.activeSelf}";
+        public bool SandTwisterShown => sandTwisterSR != null && sandTwisterSR.enabled;
+        public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
+        public string EndingHead => endHead != null ? endHead.text : "";
+        public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");
 
         public void DebugEnding()
         {

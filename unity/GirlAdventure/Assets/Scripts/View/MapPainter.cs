@@ -235,7 +235,7 @@ namespace GirlAdventure.View
 
         // ------------------------------------------------------------------ 사막 (챕터 3)
         /// <summary>모래로 그리는 칸 (오아시스 풀밭·물·야자·샘물 말고 전부).</summary>
-        const string SandChars = ".:RYXSV";
+        const string SandChars = ".:RYXSVB";
 
         /// <summary>
         /// 사막: 풀밭 바탕 → 모래 오토타일(오아시스 둘레는 풀 경계가 생긴다) → 오아시스 물 → 바위 언덕 오토타일
@@ -985,6 +985,17 @@ namespace GirlAdventure.View
                 R.Ellipse(tx, dy + 4, 4, 7, H("#FFD060"));
                 R.Ellipse(tx, dy + 6, 2, 3, H("#FFFFFF"));
             }
+        }
+
+        /// <summary>오아시스 마을 우물에 물이 다시 찬 모습 (마른 우물 그림 위에 얹는 1칸): 반짝이는 물 + 물에 비친 하늘.</summary>
+        public static Texture2D WellWaterTexture()
+        {
+            var R = new Raster(T, T);
+            R.Ellipse(24, 30, 16, 8, H("#2E7FC0"));
+            R.Ellipse(24, 29, 13, 6, H("#4FB0E8"));
+            R.Ellipse(19, 28, 5, 2, H("#D8F2FF", 200));
+            R.Circle(29, 31, 1.5f, H("#FFFFFF", 220));
+            return R.ToTexture();
         }
 
         /// <summary>성문이 열린 모습 (가로 1칸 × 세로 2칸: 어두운 통로 + 양옆으로 젖혀진 문짝).</summary>

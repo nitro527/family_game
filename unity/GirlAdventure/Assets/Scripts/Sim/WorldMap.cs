@@ -17,6 +17,7 @@ namespace GirlAdventure.Sim
     /// 마을 — '.' 풀밭 'f' 꽃 '=' 길 'T' 숲 'h' 집 'u' 우물 'x' 울타리 'S' 표지판 'M' 사탕 가게 'E' 출구(밟으면 초원으로) 'N' 마을 사람
     /// 사막 — '.' 모래  ':' 동굴 출구 앞(안전)  'R' 바위 언덕  'Y' 선인장  'g' 오아시스 풀밭  'w' 오아시스 물  'p' 야자나무
     ///        'X' 동굴 출구(챕터 2 동굴에서 나온 곳)  'F' 오아시스 샘물  'S' 표지판  'V' 오아시스 마을 입구(밟으면 마을로)
+    ///        'B' 카우보이 젤리 대장 자리 (남쪽 바위 골짜기, 밟으면 보스전)
     /// 오아시스 마을 (✏️ 임시 이름) — '.' 모래  'R' 바위  'h' 흙벽돌 집  't' 천막(2×2)  'u' 마른 우물  'p' 야자  'M' 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// </summary>
     public class WorldMap
@@ -34,7 +35,8 @@ namespace GirlAdventure.Sim
                                                     VillageShop = (12, 10);    // 사탕 가게: 동서 길 바로 위 (백로그 40 — 초원에서 옮겨 옴)
         // 사막 (챕터 3): 왼쪽 동굴 출구로 나와서 시작 (맵 위쪽이면 HUD 창에 가려서 조금 아래), 가운데 동쪽 오아시스
         public static readonly (int x, int y) DesertStart = (4, 15), DesertCave = (3, 13), DesertSign = (5, 14),
-                                                    Oasis = (24, 10), OasisSpring = (20, 11);
+                                                    Oasis = (24, 10), OasisSpring = (20, 11),
+                                                    DesertBoss = (24, 20);    // 남쪽 바위 골짜기 끝: 카우보이 젤리 대장 (53)
         // 오아시스 마을 (챕터 3, 백로그 52): 사막 오아시스 동쪽 입구(TownGate) ↔ 마을 아래쪽 출구(TownExit)
         public static readonly (int x, int y) TownGate = (32, 10), TownStart = (18, 19), TownExit = (18, 20),
                                                     TownWell = (18, 10), TownSign = (20, 18), TownShop = (12, 10);
@@ -238,12 +240,18 @@ namespace GirlAdventure.Sim
             foreach (var (x, y) in new[] { (20, 9), (28, 9), (22, 7), (26, 7), (21, 12), (27, 12), (24, 13) }) m.Set(x, y, 'p');
             m.Set(OasisSpring.x, OasisSpring.y, 'F');
             m.Set(TownGate.x, TownGate.y, 'V');
+            // 남쪽 바위 골짜기: 양쪽 바위 벽 사이 좁은 길 끝에 대장 자리
+            m.Fill(DesertBoss.x - 2, DesertBoss.y - 3, DesertBoss.x - 2, DesertBoss.y, 'R');
+            m.Fill(DesertBoss.x + 2, DesertBoss.y - 3, DesertBoss.x + 2, DesertBoss.y, 'R');
+            m.Set(DesertBoss.x - 1, DesertBoss.y - 3, 'R'); m.Set(DesertBoss.x + 1, DesertBoss.y - 3, 'R');
+            m.Set(DesertBoss.x, DesertBoss.y, 'B');
             // 선인장: 출구 앞과 오아시스 둘레는 비워 둔다
             var r = new Random(5);
             for (int n = 0, tries = 0; n < 26 && tries < 2000; tries++)
             {
                 int x = 3 + r.Next(30), y = 3 + r.Next(18);
-                if (m.tiles[x, y] != '.' || Math.Abs(x - DesertStart.x) + Math.Abs(y - DesertStart.y) <= 4 || (x >= 16 && x <= 33 && y >= 5 && y <= 15)) continue;   // 오아시스·마을 문 둘레는 비움
+                if (m.tiles[x, y] != '.' || Math.Abs(x - DesertStart.x) + Math.Abs(y - DesertStart.y) <= 4 || (x >= 16 && x <= 33 && y >= 5 && y <= 15)
+                    || (Math.Abs(x - DesertBoss.x) <= 4 && y >= DesertBoss.y - 5)) continue;   // 오아시스·마을 문·골짜기 둘레는 비움
                 m.Set(x, y, 'Y');
                 n++;
             }

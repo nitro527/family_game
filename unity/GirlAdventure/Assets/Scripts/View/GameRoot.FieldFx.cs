@@ -16,7 +16,7 @@ namespace GirlAdventure.View
         readonly List<(SpriteRenderer sr, Vector3 at, float phase)> waves = new List<(SpriteRenderer, Vector3, float)>();
         readonly List<Fx> fieldFx = new List<Fx>();
         Sprite waveSprite, puffSprite, sparkSprite;
-        float sparkleTimer;
+        float sparkleTimer, swirlTimer;
         Image swirlImg;
 
         void BuildFieldFx()
@@ -150,12 +150,35 @@ namespace GirlAdventure.View
 
             // 샘물: 별가루가 퐁퐁 솟는다
             sparkleTimer -= dt;
-            if (sparkleTimer <= 0 && map.Kind != MapKind.Oasis)      // 오아시스 마을 우물은 말라 있다 (반짝이 없음)
+            if (sparkleTimer <= 0 && (map.Kind != MapKind.Oasis || P.Boss3Down))      // 오아시스 마을 우물은 사막 보스를 이길 때까지 말라 있다
             {
                 sparkleTimer = .22f;
                 var c = FeetAt(map.Spring.x, map.Spring.y) + new Vector3(Random.Range(-.3f, .3f), .5f, 0);
                 SpawnField(sparkSprite, c, new Vector3(Random.Range(-.25f, .25f), Random.Range(.6f, 1.1f)), .9f,
                            Random.Range(.2f, .32f), Random.value < .5f ? new Color(.75f, .95f, 1f) : Color.white, Random.Range(-90, 90));
+            }
+
+            // 남쪽 바위 골짜기의 모래 회오리 (카우보이 젤리 대장이 버티는 동안): 회오리 그림이 흔들리며 돌고, 둘레로 모래가 솟는다
+            if (sandTwisterSR.enabled)
+            {
+                var feet = FeetAt(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y);
+                sandTwisterSR.transform.localPosition = feet + new Vector3(Mathf.Sin(t * 3.1f) * .12f, 0, -.01f);
+                sandTwisterSR.transform.localScale = new Vector3(1 + Mathf.Sin(t * 7) * .08f, 1 + Mathf.Sin(t * 5) * .05f, 1);
+                sandTwisterSR.flipX = (int)(t * 8) % 2 == 0;            // 휙휙 도는 느낌
+            }
+            if (map.Kind == MapKind.Desert && !P.Boss3Down)
+            {
+                swirlTimer -= dt;
+                if (swirlTimer <= 0)
+                {
+                    swirlTimer = .05f;
+                    var b = FeetAt(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y);
+                    float a = t * 9f, r = .25f + Random.value * .5f;
+                    var sr = SpawnField(puffSprite, b + new Vector3(Mathf.Cos(a) * r, .1f, 0), new Vector3(-Mathf.Sin(a) * 2.2f, Random.Range(1.2f, 2.2f)), 1.1f,
+                                        Random.Range(.3f, .5f), Random.value < .5f ? new Color(.62f, .45f, .26f, .8f) : new Color(.8f, .66f, .44f, .75f));   // 모래보다 진한 갈색
+                    sr.sortingOrder = 5;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
             }
 
             // 떠다니는 것: 초원은 바람에 날리는 꽃잎, 동굴은 반딧불 같은 빛 먼지, 사막은 옆으로 날리는 모래 바람
