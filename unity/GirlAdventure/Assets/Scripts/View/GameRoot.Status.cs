@@ -98,21 +98,21 @@ namespace GirlAdventure.View
             {
                 string id = Equipment.In(P, slot);
                 mid.Append($"  <color=#9AA3C7>{Equipment.SlotName(slot)}</color> ");
-                mid.Append(id != null ? $"{GameData.ItemName(id)}\n     <size=15><color=#9AA3C7>{Equipment.BonusText(id)}</color></size>\n"
+                mid.Append(id != null ? $"{GameData.ItemName(id)} <size=15><color=#9AA3C7>{Equipment.BonusText(id)}</color></size>\n"
                                       : "<color=#9AA3C7>(없음)</color>\n");
             }
-            if (P.BrotherJoined)                    // 지훈 장비는 한 줄씩 (효과는 장비 바꾸기에서)
-                foreach (var slot in Equipment.BroSlots)
-                {
-                    string id = Equipment.In(P, slot);
-                    mid.Append($"  <color=#9AA3C7>{Equipment.SlotName(slot)}</color> {(id != null ? GameData.ItemName(id) : "<color=#9AA3C7>(없음)</color>")}\n");
-                }
-            mid.Append("\n<color=#F2C443>주문</color>\n");
-            foreach (var c in new[] { Cmd.Fire, Cmd.Star })
+            if (P.BrotherJoined)                    // 지훈 칼·방패는 한 줄로 (효과는 장비 바꾸기에서)
             {
-                var s = GameData.Skill(c);
-                mid.Append($"  {s.Name}  <size=16><color=#9AA3C7>MP {s.Mp}</color></size>\n");
+                string w = Equipment.In(P, "bro_weapon"), sh = Equipment.In(P, "bro_shield");
+                string Name(string id) => id != null ? GameData.ItemName(id) : "<color=#9AA3C7>없음</color>";
+                mid.Append($"  <color=#9AA3C7>지훈</color> {Name(w)} <color=#9AA3C7>·</color> {Name(sh)}\n");
             }
+            mid.Append("<color=#F2C443>주문</color> <size=15><color=#9AA3C7>스킬 레벨 · 다음 레벨까지</color></size>\n");
+            mid.Append(SkillLine(Cmd.Fire)).Append(SkillLine(Cmd.Star));
+            if (BattleSystem.Knows(P, Cmd.Heal)) mid.Append(SkillLine(Cmd.Heal));
+            if (P.BrotherJoined)                    // 지훈 기술은 한 줄로
+                mid.Append($"  <color=#9AA3C7>지훈</color> {GameData.Skill(Cmd.Slash).Name.Split(' ')[0]} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, Cmd.Slash)}</color></size>"
+                         + $" <color=#9AA3C7>·</color> {GameData.Skill(Cmd.Bolt).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, Cmd.Bolt)}</color></size>\n");
             stMid.text = mid.ToString();
 
             var sb = new System.Text.StringBuilder();
@@ -124,6 +124,17 @@ namespace GirlAdventure.View
             sb.Append("\n<color=#F2C443>지금 할 일</color>\n  ");
             sb.Append(Goal());
             stRight.text = sb.ToString();
+        }
+
+        /// <summary>상태 창 주문 한 줄: "리본 파이어 Lv2 ▰▰▱▱▱ 7번" (서진 주문).</summary>
+        string SkillLine(Cmd c)
+        {
+            var s = GameData.Skill(c);
+            int lv = SkillLevels.Level(P, c);
+            int filled = Mathf.RoundToInt(SkillLevels.Progress(P, c) * 5);
+            string bar = lv >= SkillLevels.MaxLevel ? "<color=#F2C443>MAX</color>"
+                       : $"<color=#7CE08A>{new string('▰', filled)}</color><color=#5A6080>{new string('▱', 5 - filled)}</color> {SkillLevels.UsesToNext(P, c)}번";
+            return $"  {s.Name} <size=15><color=#F2C443>Lv{lv}</color> {bar}</size>\n";
         }
 
         Text[] stRows;

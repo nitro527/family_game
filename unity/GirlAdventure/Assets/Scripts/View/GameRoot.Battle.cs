@@ -262,6 +262,7 @@ namespace GirlAdventure.View
                 }
                 var o = battle.Act(chosenCmd.Value, item, target);
                 yield return PlayerTurn(o);
+                if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, false);
                 yield return AfterAct(o);
                 turnRetry = o.Failed && !battleOver;
                 yield break;
@@ -292,6 +293,7 @@ namespace GirlAdventure.View
                     }
                     o = battle.BroAct(c, target);
                     yield return BrotherAct(o);
+                    if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, true);
                 }
                 yield return AfterAct(o);
                 yield break;
@@ -311,6 +313,27 @@ namespace GirlAdventure.View
                     sfx.Play("win");
                     yield return Talk("win", ("enemy", FoeName(i)));
                 }
+        }
+
+        /// <summary>
+        /// 스킬 레벨업 (백로그 55): 쓴 사람 둘레로 금빛 별이 회오리치며 솟고 "Lv2!" 글자 → "리본 파이어가 Lv2 가 되었다!".
+        /// </summary>
+        IEnumerator SkillUpRoutine(Cmd c, int lv, bool bro)
+        {
+            float x = bro ? BroX : HeroX;
+            sfx.Play("lvup");
+            var center = Px(x, (bro ? BroY : HeroY) - 100);
+            Spawn(glowSprite, center, Vector3.zero, .9f, 2.4f, new Color(1f, .9f, .45f, .6f));
+            for (int i = 0; i < 18; i++)
+            {
+                float a = i / 18f * Mathf.PI * 2;
+                Spawn(starSprite, center + new Vector3(Mathf.Cos(a), Mathf.Sin(a) * .5f) * .9f, new Vector3(-Mathf.Sin(a) * 1.5f, 2.2f + Mathf.Cos(a) * .4f),
+                      .9f, .32f, i % 2 == 0 ? new Color(1f, .86f, .3f) : new Color(.8f, .95f, 1f), 360);
+            }
+            Pop($"{GameData.Skill(c).Name} Lv{lv}!", x + 30, 200, UIKit.Gold, 34);
+            if (bro) broPose = "victory"; else pose = "victory";
+            yield return Talk(bro ? "bro_skill_up" : "skill_up", ("skill", GameData.Skill(c).Name), ("lv", lv));
+            if (bro) broPose = "ready"; else pose = "ready";
         }
 
         /// <summary>지훈의 검(앞으로 뛰어들며 베기) · 번개(하늘에서 내리꽂힘) 연출.</summary>

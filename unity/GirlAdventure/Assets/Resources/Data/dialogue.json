@@ -78,6 +78,8 @@
     { "Id": "defeat", "Lines": [
       { "Text": "{name:은/는} 쓰러지고 말았다…", "Face": "cry", "Hold": 1.4 },
       { "Text": "…그때, 멀리서 엄마 아빠의 응원 소리가 들렸다! 힘을 내!", "Face": "surprised", "Hold": 1.6 } ] },
+    { "Id": "skill_up",     "Lines": [ { "Text": "{skill}의 스킬 레벨이 올랐다! Lv{lv}! 위력이 세졌다!", "Face": "laugh", "Hold": 1.3 } ] },
+    { "Id": "bro_skill_up", "Lines": [ { "Text": "{bro}의 {skill} 스킬 레벨이 올랐다! Lv{lv}! 더 세졌어!", "Face": "bro_laugh", "Hold": 1.3 } ] },
     { "Id": "bro_cast",     "Lines": [ { "Text": "{bro}의 {skill}!", "Face": "bro_determined", "Hold": 0.45 } ] },
     { "Id": "bro_bolt",     "Lines": [ { "Text": "{bro}의 {skill}! 하늘에서 번개가 번쩍!", "Face": "bro_determined", "Hold": 0.55 } ] },
     { "Id": "bro_miss",     "Lines": [ { "Text": "앗, 빗나갔다!", "Face": "bro_angry", "Hold": 0.9 } ] },

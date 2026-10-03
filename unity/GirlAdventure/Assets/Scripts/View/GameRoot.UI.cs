@@ -268,9 +268,16 @@ namespace GirlAdventure.View
                     int n = 0;
                     foreach (var id in Items.Owned(P)) n += P.Count(id);
                     return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{n}</color></size>";
-                case Cmd.Bolt: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>MP {GameData.Skill(c).Mp}</color></size>";
-                default: return GameData.Skill(c).Name;
+                case Cmd.Bolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>MP {GameData.Skill(c).Mp}</color></size>";
+                default: return GameData.Skill(c).Name + LvTag(c);
             }
+        }
+
+        /// <summary>스킬 레벨 표시 (Lv2 부터, 작은 금색 글자). 자라지 않는 명령은 빈 칸.</summary>
+        string LvTag(Cmd c)
+        {
+            int lv = SkillLevels.Level(P, c);
+            return SkillLevels.Grows(c) && lv >= 2 ? $" <size=15><color=#F2C443>Lv{lv}</color></size>" : "";
         }
 
         /// <summary>지금 명령을 고르는 사람이 이 명령을 쓸 수 있나 (도망은 둘 다 같은 규칙).</summary>

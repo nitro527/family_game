@@ -250,7 +250,7 @@ namespace GirlAdventure.View
                 {
                     var s = GameData.Skill(known[i]);
                     string mp = $"<size=15><color=#9AA3C7>MP {s.Mp}</color></size>";
-                    labels[i] = battle.CanUse(known[i]) ? $"{s.Name} {mp}" : $"<color=#80808C>{s.Name}</color> {mp}";
+                    labels[i] = battle.CanUse(known[i]) ? $"{s.Name}{LvTag(known[i])} {mp}" : $"<color=#80808C>{s.Name}</color>{LvTag(known[i])} {mp}";
                 }
                 labels[known.Count] = "그만두기";
                 ShowMessageWindow(true);

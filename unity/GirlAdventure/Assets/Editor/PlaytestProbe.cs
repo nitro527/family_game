@@ -1009,6 +1009,7 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(ds.x, ds.y, "right");
             G.NoGroups = true;
             G.DebugSpawnMob(ds.x + 1, ds.y, 1);
+            G.P.SkillUses["Fire"] = GameData.SkillLevelUses[0] - 1;   // 다음 리본 파이어로 스킬 Lv2 (백로그 55 연출)
             yield return .4f;
             Shot("desert_mob_field");
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
@@ -1019,6 +1020,7 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             G.NoGroups = false;
             Expect("cactus jelly in the book", Bestiary.Beaten(G.P, GameData.Desert[1]));
+            Expect("skill level up shown in battle (fire Lv2)", skillUpSeen && SkillLevels.Level(G.P, Cmd.Fire) >= 2);
 
             G.DebugGroupBattle(2);
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
@@ -1120,6 +1122,8 @@ namespace GirlAdventure.EditorTools
             Expect("town well has water again", G.MapKindNow == MapKind.Oasis && G.WellWaterShown && !G.SandTwisterShown);
         }
 
+        static bool skillUpSeen;
+
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
         {
@@ -1147,7 +1151,8 @@ namespace GirlAdventure.EditorTools
                 }
                 else Keys.Press(KeyCode.Z);
                 yield return .3f;
-                if (G.MessageText.Contains("레벨이 올랐다") && lvShot++ == 0) Shot("levelup");
+                if (G.MessageText.Contains("레벨이 올랐다!") && !G.MessageText.Contains("스킬") && lvShot++ == 0) Shot("levelup");
+                if (G.MessageText.Contains("스킬 레벨이 올랐다") && !skillUpSeen) { skillUpSeen = true; Shot("skill_up"); }
             }
         }
 
