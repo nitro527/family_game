@@ -29,10 +29,16 @@ namespace GirlAdventure.Sim
         public int Heal;                // 회복 주문: Heal + 0~Rand-1 만큼 HP 회복
         public int Lv;                  // 이 레벨부터 쓸 수 있는 주문 (0 이면 처음부터)
         public double Rate;             // 도망 성공률
+        public bool Grows;              // 쓸수록 스킬 레벨이 오르는 주문·기술 (SkillLevels)
     }
 
     [Serializable]
-    public class SkillTable { public SkillDef[] Skills; }
+    public class SkillTable
+    {
+        public int[] LevelUses;         // 스킬 레벨 2·3·4·5 가 되는 숙련도 (쓴 횟수)
+        public double PowerPerLevel;    // 스킬 레벨 하나마다 위력 +
+        public SkillDef[] Skills;
+    }
 
     [Serializable]
     public class ItemDef
@@ -112,6 +118,8 @@ namespace GirlAdventure.Sim
         static readonly List<(EncounterZone zone, int[] pool)> zones = new List<(EncounterZone, int[])>();
 
         public static bool Loaded { get; private set; }
+        public static int[] SkillLevelUses { get; private set; } = new int[0];
+        public static double SkillPowerPerLevel { get; private set; }
 
         public static void Set(EnemyTable enemies, SkillTable skillTable, DialogueTable dialogue, ItemTable itemTable, EncounterTable encounters)
         {
@@ -136,6 +144,8 @@ namespace GirlAdventure.Sim
             DesertBoss = enemies.DesertBoss;
             if (DesertBoss != null) DesertBoss.Boss = true;
             skills.Clear();
+            SkillLevelUses = skillTable.LevelUses ?? new int[0];
+            SkillPowerPerLevel = skillTable.PowerPerLevel;
             foreach (var s in skillTable.Skills)
                 skills[(Cmd)Enum.Parse(typeof(Cmd), s.Cmd)] = s;
             talk.Clear();

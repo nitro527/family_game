@@ -1,12 +1,12 @@
 # 다시 시작하기 (인수인계)
 
-마지막 갱신: 2026-10-03 — **이번 주부터 자동 루틴 없이 대화에서 진행** (사용자가 주기적으로 명령). 49~53 챕터 3 전체(동생 합류 화면·사막 맵·사막 젤리·오아시스 마을·사막 보스) 완료. 앞으로의 제안·🙋 질문은 [PLAN_NEXT.md](PLAN_NEXT.md).
+마지막 갱신: 2026-10-03 — **이번 주부터 자동 루틴 없이 대화에서 진행** (사용자가 주기적으로 명령). 49~53 챕터 3 전체(동생 합류 화면·사막 맵·사막 젤리·오아시스 마을·사막 보스), 54 스킬 레벨(Sim) 완료. 앞으로의 제안·🙋 질문은 [PLAN_NEXT.md](PLAN_NEXT.md).
 주말 회고·다음 할 일·확장 검토·**작업 방식 비교와 사용자 체크리스트(§6)** 는 → [REVIEW_2026-09-27.md](REVIEW_2026-09-27.md)
 
 ## 주말에 다시 시작할 때 (순서대로)
 1. Unity Hub 로그인 확인 (배치 모드 검증에 필요)
 2. (2026-10-03 부터) 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 사용자가 이 대화에서 명령하면 백로그 항목을 하나씩 처리
-3. 다음 개발 항목: `docs/BACKLOG.md` **54 스킬 레벨 a (Sim)** → 55·56. PLAN_NEXT.md 61번 제안대로 `tools/balance.py` 에 스킬 레벨 옵션을 먼저 넣으면 좋음
+3. 다음 개발 항목: `docs/BACKLOG.md` **55 스킬 레벨 b (View)** → 56 주문 바꾸기. Sim 은 `SkillLevels` (Level/Progress/UsesToNext), 전투 결과 `PlayerOutcome.SkillUp` 으로 "리본 파이어가 Lv2 가 되었다!" 연출. 보스 수치는 `python tools/balance.py --skill N` 으로
    - 챕터 3 은 끝까지 됨 (지금 마지막 챕터 = `WorldMap.LastChapter` 3). 챕터 4 는 🙋 사용자 결정(숲? 엄마 합류?) 뒤 — PLAN_NEXT.md §3
    - 지훈 얼굴 대사는 Face 를 `bro_smile` 처럼 (`GameRoot.FacePath`)
 4. 그 뒤 PLAN_NEXT.md 의 추천 순서 (58 편지 퀘스트, 60 서진이 시험 플레이 …)

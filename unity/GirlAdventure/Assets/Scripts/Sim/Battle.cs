@@ -46,6 +46,7 @@ namespace GirlAdventure.Sim
         public int Heal;
         public int MpHeal;
         public string Item;     // 쓴 도구 id (Candy/Item)
+        public int SkillUp;     // 이번에 쓴 주문·기술의 스킬 레벨이 올랐으면 새 레벨 (아니면 0)
     }
 
     public struct EnemyOutcome
@@ -143,24 +144,26 @@ namespace GirlAdventure.Sim
             if (c == Cmd.Spell || !CanUse(c) || ((c == Cmd.Candy || c == Cmd.Item) && !Items.CanUse(P, item))) { o.Failed = true; return o; }
             var s = GameData.Skill(c);
             P.Mp -= s.Mp;
+            double power = SkillLevels.Power(P, c);         // 쓰기 전 레벨의 위력 (이번에 오른 레벨은 다음부터)
+            o.SkillUp = SkillLevels.Use(P, c);
             switch (c)
             {
                 case Cmd.Fire:
                     o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
                     if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; break; }
                     o.Damages = new int[Foes.Count];
-                    o.Damage = o.Damages[o.Target] = Roll(s);
+                    o.Damage = o.Damages[o.Target] = Roll(s, power);
                     break;
                 case Cmd.Star:                  // 살아 있는 적 모두에게 (적마다 따로 굴림)
                     o.Target = FirstAlive();
                     o.Damages = new int[Foes.Count];
                     for (int i = 0; i < Foes.Count; i++)
-                        if (!Foes[i].Down) o.Damages[i] = Roll(s);
+                        if (!Foes[i].Down) o.Damages[i] = Roll(s, power);
                     o.Damage = o.Damages[o.Target];
                     break;
                 case Cmd.Heal:
                     int before = P.Hp;
-                    P.Hp = Math.Min(P.MaxHp, P.Hp + s.Heal + r.Next(0, Math.Max(1, s.Rand)));
+                    P.Hp = Math.Min(P.MaxHp, P.Hp + SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power));
                     o.Heal = P.Hp - before;
                     break;
                 case Cmd.Candy:
@@ -177,7 +180,7 @@ namespace GirlAdventure.Sim
             return o;
         }
 
-        int Roll(SkillDef s) => P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand));
+        int Roll(SkillDef s, double power) => SkillLevels.Scale(P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
 
         /// <summary>동생이 이 명령을 쓸 수 있나: 검은 늘, 번개는 MP 가 있으면.</summary>
         public bool BroCanUse(Cmd c) => Party && !BrotherDown && (c == Cmd.Slash || (c == Cmd.Bolt && P.BroMp >= GameData.Skill(c).Mp));
@@ -189,10 +192,12 @@ namespace GirlAdventure.Sim
             if (!BroCanUse(c)) { o.Failed = true; return o; }
             var s = GameData.Skill(c);
             P.BroMp -= s.Mp;
+            double power = SkillLevels.Power(P, c);
+            o.SkillUp = SkillLevels.Use(P, c);
             o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
             if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; return o; }
             o.Damages = new int[Foes.Count];
-            o.Damage = o.Damages[o.Target] = P.BroAtk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand));
+            o.Damage = o.Damages[o.Target] = SkillLevels.Scale(P.BroAtk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
             Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
             return o;
         }

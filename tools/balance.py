@@ -42,7 +42,8 @@ def load(name):
 
 
 ENEMIES = load("enemies.json")
-SKILLS = {s["Cmd"]: s for s in load("skills.json")["Skills"]}
+SKILL_TABLE = load("skills.json")
+SKILLS = {s["Cmd"]: s for s in SKILL_TABLE["Skills"]}
 ITEMS = {i["Id"]: i for i in load("items.json")["Items"]}
 
 
@@ -69,8 +70,15 @@ def gear_bonus(shop):
     return atk, dfn
 
 
-def fight(lv, enemy, gear=(0, 0), heal=False, rng=random):
-    """한 판. (이겼나, 턴 수, 쓴 사탕 수)."""
+def skill_power(level):
+    """스킬 레벨 → 위력 배율 (skills.json PowerPerLevel, Unity SkillLevels.Power 와 같은 식)."""
+    return 1 + SKILL_TABLE.get("PowerPerLevel", 0) * (max(1, min(5, level)) - 1)
+
+
+def fight(lv, enemy, gear=(0, 0), heal=False, rng=random, skill=1):
+    """한 판. (이겼나, 턴 수, 쓴 사탕 수). skill: 모든 주문의 스킬 레벨 (1~5)."""
+    pw = skill_power(skill)
+    scale = lambda v: max(1, round(v * pw))
     max_hp = START_HP + HP_PER_LV * (lv - 1)
     hp, mp = max_hp, START_MP + MP_PER_LV * (lv - 1)
     atk, dfn = START_ATK + ATK_PER_LV * (lv - 1) + gear[0], gear[1]
@@ -86,14 +94,14 @@ def fight(lv, enemy, gear=(0, 0), heal=False, rng=random):
             hp = min(max_hp, hp + candy_hp)
         elif heal and low and lv >= hl.get("Lv", 0) and mp >= hl["Mp"] and hp < max_hp:
             mp -= hl["Mp"]
-            hp = min(max_hp, hp + hl["Heal"] + rng.randrange(max(1, hl["Rand"])))
+            hp = min(max_hp, hp + scale(hl["Heal"] + rng.randrange(max(1, hl["Rand"]))))
         elif boss and mp >= star["Mp"]:
             mp -= star["Mp"]
-            ehp -= atk * star["AtkMul"] + star["Bonus"] + rng.randrange(max(1, star["Rand"]))
+            ehp -= scale(atk * star["AtkMul"] + star["Bonus"] + rng.randrange(max(1, star["Rand"])))
         else:
             mp -= fire["Mp"]
             if not (fire.get("Miss", 0) > 0 and rng.random() < fire["Miss"]):
-                ehp -= atk * fire["AtkMul"] + fire["Bonus"] + rng.randrange(max(1, fire["Rand"]))
+                ehp -= scale(atk * fire["AtkMul"] + fire["Bonus"] + rng.randrange(max(1, fire["Rand"])))
         if ehp <= 0:
             return True, turn, used
         if rng.random() >= DODGE:
@@ -103,11 +111,11 @@ def fight(lv, enemy, gear=(0, 0), heal=False, rng=random):
     return False, MAX_TURNS, used
 
 
-def win_rate(lv, enemy, gear=(0, 0), heal=False, runs=20000, seed=1):
+def win_rate(lv, enemy, gear=(0, 0), heal=False, runs=20000, seed=1, skill=1):
     rng = random.Random(seed)
     wins = turns = candies = 0
     for _ in range(runs):
-        w, t, c = fight(lv, enemy, gear, heal, rng)
+        w, t, c = fight(lv, enemy, gear, heal, rng, skill)
         wins += w
         turns += t
         candies += c
@@ -142,6 +150,7 @@ def main():
     ap.add_argument("--atk", help="적 공격력 후보 (예: 9:12)")
     ap.add_argument("--gear", action="store_true", help="그 지역 가게 장비를 다 낀 상태")
     ap.add_argument("--heal", action="store_true", help="사탕이 떨어지면 반짝 힐도 씀")
+    ap.add_argument("--skill", type=int, default=1, help="모든 주문의 스킬 레벨 1~5 (백로그 54, 위력 +PowerPerLevel/레벨)")
     ap.add_argument("--runs", type=int, default=20000)
     a = ap.parse_args()
 
@@ -149,10 +158,10 @@ def main():
         print("보스        레벨  장비없음  장비있음   (목표: 85~98.5% / 99%+)")
         for name, sc in SCENARIOS.items():
             e = ENEMIES[sc["key"]]
-            r0 = win_rate(sc["lv"], e, runs=a.runs, heal=a.heal)[0]
+            r0 = win_rate(sc["lv"], e, runs=a.runs, heal=a.heal, skill=a.skill)[0]
             line = f"{e['Name']:<10} Lv{sc['lv']:<3} {r0:7.1%}"
             if sc["shop"]:
-                line += f"  {win_rate(sc['lv'], e, gear_bonus(sc['shop']), a.heal, a.runs)[0]:8.1%}"
+                line += f"  {win_rate(sc['lv'], e, gear_bonus(sc['shop']), a.heal, a.runs, skill=a.skill)[0]:8.1%}"
             print(line)
         return
 
@@ -168,7 +177,7 @@ def main():
     for hp in span(a.hp, enemy["Hp"]):
         for atk in span(a.atk, enemy["Atk"]):
             e = dict(enemy, Hp=hp, Atk=atk)
-            rate, turns, candies = win_rate(lv, e, gear, a.heal, a.runs)
+            rate, turns, candies = win_rate(lv, e, gear, a.heal, a.runs, skill=a.skill)
             mark = " ← 지금" if (hp, atk) == (enemy["Hp"], enemy["Atk"]) else ""
             print(f"{hp:>5} {atk:>4} {rate:7.1%} {turns:7.1f} {candies:5.2f}  {verdict(rate, a.gear)}{mark}")
 

@@ -1,13 +1,15 @@
 {
+  "LevelUses": [10, 30, 60, 100],
+  "PowerPerLevel": 0.05,
   "Skills": [
-    { "Cmd": "Fire",  "Name": "리본 파이어", "Mp": 0, "AtkMul": 1, "Bonus": 0, "Rand": 4, "Miss": 0.08 },
-    { "Cmd": "Star",  "Name": "별빛 폭풍",   "Mp": 6, "AtkMul": 2, "Bonus": 6, "Rand": 5, "Miss": 0 },
-    { "Cmd": "Heal",  "Name": "반짝 힐",     "Mp": 4, "Lv": 4, "Heal": 20, "Rand": 6 },
+    { "Cmd": "Fire",  "Name": "리본 파이어", "Mp": 0, "AtkMul": 1, "Bonus": 0, "Rand": 4, "Miss": 0.08, "Grows": true },
+    { "Cmd": "Star",  "Name": "별빛 폭풍",   "Mp": 6, "AtkMul": 2, "Bonus": 6, "Rand": 5, "Miss": 0, "Grows": true },
+    { "Cmd": "Heal",  "Name": "반짝 힐",     "Mp": 4, "Lv": 4, "Heal": 20, "Rand": 6, "Grows": true },
     { "Cmd": "Spell", "Name": "주문",        "Mp": 0 },
     { "Cmd": "Candy", "Name": "사탕 먹기",   "Mp": 0 },
     { "Cmd": "Item",  "Name": "도구",        "Mp": 0 },
-    { "Cmd": "Slash", "Name": "검 휘두르기", "Mp": 0, "AtkMul": 1, "Bonus": 2, "Rand": 4, "Miss": 0.05 },
-    { "Cmd": "Bolt",  "Name": "번개",       "Mp": 4, "AtkMul": 2, "Bonus": 2, "Rand": 5, "Miss": 0 },
+    { "Cmd": "Slash", "Name": "검 휘두르기", "Mp": 0, "AtkMul": 1, "Bonus": 2, "Rand": 4, "Miss": 0.05, "Grows": true },
+    { "Cmd": "Bolt",  "Name": "번개",       "Mp": 4, "AtkMul": 2, "Bonus": 2, "Rand": 5, "Miss": 0, "Grows": true },
     { "Cmd": "Run",   "Name": "도망가기",    "Mp": 0, "Rate": 0.75 }
   ]
 }

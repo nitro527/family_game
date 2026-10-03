@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 10;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스
+        public const int CurrentVersion = 11;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -23,6 +23,7 @@ namespace GirlAdventure.Sim
         public string[] Seen, Beaten;   // 버전 8: 도감 — 만난/쓰러뜨린 적 이름
         public bool BrotherJoined;      // 버전 9: 동생 지훈 합류
         public int BroHp, BroMp;
+        public string[] SkillUses;      // 버전 11: 스킬 숙련도 "Fire:12"
         public string SavedAt;          // 표시용 (예: "09-26 14:30")
     }
 
@@ -62,6 +63,8 @@ namespace GirlAdventure.Sim
         public Dictionary<string, string> Equipped = new Dictionary<string, string>();   // 부위 → 장착한 장비 id
         public List<string> Seen = new List<string>();      // 도감: 만난 적 이름
         public List<string> Beaten = new List<string>();    // 도감: 쓰러뜨린 적 이름
+        /// <summary>스킬 숙련도 (Cmd 이름 → 쓴 횟수, SkillLevels).</summary>
+        public Dictionary<string, int> SkillUses = new Dictionary<string, int>();
 
         // 동생 지훈 (공격형 꼬마 용사, 백로그 48): 레벨은 누나와 같이 오른다 (경험치 공유). 능력치는 레벨에서 계산
         public const int BroStartHp = 30, BroHpPerLevel = 7, BroStartMp = 4, BroMpPerLevel = 1, BroStartAtk = 7, BroAtkPerLevel = 3, BroBaseDef = 1;
@@ -162,7 +165,15 @@ namespace GirlAdventure.Sim
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
             Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),
             BrotherJoined = BrotherJoined, BroHp = BroHp, BroMp = BroMp,
+            SkillUses = SkillEntries(),
         };
+
+        string[] SkillEntries()
+        {
+            var list = new List<string>();
+            foreach (var kv in SkillUses) if (kv.Value > 0) list.Add(kv.Key + ":" + kv.Value);
+            return list.ToArray();
+        }
 
         string[] BagEntries()
         {
@@ -210,6 +221,14 @@ namespace GirlAdventure.Sim
                     if (!p.Gear.Contains(id) && (!GameData.Loaded || Equipment.IsGear(id))) p.Gear.Add(id);
             if (s.Equipped != null && GameData.Loaded)
                 foreach (var id in s.Equipped) Equipment.Equip(p, id);    // 가진 장비만 장착된다
+            if (s.SkillUses != null)            // 옛 세이브(버전 10 이하)는 숙련도 0. 모르는 명령·이상한 수는 버린다
+                foreach (var e in s.SkillUses)
+                {
+                    int colon = e?.LastIndexOf(':') ?? -1;
+                    if (colon <= 0 || !int.TryParse(e.Substring(colon + 1), out int n) || n <= 0) continue;
+                    string id = e.Substring(0, colon);
+                    if (Enum.TryParse<Cmd>(id, out var c) && (!GameData.Loaded || SkillLevels.Grows(c))) p.SkillUses[id] = Math.Min(n, 9999);
+                }
             Bestiary.Load(p.Seen, s.Seen);     // 옛 세이브(버전 7 이하)는 빈 도감
             Bestiary.Load(p.Beaten, s.Beaten);
             if (s.BrotherJoined)                // 옛 세이브(버전 8 이하)는 합류 전

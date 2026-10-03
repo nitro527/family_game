@@ -438,6 +438,53 @@ namespace GirlAdventure.EditorTools
             p.BroHp = 1; p.Hp = 1;
             Check("inn heals brother too", Inn.Stay(p) && p.BroHp == p.BroMaxHp && p.Hp == p.MaxHp);
             Boss3Tests();
+            SkillLevelTests();
+        }
+
+        /// <summary>스킬 레벨 (백로그 54): 숙련도 → 레벨, 위력, 레벨업 알림, 지훈 기술, 세이브 v11, 옛 세이브.</summary>
+        static void SkillLevelTests()
+        {
+            var uses = GameData.SkillLevelUses;
+            Check("skill table: 4 thresholds rising, small power step", uses.Length == 4 && uses[0] < uses[1] && uses[1] < uses[2] && uses[2] < uses[3]
+                  && GameData.SkillPowerPerLevel > 0 && GameData.SkillPowerPerLevel <= .1);
+            Check("skill grows: fire/star/heal/slash/bolt, not run/item", SkillLevels.Grows(Cmd.Fire) && SkillLevels.Grows(Cmd.Star) && SkillLevels.Grows(Cmd.Heal)
+                  && SkillLevels.Grows(Cmd.Slash) && SkillLevels.Grows(Cmd.Bolt) && !SkillLevels.Grows(Cmd.Run) && !SkillLevels.Grows(Cmd.Item));
+            var p = PlayerState.NewGame("s");
+            int ups = 0, at = -1;
+            for (int i = 1; i <= uses[0]; i++) { int up = SkillLevels.Use(p, Cmd.Fire); if (up > 0) { ups++; at = i; } }
+            Check("skill: Lv2 exactly at first threshold", ups == 1 && at == uses[0] && SkillLevels.Level(p, Cmd.Fire) == 2
+                  && Math.Abs(SkillLevels.Power(p, Cmd.Fire) - (1 + GameData.SkillPowerPerLevel)) < 1e-9 && SkillLevels.UsesToNext(p, Cmd.Fire) == uses[1] - uses[0]);
+            for (int i = 0; i < 500; i++) SkillLevels.Use(p, Cmd.Fire);
+            Check("skill: max level 5, progress full", SkillLevels.Level(p, Cmd.Fire) == SkillLevels.MaxLevel && SkillLevels.UsesToNext(p, Cmd.Fire) == 0
+                  && SkillLevels.Progress(p, Cmd.Fire) == 1 && SkillLevels.Level(p, Cmd.Star) == 1);
+
+            // 전투: 쓰면 숙련도가 오르고, 레벨이 오르는 순간 SkillUp, 높은 레벨은 피해가 더 크다 (같은 주사위)
+            var q = PlayerState.NewGame("b");
+            q.GainExp(PlayerState.NextExp(5));
+            q.SkillUses["Fire"] = uses[0] - 1;
+            var b = new BattleSystem(q, GameData.King, new System.Random(4));
+            PlayerOutcome o = default;
+            for (int i = 0; i < 10 && (o.Missed || i == 0); i++) o = b.Act(Cmd.Fire);
+            Check("battle: fire use counts, SkillUp at threshold", o.SkillUp == 2 || SkillLevels.Uses(q, Cmd.Fire) > uses[0], $"up {o.SkillUp} uses {SkillLevels.Uses(q, Cmd.Fire)}");
+            int Dmg(int fireUses)
+            {
+                var t = PlayerState.NewGame("d"); t.GainExp(PlayerState.NextExp(5));
+                t.SkillUses["Star"] = fireUses;
+                return new BattleSystem(t, GameData.King, new System.Random(9)).Act(Cmd.Star).Damage;
+            }
+            int d1 = Dmg(0), d5 = Dmg(999);
+            Check("battle: star Lv5 hits harder", d5 > d1 && d5 <= Math.Round(d1 * (1 + 4 * GameData.SkillPowerPerLevel)) + 1, $"{d1} → {d5}");
+            var br = PlayerState.NewGame("j"); br.GainExp(PlayerState.NextExp(8)); br.Boss2Down = true; Quest.TryJoinBrother(br);
+            new BattleSystem(br, GameData.King, new System.Random(1)).BroAct(Cmd.Slash);
+            Check("brother slash counts too", SkillLevels.Uses(br, Cmd.Slash) == 1);
+
+            // 세이브 v11: 숙련도 저장, 옛 세이브는 0, 이상한 값은 버림
+            var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            var bad = p.ToSave(); bad.SkillUses = new[] { "Fire:-3", "Nope:5", "Run:4", "Star:7", "junk" };
+            var badBack = PlayerState.FromSave(bad);
+            var old = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":10,\"Name\":\"a\",\"Lv\":3,\"X\":3,\"Y\":4}"));
+            Check("skill uses saved (v11), bad entries dropped, old save zero", SaveData.CurrentVersion == 11 && SkillLevels.Uses(back, Cmd.Fire) == SkillLevels.Uses(p, Cmd.Fire)
+                  && badBack.SkillUses.Count == 1 && SkillLevels.Uses(badBack, Cmd.Star) == 7 && old.SkillUses.Count == 0);
         }
 
         /// <summary>사막 보스 (백로그 53): 골짜기 자리, 세이브 v10, 이긴 뒤 마을 사람 대사, 2인 밸런스.</summary>
@@ -455,7 +502,7 @@ namespace GirlAdventure.EditorTools
             Check("boss3 word false before", Npcs.Holds("boss3", p) == false && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.Oasis)).Find(n => n.Id == "elder"), p) == "npc_elder");
             p.Boss3Down = true;
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
-            Check("boss3 saved (v10), elder thanks", SaveData.CurrentVersion == 10 && q.Boss3Down
+            Check("boss3 saved (v10+), elder thanks", SaveData.CurrentVersion >= 10 && q.Boss3Down
                   && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.Oasis)).Find(n => n.Id == "elder"), q) == "npc_elder_end");
 
             // 2인 밸런스: 장비(태양 지팡이·모래바람 망토·지훈 칼·방패) Lv12 이면 거의 이기고, 장비 없는 Lv11 은 더 어렵다
