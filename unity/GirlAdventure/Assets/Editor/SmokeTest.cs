@@ -622,6 +622,21 @@ namespace GirlAdventure.EditorTools
                 System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../playtest/map_snow.png")), tex.EncodeToPNG());
             }
             catch (Exception e) { Debug.LogWarning("map_snow.png: " + e.Message); }
+            // 얼음 미끄럼 (C5-3): 서쪽 물가에서 동쪽으로 → 상자 바로 앞에서 멈춤 / 위에서 아래로 → 상자 위에서 멈춤 / 바위에서 멈춤
+            var pp = PlayerState.NewGame("i"); pp.Chapter = 5;
+            Func<int, int, bool> walk = (x, y) => Quest.Walkable(m, pp, x, y);
+            var c = WorldMap.SnowChest;
+            int wx = c.x; while (m.Slippery(wx - 1, c.y)) wx--;
+            var east = m.SlideEnd(wx, c.y, 1, 0, walk);
+            int ny = c.y; while (m.Slippery(c.x, ny - 1)) ny--;
+            var south = m.SlideEnd(c.x, ny, 0, 1, walk);
+            var rockStop = m.SlideEnd(14, 12, 0, -1, walk);
+            Check("ice slide: stops beside the chest, at rocks, and runs off the ice onto snow", east == (c.x - 1, c.y) && south == (c.x, c.y - 1) && rockStop == (14, 10)
+                  && m.SlideEnd(13, 13, -1, 0, walk) is var off && !m.Slippery(off.x, off.y) && !m.Slippery(4, 20), $"east {east} south {south} rock {rockStop}");
+            var sp = PlayerState.NewGame("c");
+            var sc1 = Quest.OpenSnowChest(sp, out var sw);
+            Check("snow chest: pendant once, gear but not sold", sc1 == ChestResult.Got && Quest.OpenSnowChest(sp, out _) == ChestResult.Empty && sp.Gear.Contains("snow_pendant")
+                  && sw == "눈꽃 목걸이" && Equipment.IsGear("snow_pendant") && !Shop.Goods(MapKind.LavaTown).Contains("snow_pendant"));
             Check("snow song + talk", Music.Get("snow")?.Name == "snow" && GameData.HasTalk("ch5_intro") && GameData.HasTalk("sign_snow"));
         }
 

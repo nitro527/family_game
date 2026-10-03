@@ -18,6 +18,7 @@
     { "Id": "flame_sword", "Name": "불꽃 칼", "Kind": "bro_weapon", "Atk": 9, "Price": 240, "Shops": "lavatown", "Desc": "지훈이 손에 맞춘 빨갛게 빛나는 칼" },
     { "Id": "lion_blade", "Name": "사자 장검", "Kind": "dad_weapon", "Atk": 7, "Price": 240, "Shops": "lavatown", "Desc": "손잡이에 사자가 새겨진 기사의 긴 검" },
     { "Id": "lion_shield", "Name": "황금 사자 방패", "Kind": "dad_shield", "Def": 5, "Price": 220, "Shops": "lavatown", "Desc": "가족을 지키는 금빛 사자 방패" },
-    { "Id": "key",    "Name": "기지 열쇠", "Kind": "key", "Desc": "젤리 기지의 문을 여는 반짝이는 열쇠" }
+    { "Id": "key",    "Name": "기지 열쇠", "Kind": "key", "Desc": "젤리 기지의 문을 여는 반짝이는 열쇠" },
+    {"Id": "snow_pendant", "Name": "눈꽃 목걸이", "Kind": "acc", "Atk": 2, "Def": 4, "Price": 300, "Shops": "treasure", "Desc": "꽁꽁 언 호수 한가운데 상자에 들어 있던 반짝이는 눈꽃 목걸이 (가게에서는 안 팔아요)"}
   ]
 }

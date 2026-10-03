@@ -108,6 +108,18 @@ namespace GirlAdventure.Sim
             return ChestResult.Got;
         }
 
+        /// <summary>언 호수 한가운데 보물상자 (C5-3): 눈꽃 목걸이 ✏️.</summary>
+        public const string SnowChestId = "snow_chest", SnowChestItem = "snow_pendant";
+
+        public static ChestResult OpenSnowChest(PlayerState p, out string what)
+        {
+            what = GameData.ItemName(SnowChestItem);
+            if (p.Opened.Contains(SnowChestId)) return ChestResult.Empty;
+            p.Opened.Add(SnowChestId);
+            if (!p.Gear.Contains(SnowChestItem)) p.Gear.Add(SnowChestItem);
+            return ChestResult.Got;
+        }
+
         /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
         public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16 };
         /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>

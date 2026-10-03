@@ -540,6 +540,7 @@ namespace GirlAdventure.View
                         R.Ellipse(X + 23, Y + 16, 15, 6, H("#FFFFFF"));
                     }
                     else if (ch == 'n') Snowman(R, X, Y);
+                    else if (ch == 'H') Painter.Chest(R, X, Y, false);
                 }
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)

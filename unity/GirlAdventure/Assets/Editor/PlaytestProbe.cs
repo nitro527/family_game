@@ -1403,6 +1403,24 @@ namespace GirlAdventure.EditorTools
             Shot("ch5_snow");
             Expect("chapter 5 starts on the snow land with the family", G.P.Chapter == 5 && G.MapKindNow == MapKind.Snow && G.FollowerVisible("dad") && G.BroFieldVisible && (G.P.X, G.P.Y) == WorldMap.SnowStart);
             ExpectBgm("snow");
+            // 얼음 미끄럼 (C5-3): 호수 서쪽 물가에서 오른쪽으로 한 번 → 쭉 미끄러져 상자 앞에서 멈춘다 → 상자
+            int iceX = WorldMap.SnowChest.x; while (G.Map.Slippery(iceX - 1, WorldMap.SnowChest.y)) iceX--;
+            G.DebugMobs(true, true);
+            G.DebugTeleport(iceX - 1, WorldMap.SnowChest.y, "right");
+            yield return .3f;
+            Keys.Hold(KeyCode.RightArrow, true); yield return .12f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return .35f;
+            Shot("ice_sliding");
+            yield return (Func<bool>)(() => G.MessageText.Contains("미끄러"));
+            Shot("ice_hint");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("slid across the ice to the chest", G.P.X == WorldMap.SnowChest.x - 1 && G.P.Y == WorldMap.SnowChest.y, $"{G.P.X},{G.P.Y}");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .12f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return 1.2f;
+            Shot("snow_chest");
+            Expect("snow chest gives the pendant", G.P.Gear.Contains("snow_pendant") && G.MessageText.Contains("눈꽃 목걸이"));
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugMobs(false, false);
             G.DebugTeleport(WorldMap.SnowPeak.x + 1, WorldMap.SnowPeak.y + 5, "up");
             yield return .8f;
             Shot("ch5_peak");

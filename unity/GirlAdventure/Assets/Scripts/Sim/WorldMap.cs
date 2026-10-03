@@ -50,7 +50,8 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y)[] LavaTownHouses = { (7, 5), (23, 4), (7, 14), (25, 14) };
         public const int LavaTownInn = 1;
         // 눈 덮인 땅 (챕터 5, C5-1): 왼쪽 아래에서 셋이 출발, 가운데 언 호수, 오른쪽 위 눈 산 (보스는 C5-5)
-        public static readonly (int x, int y) SnowStart = (4, 20), SnowFire = (7, 19), SnowSign = (6, 21), SnowPeak = (27, 2);
+        public static readonly (int x, int y) SnowStart = (4, 20), SnowFire = (7, 19), SnowSign = (6, 21), SnowPeak = (27, 2),
+                                                    SnowChest = (17, 11);   // 언 호수 한가운데 보물상자 (C5-3: 미끄러져서 닿는다)
         // 지하세계: 밧줄(UnderExit) 바로 아래에서 시작
         public static readonly (int x, int y) UnderExit = (5, 3), UnderStart = (5, 4), UnderSpring = (8, 3), UnderSign = (3, 6);
         // 오아시스 마을 (챕터 3, 백로그 52): 사막 오아시스 동쪽 입구(TownGate) ↔ 마을 아래쪽 출구(TownExit)
@@ -122,6 +123,19 @@ namespace GirlAdventure.Sim
                         SecretHole = (x, y);
                         return;
                     }
+        }
+
+        /// <summary>
+        /// 얼음 미끄럼 (C5-3, DQ 얼음 길): 얼음('i') 위에 서면 같은 방향으로 한 칸 더 미끄러진다 — 앞이 막혔으면 멈춘다.
+        /// 얼음에서 눈밭으로 미끄러져 나가면 거기서 멈춘다.
+        /// </summary>
+        public bool Slippery(int x, int y) => Kind == MapKind.Snow && At(x, y) == 'i';
+
+        /// <summary>얼음 위 (x, y) 에서 (dx, dy) 로 미끄러지면 멈추는 칸 (walk = 들어갈 수 있는 칸인가).</summary>
+        public (int x, int y) SlideEnd(int x, int y, int dx, int dy, Func<int, int, bool> walk)
+        {
+            for (int i = 0; i < W + H && Slippery(x, y) && walk(x + dx, y + dy); i++) { x += dx; y += dy; }
+            return (x, y);
         }
 
         /// <summary>마을 맵 (별빛 마을·오아시스 마을): 몬스터가 없고 출구 'E' 로 나간다.</summary>
@@ -314,7 +328,9 @@ namespace GirlAdventure.Sim
             m.Fill(0, 0, W - 1, 1, 'P'); m.Fill(0, H - 2, W - 1, H - 1, 'P');
             m.Fill(0, 0, 1, H - 1, 'P'); m.Fill(W - 2, 0, W - 1, H - 1, 'P');
             foreach (var (x, y) in new[] { (2, 2), (3, 2), (2, 3), (33, 2), (33, 3), (33, 21), (32, 21), (12, 2), (13, 2), (2, 12), (2, 13), (33, 12) }) m.Set(x, y, 'P');
-            m.Ellipse(17, 11, 5.2, 3.3, 'i', ".");                  // 꽁꽁 언 호수
+            m.Ellipse(17, 11, 5.2, 3.3, 'i', ".");                  // 꽁꽁 언 호수 (위에서는 미끄러진다, C5-3)
+            foreach (var (x, y) in new[] { (14, 9), (20, 13) }) m.Set(x, y, 'R');   // 호수 위 바위 (미끄러지다 멈추는 곳)
+            m.Set(SnowChest.x, SnowChest.y, 'H');
             // 전나무 무리
             m.Fill(6, 4, 8, 6, 'P'); m.Set(8, 4, '.');
             m.Fill(22, 16, 24, 18, 'P'); m.Set(22, 18, '.');

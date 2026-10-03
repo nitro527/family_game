@@ -34,6 +34,7 @@ namespace GirlAdventure.View
         }
         readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
+        bool sliding;                           // 얼음 위를 미끄러지는 중 (C5-3): 걷는 그림 대신 선 채로 쭉
         WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap;
         WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
         SpriteRenderer homeChestSR;
@@ -167,8 +168,8 @@ namespace GirlAdventure.View
             RefreshHoles();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
-            (int x, int y) hc = map.Kind == MapKind.Home ? map.Find('H') : (-1, -1);
-            homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(Quest.HomeChestId(map.Room));
+            (int x, int y) hc = map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? map.Find('H') : (-1, -1);
+            homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(map.Kind == MapKind.Snow ? Quest.SnowChestId : Quest.HomeChestId(map.Room));
             if (homeChestSR.enabled) homeChestSR.transform.localPosition = new Vector3(hc.x, -hc.y, 0);
             wellWaterSR.enabled = map.Kind == MapKind.Oasis && P.Boss3Down;      // 사막 보스를 이기면 마른 우물에 물이 찬다
             sandTwisterSR.enabled = map.Kind == MapKind.Desert && !P.Boss3Down && sandTwisterSR.sprite != null;
@@ -415,7 +416,8 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            var r = Quest.OpenHomeChest(P, map.Room, out var what);
+            bool snow = map.Kind == MapKind.Snow;
+            var r = snow ? Quest.OpenSnowChest(P, out var what) : Quest.OpenHomeChest(P, map.Room, out what);
             if (r == ChestResult.Got)
             {
                 sfx.Play("chest");
@@ -425,9 +427,18 @@ namespace GirlAdventure.View
                     SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
                 AutoSave();
                 RefreshHud();
-                yield return Talk("chest_open", ("item", what));
+                yield return Talk(snow ? "snow_chest_open" : "chest_open", ("item", what));
             }
             else yield return Talk("chest_empty");
+            HideMessage();
+            busy = false;
+        }
+
+        /// <summary>얼음 위 첫 미끄럼이면 한 번 알려 준다 (C5-3).</summary>
+        IEnumerator IceHintRoutine()
+        {
+            busy = true;
+            yield return Talk("ice_slide");
             HideMessage();
             busy = false;
         }
@@ -504,7 +515,7 @@ namespace GirlAdventure.View
             if (moveT >= 0)
             {
                 moveT += Time.deltaTime / StepTime;
-                walkT += Time.deltaTime;
+                if (!sliding) walkT += Time.deltaTime;
                 if (moveT >= 1)
                 {
                     moveT = -1;
@@ -546,7 +557,7 @@ namespace GirlAdventure.View
                 char c = map.At(nx, ny);
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
-                else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
+                else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
                 else if (c == 'h' && map.Kind == MapKind.Village && dir == "up" && WorldMap.HouseAtDoor(nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(nx, ny)));
                 else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
                 else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
@@ -753,6 +764,21 @@ namespace GirlAdventure.View
 
         void OnArrive()
         {
+            // 얼음 위 (C5-3): 앞이 열려 있으면 같은 방향으로 한 칸 더 미끄러진다
+            if (map.Slippery(P.X, P.Y))
+            {
+                int dx = facing == "left" ? -1 : facing == "right" ? 1 : 0, dy = facing == "up" ? -1 : facing == "down" ? 1 : 0;
+                if (Quest.Walkable(map, P, P.X + dx, P.Y + dy) && mobs.At(P.X + dx, P.Y + dy) == null)
+                {
+                    if (!sliding) sfx.Play("mv_spin");
+                    sliding = true;
+                    TryMove(facing);
+                    return;
+                }
+            }
+            bool slid = sliding;
+            sliding = false;
+            if (slid && !P.Opened.Contains("ice_hint")) { P.Opened.Add("ice_hint"); StartCoroutine(IceHintRoutine()); }
             sfx.Play("step");
             char here = map.At(P.X, P.Y);
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }

@@ -481,6 +481,7 @@ namespace GirlAdventure.View
 
         public int MobCount => mobs.List.Count;
         public MapKind MapKind => map.Kind;
+        public WorldMap Map => map;
 
         /// <summary>플레이테스트용: 몬스터 생성·이동 멈춤 + 전부 치우기.</summary>
         public void DebugMobs(bool paused, bool clear)
