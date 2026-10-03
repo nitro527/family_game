@@ -199,6 +199,20 @@ namespace GirlAdventure.Sim
             if (SnowBoss != null) yield return SnowBoss;
         }
 
+        /// <summary>도감에 쓰는 사는 곳 (Q-12): 어느 목록에 들어 있나로 정한다.</summary>
+        public static string RegionOf(EnemyDef d)
+        {
+            if (d == null) return "";
+            if (d == King) return "킹 젤리의 성";
+            if (Array.IndexOf(Normal, d) >= 0) return "초원";
+            if (d == Guard || d == General || Array.IndexOf(Cave, d) >= 0) return "동굴";
+            if (d == DesertBoss || Array.IndexOf(Desert, d) >= 0) return "사막";
+            if (Array.IndexOf(Under, d) >= 0) return "지하세계";
+            if (d == LavaBoss || Array.IndexOf(Lava, d) >= 0) return "용암 땅";
+            if (d == SnowBoss || Array.IndexOf(Snow, d) >= 0) return "눈 덮인 땅";
+            return "";
+        }
+
         /// <summary>
         /// 이 자리의 출현표 (적 인덱스 목록: 초원은 Normal, 동굴은 Cave). 맞는 구역이 없으면 첫 구역.
         /// </summary>

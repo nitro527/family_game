@@ -91,9 +91,11 @@ namespace GirlAdventure.View
             bookBig.sprite = JellySprite(s);
             bookBig.color = sSeen ? Color.white : new Color(0, 0, 0, .8f);
             bookName.text = sSeen ? s.Name : "???";
-            bookInfo.text = sBeat ? $"<color=#F2C443>★ 쓰러뜨렸어요</color>\nHP {s.Hp} · 공격 {s.Atk} · 경험치 {s.Exp}"
-                          : sSeen ? "<color=#9AA3C7>만났지만 아직 못 이겼어요</color>" : "<color=#9AA3C7>아직 못 만났어요</color>";
-            bookDesc.text = sSeen ? s.Desc ?? "" : "어딘가에 숨어 있어요…";
+            string where = GameData.RegionOf(s);
+            bookInfo.text = (sBeat ? $"<color=#F2C443>★ 쓰러뜨렸어요</color>\nHP {s.Hp} · 공격 {s.Atk} · 경험치 {s.Exp}"
+                           : sSeen ? "<color=#9AA3C7>만났지만 아직 못 이겼어요</color>" : "<color=#9AA3C7>아직 못 만났어요</color>")
+                          + (sSeen && where != "" ? $"\n<color=#9AA3C7>사는 곳</color> {where}" : "");
+            bookDesc.text = sSeen ? s.Desc ?? "" : where != "" ? $"{where} 어딘가에 숨어 있어요…" : "어딘가에 숨어 있어요…";   // 못 만난 몬스터도 사는 곳 힌트 (Q-12)
         }
 
         IEnumerator BookRoutine()

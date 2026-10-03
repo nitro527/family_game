@@ -82,6 +82,9 @@ namespace GirlAdventure.EditorTools
             try { DataLoader.Load(true); }
             catch (Exception e) { Check("data loads", false, e.Message); return; }
             Check("data loads", GameData.Loaded);
+            string noRegion = "";
+            foreach (var d in GameData.AllEnemies()) if (GameData.RegionOf(d) == "") noRegion += d.Name + " ";
+            Check("every bestiary monster has a region (Q-12)", noRegion == "" && GameData.RegionOf(GameData.SnowBoss) == "눈 덮인 땅" && GameData.RegionOf(GameData.King) == "킹 젤리의 성", noRegion);
             bool enemiesOk = GameData.Normal != null && GameData.Normal.Length >= 3 && GameData.King != null && GameData.King.Boss;
             if (enemiesOk)
                 foreach (var d in GameData.Normal)
