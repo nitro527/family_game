@@ -6,12 +6,13 @@
 ## 주말에 다시 시작할 때 (순서대로)
 1. Unity Hub 로그인 확인 (배치 모드 검증에 필요)
 2. (2026-10-03 부터) 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 사용자가 이 대화에서 명령하면 백로그 항목을 하나씩 처리
-3. 다음 개발 항목: `docs/BACKLOG.md` **55 스킬 레벨 b (View)** → 56 주문 바꾸기. Sim 은 `SkillLevels` (Level/Progress/UsesToNext), 전투 결과 `PlayerOutcome.SkillUp` 으로 "리본 파이어가 Lv2 가 되었다!" 연출. 보스 수치는 `python tools/balance.py --skill N` 으로
-   - 챕터 3 은 끝까지 됨 (지금 마지막 챕터 = `WorldMap.LastChapter` 3). 챕터 4 는 🙋 사용자 결정(숲? 엄마 합류?) 뒤 — PLAN_NEXT.md §3
-   - 56 주문 바꾸기는 🙋 새 주문 결정까지 보류. 결정 없이 할 수 있는 다음 큰 일: PLAN_NEXT 66 파티 구조 일반화 (지훈 전용 칸 → 파티 멤버 목록, 엄마·아빠 합류 준비)
-   - 세이브 버전을 올리면 SmokeTest `SaveSafetyTests` 에 그 버전 예시 JSON 을 하나 더해야 통과
-   - 지훈 얼굴 대사는 Face 를 `bro_smile` 처럼 (`GameRoot.FacePath`)
-4. 그 뒤 PLAN_NEXT.md 의 추천 순서 (58 편지 퀘스트, 60 서진이 시험 플레이 …)
+3. 다음 개발 항목 (Claude 가 계획하며 진행 — 사용자 지시 10-03 "앞으로 뭘할지도 니가 계속 계획하면서 진행해봐"): `docs/BACKLOG.md` 맨 위 **C4 챕터 4** 의 남은 것
+   - **C4-7a 용암 땅 쉼터 마을** ✏️ → **C4-7b 용암 보스 + 챕터 4 끝** ✏️ → **C4-8 빌드 + PLAYTEST_NOTE 챕터 4 줄**
+   - 동료는 `party.json` (지훈 jihun·아빠 dad), 화면은 동료 배열(`AllyView`·`Follower`·`allyHuds`), 동료 공용 대사 `ally_*`(얼굴 `ally_brave`), 지훈은 예전 `bro_*`
+   - 마을 드나들기: `WorldMap.HasTown(chapter)`(지금 1·3), `ForPlayer`, View `SurfaceMap`·`TravelRoutine`(챕터 3 = 사막) — 챕터 4 마을을 넣을 때 여기들
+   - 밸런스: SmokeTest `[BALANCE LAVA]`·`FightDuo`(셋 AI), `python tools/balance.py --skill N`. 프로브 난수는 `GameRoot.SeedOverride` 로 고정
+   - 세이브 버전 올리면 SmokeTest `SaveSafetyTests` 에 예시 JSON 추가 (지금 v13)
+4. 그 뒤: PLAN_NEXT.md (58 편지 퀘스트 🙋, 62 지훈 기술 🙋, 엄마 합류 시점 🙋…) · 🙋 답을 기다리는 것: 지하세계·용암 괴물 디자인(서진이), 새 주문(56), 기술·마을·보스 이름
 5. 그림(Gemini) 작업은 **대화 세션에서만** (자동 루틴 불가). PC 잠금 상태면 클립보드가 막혀 못 함
 
 ## 프로젝트 한눈에
