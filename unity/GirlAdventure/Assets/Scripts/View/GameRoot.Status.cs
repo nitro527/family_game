@@ -208,7 +208,7 @@ namespace GirlAdventure.View
         {
             if (P.Underground) return "지하세계를 탐험하자! 입구 방의 밧줄로 위로 돌아갈 수 있어요";
             if (P.Chapter < 2) return P.BossDown ? "별빛을 되찾았어요!" : "남동쪽 성의 킹 젤리를 물리치자";
-            if (P.Chapter >= 5) return "눈 덮인 땅을 탐험하자! 북동쪽 눈 산 아래까지 눈길을 따라가 보자";
+            if (P.Chapter >= 5) return "눈꽃 마을(눈길 동쪽 끝)에서 털옷을 사고, 북동쪽 눈 산 동굴을 살펴보자";
             if (P.Chapter >= 4) return P.Boss4Down ? "화산이 잠잠해졌어요!" : "온천 마을에서 장비를 갖추고, 화산 아래 동굴로 가 보자";
             if (P.Chapter >= 3) return P.Boss3Down ? "사막에 물이 돌아왔어요!" : "오아시스 마을의 말라 버린 우물… 남쪽 바위 골짜기를 살펴보자";
             if (P.Boss2Down) return "동굴에 평화가 찾아왔어요!";

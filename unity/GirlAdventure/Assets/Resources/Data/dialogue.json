@@ -195,6 +195,22 @@
       { "Text": "\"감기 걸리지 않게 아빠 곁에 꼭 붙어 있으렴. 저기 모닥불에서 몸을 녹이고 가자!\"", "Face": "dad_smile", "Hold": 1.6 } ] },
     { "Id": "ice_slide", "Lines": [ { "Text": "미끌미끌~! 얼음 위에서는 무언가에 부딪힐 때까지 쭉 미끄러져요!", "Face": "laugh", "Hold": 1.3 } ] },
     { "Id": "snow_chest_open", "Lines": [ { "Text": "보물상자를 열었다! {item:을/를} 손에 넣었다!", "Face": "laugh", "Hold": 1.2 }, { "Text": "상태 창(Esc)의 장비에서 달아 볼 수 있어요.", "Face": "smile" } ] },
+    { "Id": "snowtown_enter", "Lines": [
+      { "Text": "전나무 숲 사이에 숨은 작은 마을! 통나무집 굴뚝에서 연기가 몽글몽글 올라와요.", "Face": "smile", "Hold": 1.3 },
+      { "Text": "\"따뜻한 마을이구나. 여기서 털옷도 사고 몸도 녹이자!\"", "Face": "dad_smile", "Hold": 1.2 } ] },
+    { "Id": "sign_snowtown", "Lines": [
+      { "Text": "표지판: \"눈꽃 마을 (✏️ 임시 이름). 털옷 가게는 왼쪽, 여관은 오른쪽 위 집. 모닥불에서 몸을 녹여요!\"", "Face": "smile" } ] },
+    { "Id": "npc_snow_elder", "Lines": [
+      { "Text": "\"멀리서 왔구나. 요즘 북동쪽 눈 산에서 눈보라가 멈추질 않는단다…\"", "Face": "surprised" },
+      { "Text": "\"눈 산 동굴 앞에서 커다란 발자국을 봤다는 젤리도 있어. 털이 복슬복슬한 '예티'가 산다는 소문이야.\"", "Face": "surprised" },
+      { "Text": "\"예티…? 무섭지 않아! 우리 가족이 가 볼게요!\"", "Face": "laugh" } ] },
+    { "Id": "npc_furrier", "Lines": [
+      { "Text": "\"어서 오세요! 하얀 털 망토는 눈보라도 끄떡없어요. 지훈이 얼음 칼, 아빠 서리 장검도 있답니다!\"", "Face": "smile" } ] },
+    { "Id": "npc_skater", "Lines": [
+      { "Text": "\"슝~ 슝~! 마을 연못은 안 미끄러운 연습용이야. 바깥 호수는 쭉쭉 미끄러지니까 조심해!\"", "Face": "laugh" } ] },
+    { "Id": "npc_snow_kid", "Lines": [
+      { "Text": "\"나는 착한 눈송이 젤리야! 밖의 눈송이 젤리들은 눈보라 때문에 화가 났대.\"", "Face": "laugh" },
+      { "Text": "누나, 눈싸움 하자! 받아라~!", "Face": "bro_laugh" } ] },
     { "Id": "sign_snow", "Lines": [
       { "Text": "표지판: \"눈 덮인 땅. 호수는 꽁꽁 얼어 있어요. 모닥불에서 몸을 녹이고 가세요. 북동쪽 눈 산 조심!\"", "Face": "smile" } ] },
     { "Id": "dad_join", "Lines": [

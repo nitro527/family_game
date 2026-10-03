@@ -196,7 +196,7 @@ namespace GirlAdventure.View
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }
-                else if (map.Kind == MapKind.Snow)
+                else if (map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown)
                 {
                     ambientTimer = .05f;                // 눈 덮인 땅: 펑펑 내리는 눈
                     var p = new Vector3(camPos.x + Random.Range(-halfW - 1, halfW), camPos.y + halfH + .3f, 0);

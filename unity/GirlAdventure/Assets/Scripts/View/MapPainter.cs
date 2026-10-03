@@ -22,7 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -546,9 +546,102 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 67));
             SnowPeakArt(R, WorldMap.SnowPeak.x * T, WorldMap.SnowPeak.y * T);
+            TownArch(R, WorldMap.SnowGate.x * T, WorldMap.SnowGate.y * T);       // 눈꽃 마을 문
             Campfire(R, WorldMap.SnowFire.x * T, WorldMap.SnowFire.y * T);
             Sign(R, WorldMap.SnowSign.x * T, WorldMap.SnowSign.y * T);
             return R;
+        }
+
+        /// <summary>
+        /// 눈꽃 마을 (C5-4): 눈밭 + 발자국 눈길 + 스케이트 연못 → 전나무 → 통나무집(눈 지붕)·여관 간판 → 털옷 가게·모닥불·표지판·출구 문.
+        /// </summary>
+        static Raster SnowTown(WorldMap m)
+        {
+            int w = WorldMap.W * T, h = WorldMap.H * T;
+            var R = new Raster(w, h);
+            var pond = Mask(m, "i");
+            var path = Mask(m, "=");
+            Color32 s0 = H("#E8EEF8"), s1 = H("#FCFDFF"), trod = H("#CCD6E6"), i0 = H("#A4D8F0"), i1 = H("#DAF2FC"), irim = H("#8EA8C4");
+            for (int py = 0; py < h; py++)
+                for (int px = 0; px < w; px++)
+                {
+                    var c = Lerp(s0, s1, Fbm(px, py, 71));
+                    float wob = (Noise(px / 14f, py / 14f, 72) - .5f) * 10;
+                    if (Soft(path, px + wob, py - wob * .5f) is float pw && pw > .4f) c = Lerp(c, trod, Smooth(.4f, .62f, pw) * .55f);
+                    float lw = Soft(pond, px + wob * .5f, py - wob * .5f);
+                    if (lw > .35f) c = lw < .5f ? Lerp(c, irim, Smooth(.35f, .5f, lw)) : Lerp(i0, i1, Noise(px / 30f, py / 30f, 73));
+                    R.Blend(px, py, c);
+                }
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'i' && Hash(x, y, 74) < .3f)                                    // 스케이트 자국
+                        R.Line(x * T + 8, y * T + 30, x * T + 40, y * T + 22, 2, H("#FFFFFF", 160));
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 75));
+            TownArch(R, WorldMap.SnowTownExit.x * T, WorldMap.SnowTownExit.y * T);
+            for (int i = 0; i < WorldMap.SnowTownHouses.Length; i++)
+            {
+                var (hx, hy) = WorldMap.SnowTownHouses[i];
+                LogCabin(R, hx * T, hy * T, i);
+            }
+            var inn = WorldMap.SnowTownHouses[WorldMap.SnowTownInn];
+            InnSign(R, inn.x * T + 3 * T / 2f, inn.y * T + 48);
+            FurShop(R, WorldMap.SnowTownShop.x * T, WorldMap.SnowTownShop.y * T);
+            Campfire(R, WorldMap.SnowTownFire.x * T, WorldMap.SnowTownFire.y * T);
+            Sign(R, WorldMap.SnowTownSign.x * T, WorldMap.SnowTownSign.y * T);
+            return R;
+        }
+
+        /// <summary>통나무집 (3×2 칸): 둥근 통나무 벽, 눈 쌓인 세모 지붕(고드름), 노란 불빛 창, 굴뚝.</summary>
+        static void LogCabin(Raster R, float X, float Y, int v)
+        {
+            float w = 3 * T, h = 2 * T;
+            Color32 log = v % 2 == 0 ? H("#9A6238") : H("#8A5530"), logD = Mul(log, .75f), logL = Mul(log, 1.15f);
+            R.Ellipse(X + w / 2 + 8, Y + h - 2, w / 2 + 6, 10, new Color32(60, 80, 130, 70));
+            R.Rect(X + 6, Y + 28, w - 12, h - 30, Ink);
+            R.Rect(X + 8, Y + 30, w - 16, h - 34, log);
+            for (float ly = Y + 34; ly < Y + h - 6; ly += 10)                                       // 통나무 줄
+            {
+                R.Rect(X + 8, ly + 6, w - 16, 3, logD);
+                R.Circle(X + 9, ly + 4, 4.5f, logL); R.Circle(X + w - 9, ly + 4, 4.5f, logL);
+            }
+            R.Rect(X + w - 40, Y - 16, 14, 30, H("#6E6A72"));                                   // 굴뚝 (눈 모자)
+            R.Ellipse(X + w - 33, Y - 16, 10, 5, H("#FFFFFF"));
+            var roof = new[] { new Vector2(X - 6, Y + 36), new Vector2(X + w / 2, Y - 12), new Vector2(X + w + 6, Y + 36) };
+            R.Polygon(roof, H("#6B4A30"), Ink, 4);
+            R.Polygon(new[] { new Vector2(X - 6, Y + 34), new Vector2(X + w / 2, Y - 10), new Vector2(X + w + 6, Y + 34), new Vector2(X + w / 2, Y + 20) }, H("#FFFFFF"));   // 눈 지붕
+            for (int i = 0; i < 7; i++)                                                              // 고드름
+            {
+                float ix = X + 8 + i * (w - 16) / 6f;
+                R.Polygon(new[] { new Vector2(ix - 3, Y + 34), new Vector2(ix, Y + 34 + 6 + (i % 3) * 4), new Vector2(ix + 3, Y + 34) }, H("#CFEFFF"));
+            }
+            float dx = X + w / 2 - 11;                                                              // 문
+            R.Rect(dx - 2, Y + h - 32, 26, 32, Ink);
+            R.Rect(dx, Y + h - 30, 22, 30, H("#5A3418"));
+            R.Circle(dx + 17, Y + h - 15, 2, H("#FFD84A"));
+            foreach (float wx in new[] { X + 26, X + w - 26 })                                       // 따뜻한 창
+            {
+                R.Rect(wx - 10, Y + 44, 20, 16, Ink);
+                R.Rect(wx - 8, Y + 46, 16, 12, H("#FFD86A"));
+                R.Rect(wx - 1, Y + 46, 2, 12, H("#6B4A30"));
+                R.Rect(wx - 12, Y + 59, 24, 4, H("#FFFFFF"));
+            }
+        }
+
+        /// <summary>털옷 가게: 파랑·하양 줄무늬 차양 + 나무 계산대 위 털모자·목도리.</summary>
+        static void FurShop(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(60, 80, 130, 80));
+            R.Rect(X + 3, Y - 8, 5, 50, H("#6B4424"));
+            R.Rect(X + 40, Y - 8, 5, 50, H("#6B4424"));
+            R.Polygon(new[] { new Vector2(X - 4, Y - 6), new Vector2(X + 52, Y - 6), new Vector2(X + 48, Y + 8), new Vector2(X, Y + 8) },
+                      (px, py) => ((int)((px - X + 8) / 8) % 2 == 0) ? H("#4A7BD8") : H("#FFFFFF"), Ink, 2.5f);
+            R.Ellipse(X + 24, Y - 8, 28, 5, H("#FFFFFF"));                                          // 차양 위 눈
+            R.Rect(X + 1, Y + 26, 46, 5, H("#C9955A"));
+            R.Rect(X + 3, Y + 31, 42, 13, H("#A8743F"));
+            R.Ellipse(X + 14, Y + 22, 8, 6, H("#D8574A")); R.Circle(X + 14, Y + 15, 3, H("#FFFFFF"));   // 털모자
+            R.Rect(X + 26, Y + 18, 16, 6, H("#4FA85A")); R.Rect(X + 36, Y + 18, 5, 10, H("#4FA85A"));  // 목도리
         }
 
         /// <summary>눈 덮인 전나무 한 그루 (칸 위로 조금 솟는다, 세 층마다 눈).</summary>

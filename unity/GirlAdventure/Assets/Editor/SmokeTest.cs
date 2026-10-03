@@ -473,6 +473,7 @@ namespace GirlAdventure.EditorTools
             HomeTests();
             SnowTests();
             SnowJellyTests();
+            SnowTownTests();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -508,6 +509,34 @@ namespace GirlAdventure.EditorTools
             float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
             Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
+        }
+
+        /// <summary>눈꽃 마을 (C5-4): 눈길 끝 문, 마을 모든 칸 이어짐(마을 사람 놓은 뒤), 마을 사람·여관, 털옷 가게 새 장비, 드나들기.</summary>
+        static void SnowTownTests()
+        {
+            var s = WorldMap.Snow();
+            var sr = Reach(s, WorldMap.SnowStart);
+            Check("snow gate: doorway at the east end of the snow path", s.IsDoorway(WorldMap.SnowGate.x, WorldMap.SnowGate.y) && sr[WorldMap.SnowGate.x, WorldMap.SnowGate.y]
+                  && !s.Blocked(WorldMap.SnowGate.x - 1, WorldMap.SnowGate.y));
+            var t = WorldMap.SnowTown();
+            Npcs.Place(t);
+            var tr = Reach(t, WorldMap.SnowTownStart);
+            int free = 0, unreached = 0;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (!t.Blocked(x, y)) { free++; if (!tr[x, y]) unreached++; }
+            bool Near((int x, int y) p) => tr[p.x - 1, p.y] || tr[p.x + 1, p.y] || tr[p.x, p.y + 1] || tr[p.x, p.y - 1];
+            string bad = "";
+            int n = 0;
+            foreach (var npc in Npcs.On(MapKind.SnowTown)) { n++; if (!Near((npc.X, npc.Y)) || !GameData.HasTalk(npc.Talk)) bad += npc.Id + " "; }
+            Check("snow town: all reachable, exit, fire, shop, sign, npcs + inn", t.IsTown && unreached == 0 && free > 300 && t.IsDoorway(WorldMap.SnowTownExit.x, WorldMap.SnowTownExit.y)
+                  && Near(WorldMap.SnowTownFire) && Near(WorldMap.SnowTownShop) && Near(WorldMap.SnowTownSign) && n >= 4 && bad == ""
+                  && new List<NpcDef>(Npcs.On(MapKind.SnowTown)).Exists(x => x.Inn) && t.EncounterRate(18, 15) == 0, $"unreached {unreached} bad {bad}");
+            var goods = Shop.Goods(MapKind.SnowTown);
+            Check("fur shop: new gear for all three + candy", goods.Contains("snow_wand") && goods.Contains("fur_cape") && goods.Contains("ice_sword") && goods.Contains("frost_blade")
+                  && goods.Contains("candy") && goods.Contains("moon") && !goods.Contains("snow_pendant")
+                  && GameData.Item("snow_wand").Atk > GameData.Item("flame_wand").Atk && GameData.Item("ice_sword").Atk > GameData.Item("flame_sword").Atk
+                  && GameData.Item("frost_blade").Atk > GameData.Item("lion_blade").Atk, string.Join(",", goods));
         }
 
         /// <summary>그림 확인용: 몬스터 여럿을 한 장으로 (unity/playtest/파일).</summary>
@@ -611,9 +640,9 @@ namespace GirlAdventure.EditorTools
             var p = PlayerState.NewGame("s");
             p.Boss2Down = true; Quest.TryJoinBrother(p); p.Join("dad"); p.Chapter = 4; p.Boss4Down = true; p.InVillage = true; p.Hp = 1;
             Quest.StartChapter5(p);
-            Check("chapter 4 → 5: three together at the snow start, healed, no town yet",
+            Check("chapter 4 → 5: three together at the snow start, healed, snow town",
                   WorldMap.LastChapter == 5 && p.Chapter == 5 && !p.InVillage && (p.X, p.Y) == WorldMap.SnowStart && p.Companions.Count == 2 && p.Hp == p.MaxHp
-                  && !WorldMap.HasTown(5) && WorldMap.ForPlayer(5, true).Kind == MapKind.Snow && WorldMap.ForPlayer(4, true).Kind == MapKind.LavaTown);
+                  && WorldMap.HasTown(5) && WorldMap.ForPlayer(5, true).Kind == MapKind.SnowTown && WorldMap.ForPlayer(4, true).Kind == MapKind.LavaTown);
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
             Check("chapter 5 save loads on the snow map", q.Chapter == 5 && (q.X, q.Y) == WorldMap.SnowStart && q.Companions.Count == 2);
             try   // 그림 확인용: 눈 덮인 땅 전체 그림 (unity/playtest/map_snow.png)
