@@ -196,7 +196,7 @@ namespace GirlAdventure.View
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }
-                else if (map.Kind == MapKind.Lava)
+                else if (map.Kind == MapKind.Lava || map.Kind == MapKind.LavaTown)
                 {
                     ambientTimer = .08f;                // 용암 땅: 아래에서 솟아오르는 불티
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y - halfH - .2f, 0);

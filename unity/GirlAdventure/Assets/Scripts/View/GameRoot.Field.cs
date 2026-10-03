@@ -33,7 +33,7 @@ namespace GirlAdventure.View
         }
         readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
-        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap;
+        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
@@ -55,6 +55,7 @@ namespace GirlAdventure.View
             townMap = WorldMap.OasisTown();
             underMap = WorldMap.Underworld();
             lavaMap = WorldMap.Lava();
+            lavaTownMap = WorldMap.LavaTown();
             mobs = new FieldMonsters(rng);
             Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
             Npcs.Place(caveMap);
@@ -62,10 +63,11 @@ namespace GirlAdventure.View
             Npcs.Place(desertMap);
             Npcs.Place(townMap);
             Npcs.Place(underMap);
+            Npcs.Place(lavaTownMap);
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap })
+            foreach (var m in new[] { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap })
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -149,7 +151,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지하세계가 아닐 때 있어야 할 맵 (챕터·마을 안).</summary>
-        WorldMap SurfaceMap => P.Chapter >= 4 ? lavaMap : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+        WorldMap SurfaceMap => P.Chapter >= 4 ? (P.InVillage ? lavaTownMap : lavaMap) : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
 
         /// <summary>연 상자·열린 문·보물상자 지킴이 그림.</summary>
         void RefreshQuestProps()
@@ -353,10 +355,11 @@ namespace GirlAdventure.View
             sfx.Play("step");
             yield return Fade(0, 1, .3f);
             P.InVillage = toVillage;
-            bool desert = P.Chapter == 3;           // 챕터 3: 사막 ↔ 오아시스 마을 (문이 오른쪽 끝이라 나오면 왼쪽을 본다)
-            if (desert) (P.X, P.Y) = toVillage ? WorldMap.TownStart : (WorldMap.TownGate.x - 1, WorldMap.TownGate.y);
+            bool desert = P.Chapter == 3, lava = P.Chapter >= 4;   // 챕터 3: 사막 ↔ 오아시스 마을, 챕터 4: 용암 땅 ↔ 온천 마을 (문이 오른쪽이라 나오면 왼쪽을 본다)
+            if (lava) (P.X, P.Y) = toVillage ? WorldMap.LavaTownStart : (WorldMap.LavaGate.x - 1, WorldMap.LavaGate.y);
+            else if (desert) (P.X, P.Y) = toVillage ? WorldMap.TownStart : (WorldMap.TownGate.x - 1, WorldMap.TownGate.y);
             else (P.X, P.Y) = toVillage ? WorldMap.VillageStart : (WorldMap.VillageGate.x, WorldMap.VillageGate.y + 1);
-            facing = toVillage ? "up" : desert ? "left" : "down";
+            facing = toVillage ? "up" : desert || lava ? "left" : "down";
             moveT = -1;
             ApplyMap();
             ResetBrother();
@@ -367,7 +370,7 @@ namespace GirlAdventure.View
             AutoSave();
             yield return Fade(1, 0, .3f);
             HideSwirl();
-            if (toVillage) { yield return Talk(desert ? "oasis_enter" : "village_enter"); HideMessage(); }
+            if (toVillage) { yield return Talk(lava ? "lavatown_enter" : desert ? "oasis_enter" : "village_enter"); HideMessage(); }
             busy = false;
         }
 
@@ -834,7 +837,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(map.Kind == MapKind.LavaTown ? "sign_lavatown" : map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }

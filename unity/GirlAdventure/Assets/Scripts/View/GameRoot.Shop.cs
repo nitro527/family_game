@@ -136,12 +136,23 @@ namespace GirlAdventure.View
             choiceIndex = back;
         }
 
+        /// <summary>동료 장비 대사: 지훈은 "bro_equip_*", 다른 동료는 "ally_equip_*" (그 동료의 공격·방어).</summary>
+        IEnumerator AllyGearTalk(CompanionDef owner, string key, string id)
+        {
+            var c = P.Member(owner.Id);
+            int atk = c != null ? P.AtkOf(c) : 0, def = c != null ? P.DefOf(c) : 0;
+            if (owner.Id == Party.Brother) { yield return Talk("bro_" + key, ("item", GameData.ItemName(id)), ("atk", atk), ("def", def)); yield break; }
+            allyFaceDef = owner;
+            yield return Talk("ally_" + key, ("ally", owner.Name), ("item", GameData.ItemName(id)), ("atk", atk), ("def", def));
+        }
+
         IEnumerator EquipNow(string id)
         {
             Equipment.Equip(P, id);
             sfx.Play("chest");
             RefreshHud();
-            if (Equipment.ForBrother(id)) yield return Talk("bro_equip_on", ("item", GameData.ItemName(id)), ("atk", P.BroAtk), ("def", P.BroDef));
+            var owner = Equipment.OwnerOf(id);
+            if (owner != null) yield return AllyGearTalk(owner, "equip_on", id);
             else yield return Talk("equip_on", ("item", GameData.ItemName(id)), ("atk", P.Atk), ("def", P.Def));
         }
 
@@ -195,7 +206,7 @@ namespace GirlAdventure.View
                     Equipment.Unequip(P, slot);
                     sfx.Play("select");
                     RefreshHud();
-                    if (Equipment.IsBroSlot(slot)) yield return Talk("bro_equip_off", ("item", GameData.ItemName(cur2)), ("atk", P.BroAtk), ("def", P.BroDef));
+                    if (Equipment.IsBroSlot(slot)) yield return AllyGearTalk(Party.OwnerOfSlot(slot), "equip_off", cur2);
                     else yield return Talk("equip_off", ("item", GameData.ItemName(cur2)), ("atk", P.Atk), ("def", P.Def));
                 }
                 RenderStatus();

@@ -1271,6 +1271,55 @@ namespace GirlAdventure.EditorTools
             Expect("lava battle: lava jelly + backdrop", G.BattleEnemy == GameData.Lava[1] && G.BattleBackdropName == "lava", G.BattleBackdropName + " " + G.BattleEnemy?.Name);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+
+            // 온천 마을 (C4-7a): 용암 땅 문 → 마을 → 마을 어른 → 대장간에서 사자 장검 → 아빠 장착 → 나가기
+            G.DebugMobs(true, true);
+            G.DebugTeleport(WorldMap.LavaGate.x - 1, WorldMap.LavaGate.y, "right");
+            yield return .4f;
+            Shot("lava_gate");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("김이") || G.MapKindNow == MapKind.LavaTown && !G.Busy)) yield return x;
+            yield return .6f;
+            Shot("lavatown_enter");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            Expect("entered the hot spring town", G.MapKindNow == MapKind.LavaTown && G.P.InVillage && G.FollowerVisible("dad"));
+            G.DebugTeleport(16, 16, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("화산"))) yield return x;
+            yield return .5f;
+            Shot("lavatown_elder");
+            Expect("elder talks about the angry volcano", G.MessageText.Contains("화산"), G.MessageText);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugSetGold(800);
+            int dadAtk0 = G.P.AtkOf(G.P.Member("dad"));
+            G.DebugTeleport(WorldMap.LavaTownShop.x + 1, WorldMap.LavaTownShop.y, "left");
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            yield return .2f;
+            int bladeIdx = Shop.Goods(MapKind.LavaTown).IndexOf("lion_blade");
+            for (int k = 0; k < bladeIdx; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Shot("lavatown_forge");
+            Keys.Press(KeyCode.Return);
+            yield return .3f;
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .3f;
+            Keys.Press(KeyCode.Return);                // 지금 장착하기
+            yield return .3f;
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("장착했다") || G.ChoiceOpen)) yield return x;
+            Shot("lavatown_dad_equip");
+            Expect("dad lion blade bought & equipped", Equipment.IsEquipped(G.P, "lion_blade") && G.P.AtkOf(G.P.Member("dad")) == dadAtk0 + GameData.Item("lion_blade").Atk, G.MessageText);
+            foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
+            Keys.Press(KeyCode.Escape);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugTeleport(WorldMap.LavaTownStart.x, WorldMap.LavaTownStart.y, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            foreach (var x in SkipTalk(() => G.MapKindNow == MapKind.Lava && !G.Busy)) yield return x;
+            yield return .4f;
+            Expect("left the hot spring town to the lava gate", G.MapKindNow == MapKind.Lava && !G.P.InVillage && G.P.X == WorldMap.LavaGate.x - 1);
+            ExpectBgm("lava");
         }
 
         static bool skillUpSeen, broCmdSeen, comboShot;

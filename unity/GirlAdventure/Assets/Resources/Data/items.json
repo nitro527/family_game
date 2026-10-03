@@ -1,8 +1,8 @@
 {
   "Items": [
-    { "Id": "candy",  "Name": "사탕",      "Kind": "use", "Hp": 18, "Price": 8,  "Shops": "village,cave,oasis", "Desc": "먹으면 HP가 회복되는 달콤한 사탕" },
-    { "Id": "potion", "Name": "마법 물약", "Kind": "use", "Mp": 12, "Price": 15, "Shops": "village,cave,oasis", "Desc": "마시면 MP가 회복되는 반짝이는 물약" },
-    { "Id": "moon",   "Name": "달님 사탕", "Kind": "use", "Hp": 60, "Price": 30, "Shops": "cave,oasis", "Desc": "HP가 아주 많이 회복되는 커다란 달 모양 사탕" },
+    { "Id": "candy",  "Name": "사탕",      "Kind": "use", "Hp": 18, "Price": 8,  "Shops": "village,cave,oasis,lavatown", "Desc": "먹으면 HP가 회복되는 달콤한 사탕" },
+    { "Id": "potion", "Name": "마법 물약", "Kind": "use", "Mp": 12, "Price": 15, "Shops": "village,cave,oasis,lavatown", "Desc": "마시면 MP가 회복되는 반짝이는 물약" },
+    { "Id": "moon",   "Name": "달님 사탕", "Kind": "use", "Hp": 60, "Price": 30, "Shops": "cave,oasis,lavatown", "Desc": "HP가 아주 많이 회복되는 커다란 달 모양 사탕" },
     { "Id": "star_wand",    "Name": "별빛 지팡이", "Kind": "weapon", "Atk": 2, "Price": 50,  "Shops": "village", "Desc": "끝에 작은 별이 달린 지팡이" },
     { "Id": "flower_cape",  "Name": "꽃잎 망토",   "Kind": "armor",  "Def": 1, "Price": 40,  "Shops": "village", "Desc": "꽃잎을 엮어 만든 가볍고 튼튼한 망토" },
     { "Id": "ribbon",       "Name": "리본 머리띠", "Kind": "acc",    "Def": 1, "Price": 30,  "Shops": "village", "Desc": "엄마가 달아 준 행운의 리본" },
@@ -13,6 +13,11 @@
     { "Id": "sand_cape", "Name": "모래바람 망토", "Kind": "armor", "Def": 5, "Price": 180, "Shops": "oasis", "Desc": "모래바람도 막아 주는 두꺼운 망토" },
     { "Id": "bro_sword", "Name": "모래바람 칼", "Kind": "bro_weapon", "Atk": 5, "Price": 150, "Shops": "oasis", "Desc": "지훈이 손에 꼭 맞는 작은 강철 칼" },
     { "Id": "bro_shield", "Name": "거북 등딱지 방패", "Kind": "bro_shield", "Def": 3, "Price": 120, "Shops": "oasis", "Desc": "단단한 사막 거북 등딱지로 만든 둥근 방패" },
+    { "Id": "flame_wand", "Name": "불꽃 지팡이", "Kind": "weapon", "Atk": 12, "Price": 300, "Shops": "lavatown", "Desc": "용암 땅 대장간에서 만든 불꽃 보석 지팡이" },
+    { "Id": "lava_robe", "Name": "용암 로브", "Kind": "armor", "Def": 8, "Price": 260, "Shops": "lavatown", "Desc": "뜨거운 열기도 막아 주는 붉은 로브" },
+    { "Id": "flame_sword", "Name": "불꽃 칼", "Kind": "bro_weapon", "Atk": 9, "Price": 240, "Shops": "lavatown", "Desc": "지훈이 손에 맞춘 빨갛게 빛나는 칼" },
+    { "Id": "lion_blade", "Name": "사자 장검", "Kind": "dad_weapon", "Atk": 7, "Price": 240, "Shops": "lavatown", "Desc": "손잡이에 사자가 새겨진 기사의 긴 검" },
+    { "Id": "lion_shield", "Name": "황금 사자 방패", "Kind": "dad_shield", "Def": 5, "Price": 220, "Shops": "lavatown", "Desc": "가족을 지키는 금빛 사자 방패" },
     { "Id": "key",    "Name": "기지 열쇠", "Kind": "key", "Desc": "젤리 기지의 문을 여는 반짝이는 열쇠" }
   ]
 }

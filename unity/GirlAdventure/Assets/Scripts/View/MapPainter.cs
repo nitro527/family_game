@@ -22,7 +22,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -339,10 +339,10 @@ namespace GirlAdventure.View
         }
 
         /// <summary>흙벽돌 집 (3×2 칸): 둥근 모서리 모래색 벽, 평평한 지붕 위 나무 들보 끝, 아치 문, 작은 창, 벽 앞 항아리.</summary>
-        static void AdobeHouse(Raster R, float X, float Y, int v)
+        static void AdobeHouse(Raster R, float X, float Y, int v, bool stone = false)
         {
             float w = 3 * T, h = 2 * T;
-            Color32 wall = v % 2 == 0 ? H("#E2B47A") : H("#D9A06A"), wallD = Mul(wall, .82f), wallL = Mul(wall, 1.1f);
+            Color32 wall = stone ? (v % 2 == 0 ? H("#8E8A92") : H("#7E7A84")) : v % 2 == 0 ? H("#E2B47A") : H("#D9A06A"), wallD = Mul(wall, .82f), wallL = Mul(wall, 1.1f);   // stone = 온천 마을 돌집
             R.Ellipse(X + w / 2 + 8, Y + h - 2, w / 2 + 6, 10, new Color32(0, 0, 0, 70));          // 그림자
             R.Rect(X + 4, Y + 10, w - 8, h - 12, Ink);
             R.Rect(X + 7, Y + 13, w - 14, h - 18, wall);
@@ -471,7 +471,73 @@ namespace GirlAdventure.View
             if (t != null) R.Stamp(t.Sheet, 6 * T, 4 * T, 2 * T, 2 * T, WorldMap.Volcano.x * T, WorldMap.Volcano.y * T, 2);
             HotSpring(R, WorldMap.LavaSpring.x * T, WorldMap.LavaSpring.y * T);
             Sign(R, WorldMap.LavaSign.x * T, WorldMap.LavaSign.y * T);
+            TownArch(R, WorldMap.LavaGate.x * T, WorldMap.LavaGate.y * T);       // 온천 마을 문
             return R;
+        }
+
+        /// <summary>
+        /// 온천 마을 (C4-7a): 잿빛 땅(주황 금 없이 따뜻한 색) → 김이 오르는 온천 웅덩이 → 회색 바위 → 돌집·여관 간판·대장간·온천·표지판·출구 문.
+        /// </summary>
+        static Raster LavaTown(WorldMap m, FieldTiles t)
+        {
+            int w = WorldMap.W * T, h = WorldMap.H * T;
+            var R = new Raster(w, h);
+            var pool = Mask(m, "w");
+            Color32 a0 = H("#5A4A44"), a1 = H("#76625A"), p0 = H("#5FC8E8"), p1 = H("#9FE4F4");
+            for (int py = 0; py < h; py++)
+                for (int px = 0; px < w; px++)
+                {
+                    float n = Fbm(px, py, 51), fine = Hash(px, py, 52);
+                    var c = Mul(Lerp(a0, a1, n), .95f + fine * .08f);
+                    float wob = (Noise(px / 14f, py / 14f, 53) - .5f) * 12;
+                    float pw = Soft(pool, px + wob, py - wob);
+                    if (pw > .35f)
+                    {
+                        if (pw < .5f) c = Lerp(c, H("#8E8A92"), Smooth(.35f, .5f, pw));      // 돌 테두리
+                        else c = Lerp(p0, p1, Fbm(px, py, 54));
+                    }
+                    R.Blend(px, py, c);
+                }
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'w' && Hash(x, y, 55) < .5f)                         // 김
+                        R.Ellipse(x * T + 24, y * T + 10, 10, 14, H("#FFFFFF", 60));
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'R')
+                    {
+                        if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "R", x, y);
+                        else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640"));
+                    }
+            TownArch(R, WorldMap.LavaTownExit.x * T, WorldMap.LavaTownExit.y * T);
+            for (int i = 0; i < WorldMap.LavaTownHouses.Length; i++)
+            {
+                var (hx, hy) = WorldMap.LavaTownHouses[i];
+                AdobeHouse(R, hx * T, hy * T, i, true);
+            }
+            var inn = WorldMap.LavaTownHouses[WorldMap.LavaTownInn];
+            InnSign(R, inn.x * T + 3 * T / 2f, inn.y * T + 48);
+            Forge(R, WorldMap.LavaTownShop.x * T, WorldMap.LavaTownShop.y * T);
+            HotSpring(R, WorldMap.LavaTownSpring.x * T, WorldMap.LavaTownSpring.y * T);
+            Sign(R, WorldMap.LavaTownSign.x * T, WorldMap.LavaTownSign.y * T);
+            return R;
+        }
+
+        /// <summary>대장간: 돌 화덕(안에 불) + 모루 + 망치, 위에 굴뚝 연기.</summary>
+        static void Forge(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 26, Y + 44, 24, 5, new Color32(0, 0, 0, 80));
+            R.Rect(X + 2, Y + 8, 26, 34, Ink);                                     // 화덕
+            R.Rect(X + 4, Y + 10, 22, 30, H("#6E6A72"));
+            R.Ellipse(X + 15, Y + 30, 7, 6, H("#FF7A2A"));
+            R.Ellipse(X + 15, Y + 31, 4, 3, H("#FFE27A"));
+            R.Rect(X + 8, Y - 6, 8, 16, H("#4E4A54"));                             // 굴뚝
+            R.Ellipse(X + 12, Y - 10, 6, 5, H("#BBBBBB", 120));
+            R.Rect(X + 30, Y + 30, 16, 6, Ink);                                    // 모루
+            R.Rect(X + 31, Y + 31, 14, 4, H("#5A5A66"));
+            R.Rect(X + 35, Y + 35, 6, 8, H("#3A3A44"));
+            R.Line(X + 40, Y + 18, X + 46, Y + 28, 2.5f, H("#8A5A30"));           // 망치
+            R.Rect(X + 36, Y + 14, 8, 6, H("#9A9AA6"));
         }
 
         /// <summary>온천: 둥근 돌 테두리 안의 하늘색 물 + 김.</summary>

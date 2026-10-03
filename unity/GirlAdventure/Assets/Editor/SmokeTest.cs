@@ -68,7 +68,7 @@ namespace GirlAdventure.EditorTools
             "shop_hello", "shop_ask", "shop_bought", "shop_nogold", "shop_full", "shop_bye",
             "shop_gear", "shop_owned", "equip_on", "equip_off", "equip_none", "guard_meet", "guard_down",
             "hole_look", "hole_candy", "hole_monster", "hole_empty", "book_complete",
-            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
+            "bro_join", "bro_join_late", "bro_joined", "bro_cast", "bro_bolt", "bro_miss", "bro_hit", "bro_dodge", "bro_hurt", "bro_down", "sis_down", "skill_up", "bro_skill_up", "combo", "combo_hit", "ally_cast", "ally_miss", "ally_hit", "ally_dodge", "ally_hurt", "ally_down", "ally_skill_up", "ally_guard", "ally_guarded", "ch4_intro", "dad_join", "dad_joined", "sign_lava", "lavatown_enter", "sign_lavatown", "npc_lava_elder", "npc_springkeeper", "npc_smith", "npc_lava_kid", "ally_equip_on", "ally_equip_off", "secret_hole_open", "secret_hole_open_solo", "under_enter", "under_leave", "sign_under",
         };
 
         static void DataTests()
@@ -467,6 +467,42 @@ namespace GirlAdventure.EditorTools
             PartyTests();
             LavaTests();
             LavaJellyTests();
+            LavaTownTests();
+        }
+
+        /// <summary>온천 마을 (C4-7a): 용암 땅 문, 마을 모든 칸 이어짐(마을 사람 놓은 뒤), 마을 사람, 대장간(아빠 장비), 드나들기 맵.</summary>
+        static void LavaTownTests()
+        {
+            var lava = WorldMap.Lava();
+            var g = WorldMap.LavaGate;
+            var lr = Reach(lava, WorldMap.LavaStart);
+            Check("lava land: town gate doorway reachable, exit spot free", lava.IsDoorway(g.x, g.y) && lr[g.x, g.y] && !lava.Blocked(g.x - 1, g.y));
+            var t = WorldMap.LavaTown();
+            Npcs.Place(t);
+            var ts = WorldMap.LavaTownStart;
+            var reach = Reach(t, ts);
+            int free = 0, unreached = 0;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (!t.Blocked(x, y)) { free++; if (!reach[x, y]) unreached++; }
+            var ex = WorldMap.LavaTownExit;
+            Check("lava town: start, exit doorway, all reachable, no monsters, spring/sign/shop", t.Kind == MapKind.LavaTown && t.IsTown && t.IsDoorway(ex.x, ex.y)
+                  && reach[ex.x, ex.y] && unreached == 0 && free > 250 && t.EncounterRate(ts.x, ts.y) == 0
+                  && t.At(t.Spring.x, t.Spring.y) == 'F' && t.At(t.SignPos.x, t.SignPos.y) == 'S' && t.At(t.ShopPos.x, t.ShopPos.y) == 'M'
+                  && WorldMap.ForPlayer(4, true).Kind == MapKind.LavaTown && WorldMap.ForPlayer(4, false).Kind == MapKind.Lava, $"free {free} unreached {unreached}");
+            string bad = "";
+            int n = 0;
+            foreach (var npc in Npcs.On(MapKind.LavaTown))
+            {
+                n++;
+                bool near = false;
+                foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) near |= reach[npc.X + dx, npc.Y + dy];
+                if (t.At(npc.X, npc.Y) != 'N' || !near || !GameData.HasTalk(npc.Talk) || Array.IndexOf(EnemyDef.Looks, npc.Look ?? "") < 0) bad += npc.Id + " ";
+            }
+            Check("lava town npcs placed, reachable, talk + look, inn", n >= 4 && bad == "" && new List<NpcDef>(Npcs.On(MapKind.LavaTown)).Exists(x => x.Inn), bad);
+            var goods = Shop.Goods(MapKind.LavaTown);
+            Check("forge sells dad gear + new gear", goods.Contains("lion_blade") && goods.Contains("lion_shield") && goods.Contains("flame_wand") && goods.Contains("flame_sword")
+                  && Equipment.OwnerOf("lion_blade")?.Id == "dad" && Equipment.OwnerOf("flame_sword")?.Id == Party.Brother, string.Join(",", goods));
         }
 
         /// <summary>용암 젤리 (C4-6, ✏️ 임시): 데이터·출현(잿빛 땅만)·셋이 싸우는 밸런스 (Lv12 아빠 합류 직후).</summary>
@@ -536,7 +572,7 @@ namespace GirlAdventure.EditorTools
                   && unreached == 0 && free > 400 && lava > 40 && bridges >= 4 && m.Blocked(16, 5) == (m.At(16, 5) == 'L' || m.At(16, 5) == 'R'), $"free {free} unreached {unreached} lava {lava} bridges {bridges}");
             Check("lava land: hot spring revive, sign, volcano, edges rock", m.At(m.Spring.x, m.Spring.y) == 'F' && reach[m.RevivePoint.x, m.RevivePoint.y]
                   && m.At(m.SignPos.x, m.SignPos.y) == 'S' && m.At(WorldMap.Volcano.x, WorldMap.Volcano.y) == 'K' && m.At(-1, 3) == 'R'
-                  && WorldMap.ForChapter(4).Kind == MapKind.Lava && WorldMap.LastChapter == 4 && !WorldMap.HasTown(4));
+                  && WorldMap.ForChapter(4).Kind == MapKind.Lava && WorldMap.LastChapter == 4 && WorldMap.HasTown(4) && !WorldMap.HasTown(2));
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(12));
             p.Boss2Down = true; p.Boss3Down = true; p.Chapter = 3; Quest.TryJoinBrother(p); p.Hp = 1; p.InVillage = true;
