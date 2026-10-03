@@ -1351,6 +1351,12 @@ namespace GirlAdventure.EditorTools
             Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
             foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
             yield return .2f;
+            // 9줄 목록 (Q-4): 7줄만 보이고 ↑ 한 번이면 맨 아래 "그만두기"로 스크롤, ↓ 로 다시 맨 위
+            Keys.Press(KeyCode.UpArrow); yield return .2f;
+            Shot("forge_scroll_bottom");
+            Expect("long shop list scrolls to the last row", G.ChoiceCount == 9 && G.ChoiceRows == 7 && G.ChoiceCursorVisible, $"count {G.ChoiceCount} rows {G.ChoiceRows}");
+            Keys.Press(KeyCode.DownArrow); yield return .2f;
+            Expect("and back to the top", G.ChoiceCursorVisible);
             int bladeIdx = Shop.Goods(MapKind.LavaTown).IndexOf("lion_blade");
             for (int k = 0; k < bladeIdx; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
             Shot("lavatown_forge");

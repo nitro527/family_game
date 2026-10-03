@@ -20,7 +20,7 @@ namespace GirlAdventure.View
 
         // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다.
         // 세 칸: 왼쪽 능력치 / 가운데 장비·주문 / 오른쪽 가방·지금 할 일
-        const float StW = 920, StH = 384, StX = (960 - StW) / 2, StY = 8, RowY = 108, RowH = 34, MidX = 404, RightX = 664;
+        const float StW = 920, StH = 384, StX = (960 - StW) / 2, StY = 8, RowY = 108, RowH = 34, MidX = 404, RightX = 690;
 
         void BuildStatus()
         {
@@ -111,7 +111,8 @@ namespace GirlAdventure.View
                 }
                 mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", names)}" + "\n");
             }
-            mid.Append("<color=#F2C443>주문</color> <size=15><color=#9AA3C7>스킬 레벨 · 다음 레벨까지</color></size>\n");
+            bool crowded = P.Companions.Count >= 2;    // 셋이면 줄이 많아 부제를 빼고 글씨를 작게 (아빠 기술 줄이 아래 버튼에 가리던 것)
+            mid.Append(crowded ? "<color=#F2C443>주문</color>\n" : "<color=#F2C443>주문</color> <size=15><color=#9AA3C7>스킬 레벨 · 다음 레벨까지</color></size>\n");
             mid.Append(SkillLine(Cmd.Fire)).Append(SkillLine(Cmd.Star));
             if (BattleSystem.Knows(P, Cmd.Heal)) mid.Append(SkillLine(Cmd.Heal));
             foreach (var c in P.Companions)             // 동료 기술은 한 줄씩 (자라는 기술은 Lv 도)
@@ -123,7 +124,7 @@ namespace GirlAdventure.View
                     else if (System.Enum.TryParse<Cmd>(k, out var cmd2)) parts.Add(GameData.Skill(cmd2).Name);
                 mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", parts)}" + "\n");
             }
-            stMid.fontSize = P.Companions.Count >= 2 ? 17 : 19;   // 동료가 둘이면 줄이 많아 조금 작게
+            stMid.fontSize = crowded ? 16 : 19;
             stMid.text = mid.ToString();
 
             var sb = new System.Text.StringBuilder();

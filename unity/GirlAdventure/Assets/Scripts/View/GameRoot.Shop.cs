@@ -12,8 +12,9 @@ namespace GirlAdventure.View
         GameObject choiceWin;
         readonly List<Text> choiceTexts = new List<Text>();
         string[] choiceItems;
-        int choiceIndex, choicePicked = -1;
-        const int MaxChoices = 7;                   // 동굴 가게: 소모품 3 + 장비 3 + 그만두기
+        int choiceIndex, choicePicked = -1, choiceOffset;
+        const int MaxChoices = 7;                   // 한 번에 보이는 줄 (더 많으면 커서를 따라 스크롤, ▲▼ 표시 — 온천 대장간 9줄이 화면 위로 넘치던 것)
+        Text choiceUp, choiceDown;
         const float ChoiceX = 628, ChoiceW = 320;       // 좁은 대화창(16~628)과 옆으로 겹치지 않게
         const float StatusChoiceX = 364;                // 상태 창 HP 막대 끝(362) ~ 가방 칸(684) 사이
 
@@ -28,21 +29,30 @@ namespace GirlAdventure.View
                 t.supportRichText = true;
                 var b = t.gameObject.AddComponent<Button>();
                 b.transition = Selectable.Transition.None;
-                b.onClick.AddListener(() => { if (choiceWin.activeSelf && idx < choiceItems.Length) { choiceIndex = idx; choicePicked = idx; } });
+                b.onClick.AddListener(() => { if (choiceWin.activeSelf && choiceOffset + idx < choiceItems.Length) { choiceIndex = choiceOffset + idx; choicePicked = choiceIndex; } });
                 choiceTexts.Add(t);
             }
+            choiceUp = UIKit.Label(choiceWin.transform, "More Up", "▲", ChoiceW - 34, 0, 24, 16, 14, TextAnchor.MiddleCenter, UIKit.Gold);
+            choiceDown = UIKit.Label(choiceWin.transform, "More Down", "▼", ChoiceW - 34, 0, 24, 16, 14, TextAnchor.MiddleCenter, UIKit.Gold);
             choiceWin.SetActive(false);
         }
 
         void RenderChoice()
         {
+            int n = choiceItems.Length, rows = Mathf.Min(n, MaxChoices);
+            if (choiceIndex < choiceOffset) choiceOffset = choiceIndex;
+            if (choiceIndex >= choiceOffset + rows) choiceOffset = choiceIndex - rows + 1;
+            choiceOffset = Mathf.Clamp(choiceOffset, 0, Mathf.Max(0, n - rows));
             for (int i = 0; i < MaxChoices; i++)
             {
-                bool on = i < choiceItems.Length;
+                int k = choiceOffset + i;
+                bool on = i < rows;
                 choiceTexts[i].gameObject.SetActive(on);
                 choiceTexts[i].fontSize = Settings.ChoiceFontSize;
-                if (on) choiceTexts[i].text = (i == choiceIndex ? "<color=#F2C443>▶</color> " : "    ") + choiceItems[i];
+                if (on) choiceTexts[i].text = (k == choiceIndex ? "<color=#F2C443>▶</color> " : "    ") + choiceItems[k];
             }
+            choiceUp.gameObject.SetActive(choiceOffset > 0);
+            choiceDown.gameObject.SetActive(choiceOffset + rows < n);
         }
 
         /// <summary>선택창을 띄우고 고를 때까지 기다린다. 결과는 choicePicked (Esc = 마지막 항목).</summary>
@@ -50,10 +60,13 @@ namespace GirlAdventure.View
         {
             choiceItems = items;
             choicePicked = -1;
+            choiceOffset = 0;
+            float h = 24 + Mathf.Min(items.Length, MaxChoices) * 43;
             var rt = (RectTransform)choiceWin.transform;
-            rt.sizeDelta = new Vector2(ChoiceW, 24 + items.Length * 43);
+            rt.sizeDelta = new Vector2(ChoiceW, h);
+            ((RectTransform)choiceDown.transform).anchoredPosition = new Vector2(ChoiceW - 34, -(h - 16));
             // 대화창 바로 위(또는 아래)에 붙인다. 상태 창이 열려 있으면 가운데 칸 위로 (왼쪽 능력치·오른쪽 가방이 보이게)
-            rt.anchoredPosition = new Vector2(statusOpen ? StatusChoiceX : ChoiceX, -ChoiceTopY(24 + items.Length * 43));
+            rt.anchoredPosition = new Vector2(statusOpen ? StatusChoiceX : ChoiceX, -ChoiceTopY(h));
             choiceWin.SetActive(true);
             RenderChoice();
             while (choicePicked < 0)
@@ -95,7 +108,9 @@ namespace GirlAdventure.View
                     bool gear = Equipment.IsGear(g);
                     string price = gear && P.Gear.Contains(g) ? "<color=#9AA3C7>가짐</color>" : $"<color=#F2C443>{GameData.ItemPrice(g)}G</color>";
                     string cmp = gear && !P.Gear.Contains(g) ? CompareText(g) : "";
-                    labels[i] = $"{GameData.ItemName(g)} <size=15><color=#9AA3C7>{(gear ? Equipment.BonusText(g) : Items.EffectText(g))}</color>{cmp}  {price}</size>";
+                    // 장비는 "지금 장비와 비교(▲공10)"만 (공격+12 같은 원래 수치까지 넣으면 가격이 다음 줄로 밀림), 도구는 효과
+                    labels[i] = gear ? $"{GameData.ItemName(g)} <size=15>{cmp.TrimStart()}  {price}</size>"
+                                     : $"{GameData.ItemName(g)} <size=15><color=#9AA3C7>{Items.EffectText(g)}</color>  {price}</size>";
                 }
                 labels[goods.Count] = "그만두기";
                 yield return Choose(labels);
@@ -288,6 +303,9 @@ namespace GirlAdventure.View
         // ---- 프로브용
         public bool ChoiceOpen => choiceWin != null && choiceWin.activeSelf;
         public int ChoiceCount => choiceItems?.Length ?? 0;
+        /// <summary>커서 줄이 지금 보이는 줄 안에 있나 (스크롤), 보이는 줄 수.</summary>
+        public bool ChoiceCursorVisible => choiceIndex >= choiceOffset && choiceIndex < choiceOffset + Mathf.Min(ChoiceCount, MaxChoices) && choiceTexts[choiceIndex - choiceOffset].text.Contains("▶");
+        public int ChoiceRows => choiceTexts.FindAll(t => t.gameObject.activeSelf).Count;
         public bool HasSfx(string name) => sfx != null && sfx.Has(name);
         public void DebugSetGold(int g) { P.Gold = g; RefreshHud(); }
         public void DebugSetMp(int mp) { P.Mp = Mathf.Clamp(mp, 0, P.MaxMp); RefreshHud(); }
