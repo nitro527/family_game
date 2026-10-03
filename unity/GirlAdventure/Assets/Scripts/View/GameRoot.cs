@@ -63,8 +63,8 @@ namespace GirlAdventure.View
                     bool up = Keys.Down(KeyCode.UpArrow), down = Keys.Down(KeyCode.DownArrow);
                     if (up || down)
                     {
-                        // 고를 수 있는 것: 모험 시작(0), 이어하기(1, 세이브 있을 때), 설정(2)
-                        var opts = continueBtn.gameObject.activeSelf ? new[] { 0, 1, 2 } : new[] { 0, 2 };
+                        // 고를 수 있는 것 (화면 순서): 모험 시작(0), 챕터 고르기(3, 그 오른쪽), 이어하기(1, 세이브 있을 때), 설정(2)
+                        var opts = continueBtn.gameObject.activeSelf ? new[] { 0, 3, 1, 2 } : new[] { 0, 3, 2 };
                         int k = System.Array.IndexOf(opts, titleIndex);
                         titleIndex = opts[(k + (down ? 1 : opts.Length - 1)) % opts.Length];
                         sfx.Play("select");
@@ -74,6 +74,7 @@ namespace GirlAdventure.View
                     {
                         if (titleIndex == 1) ContinueGame();
                         else if (titleIndex == 2) OpenTitleOptions();
+                        else if (titleIndex == 3) PickChapter();
                         else StartGame();
                     }
                     TickTitle();
@@ -111,32 +112,82 @@ namespace GirlAdventure.View
             StartCoroutine(NewGameRoutine());
         }
 
-        /// <summary>세이브가 하나라도 있으면 어느 칸에 쓸지 고르고, 찬 칸이면 덮어쓸지 묻는다.</summary>
+        /// <summary>세이브가 하나라도 있으면 어느 칸에 쓸지 고르고, 찬 칸이면 덮어쓸지 묻는다 (pickedSlot, 그만두면 -1).</summary>
+        IEnumerator PickNewSlot()
+        {
+            pickedSlot = 0;
+            if (!SaveStore.AnyExists) yield break;
+            busy = true;
+            yield return AskSlot("slot_new", false);
+            int slot = pickedSlot;
+            if (slot >= 0 && SaveStore.Peek(slot) != null)
+            {
+                msgText.text = FillText(GameData.Talk("slot_overwrite")[0].Text, new (string, object)[] { ("slot", slot + 1) });
+                choiceIndex = 1;                                        // 기본은 "그만두기" (실수로 지우지 않게)
+                yield return Choose("지우고 새로 시작", "그만두기");
+                if (choicePicked != 0) slot = -1;
+            }
+            HideMessage();
+            busy = false;
+            pickedSlot = slot;
+        }
+
         IEnumerator NewGameRoutine()
         {
-            int slot = 0;
-            if (SaveStore.AnyExists)
-            {
-                busy = true;
-                yield return AskSlot("slot_new", false);
-                slot = pickedSlot;
-                if (slot >= 0 && SaveStore.Peek(slot) != null)
-                {
-                    msgText.text = FillText(GameData.Talk("slot_overwrite")[0].Text, new (string, object)[] { ("slot", slot + 1) });
-                    choiceIndex = 1;                                        // 기본은 "그만두기" (실수로 지우지 않게)
-                    yield return Choose("지우고 새로 시작", "그만두기");
-                    if (choicePicked != 0) slot = -1;
-                }
-                HideMessage();
-                busy = false;
-                if (slot < 0) { RenderTitle(); yield break; }
-            }
-            SaveStore.Slot = slot;
+            yield return PickNewSlot();
+            if (pickedSlot < 0) { RenderTitle(); yield break; }
+            SaveStore.Slot = pickedSlot;
             P = PlayerState.NewGame(nameInput.text);
             PlayerPrefs.SetString("girlName", P.Name);
             sfx.Play("start");
             StartCoroutine(IntroRoutine());
         }
+
+        /// <summary>타이틀 "챕터 고르기" (사용자 2026-10-03): 챕터 2~4 를 그 챕터에 맞는 레벨·장비로 바로 시작한다.</summary>
+        void PickChapter()
+        {
+            if (Current != Mode.Title || busy) return;
+            confirmFrame = Time.frameCount;
+            titleIndex = 3;
+            RenderTitle();
+            StartCoroutine(PickChapterRoutine());
+        }
+
+        IEnumerator PickChapterRoutine()
+        {
+            busy = true;
+            ShowMessageWindow(true);
+            SetFace("smile");
+            msgText.text = GameData.Talk("quick_pick")[0].Text;
+            var labels = new List<string>();
+            for (int c = 2; c <= WorldMap.LastChapter; c++) labels.Add($"챕터 {c} {ChapterPlace(c)} · Lv{Quest.QuickLevels[c]}");
+            labels.Add("그만두기");
+            choiceIndex = labels.Count - 2;                         // 기본은 가장 새 챕터
+            yield return Choose(labels.ToArray());
+            int chapter = choicePicked < labels.Count - 1 ? choicePicked + 2 : -1;
+            HideMessage();
+            busy = false;
+            if (chapter < 0) { RenderTitle(); yield break; }
+            yield return PickNewSlot();
+            if (pickedSlot < 0) { RenderTitle(); yield break; }
+            SaveStore.Slot = pickedSlot;
+            BeginQuick(chapter);
+        }
+
+        void BeginQuick(int chapter)
+        {
+            P = Quest.QuickStart(nameInput.text, chapter);
+            PlayerPrefs.SetString("girlName", P.Name);
+            facing = chapter == 4 ? "right" : "down";
+            sfx.Play("start");
+            StartCoroutine(chapter == 4 ? Chapter4Routine() : chapter == 3 ? Chapter3Routine() : Chapter2Routine());
+        }
+
+        /// <summary>프로브용: 타이틀에서 챕터 고르기 메뉴만 연다 / 고른 셈 치고 그 칸에서 바로 시작한다.</summary>
+        public void DebugOpenChapterPick() => PickChapter();
+        public void DebugQuickStart(int chapter, int slot) { StopAllCoroutines(); HideMessage(); busy = false; SaveStore.Slot = slot; BeginQuick(chapter); }
+
+        static string ChapterPlace(int c) => c == 2 ? "동굴" : c == 3 ? "사막" : c == 4 ? "용암 땅" : "초원";
 
         void ContinueGame()
         {

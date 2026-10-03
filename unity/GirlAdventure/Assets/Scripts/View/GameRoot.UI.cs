@@ -15,7 +15,8 @@ namespace GirlAdventure.View
         InputField nameInput;
         Button continueBtn;
         Text startLbl, continueLbl, optionsLbl;
-        int titleIndex;                     // 0 모험 시작, 1 이어하기
+        int titleIndex;                     // 0 모험 시작, 1 이어하기, 2 설정, 3 챕터 고르기
+        Text chapterLbl;
         Image heroTitleImg, flashImg, cutinArt;
         Text cutinText, endText;
         Button nextChapterBtn;
@@ -421,6 +422,9 @@ namespace GirlAdventure.View
             continueBtn = UIKit.Button(t, "Continue", "이어하기", 60, 446, 240, 56, 24, new Color32(110, 190, 255, 255));
             continueBtn.onClick.AddListener(ContinueGame);
             continueLbl = continueBtn.GetComponentInChildren<Text>();
+            var pick = UIKit.Button(t, "Chapter", "챕터 고르기", 312, 372, 170, 62, 22, new Color32(255, 170, 120, 255));
+            pick.onClick.AddListener(PickChapter);
+            chapterLbl = pick.GetComponentInChildren<Text>();
             var opt = UIKit.Button(t, "Options", "설정", 312, 446, 100, 56, 22, new Color32(190, 190, 215, 255));
             opt.onClick.AddListener(OpenTitleOptions);
             optionsLbl = opt.GetComponentInChildren<Text>();
@@ -453,6 +457,8 @@ namespace GirlAdventure.View
             startLbl.color = titleIndex == 0 ? (Color)UIKit.Gold : Color.white;
             optionsLbl.text = (titleIndex == 2 ? "▶ " : "") + "설정";
             optionsLbl.color = titleIndex == 2 ? (Color)UIKit.Gold : Color.white;
+            chapterLbl.text = (titleIndex == 3 ? "▶ " : "") + "챕터 고르기";
+            chapterLbl.color = titleIndex == 3 ? (Color)UIKit.Gold : Color.white;
             if (s == null) return;
             continueLbl.text = (titleIndex == 1 ? "▶ " : "") + $"이어하기 <size=17>Lv {s.Lv}{(SaveStore.Count > 1 ? $" 외 {SaveStore.Count - 1}" : "")}</size>";
             continueLbl.color = titleIndex == 1 ? (Color)UIKit.Gold : Color.white;

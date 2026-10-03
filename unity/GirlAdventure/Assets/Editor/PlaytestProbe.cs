@@ -144,7 +144,7 @@ namespace GirlAdventure.EditorTools
             for (int i = 0; i < 3; i++) { Keys.Press(KeyCode.M); yield return .2f; }
             if (G.BgmLevel != vol0) { fails++; Log("BGM VOLUME FAIL (한 바퀴 뒤 원래대로 안 돌아옴)"); }
             // 타이틀 설정: ↓ → 설정 → 효과음 한 번 바꾸고 → 되돌리기 → 닫기
-            Keys.Press(KeyCode.DownArrow); yield return .15f;
+            for (int i = 0; i < 3 && G.TitleIndex != 2; i++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }   // 챕터 고르기를 지나 설정
             Expect("title cursor reaches settings", G.TitleIndex == 2);
             Keys.Press(KeyCode.Return);
             yield return .4f;
@@ -158,7 +158,7 @@ namespace GirlAdventure.EditorTools
             Keys.Press(KeyCode.Escape);
             yield return .4f;
             Expect("title settings close", G.Current == GameRoot.Mode.Title && !G.Busy && Settings.SfxPercent == titleSfx0);
-            Keys.Press(KeyCode.UpArrow); yield return .15f;
+            for (int i = 0; i < 3 && G.TitleIndex != 0; i++) { Keys.Press(KeyCode.UpArrow); yield return .15f; }
             Expect("title cursor back to start", G.TitleIndex == 0);
             yield return .5f;
             Keys.Press(KeyCode.Return);
@@ -693,7 +693,7 @@ namespace GirlAdventure.EditorTools
             // 새로 시작: 칸 고르기 → 그만두기 / 찬 칸은 덮어쓰기 확인(기본 그만두기)
             G.DebugToTitle();
             yield return .5f;
-            Keys.Press(KeyCode.UpArrow); yield return .15f;
+            for (int i = 0; i < 3 && G.TitleIndex != 0; i++) { Keys.Press(KeyCode.UpArrow); yield return .15f; }
             Keys.Press(KeyCode.Return);
             yield return .4f;
             Expect("new game with saves opens slot picker", G.SlotPickerOpen);
@@ -711,7 +711,7 @@ namespace GirlAdventure.EditorTools
             Keys.Press(KeyCode.Return);                 // 기본 = 그만두기
             yield return .4f;
             Expect("overwrite cancel keeps title", G.Current == GameRoot.Mode.Title && !G.Busy);
-            Keys.Press(KeyCode.DownArrow); yield return .15f;  // 이어하기로
+            for (int i = 0; i < 3 && G.TitleIndex != 1; i++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }  // 이어하기로
             Keys.Press(KeyCode.Return);
             yield return .4f;
             Keys.Press(KeyCode.Return);
@@ -1357,6 +1357,26 @@ namespace GirlAdventure.EditorTools
             yield return 1.2f;
             Shot("ch4_clear");
             Expect("chapter 4 cleared (last chapter for now)", G.P.Boss4Down && G.EndingHead.Contains("챕터 4") && G.NextChapterLabel == "", G.EndingHead);
+
+            // 챕터 고르기 (사용자 2026-10-03): 타이틀 맨 아래 버튼 → 챕터 목록 → 용암 땅으로 바로 (3번 칸)
+            G.DebugToTitle();
+            yield return .5f;
+            for (int i = 0; i < 4 && G.TitleIndex != 3; i++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Expect("title cursor reaches chapter pick", G.TitleIndex == 3);
+            Shot("title_chapter_button");
+            Keys.Press(KeyCode.Return);
+            yield return .5f;
+            Shot("title_chapter_pick");
+            Expect("chapter pick lists chapters", G.Busy && G.MessageText.Contains("챕터"));
+            Keys.Press(KeyCode.Escape);
+            yield return .4f;
+            Expect("chapter pick cancel stays on title", G.Current == GameRoot.Mode.Title && !G.Busy);
+            G.DebugQuickStart(4, 2);
+            yield return 1.5f;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            yield return .5f;
+            Shot("quick_ch4");
+            Expect("quick start chapter 4 on lava with dad", G.Current == GameRoot.Mode.Field && G.MapKindNow == MapKind.Lava && G.P.Lv == Quest.QuickLevels[4] && G.FollowerVisible("dad"));
         }
 
         static bool skillUpSeen, broCmdSeen, comboShot;

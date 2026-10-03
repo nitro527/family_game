@@ -90,6 +90,44 @@ namespace GirlAdventure.Sim
             p.Y = WorldMap.LavaStart.y;
         }
 
+        /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
+        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13 };
+        /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>
+        static readonly string[][] QuickGear =
+        {
+            null, null,
+            new[] { "star_wand", "flower_cape", "ribbon" },
+            new[] { "crystal_wand", "moon_robe", "star_pendant" },
+            new[] { "sun_wand", "sand_cape", "star_pendant", "bro_sword", "bro_shield" },
+        };
+
+        /// <summary>
+        /// 챕터 골라 시작 (사용자 2026-10-03 "업데이트될 때마다 처음부터 시작하는 거 귀찮아"): 앞 챕터들을 깬 것으로 하고
+        /// 그 챕터에 맞는 레벨·장비·골드·사탕으로 새 모험을 만든다. 동료 합류·출발 자리는 StartChapterN 그대로.
+        /// </summary>
+        public static PlayerState QuickStart(string name, int chapter)
+        {
+            chapter = System.Math.Max(2, System.Math.Min(WorldMap.LastChapter, chapter));
+            var p = PlayerState.NewGame(name);
+            while (p.Lv < QuickLevels[chapter]) p.GainExp(PlayerState.NextExp(p.Lv) - p.Exp);
+            p.BossDown = true;
+            if (chapter >= 3) { p.GuardDown = true; p.Boss2Down = true; }
+            if (chapter >= 4) p.Boss3Down = true;
+            foreach (var id in QuickGear[chapter])
+            {
+                if (!p.Gear.Contains(id)) p.Gear.Add(id);
+                Equipment.Equip(p, id);
+            }
+            p.GainGold(150 * chapter);
+            p.Candy = PlayerState.MaxCandy;
+            p.AddItem("potion", 2);
+            if (chapter >= 3) p.AddItem("moon", 2);
+            if (chapter == 2) StartChapter2(p);
+            else if (chapter == 3) StartChapter3(p);
+            else StartChapter4(p);
+            return p;
+        }
+
         /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>
         public static void StartChapter2(PlayerState p)
         {

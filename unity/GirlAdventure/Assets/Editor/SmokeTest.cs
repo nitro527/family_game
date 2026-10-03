@@ -469,6 +469,7 @@ namespace GirlAdventure.EditorTools
             LavaJellyTests();
             LavaTownTests();
             Boss4Tests();
+            QuickStartTests();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -504,6 +505,26 @@ namespace GirlAdventure.EditorTools
             float g14 = Win(14, true), g13 = Win(13, true), n13 = Win(13, false);
             Debug.Log($"[BALANCE BOSS4] trio Lv14+lava gear={g14:P1} Lv13+lava gear={g13:P1} Lv13 desert gear only={n13:P1}");
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
+        }
+
+        /// <summary>챕터 고르기 (사용자 2026-10-03): 그 챕터 레벨·동료·장비·출발 자리, 앞 보스는 깬 것으로, 세이브로 되살아남.</summary>
+        static void QuickStartTests()
+        {
+            for (int ch = 2; ch <= WorldMap.LastChapter; ch++)
+            {
+                var p = Quest.QuickStart("t", ch);
+                var start = WorldMap.ForChapter(ch).SpawnPoint;
+                int mates = ch >= 4 ? 2 : ch == 3 ? 1 : 0;
+                var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+                Check($"quick start chapter {ch}: level, party, gear, place, bosses",
+                      p.Chapter == ch && p.Lv == Quest.QuickLevels[ch] && p.Companions.Count == mates && (p.X, p.Y) == start
+                      && p.BossDown && p.Boss2Down == (ch >= 3) && p.Boss3Down == (ch >= 4) && !p.Boss4Down
+                      && p.Equipped.Count >= 3 && p.Atk > PlayerState.StartAtk + 5 && p.Hp == p.MaxHp && p.Gold > 0
+                      && q.Lv == p.Lv && q.Companions.Count == mates && q.Equipped.Count == p.Equipped.Count && q.Chapter == ch,
+                      $"lv {p.Lv} mates {p.Companions.Count} gear {p.Equipped.Count} at {p.X},{p.Y}");
+            }
+            var c4 = Quest.QuickStart("t", 4);
+            Check("quick start chapter 4: jihun sword + shield on", Equipment.In(c4, "bro_weapon") == "bro_sword" && Equipment.In(c4, "bro_shield") == "bro_shield");
         }
 
         /// <summary>온천 마을 (C4-7a): 용암 땅 문, 마을 모든 칸 이어짐(마을 사람 놓은 뒤), 마을 사람, 대장간(아빠 장비), 드나들기 맵.</summary>
