@@ -32,7 +32,7 @@ namespace GirlAdventure.Sim
     /// Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).
     /// Spell 은 "주문" 목록을 여는 명령 (실제로 쓰는 것은 Star·Heal).
     /// </summary>
-    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt }   // Slash·Bolt = 동생 지훈 (검·번개)
+    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard }   // Slash·Bolt = 동생 지훈 (검·번개), Sword·Guard = 아빠 (검·지키기)
 
     public struct PlayerOutcome
     {
@@ -56,6 +56,7 @@ namespace GirlAdventure.Sim
         public int Damage;
         public bool OnBrother;  // 동생 지훈이 맞았다
         public int Ally;        // 맞은 동료 번호 (P.Companions, -1 = 서진)
+        public bool Guarded;    // 지키는 동료가 대신 막았다 (피해 반)
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -231,6 +232,15 @@ namespace GirlAdventure.Sim
             return Sim.Party.Knows(m.Def, c) && m.Mp >= GameData.Skill(c).Mp;
         }
 
+        /// <summary>
+        /// 지키기 (아빠, 설정 "사자 방패로 가족을 지킴"): 이번 차례 동안 적 공격을 이 동료가 대신 맞고 피해는 반 (올림, 최소 1).
+        /// 다음 차례가 시작될 때(NewRound) 풀린다. 쓰러지면 못 지킨다.
+        /// </summary>
+        public int Guarding { get; private set; } = -1;
+
+        /// <summary>새 차례 (서진 명령 전에 부른다): 지키기를 푼다.</summary>
+        public void NewRound() => Guarding = -1;
+
         /// <summary>동료 i 의 공격 기술 (한 마리, 기술의 빗나감·위력·스킬 레벨은 서진 주문과 같은 규칙).</summary>
         public PlayerOutcome MemberAct(int i, Cmd c, int target = -1)
         {
@@ -239,6 +249,7 @@ namespace GirlAdventure.Sim
             var m = P.Companions[i];
             var s = GameData.Skill(c);
             m.Mp -= s.Mp;
+            if (c == Cmd.Guard) { Guarding = i; return o; }
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
             o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
@@ -258,7 +269,8 @@ namespace GirlAdventure.Sim
             // 서 있는 사람 중 무작위로 노린다. 혼자면 주사위를 굴리지 않고, 둘이면 예전처럼 반반 (NextDouble 한 번 — 같은 씨앗이면 같은 결과)
             var standing = new List<int>();
             for (int i = 0; i < P.Companions.Count; i++) if (!P.Companions[i].Down) standing.Add(i);
-            if (standing.Count > 0)
+            if (Guarding >= 0 && !AllyDown(Guarding)) { o.Ally = Guarding; o.Guarded = true; }     // 지키는 동료가 대신
+            else if (standing.Count > 0)
             {
                 if (SisterDown) o.Ally = standing.Count == 1 ? standing[0] : standing[r.Next(standing.Count)];
                 else if (standing.Count == 1) o.Ally = r.NextDouble() < .5 ? standing[0] : -1;
@@ -270,6 +282,7 @@ namespace GirlAdventure.Sim
             {
                 var m = P.Companions[o.Ally];
                 o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.DefOf(m));
+                if (o.Guarded) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
                 m.Hp = Math.Max(0, m.Hp - o.Damage);
                 return o;
             }
@@ -284,6 +297,7 @@ namespace GirlAdventure.Sim
             var list = new List<EnemyOutcome>();
             for (int i = 0; i < Foes.Count && !PlayerDown; i++)
                 if (!Foes[i].Down) list.Add(EnemyAct(i));
+            NewRound();
             return list;
         }
     }

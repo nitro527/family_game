@@ -505,6 +505,32 @@ namespace GirlAdventure.EditorTools
                 Check("party load: unknown/duplicate/bad entries dropped", odd.Companions.Count == 1 && odd.BroHp == 5);
             }
             finally { Party.Unregister("test_mom"); }
+            // 아빠 (C4-2): party.json, 지키기 = 이번 차례 적 공격을 아빠가 대신 반만, 다음 차례에 풀림
+            var dadDef = Party.Def("dad");
+            Check("party.json: dad (knight) with sword + guard, own gear slots", dadDef != null && dadDef.Art == "Dad" && dadDef.Face == "dad_"
+                  && Party.Knows(dadDef, Cmd.Sword) && Party.Knows(dadDef, Cmd.Guard) && Equipment.SlotName("dad_shield") == "아빠 방패"
+                  && dadDef.HpPerLevel > Party.Def(Party.Brother).HpPerLevel && dadDef.BaseDef > Party.Def(Party.Brother).BaseDef);
+            var fam = PlayerState.NewGame("f");
+            fam.GainExp(PlayerState.NextExp(12)); fam.Boss2Down = true; Quest.TryJoinBrother(fam);
+            var papa = fam.Join("dad");
+            var gb = new BattleSystem(fam, GameData.DesertBoss, new System.Random(3));
+            var g = gb.MemberAct(1, Cmd.Guard);
+            int toDad = 0, half = 0;
+            for (int i = 0; i < 50; i++)
+            {
+                papa.Hp = fam.MaxHpOf(papa);
+                var e = gb.EnemyAct(0);
+                if (e.Ally == 1 && e.Guarded) toDad++;
+                int full = Math.Max(1, GameData.DesertBoss.Atk + 2 - fam.DefOf(papa));
+                if (!e.Dodged && e.Damage <= (full + 1) / 2) half++;
+                else if (e.Dodged) half++;
+            }
+            gb.NewRound();
+            var after = gb.EnemyAct(0);
+            Check("dad guard: takes every hit for the family, half damage, ends next round", !g.Failed && toDad == 50 && half == 50 && !after.Guarded);
+            var sw = gb.MemberAct(1, Cmd.Sword, 0);
+            Check("dad sword hits", !sw.Failed && (sw.Missed || sw.Damage >= fam.AtkOf(papa)));
+
             var legacy = PlayerState.FromSave(JsonUtility.FromJson<SaveData>("{\"Version\":12,\"Name\":\"a\",\"Lv\":9,\"Chapter\":2,\"X\":4,\"Y\":20,\"BrotherJoined\":true,\"BroHp\":11,\"BroMp\":2}"));
             Check("legacy brother fields → companion list", legacy.Companions.Count == 1 && legacy.BrotherJoined && legacy.BroHp == 11 && legacy.BroMp == 2);
         }

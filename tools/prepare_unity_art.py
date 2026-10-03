@@ -6,6 +6,7 @@ height (feet on the bottom edge). The four side frames share one scale so their
 natural bob is kept.
 
 usage: python tools/prepare_unity_art.py            (딸 그림 전부)
+       python tools/prepare_unity_art.py boy | dad    (동료 그림 → Resources/Boy, Resources/Dad)
        python tools/prepare_unity_art.py monsters   (몬스터 도감 그림 중 enemies.json 의 "Art" 가 가리키는 것만)
        python tools/prepare_unity_art.py boy        (동생 지훈 → Resources/Boy, 백로그 47)
 """
@@ -153,37 +154,58 @@ def keep_main(im):
     return out
 
 
-def boy():
-    """동생(지훈) 그림: 걷기 옆 4장·앞·뒤, 전투 대기·공격·피격·승리, 표정 6개, 전신. 딸과 같은 크기 규칙에 BOY_SCALE."""
-    os.makedirs(BOY_OUT, exist_ok=True)
-    P = os.path.join(BOY_SRC, 'poses')
-    load = lambda n: keep_main(Image.open(os.path.join(P, f'boy_{n}.png')).convert('RGBA'))
-    wh = round(WALK_FIG_H * BOY_SCALE)
+# 동료 그림 설정: (원본 폴더, 출력 폴더, 누나 대비 크기, 전투 포즈 이름 → 원본 포즈 이름)
+COMPANIONS = {
+    'boy': ('boy', 'Boy', BOY_SCALE, {'ready': 'ready', 'attack': 'attack', 'damage': 'damage', 'victory': 'victory'}),
+    # 아빠: 설정집 5.5등신 (누나 4등신보다 크게), 전투 대기 = 사자 방패를 든 guard 포즈
+    'dad': ('dad', 'Dad', 1.25, {'ready': 'guard', 'attack': 'attack', 'damage': 'damage', 'victory': 'victory', 'guard': 'guard'}),
+}
+
+
+def companion(key):
+    """동료 그림: 걷기 옆 4장·앞·뒤, 전투 포즈, 표정 6개, 전신. 딸과 같은 크기 규칙에 동료 배율."""
+    src_name, out_name, scale, battle_map = COMPANIONS[key]
+    src = os.path.join(ROOT, 'assets', 'characters', 'gen', src_name)
+    out = os.path.join(ROOT, 'unity', 'GirlAdventure', 'Assets', 'Resources', out_name)
+    os.makedirs(out, exist_ok=True)
+    P = os.path.join(src, 'poses')
+    load = lambda n: keep_main(Image.open(os.path.join(P, f'{src_name}_{n}.png')).convert('RGBA'))
+    wh = round(WALK_FIG_H * scale)
     side = [load(f'walk_side{i}') for i in range(1, 5)]
     walk = normalize_group(side, wh) + normalize_group([load('walk_front')], wh) + normalize_group([load('walk_back')], wh)
     names = ['walk_side1', 'walk_side2', 'walk_side3', 'walk_side4', 'walk_front', 'walk_back']
     for n, im in zip(names, place(walk)):
-        im.save(os.path.join(BOY_OUT, n + '.png'), optimize=True)
-    battle_names = ['ready', 'attack', 'damage', 'victory']
-    battle = [load(f'battle_{n}') for n in battle_names]
-    s = BATTLE_FIG_H * BOY_SCALE / (bbox(battle[0])[3] - bbox(battle[0])[1])
+        im.save(os.path.join(out, n + '.png'), optimize=True)
+    battle_names = list(battle_map)
+    battle = [load(f'battle_{battle_map[n]}') for n in battle_names]
+    s = BATTLE_FIG_H * scale / (bbox(battle[0])[3] - bbox(battle[0])[1])
     cuts = []
     for im in battle:
         c = im.crop(bbox(im))
         cuts.append(c.resize((round(c.width * s), round(c.height * s)), Image.LANCZOS))
     for n, im in zip(battle_names, place(cuts)):
-        im.save(os.path.join(BOY_OUT, f'battle_{n}.png'), optimize=True)
-    for p in sorted(glob.glob(os.path.join(BOY_SRC, 'icons', '*.png'))):
+        im.save(os.path.join(out, f'battle_{n}.png'), optimize=True)
+    for p in sorted(glob.glob(os.path.join(src, 'icons', '*.png'))):
         name = os.path.basename(p).split('_', 2)[2]
-        Image.open(p).convert('RGB').resize((256, 256), Image.LANCZOS).save(os.path.join(BOY_OUT, 'face_' + name), optimize=True)
-    hero = Image.open(os.path.join(BOY_SRC, 'boy_main_transparent.png')).convert('RGBA')
-    hero.resize((round(hero.width * 1000 / hero.height), 1000), Image.LANCZOS).save(os.path.join(BOY_OUT, 'hero.png'), optimize=True)
+        Image.open(p).convert('RGB').resize((256, 256), Image.LANCZOS).save(os.path.join(out, 'face_' + name), optimize=True)
+    hero = Image.open(os.path.join(src, f'{src_name}_main_transparent.png')).convert('RGBA')
+    hero.resize((round(hero.width * 1000 / hero.height), 1000), Image.LANCZOS).save(os.path.join(out, 'hero.png'), optimize=True)
     for n in names + [f'battle_{b}' for b in battle_names]:
-        im = Image.open(os.path.join(BOY_OUT, n + '.png'))
+        im = Image.open(os.path.join(out, n + '.png'))
         b = bbox(im)
         print(f'{n:15s} canvas={im.size} figH={b[3] - b[1]} bottomGap={im.height - b[3]}')
 
 
+def boy():
+    """동생(지훈) 그림 (예전 명령 그대로)."""
+    companion('boy')
+
+
 if __name__ == '__main__':
     arg = sys.argv[1:]
-    monsters() if arg == ['monsters'] else boy() if arg == ['boy'] else main()
+    if arg == ['monsters']:
+        monsters()
+    elif arg and arg[0] in COMPANIONS:
+        companion(arg[0])
+    else:
+        main()

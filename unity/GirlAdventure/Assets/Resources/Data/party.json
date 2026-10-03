@@ -1,6 +1,7 @@
 {
   "_comment": "동료 정의 (PLAN_NEXT 66). 엄마·아빠는 여기에 한 줄씩. 능력치 = Start + PerLevel × (레벨-1), 레벨은 서진과 같이",
   "Companions": [
-    {"Id": "jihun", "Name": "지훈", "Class": "용사", "Art": "Boy", "Face": "bro_", "StartHp": 30, "HpPerLevel": 7, "StartMp": 4, "MpPerLevel": 1, "StartAtk": 7, "AtkPerLevel": 3, "BaseDef": 1, "Skills": ["Slash", "Bolt"], "GearSlots": ["bro_weapon", "bro_shield"], "GearNames": ["칼", "방패"]}
+    {"Id": "jihun", "Name": "지훈", "Class": "용사", "Art": "Boy", "Face": "bro_", "StartHp": 30, "HpPerLevel": 7, "StartMp": 4, "MpPerLevel": 1, "StartAtk": 7, "AtkPerLevel": 3, "BaseDef": 1, "Skills": ["Slash", "Bolt"], "GearSlots": ["bro_weapon", "bro_shield"], "GearNames": ["칼", "방패"], "BraveFace": "determined"},
+    {"Id": "dad", "Name": "아빠", "Class": "기사", "Art": "Dad", "Face": "dad_", "BraveFace": "serious", "StartHp": 40, "HpPerLevel": 8, "StartMp": 6, "MpPerLevel": 1, "StartAtk": 6, "AtkPerLevel": 2, "BaseDef": 4, "Skills": ["Sword", "Guard"], "GearSlots": ["dad_weapon", "dad_shield"], "GearNames": ["검", "방패"]}
   ]
 }

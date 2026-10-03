@@ -9,8 +9,8 @@
 
 ## 진행 대기 (우선순위 순)
 C4. **챕터 4 — 용암 땅 + 아빠 합류** (사용자 결정 2026-10-03: "다음 챕터는 용암 땅", "챕터 시작할 때 아빠가 합류")
-   - [ ] C4-1. **아빠 그림 → Unity**: `prepare_unity_art.py` 를 동료 일반으로 (`boy`/`dad`), 아빠는 누나보다 크게(설정집 5.5등신), 전투 대기 = 방패 든 guard 포즈, 표정 6개(smile·laugh·serious·surprised·cry·thumbsup) → `Resources/Dad`
-   - [ ] C4-2. **아빠 Sim**: party.json 아빠(기사: HP 높고 방어 높고 공격 보통), 기술 "검 공격 ✏️"·"지키기"(그 차례 적 공격을 아빠가 대신, 피해 반으로 — 설정 "사자 방패로 가족을 지킴"), 기술 이름은 Cmd 추가
+   - [x] C4-1. (완료 2026-10-03, `python tools/prepare_unity_art.py dad`, 배율 1.25) **아빠 그림 → Unity**: `prepare_unity_art.py` 를 동료 일반으로 (`boy`/`dad`), 아빠는 누나보다 크게(설정집 5.5등신), 전투 대기 = 방패 든 guard 포즈, 표정 6개(smile·laugh·serious·surprised·cry·thumbsup) → `Resources/Dad`
+   - [x] C4-2. (완료 2026-10-03 — HP 40+8/Lv·MP 6+1·공 6+2·방 4, "기사의 검" ✏️ 공×1+4·"지키기": `BattleSystem.Guarding`/`NewRound`, 적 공격 대신 반 피해) **아빠 Sim**: party.json 아빠(기사: HP 높고 방어 높고 공격 보통), 기술 "검 공격 ✏️"·"지키기"(그 차례 적 공격을 아빠가 대신, 피해 반으로 — 설정 "사자 방패로 가족을 지킴"), 기술 이름은 Cmd 추가
    - [ ] C4-3. **화면 3인 (파티 일반화 2단계)**: 전투 배치·HUD 창 3개·명령 차례(동료 정의의 기술)·대열 걷기 줄줄이·얼굴 접두어(dad_)·포즈를 동료 정의(Art)에서
    - [ ] C4-4. **챕터 3 끝 → 챕터 4 시작 + 아빠 합류 장면**: 완료 화면 "챕터 4 시작" → 아빠 합류 대사·컷인 → 용암 땅 (`LastChapter` 4, 세이브)
    - [ ] C4-5. **용암 땅 맵**: `MapKind.Lava` — 검은 바위·용암 강(흐르는 빛)·화산(PIPOYA 시트 화산 그림)·돌다리, 용암 곡, 전투 배경(painterly 용암 33·43번 후보)

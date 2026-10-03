@@ -13,6 +13,7 @@ namespace GirlAdventure.Sim
         public string Id, Name, Class;
         public string Art;                  // 그림 폴더 (Resources/<Art>/battle_*, walk_*, face_*)
         public string Face;                 // 대사 얼굴 접두어 (예: "bro_" → bro_smile)
+        public string BraveFace;            // 씩씩한 얼굴 이름 (지훈 determined, 아빠 serious — 동료 공용 대사 "ally_brave")
         public int StartHp, HpPerLevel, StartMp, MpPerLevel, StartAtk, AtkPerLevel, BaseDef;
         public string[] Skills;             // 전투 명령 (Cmd 이름, 순서대로 명령창에) — 도망은 명령창이 따로 붙인다
         public string[] GearSlots;          // 장비 부위 (items.json Kind) — 서진 장비와 같은 Equipped 표에 들어간다

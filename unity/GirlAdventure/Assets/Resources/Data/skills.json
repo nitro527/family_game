@@ -10,6 +10,8 @@
     { "Cmd": "Item",  "Name": "도구",        "Mp": 0 },
     { "Cmd": "Slash", "Name": "검 휘두르기", "Mp": 0, "AtkMul": 1, "Bonus": 2, "Rand": 4, "Miss": 0.05, "Grows": true },
     { "Cmd": "Bolt",  "Name": "번개",       "Mp": 4, "AtkMul": 2, "Bonus": 2, "Rand": 5, "Miss": 0, "Grows": true },
+    { "Cmd": "Sword", "Name": "기사의 검",   "Mp": 0, "AtkMul": 1, "Bonus": 4, "Rand": 5, "Miss": 0.04, "Grows": true },
+    { "Cmd": "Guard", "Name": "지키기",     "Mp": 0 },
     { "Cmd": "Run",   "Name": "도망가기",    "Mp": 0, "Rate": 0.75 }
   ]
 }

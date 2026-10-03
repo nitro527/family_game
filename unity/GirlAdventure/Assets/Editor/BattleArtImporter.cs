@@ -17,7 +17,7 @@ namespace GirlAdventure.EditorTools
         {
             bool battle = assetPath.Contains("Assets/Resources/Battle/") || assetPath.Contains("Assets/Resources/UI/"), tiles = assetPath.Contains("Assets/Resources/Tiles/");
             bool monsters = assetPath.Contains("Assets/Resources/Monsters/");
-            bool boy = assetPath.Contains("Assets/Resources/Boy/");
+            bool boy = assetPath.Contains("Assets/Resources/Boy/") || assetPath.Contains("Assets/Resources/Dad/");   // 동료 그림 (지훈·아빠)
             if (!battle && !tiles && !monsters && !boy) return;
             var imp = (TextureImporter)assetImporter;
             if (boy)
