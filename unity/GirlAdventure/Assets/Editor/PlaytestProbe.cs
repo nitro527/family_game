@@ -1059,7 +1059,7 @@ namespace GirlAdventure.EditorTools
                 Shot("under_enter");
                 foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
                 Expect("went down to the underworld", G.MapKindNow == MapKind.Underworld && G.P.Underground && G.BroFieldVisible);
-                ExpectBgm("cave");
+                ExpectBgm("underworld");
                 G.DebugMobs(true, true);
                 G.DebugTeleport(20, 16, "right");
                 G.NoGroups = true;

@@ -347,7 +347,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
