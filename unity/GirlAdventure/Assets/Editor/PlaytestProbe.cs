@@ -39,6 +39,7 @@ namespace GirlAdventure.EditorTools
             shotNo = 0;
             fails = 0;
             EditorApplication.update += Tick;
+            GameRoot.SeedOverride = 20261003;           // 게임 난수 씨앗 고정 (도메인 다시 불러오기 없이 플레이 모드에 그대로 남는다)
             EditorApplication.isPlaying = true;
         }
 
@@ -1254,11 +1255,20 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(26, 7, "up");
             yield return .8f;
             Shot("lava_volcano");
-            G.DebugGroupBattle(1);
+            // 용암 젤리 (C4-6, ✏️ 임시): 필드에 세우고 부딪혀 싸운다
+            G.DebugMobs(true, true);
+            var ls = G.DebugOpenSpot(6);
+            G.DebugTeleport(ls.x, ls.y, "right");
+            G.NoGroups = true;
+            G.DebugSpawnMob(ls.x + 1, ls.y, 1);
+            yield return .5f;
+            Shot("lava_mob_field");
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .3f;
             Shot("lava_battle");
-            Expect("lava battle backdrop", G.BattleBackdropName == "lava", G.BattleBackdropName);
+            G.NoGroups = false;
+            Expect("lava battle: lava jelly + backdrop", G.BattleEnemy == GameData.Lava[1] && G.BattleBackdropName == "lava", G.BattleBackdropName + " " + G.BattleEnemy?.Name);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
         }

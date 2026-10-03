@@ -19,7 +19,9 @@ namespace GirlAdventure.View
         public PlayerState P { get; private set; }
 
         WorldMap map;
-        readonly System.Random rng = new System.Random();
+        /// <summary>테스트용: 값이 있으면 게임 난수 씨앗을 고정 (프로브가 보스전 운에 흔들리지 않게, C4-9). 보통은 매번 다른 씨앗.</summary>
+        public static int? SeedOverride;
+        readonly System.Random rng = SeedOverride.HasValue ? new System.Random(SeedOverride.Value) : new System.Random();
         Camera cam;
         Sfx sfx;
         Bgm bgm;

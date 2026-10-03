@@ -466,6 +466,55 @@ namespace GirlAdventure.EditorTools
             BroAutoTests();
             PartyTests();
             LavaTests();
+            LavaJellyTests();
+        }
+
+        /// <summary>용암 젤리 (C4-6, ✏️ 임시): 데이터·출현(잿빛 땅만)·셋이 싸우는 밸런스 (Lv12 아빠 합류 직후).</summary>
+        static void LavaJellyTests()
+        {
+            var lava = GameData.Lava;
+            Check("lava jellies (placeholder): 3 incl. tier 2, magma/ember looks", lava.Length == 3 && Array.Exists(lava, d => d.Tier == 2)
+                  && Array.Exists(lava, d => d.Look == "magma") && Array.Exists(lava, d => d.Look == "ember") && GameData.ListFor(MapKind.Lava) == lava);
+            var m = WorldMap.Lava();
+            bool onlyAsh = true;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    onlyAsh &= (m.EncounterRate(x, y) > 0) == (m.At(x, y) == '.');
+            Check("lava: jellies only on ash ground, big only far", onlyAsh && !Array.Exists(GameData.EncounterPool(MapKind.Lava, 6, 12), i => lava[i].Tier == 2)
+                  && Array.Exists(GameData.EncounterPool(MapKind.Lava, 26, 18), i => lava[i].Tier == 2));
+            (float win, float hpLeft, float exp) Trio(int lv, int x, int y, int force)
+            {
+                var r = new System.Random(66);
+                int wins = 0, n = 400;
+                float hp = 0, ex = 0;
+                for (int run = 0; run < n; run++)
+                {
+                    var q = PlayerState.NewGame("t");
+                    q.GainExp(PlayerState.NextExp(lv - 1));
+                    q.Boss2Down = true; Quest.TryJoinBrother(q); q.Join("dad");
+                    List<EnemyDef> foes;
+                    if (force > 0)
+                    {
+                        var pool = GameData.EncounterPool(MapKind.Lava, x, y);
+                        foes = new List<EnemyDef>();
+                        for (int i = 0; i < force; i++) foes.Add(lava[pool[r.Next(pool.Length)]]);
+                    }
+                    else foes = GameData.RollEncounter(MapKind.Lava, x, y, r);
+                    foreach (var f in foes) ex += f.Exp;
+                    if (FightDuo(q, foes, r)) wins++;
+                    int tot = q.Hp, max = q.MaxHp;
+                    foreach (var c in q.Companions) { tot += Math.Max(0, c.Hp); max += q.MaxHpOf(c); }
+                    hp += Math.Max(0, tot) / (float)max;
+                }
+                return (wins / (float)n, hp / n, ex / n);
+            }
+            var near = Trio(12, 6, 12, 0);
+            var far3 = Trio(13, 26, 18, 3);
+            float perLevel = (PlayerState.NextExp(12) - PlayerState.NextExp(11)) / near.exp;
+            Debug.Log($"[BALANCE LAVA] trio near @Lv12 win={near.win:P1} hpLeft={near.hpLeft:P0} exp={near.exp:F1} (battles/level≈{perLevel:F1}) | far x3 @Lv13 win={far3.win:P1} hpLeft={far3.hpLeft:P0}");
+            Check("lava trio balance (near ≥97% costs HP, far x3 ≥85%, 2.5~5.5 fights/level)",
+                  near.win >= .97f && near.hpLeft < .92f && far3.win >= .85f && perLevel >= 2.5f && perLevel <= 5.5f,
+                  $"near {near.win:P1} hp {near.hpLeft:P0} far3 {far3.win:P1} perLevel {perLevel:F1}");
         }
 
         /// <summary>챕터 4 용암 땅 (C4-4·5, 사용자 2026-10-03): 맵 이어짐(돌다리), 온천·표지판·화산, 챕터 4 시작에 아빠 합류, 세이브.</summary>
@@ -1333,11 +1382,20 @@ namespace GirlAdventure.EditorTools
                     b.Act(c);
                     if (b.EnemyDown) return true;
                 }
-                if (!b.BrotherDown)
+                for (int a = 0; a < p.Companions.Count; a++)       // 동료들 (합류 순서): 지훈은 예전 규칙, 아빠는 서진이 위험하면 지키기
                 {
-                    b.BroAct(def.Boss && b.BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash);
-                    if (b.EnemyDown) return true;
-                    if (b.ComboReady()) { b.Combo(); if (b.EnemyDown) return true; }      // 합동 공격 (화면과 같은 규칙)
+                    if (b.AllyDown(a)) continue;
+                    if (p.Companions[a].Id == Party.Brother)
+                    {
+                        b.MemberAct(a, def.Boss && b.MemberCanUse(a, Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash);
+                        if (b.EnemyDown) return true;
+                        if (b.ComboReady()) { b.Combo(); if (b.EnemyDown) return true; }      // 합동 공격 (화면과 같은 규칙)
+                    }
+                    else
+                    {
+                        b.MemberAct(a, !b.SisterDown && p.Hp < p.MaxHp * .5f && b.MemberCanUse(a, Cmd.Guard) ? Cmd.Guard : Cmd.Sword);
+                        if (b.EnemyDown) return true;
+                    }
                 }
                 b.EnemyTurn();
                 if (b.PlayerDown) return false;

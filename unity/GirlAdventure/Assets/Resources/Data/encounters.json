@@ -8,6 +8,8 @@
     { "Map": "desert", "MinFar": 32, "Pool": ["카우보이 젤리", "선인장 젤리", "선인장 젤리", "큰 선인장 젤리"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "under", "MinFar": 0,  "Pool": ["그림자 젤리", "그림자 젤리", "반딧불 젤리"], "Group": 0.3, "MaxGroup": 2 },
     { "Map": "under", "MinFar": 30, "Pool": ["그림자 젤리", "반딧불 젤리", "큰 그림자 젤리"], "Group": 0.35, "MaxGroup": 3 },
+    { "Map": "lava", "MinFar": 0,  "Pool": ["숯 젤리", "숯 젤리", "용암 젤리"], "Group": 0.25, "MaxGroup": 2 },
+    { "Map": "lava", "MinFar": 32, "Pool": ["숯 젤리", "용암 젤리", "용암 젤리", "큰 용암 젤리"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "cave",  "MaxY": 9,    "Pool": ["돌멩이 젤리", "광물 젤리", "수정 젤리", "수정 젤리", "큰 돌멩이 젤리"], "Group": 0.3, "MaxGroup": 3 }
   ]
 }

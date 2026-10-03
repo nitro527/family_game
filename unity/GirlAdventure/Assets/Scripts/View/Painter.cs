@@ -198,6 +198,8 @@ namespace GirlAdventure.View
             else if (look == "bow") HeadBow(R, cx, bottom, w, h);
             else if (look == "turban") Turban(R, cx, bottom, w, h);
             else if (look == "cowboy") CowboyHat(R, cx, bottom, w, h);
+            else if (look == "magma") Magma(R, cx, bottom, w, h);
+            else if (look == "ember") Ember(R, cx, bottom, w, h);
             foreach (int s in new[] { -1, 1 })
             {
                 float ex = cx + s * w * .15f, ey = bottom - h * .38f;
@@ -347,6 +349,37 @@ namespace GirlAdventure.View
             R.Ellipse(cx, top + 14, w * .23f, 32, straw);
             R.Rect(cx - w * .23f, top + 24, w * .46f, 12, Raster.Hex("#E0484E"));
             R.Ellipse(cx - w * .08f, top + 2, 12, 8, new Color32(255, 255, 255, 120));
+        }
+
+        /// <summary>용암 젤리 (✏️ 임시): 몸 곳곳의 검은 딱지 + 머리 위에서 일렁이는 불꽃.</summary>
+        static void Magma(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            foreach (var (dx, dy, r) in new[] { (-.28f, .45f, .09f), (.25f, .38f, .07f), (.05f, .62f, .06f), (-.12f, .25f, .05f), (.32f, .66f, .05f) })
+                R.Ellipse(cx + dx * w, top + dy * h, r * w, r * w * .7f, Raster.Hex("#4A1A0E"));
+            Flame(R, cx, top + 8, 34);
+        }
+
+        /// <summary>숯 젤리 (✏️ 임시): 까만 몸에 주황빛으로 갈라진 금 + 작은 불씨.</summary>
+        static void Ember(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            Color32 glow = Raster.Hex("#FF8A2A");
+            R.Line(cx - w * .3f, top + h * .35f, cx - w * .12f, top + h * .5f, 4, glow);
+            R.Line(cx - w * .12f, top + h * .5f, cx - w * .18f, top + h * .7f, 4, glow);
+            R.Line(cx + w * .28f, top + h * .3f, cx + w * .15f, top + h * .48f, 4, glow);
+            R.Line(cx + w * .15f, top + h * .48f, cx + w * .26f, top + h * .66f, 4, glow);
+            R.Line(cx - w * .02f, top + h * .12f, cx + w * .05f, top + h * .28f, 3, glow);
+            Flame(R, cx + w * .18f, top + 18, 20);
+        }
+
+        /// <summary>작은 불꽃 (바깥 주황 → 안 노랑).</summary>
+        static void Flame(Raster R, float cx, float baseY, float size)
+        {
+            R.Polygon(new[] { new Vector2(cx, baseY - size * 1.6f), new Vector2(cx + size * .55f, baseY - size * .2f), new Vector2(cx, baseY + size * .2f), new Vector2(cx - size * .55f, baseY - size * .2f) },
+                      Raster.Hex("#FF6A1A"), Ink, 4);
+            R.Polygon(new[] { new Vector2(cx, baseY - size * 1.0f), new Vector2(cx + size * .3f, baseY - size * .2f), new Vector2(cx, baseY), new Vector2(cx - size * .3f, baseY - size * .2f) },
+                      Raster.Hex("#FFD84A"));
         }
 
         /// <summary>오아시스 마을 사람: 머리를 둘둘 감은 하얀 터번 + 가운데 빨간 보석.</summary>
