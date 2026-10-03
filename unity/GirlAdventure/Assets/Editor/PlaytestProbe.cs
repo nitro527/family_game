@@ -1406,10 +1406,13 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(WorldMap.SnowPeak.x + 1, WorldMap.SnowPeak.y + 5, "up");
             yield return .8f;
             Shot("ch5_peak");
-            G.DebugBattle(false);
+            G.DebugBattleWith(GameData.Snow[1]);
             yield return 1.5f;
-            Shot("ch5_battle_bg");
+            Shot("ch5_battle_icicle");
             Expect("snow battle backdrop", G.BattleBackdropName == "snow", G.BattleBackdropName);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("won against the icicle jelly", G.Current == GameRoot.Mode.Field && G.P.Chapter == 5);
             G.DebugBackToField();
             yield return .5f;
 

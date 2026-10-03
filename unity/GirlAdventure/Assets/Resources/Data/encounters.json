@@ -10,6 +10,8 @@
     { "Map": "under", "MinFar": 30, "Pool": ["유령", "해골", "해골", "이단 유령"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "lava", "MinFar": 0,  "Pool": ["숯 젤리", "숯 젤리", "용암 젤리"], "Group": 0.25, "MaxGroup": 2 },
     { "Map": "lava", "MinFar": 32, "Pool": ["숯 젤리", "용암 젤리", "용암 젤리", "큰 용암 젤리"], "Group": 0.35, "MaxGroup": 3 },
+    { "Map": "snow", "MinFar": 0,  "Pool": ["눈송이 젤리", "눈송이 젤리", "고드름 젤리"], "Group": 0.25, "MaxGroup": 2 },
+    { "Map": "snow", "MinFar": 36, "Pool": ["눈송이 젤리", "고드름 젤리", "고드름 젤리", "큰 눈송이 젤리"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "cave",  "MaxY": 9,    "Pool": ["돌멩이 젤리", "광물 젤리", "수정 젤리", "수정 젤리", "큰 돌멩이 젤리"], "Group": 0.3, "MaxGroup": 3 }
   ]
 }

@@ -533,7 +533,7 @@ namespace GirlAdventure.Sim
         public double EncounterRate(int x, int y)
         {
             if (IsTown || Kind == MapKind.Home) return 0;   // 마을·집 안엔 몬스터가 없다
-            if (Kind == MapKind.Snow) return 0;            // 눈 젤리는 C5-2
+            if (Kind == MapKind.Snow) return At(x, y) == '.' ? 0.07 : 0;     // 눈밭에서만 (눈길·언 호수·출발 자리는 쉬는 곳)
             if (Kind == MapKind.Desert) return At(x, y) == '.' ? 0.07 : 0;
             if (Kind == MapKind.Lava) return At(x, y) == '.' ? 0.07 : 0;     // 잿빛 땅에서만 (돌다리·출발 자리·온천 둘레는 쉬는 곳)     // 모래밭에만 (오아시스 풀밭·출구 앞은 쉬는 곳)
             char c = At(x, y);

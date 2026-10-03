@@ -14,6 +14,7 @@ namespace GirlAdventure.Sim
         public EnemyDef[] Desert;       // 사막 (챕터 3)
         public EnemyDef[] Under;        // 지하세계 (✏️ 서진이 디자인 전 임시 젤리)
         public EnemyDef[] Lava;         // 용암 땅 (챕터 4, ✏️ 서진이 디자인 전 임시 젤리)
+        public EnemyDef[] Snow;         // 눈 덮인 땅 (챕터 5, ✏️ 서진이 디자인 전 임시 젤리)
         public EnemyDef Guard;          // 바위 대장 젤리 (챕터 2 중간 보스, 보물상자 지킴이)
         public EnemyDef General;        // 젤리 장군
         public EnemyDef DesertBoss;     // 카우보이 젤리 대장 (챕터 3 보스)
@@ -106,12 +107,13 @@ namespace GirlAdventure.Sim
         public static EnemyDef[] Desert { get; private set; }
         public static EnemyDef[] Under { get; private set; }
         public static EnemyDef[] Lava { get; private set; }
+        public static EnemyDef[] Snow { get; private set; }
 
         /// <summary>그 맵의 일반 적 목록 (출현표 인덱스가 가리키는 곳): 동굴 Cave, 사막 Desert, 나머지(초원·마을) Normal.</summary>
-        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : kind == MapKind.Lava ? Lava : Normal;
+        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : kind == MapKind.Lava ? Lava : kind == MapKind.Snow ? Snow : Normal;
 
-        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : kind == MapKind.Underworld ? "under" : kind == MapKind.Lava ? "lava" : "field";
-        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "under" ? MapKind.Underworld : map == "lava" ? MapKind.Lava : MapKind.Field;
+        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : kind == MapKind.Underworld ? "under" : kind == MapKind.Lava ? "lava" : kind == MapKind.Snow ? "snow" : "field";
+        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "under" ? MapKind.Underworld : map == "lava" ? MapKind.Lava : map == "snow" ? MapKind.Snow : MapKind.Field;
         public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
         public static EnemyDef DesertBoss { get; private set; }
@@ -145,6 +147,7 @@ namespace GirlAdventure.Sim
             Desert = enemies.Desert ?? new EnemyDef[0];
             Under = enemies.Under ?? new EnemyDef[0];
             Lava = enemies.Lava ?? new EnemyDef[0];
+            Snow = enemies.Snow ?? new EnemyDef[0];
             Guard = enemies.Guard;
             Guard.Boss = true;
             General = enemies.General;
@@ -188,6 +191,7 @@ namespace GirlAdventure.Sim
             foreach (var d in Under) yield return d;
             foreach (var d in Lava) yield return d;
             if (LavaBoss != null) yield return LavaBoss;
+            foreach (var d in Snow) yield return d;
         }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace GirlAdventure.Sim
         public bool Timid;
 
         /// <summary>이 레벨 이상이면 그 맵 몬스터가 겁먹고 도망간다 (초원: 킹 젤리를 깬 뒤 조금 더, 동굴: 장군을 깬 뒤 조금 더).</summary>
-        public static int TimidLevel(MapKind kind) => kind == MapKind.Cave ? 11 : kind == MapKind.Desert ? 16 : kind == MapKind.Underworld ? 99 : kind == MapKind.Lava ? 20 : 7;   // 지하세계 젤리는 겁이 없다
+        public static int TimidLevel(MapKind kind) => kind == MapKind.Cave ? 11 : kind == MapKind.Desert ? 16 : kind == MapKind.Underworld ? 99 : kind == MapKind.Lava ? 20 : kind == MapKind.Snow ? 24 : 7;   // 지하세계 젤리는 겁이 없다
         readonly Random r;
         float spawnTimer;
         int nextId;

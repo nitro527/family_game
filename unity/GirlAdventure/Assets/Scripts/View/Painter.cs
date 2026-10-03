@@ -209,6 +209,8 @@ namespace GirlAdventure.View
             else if (look == "cowboy") CowboyHat(R, cx, bottom, w, h);
             else if (look == "magma") Magma(R, cx, bottom, w, h);
             else if (look == "ember") Ember(R, cx, bottom, w, h);
+            else if (look == "frost") Frost(R, cx, bottom, w, h);
+            else if (look == "icicle") IcicleCrown(R, cx, bottom, w, h);
             foreach (int s in new[] { -1, 1 })
             {
                 float ex = cx + s * w * .15f, ey = bottom - h * .38f;
@@ -517,6 +519,54 @@ namespace GirlAdventure.View
             R.Line(cx + w * .15f, top + h * .48f, cx + w * .26f, top + h * .66f, 4, glow);
             R.Line(cx - w * .02f, top + h * .12f, cx + w * .05f, top + h * .28f, 3, glow);
             Flame(R, cx + w * .18f, top + 18, 20);
+        }
+
+        /// <summary>눈송이 젤리 (✏️ 임시): 머리에 소복이 쌓인 눈(흘러내린 자국) + 볼에 작은 눈송이 무늬.</summary>
+        static void Frost(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            var cap = new List<Vector2>();
+            for (int i = 0; i <= 16; i++)
+            {
+                float t = i / 16f, a = Mathf.PI * (1 - t);
+                cap.Add(new Vector2(cx + Mathf.Cos(a) * w * .36f, top + h * .16f - Mathf.Sin(a) * h * .2f));
+            }
+            foreach (var (dx, len) in new[] { (.28f, .1f), (.12f, .16f), (-.06f, .08f), (-.22f, .14f), (-.34f, .06f) })   // 흘러내린 눈
+            {
+                cap.Add(new Vector2(cx + (dx + .04f) * w, top + h * .17f));
+                cap.Add(new Vector2(cx + dx * w, top + h * (.17f + len)));
+                cap.Add(new Vector2(cx + (dx - .04f) * w, top + h * .17f));
+            }
+            R.Polygon(cap.ToArray(), Raster.Hex("#FFFFFF"), Ink, 5);
+            R.Ellipse(cx - w * .1f, top + h * .02f, w * .1f, h * .04f, Raster.Hex("#E8F0FF"));
+            foreach (int s in new[] { -1, 1 })                                        // 볼의 눈송이
+            {
+                float fx = cx + s * w * .3f, fy = bottom - h * .26f;
+                for (int k = 0; k < 3; k++)
+                {
+                    float a = k * Mathf.PI / 3;
+                    R.Line(fx - Mathf.Cos(a) * 11, fy - Mathf.Sin(a) * 11, fx + Mathf.Cos(a) * 11, fy + Mathf.Sin(a) * 11, 3, Raster.Hex("#7AA8E0"));
+                }
+            }
+        }
+
+        /// <summary>고드름 젤리 (✏️ 임시): 머리에 뾰족한 고드름 왕관 다섯 + 몸에 서리 무늬.</summary>
+        static void IcicleCrown(Raster R, float cx, float bottom, float w, float h)
+        {
+            float top = bottom - h;
+            foreach (var (dx, len) in new[] { (-.24f, .16f), (-.12f, .24f), (0f, .32f), (.12f, .24f), (.24f, .16f) })
+            {
+                float bx = cx + dx * w, by = top + h * .12f + Mathf.Abs(dx) * h * .35f;
+                R.Polygon(new[] { new Vector2(bx - w * .06f, by + 6), new Vector2(bx, by - h * len), new Vector2(bx + w * .06f, by + 6) },
+                          (x, y) => Color32.Lerp(Raster.Hex("#5AB4F0"), Raster.Hex("#C8ECFF"), Mathf.Clamp01((by - y) / (h * len))), Ink, 5);
+                R.Line(bx - w * .02f, by - 2, bx - w * .006f, by - h * len * .55f, 4, Raster.Hex("#FFFFFF"));
+            }
+            foreach (var (dx, dy) in new[] { (-.3f, .55f), (.28f, .62f), (.05f, .78f) })   // 서리
+            {
+                float fx = cx + dx * w, fy = top + dy * h;
+                R.Line(fx - 10, fy, fx + 10, fy, 2.5f, Raster.Hex("#E4F6FF"));
+                R.Line(fx, fy - 10, fx, fy + 10, 2.5f, Raster.Hex("#E4F6FF"));
+            }
         }
 
         /// <summary>작은 불꽃 (바깥 주황 → 안 노랑).</summary>

@@ -424,6 +424,14 @@ namespace GirlAdventure.View
             StartCoroutine(BattleRoutine(boss ? GameData.King : GameData.Normal[1]));
         }
 
+        /// <summary>플레이테스트용: 그 적 하나와 싸운다.</summary>
+        public void DebugBattleWith(EnemyDef def)
+        {
+            StopAllCoroutines();
+            HideMessage();
+            StartCoroutine(BattleRoutine(def));
+        }
+
         /// <summary>플레이테스트용: 초원 젤리 무리와 싸운다 (Normal[idx] 를 n 마리).</summary>
         public void DebugGroupBattle(int n, int idx = 0)
         {

@@ -472,6 +472,7 @@ namespace GirlAdventure.EditorTools
             QuickStartTests();
             HomeTests();
             SnowTests();
+            SnowJellyTests();
         }
 
         /// <summary>화산 보스 (C4-7b, ✏️): 자리, 세이브 v14, 이긴 뒤 대사, 셋 밸런스 (장비 사면 이기는 보스).</summary>
@@ -509,6 +510,86 @@ namespace GirlAdventure.EditorTools
             Check("lava boss balance (Lv14+gear ≥95%, Lv13+gear ≥80%, without new gear <70%)", g14 >= .95f && g13 >= .8f && n13 < .7f, $"g14 {g14:P1} g13 {g13:P1} n13 {n13:P1}");
         }
 
+        /// <summary>그림 확인용: 몬스터 여럿을 한 장으로 (unity/playtest/파일).</summary>
+        static void ExportSheet(EnemyDef[] defs, string file)
+        {
+            try
+            {
+                var sheet = new Texture2D(320 * defs.Length, 420, TextureFormat.RGBA32, false);
+                var clear = new Color32[sheet.width * sheet.height];
+                for (int i = 0; i < clear.Length; i++) clear[i] = new Color32(60, 50, 80, 255);
+                sheet.SetPixels32(clear);
+                Painter.ReadableForTests = true;
+                for (int i = 0; i < defs.Length; i++)
+                {
+                    var t = Painter.Jelly(defs[i], out _);
+                    var px = t.GetPixels32();
+                    var dst = sheet.GetPixels32();
+                    for (int y = 0; y < t.height; y++)
+                        for (int x = 0; x < t.width; x++)
+                        {
+                            var c = px[y * t.width + x];
+                            if (c.a > 0) { int k = y * sheet.width + i * 320 + x; dst[k] = Color32.Lerp(dst[k], new Color32(c.r, c.g, c.b, 255), c.a / 255f); }
+                        }
+                    sheet.SetPixels32(dst);
+                }
+                System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../playtest/" + file)), sheet.EncodeToPNG());
+            }
+            catch (Exception e) { Debug.LogWarning(file + ": " + e.Message); }
+            finally { Painter.ReadableForTests = false; }
+        }
+
+        /// <summary>눈 젤리 (C5-2, ✏️ 임시): 3종(2단 하나), 눈밭에서만, 2단은 먼 곳에서만, 셋 + 대장간 장비 밸런스.</summary>
+        static void SnowJellyTests()
+        {
+            var snow = GameData.Snow;
+            Check("snow jellies (placeholder): 3 incl. tier 2, frost/icicle looks, in the bestiary", snow.Length == 3 && Array.Exists(snow, d => d.Tier == 2)
+                  && Array.Exists(snow, d => d.Look == "frost") && Array.Exists(snow, d => d.Look == "icicle") && GameData.ListFor(MapKind.Snow) == snow
+                  && Array.TrueForAll(snow, d => Array.IndexOf(EnemyDef.Looks, d.Look) >= 0));
+            var m = WorldMap.Snow();
+            bool onlySnow = true;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    onlySnow &= (m.EncounterRate(x, y) > 0) == (m.At(x, y) == '.' && !m.Safe(x, y));
+            Check("snow: jellies only on open snow, big only far", onlySnow && !Array.Exists(GameData.EncounterPool(MapKind.Snow, 8, 14), i => snow[i].Tier == 2)
+                  && Array.Exists(GameData.EncounterPool(MapKind.Snow, 26, 14), i => snow[i].Tier == 2));
+            (float win, float hpLeft, float exp) Trio(int lv, int x, int y, int force)
+            {
+                var r = new System.Random(77);
+                int wins = 0, n = 400;
+                float hp = 0, ex = 0;
+                for (int run = 0; run < n; run++)
+                {
+                    var q = PlayerState.NewGame("t");
+                    q.GainExp(PlayerState.NextExp(lv - 1));
+                    q.Boss2Down = true; Quest.TryJoinBrother(q); q.Join("dad");
+                    foreach (var id in new[] { "flame_wand", "lava_robe", "flame_sword", "bro_shield", "lion_blade", "lion_shield" }) { q.Gear.Add(id); Equipment.Equip(q, id); }
+                    List<EnemyDef> foes;
+                    if (force > 0)
+                    {
+                        var pool = GameData.EncounterPool(MapKind.Snow, x, y);
+                        foes = new List<EnemyDef>();
+                        for (int i = 0; i < force; i++) foes.Add(snow[pool[r.Next(pool.Length)]]);
+                    }
+                    else foes = GameData.RollEncounter(MapKind.Snow, x, y, r);
+                    foreach (var f in foes) ex += f.Exp;
+                    if (FightDuo(q, foes, r)) wins++;
+                    int tot = q.Hp, max = q.MaxHp;
+                    foreach (var c in q.Companions) { tot += Math.Max(0, c.Hp); max += q.MaxHpOf(c); }
+                    hp += Math.Max(0, tot) / (float)max;
+                }
+                return (wins / (float)n, hp / n, ex / n);
+            }
+            ExportSheet(snow, "snow_jellies.png");
+            var near = Trio(15, 8, 14, 0);
+            var far3 = Trio(16, 26, 14, 3);
+            float perLevel = (PlayerState.NextExp(15) - PlayerState.NextExp(14)) / near.exp;
+            Debug.Log($"[BALANCE SNOW] trio+lava gear near @Lv15 win={near.win:P1} hpLeft={near.hpLeft:P0} exp={near.exp:F1} (battles/level≈{perLevel:F1}) | far x3 @Lv16 win={far3.win:P1} hpLeft={far3.hpLeft:P0}");
+            Check("snow trio balance (near ≥97% costs HP, far x3 ≥85%, 2.5~5.5 fights/level)",
+                  near.win >= .97f && near.hpLeft < .92f && far3.win >= .85f && perLevel >= 2.5f && perLevel <= 5.5f,
+                  $"near {near.win:P1} hp {near.hpLeft:P0} far3 {far3.win:P1} perLevel {perLevel:F1}");
+        }
+
         /// <summary>눈 덮인 땅 (C5-1): 챕터 4 → 5 (셋이 함께, 출발 자리), 맵 이어짐(눈 산 아래까지·모닥불·표지판·호수), 몬스터·마을 아직 없음, 곡.</summary>
         static void SnowTests()
         {
@@ -523,10 +604,10 @@ namespace GirlAdventure.EditorTools
                     if (m.EncounterRate(x, y) > 0) enc++;
                 }
             var foot = (WorldMap.SnowPeak.x + 1, WorldMap.SnowPeak.y + 4);
-            Check("snow map: start safe, peak foot / fire / sign reachable, frozen lake walkable, no monsters yet",
+            Check("snow map: start safe, peak foot / fire / sign reachable, frozen lake walkable, jellies on snow",
                   m.Kind == MapKind.Snow && m.SpawnPoint == WorldMap.SnowStart && m.Safe(WorldMap.SnowStart.x, WorldMap.SnowStart.y) && r[foot.Item1, foot.Item2]
                   && m.At(WorldMap.SnowFire.x, WorldMap.SnowFire.y) == 'F' && Near(WorldMap.SnowFire) && Near(WorldMap.SnowSign)
-                  && lake > 20 && lakeReach == lake && enc == 0 && m.At(-1, 5) == 'P', $"lake {lakeReach}/{lake} enc {enc}");
+                  && lake > 20 && lakeReach == lake && enc > 200 && m.At(-1, 5) == 'P', $"lake {lakeReach}/{lake} enc {enc}");
             var p = PlayerState.NewGame("s");
             p.Boss2Down = true; Quest.TryJoinBrother(p); p.Join("dad"); p.Chapter = 4; p.Boss4Down = true; p.InVillage = true; p.Hp = 1;
             Quest.StartChapter5(p);
@@ -944,31 +1025,7 @@ namespace GirlAdventure.EditorTools
                   && Array.Exists(under, d => d.Tier == 2 && d.Shape == "ghost2" && d.Evade > 0 && d.Twice)
                   && GameData.ListFor(MapKind.Underworld) == under && GameData.EncounterPool(MapKind.Underworld, 20, 18).Length > 0
                   && u.EncounterRate(20, 16) > 0 && u.EncounterRate(WorldMap.UnderStart.x, WorldMap.UnderStart.y) == 0);
-            // 그림 확인용: 지하세계 괴물 다섯을 한 장으로 (unity/playtest/under_monsters.png)
-            try
-            {
-                var sheet = new Texture2D(320 * under.Length, 420, TextureFormat.RGBA32, false);
-                var clear = new Color32[sheet.width * sheet.height];
-                for (int i = 0; i < clear.Length; i++) clear[i] = new Color32(60, 50, 80, 255);
-                sheet.SetPixels32(clear);
-                Painter.ReadableForTests = true;
-                for (int i = 0; i < under.Length; i++)
-                {
-                    var t = Painter.Jelly(under[i], out _);
-                    var px = t.GetPixels32();
-                    var dst = sheet.GetPixels32();
-                    for (int y = 0; y < t.height; y++)
-                        for (int x = 0; x < t.width; x++)
-                        {
-                            var c = px[y * t.width + x];
-                            if (c.a > 0) { int k = y * sheet.width + i * 320 + x; dst[k] = Color32.Lerp(dst[k], new Color32(c.r, c.g, c.b, 255), c.a / 255f); }
-                        }
-                    sheet.SetPixels32(dst);
-                }
-                System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../playtest/under_monsters.png")), sheet.EncodeToPNG());
-            }
-            catch (Exception e) { Debug.LogWarning("under_monsters.png: " + e.Message); }
-            finally { Painter.ReadableForTests = false; }
+            ExportSheet(under, "under_monsters.png");     // 그림 확인용: 지하세계 괴물 다섯을 한 장으로 (unity/playtest/)
 
             // 잘 피함·빠름: 이단 유령은 리본 파이어가 더 자주 빗나가고, 적 차례에 두 번 공격
             var g2 = Array.Find(under, d => d.Twice);

@@ -28,7 +28,7 @@ namespace GirlAdventure.Sim
         public static readonly string[] Shapes = { "", "ghost", "ghost2", "skeleton", "bat", "worm" };
 
         /// <summary>View 가 그릴 줄 아는 겉모습: 돌 껍데기, 수정 결정, 장군 투구, (마을 사람) 밀짚모자·리본·터번·카우보이 모자, (용암 땅) 용암 딱지·숯 불씨.</summary>
-        public static readonly string[] Looks = { "", "rock", "ore", "crystal", "general", "hat", "bow", "turban", "cowboy", "magma", "ember" };
+        public static readonly string[] Looks = { "", "rock", "ore", "crystal", "general", "hat", "bow", "turban", "cowboy", "magma", "ember", "frost", "icicle" };
 
         /// <summary>View 가 연출할 줄 아는 공격 모션.</summary>
         public static readonly string[] Moves = { "tackle", "hop", "spin", "slam", "shard", "charge" };
