@@ -558,7 +558,8 @@ namespace GirlAdventure.View
             UIKit.Fill(t, "Bg", new Color32(24, 14, 52, 255));
             var frame = UIKit.Img(t, "Frame", UIKit.White, 46, 26, 344, 488, false);
             frame.color = UIKit.Gold;
-            UIKit.Img(frame.transform, "Art", Art.UI("art_ultimate"), 4, 4, 336, 480, false);
+            endArt = UIKit.Img(frame.transform, "Art", Art.UI("art_ultimate"), 4, 4, 336, 480, false);
+            endArtDefault = endArt.sprite;
             endHead = UIKit.Label(t, "Head", "모험 완료!", 430, 70, 500, 60, 44, TextAnchor.UpperLeft, UIKit.Gold, true);
             endText = UIKit.Label(t, "Body", "", 430, 150, 500, 220, 22, TextAnchor.UpperLeft, Color.white, true);
             endText.supportRichText = true;
@@ -572,12 +573,23 @@ namespace GirlAdventure.View
             endingPanel.SetActive(false);
         }
 
+        Image endArt;
+        Sprite endArtDefault;
+
+        /// <summary>챕터 완료 카드 그림: Resources/Cards/chN_clear (Gemini 장면 그림), 없으면 기본 서진 그림.</summary>
+        Sprite EndingArt(int chapter)
+        {
+            var tex = Resources.Load<Texture2D>($"Cards/ch{chapter}_clear");
+            return tex != null ? Art.FromTexture(tex, new Vector2(.5f, .5f), 100) : endArtDefault;
+        }
+
         void ShowEnding()
         {
             hudWin.SetActive(false);
             hintLabel.SetActive(false);
             enemyLabel.text = "";
             bool ch5 = P.Boss5Down, ch4 = P.Boss4Down, ch3 = P.Boss3Down, ch2 = P.Boss2Down;
+            endArt.sprite = EndingArt(ch5 ? 5 : ch4 ? 4 : ch3 ? 3 : ch2 ? 2 : 1);
             endHead.text = ch5 ? "챕터 5 완료!" : ch4 ? "챕터 4 완료!" : ch3 ? "챕터 3 완료!" : ch2 ? "챕터 2 완료!" : "모험 완료!";
             endText.text = FillText(GameData.Talk(ch5 ? "ending_card5" : ch4 ? "ending_card4" : ch3 ? "ending_card3" : ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
             bool next = P.Chapter < WorldMap.LastChapter;
