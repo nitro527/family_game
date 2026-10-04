@@ -35,12 +35,6 @@
   "element_fusion.png": [
    1
   ],
-  "under_ghost_skeleton_ghost2.png": [
-   3
-  ],
-  "under_bat_worm.png": [
-   2
-  ],
   "lava_ember_magma_boss.png": [
    3
   ],
@@ -48,6 +42,10 @@
    2
   ],
   "cave_guard_general.png": [
+   2
+  ],
+  "under_spooky.png": [
+   3,
    2
   ]
  },
@@ -327,7 +325,7 @@
    "name": "유령",
    "region": "지하세계",
    "tier": "어려움",
-   "sheet": "under_ghost_skeleton_ghost2.png",
+   "sheet": "under_spooky.png",
    "slot": 1,
    "idea": "daughter_note_04",
    "sketch": "under_ghost.png",
@@ -339,7 +337,7 @@
    "name": "해골",
    "region": "지하세계",
    "tier": "중간·어려움",
-   "sheet": "under_ghost_skeleton_ghost2.png",
+   "sheet": "under_spooky.png",
    "slot": 2,
    "idea": "daughter_note_04",
    "sketch": "under_skeleton.png",
@@ -352,7 +350,7 @@
    "name": "이단 유령",
    "region": "지하세계",
    "tier": "어려움 (2단)",
-   "sheet": "under_ghost_skeleton_ghost2.png",
+   "sheet": "under_spooky.png",
    "slot": 3,
    "idea": "daughter_note_04",
    "sketch": "under_ghost2.png",
@@ -364,8 +362,8 @@
    "name": "박쥐",
    "region": "지하세계",
    "tier": "쉬움",
-   "sheet": "under_bat_worm.png",
-   "slot": 1,
+   "sheet": "under_spooky.png",
+   "slot": 4,
    "idea": "playtest_note_2026-10-03",
    "sketch": null,
    "ingame": "박쥐",
@@ -376,8 +374,8 @@
    "name": "지렁이",
    "region": "지하세계",
    "tier": "쉬움",
-   "sheet": "under_bat_worm.png",
-   "slot": 2,
+   "sheet": "under_spooky.png",
+   "slot": 5,
    "idea": "playtest_note_2026-10-03",
    "sketch": null,
    "ingame": "지렁이",
