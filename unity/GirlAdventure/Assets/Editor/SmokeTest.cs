@@ -566,9 +566,9 @@ namespace GirlAdventure.EditorTools
             var reach = Reach(m, WorldMap.SnowStart);
             var boss = GameData.SnowBoss;
             Check("yeti: door below the snow peak, reachable, data + art", m.At(b.x, b.y) == 'B' && reach[b.x, b.y] && m.At(b.x, b.y - 1) == 'K'
-                  && boss != null && boss.Boss && boss.Art == "yeti" && boss.Backdrop == "snow_boss" && Resources.Load<Texture2D>("Monsters/yeti") != null
+                  && boss != null && boss.Boss && boss.Art == "yeti_scary" && boss.Backdrop == "snow_boss" && Resources.Load<Texture2D>("Monsters/yeti_scary") != null
                   && Resources.Load<Texture2D>("Battle/snow_boss") != null,
-                  $"tile {m.At(b.x, b.y)} reach {reach[b.x, b.y]} above {m.At(b.x, b.y - 1)} boss {boss?.Name} art {boss?.Art} bg {boss?.Backdrop} tex {Resources.Load<Texture2D>("Monsters/yeti") != null}/{Resources.Load<Texture2D>("Battle/snow_boss") != null}");
+                  $"tile {m.At(b.x, b.y)} reach {reach[b.x, b.y]} above {m.At(b.x, b.y - 1)} boss {boss?.Name} art {boss?.Art} bg {boss?.Backdrop} tex {Resources.Load<Texture2D>("Monsters/yeti_scary") != null}/{Resources.Load<Texture2D>("Battle/snow_boss") != null}");
             var p = PlayerState.NewGame("t"); p.Boss5Down = true; p.Chapter = 5;
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
             Check("boss5 saved (v15), snow elder thanks", SaveData.CurrentVersion >= 15 && q.Boss5Down
@@ -656,7 +656,7 @@ namespace GirlAdventure.EditorTools
         static void SnowJellyTests()
         {
             var snow = GameData.Snow;
-            Check("snow jellies (placeholder): 3 incl. tier 2, frost/icicle looks, in the bestiary", snow.Length == 3 && Array.Exists(snow, d => d.Tier == 2)
+            Check("snow monsters: 3 jellies (placeholder, incl. tier 2) + ice golem, frost/icicle looks, in the bestiary", snow.Length == 4 && Array.Exists(snow, d => d.Name == "얼음 골렘") && Array.Exists(snow, d => d.Tier == 2)
                   && Array.Exists(snow, d => d.Look == "frost") && Array.Exists(snow, d => d.Look == "icicle") && GameData.ListFor(MapKind.Snow) == snow
                   && Array.TrueForAll(snow, d => Array.IndexOf(EnemyDef.Looks, d.Look) >= 0));
             var m = WorldMap.Snow();

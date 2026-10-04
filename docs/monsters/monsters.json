@@ -47,6 +47,9 @@
   "under_spooky.png": [
    3,
    2
+  ],
+  "snow_yeti_scary_golem.png": [
+   2
   ]
  },
  "monsters": [
@@ -239,8 +242,8 @@
    "slot": 1,
    "idea": "daughter_note_02",
    "sketch": "yeti.png",
-   "ingame": "예티",
-   "desc": "복슬복슬 눈 괴물. 이름은 아직 고민 중!"
+   "ingame": null,
+   "desc": "복슬복슬 눈 괴물. 서진이가 처음 그린 예티 (게임에는 무서운 예티로)."
   },
   {
    "id": "mystery_orb",
@@ -465,6 +468,30 @@
    "sketch": null,
    "ingame": "젤리 장군",
    "desc": "동굴 젤리 기지의 대장. 뿔 투구를 쓰고 돌격해요."
+  },
+  {
+   "id": "yeti_scary",
+   "name": "무서운 예티",
+   "region": "눈 덮인 곳 (눈 산 동굴)",
+   "tier": "보스",
+   "sheet": "snow_yeti_scary_golem.png",
+   "slot": 1,
+   "idea": "daughter_note_02",
+   "sketch": "yeti.png",
+   "ingame": "예티",
+   "desc": "새빨간 눈으로 크와앙! 눈 산 동굴의 왕 (사용자 결정 2026-10-04: 무서운 예티)"
+  },
+  {
+   "id": "ice_golem",
+   "name": "얼음 골렘",
+   "region": "눈 덮인 곳",
+   "tier": "어려움",
+   "sheet": "snow_yeti_scary_golem.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "얼음 골렘",
+   "desc": "얼음덩어리 골렘 (사용자 요청 2026-10-04)"
   }
  ]
 }
