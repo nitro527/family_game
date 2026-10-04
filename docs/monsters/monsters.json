@@ -34,6 +34,12 @@
   ],
   "element_fusion.png": [
    1
+  ],
+  "under_ghost_skeleton_ghost2.png": [
+   3
+  ],
+  "under_bat_worm.png": [
+   2
   ]
  },
  "monsters": [
@@ -306,6 +312,68 @@
    "sketch": "spirit_nature.png",
    "ingame": null,
    "desc": "네 가지 원소 중 하나. 새싹이 쏙."
+  },
+  {
+   "id": "under_ghost",
+   "name": "유령",
+   "region": "지하세계",
+   "tier": "어려움",
+   "sheet": "under_ghost_skeleton_ghost2.png",
+   "slot": 1,
+   "idea": "daughter_note_04",
+   "sketch": "under_ghost.png",
+   "ingame": "유령",
+   "desc": "램프에서 스르륵 나오는 유령. 어려워요!"
+  },
+  {
+   "id": "under_skeleton",
+   "name": "해골",
+   "region": "지하세계",
+   "tier": "중간·어려움",
+   "sheet": "under_ghost_skeleton_ghost2.png",
+   "slot": 2,
+   "idea": "daughter_note_04",
+   "sketch": "under_skeleton.png",
+   "ingame": "해골",
+   "desc": "관에서 나오는 해골. 움직일 때마다 삐거덕 소리가 나요.",
+   "clear_holes": 0.5
+  },
+  {
+   "id": "under_ghost2",
+   "name": "이단 유령",
+   "region": "지하세계",
+   "tier": "어려움 (2단)",
+   "sheet": "under_ghost_skeleton_ghost2.png",
+   "slot": 3,
+   "idea": "daughter_note_04",
+   "sketch": "under_ghost2.png",
+   "ingame": "이단 유령",
+   "desc": "토끼 귀가 달린 유령의 2단. 잘 피하고 아주 빨라요!"
+  },
+  {
+   "id": "under_bat",
+   "name": "박쥐",
+   "region": "지하세계",
+   "tier": "쉬움",
+   "sheet": "under_bat_worm.png",
+   "slot": 1,
+   "idea": "playtest_note_2026-10-03",
+   "sketch": null,
+   "ingame": "박쥐",
+   "desc": "지하세계 천장에 매달려 있다가 파닥파닥 날아와요."
+  },
+  {
+   "id": "under_worm",
+   "name": "지렁이",
+   "region": "지하세계",
+   "tier": "쉬움",
+   "sheet": "under_bat_worm.png",
+   "slot": 2,
+   "idea": "playtest_note_2026-10-03",
+   "sketch": null,
+   "ingame": "지렁이",
+   "desc": "흙 속에서 꿈틀꿈틀 올라오는 지렁이.",
+   "clear_holes": 0.0
   }
  ]
 }

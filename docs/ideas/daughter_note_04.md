@@ -17,3 +17,4 @@
 ## 게임에 넣은 것
 - 지하세계 젤리(임시) → 유령·해골·이단 유령·박쥐·지렁이 (BACKLOG P-1, 2026-10-03 완료). 잘 피함 = 리본 파이어·검이 더 자주 빗나감(35%), 빠름 = 한 차례에 두 번 공격, 해골은 삐거덕 소리, 지하세계에 램프·관
 - 모습은 코드로 그린 그림 (unity/playtest/under_monsters.png) — 서진이 그림처럼 더 예쁘게는 Gemini 로 나중에
+- 2026-10-04 Gemini 로 서진이 그림 → 게임 그림 (`assets/monsters/gen/under_ghost_skeleton_ghost2.png`, 박쥐·지렁이 `under_bat_worm.png`), 게임 전투·필드에 들어감

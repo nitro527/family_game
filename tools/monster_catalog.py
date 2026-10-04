@@ -49,6 +49,36 @@ def drop_fragments(im, keep=0.03):
     return out.crop(out.getbbox())
 
 
+def clear_holes(im, below=0.0, min_px=400):
+    """Make enclosed pure-white background pockets transparent (between a skeleton's legs, under a worm's arch).
+    Only pockets whose centre is below `below` x height, so white highlights higher up (a skull's shine) stay."""
+    from collections import deque
+    im = im.convert('RGBA')
+    px, (w, h) = im.load(), im.size
+
+    def white(x, y):
+        r, g, b, a = px[x, y]
+        return a > 0 and r >= 240 and g >= 240 and b >= 240
+    seen = set()
+    for y in range(h):
+        for x in range(w):
+            if (x, y) in seen or not white(x, y):
+                continue
+            q, comp = deque([(x, y)]), []
+            seen.add((x, y))
+            while q:
+                cx, cy = q.popleft()
+                comp.append((cx, cy))
+                for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                    if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and white(nx, ny):
+                        seen.add((nx, ny))
+                        q.append((nx, ny))
+            if len(comp) >= min_px and sum(c[1] for c in comp) / len(comp) > h * below:
+                for c in comp:
+                    px[c] = (0, 0, 0, 0)
+    return im
+
+
 def cut_all(data):
     os.makedirs(CUT, exist_ok=True)
     for sheet, per_row in data['sheets'].items():
@@ -59,7 +89,10 @@ def cut_all(data):
         by_slot = dict(zip(range(1, n + 1), paths))
         for m in mons:
             im = Image.open(by_slot[m['slot']])
-            drop_fragments(im.crop(im.getbbox())).save(os.path.join(CUT, m['id'] + '.png'))
+            out = drop_fragments(im.crop(im.getbbox()))
+            if m.get('clear_holes') is not None:      # monsters.json: "clear_holes": 0.5 = clear white pockets in the lower half
+                out = clear_holes(out, below=m['clear_holes'])
+            out.save(os.path.join(CUT, m['id'] + '.png'))
         for p in paths:
             os.remove(p)
         print(sheet, '->', ', '.join(m['id'] for m in mons))
