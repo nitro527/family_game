@@ -40,6 +40,12 @@
   ],
   "under_bat_worm.png": [
    2
+  ],
+  "lava_ember_magma_boss.png": [
+   3
+  ],
+  "snow_flake_icicle.png": [
+   2
   ]
  },
  "monsters": [
@@ -374,6 +380,66 @@
    "ingame": "지렁이",
    "desc": "흙 속에서 꿈틀꿈틀 올라오는 지렁이.",
    "clear_holes": 0.0
+  },
+  {
+   "id": "lava_ember",
+   "name": "숯 젤리",
+   "region": "용암 땅",
+   "tier": "쉬움",
+   "sheet": "lava_ember_magma_boss.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "숯 젤리",
+   "desc": "까만 몸에 주황빛 금이 간 젤리. (임시 디자인 — 서진이 디자인을 기다려요)"
+  },
+  {
+   "id": "lava_magma",
+   "name": "용암 젤리",
+   "region": "용암 땅",
+   "tier": "중간",
+   "sheet": "lava_ember_magma_boss.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "용암 젤리",
+   "desc": "머리 위에 작은 불꽃이 일렁이는 젤리. (임시 디자인)"
+  },
+  {
+   "id": "lava_boss",
+   "name": "화산 젤리 대장",
+   "region": "용암 땅",
+   "tier": "보스",
+   "sheet": "lava_ember_magma_boss.png",
+   "slot": 3,
+   "idea": null,
+   "sketch": null,
+   "ingame": "화산 젤리 대장",
+   "desc": "화산 속에서 자다 깨어 심술이 난 대장 젤리. (임시 디자인)"
+  },
+  {
+   "id": "snow_flake",
+   "name": "눈송이 젤리",
+   "region": "눈 덮인 곳",
+   "tier": "쉬움",
+   "sheet": "snow_flake_icicle.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "눈송이 젤리",
+   "desc": "머리에 눈이 소복이 쌓인 젤리. (임시 디자인 — 서진이 디자인을 기다려요)"
+  },
+  {
+   "id": "snow_icicle",
+   "name": "고드름 젤리",
+   "region": "눈 덮인 곳",
+   "tier": "중간",
+   "sheet": "snow_flake_icicle.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "고드름 젤리",
+   "desc": "고드름 왕관을 쓴 얼음 젤리. (임시 디자인)"
   }
  ]
 }
