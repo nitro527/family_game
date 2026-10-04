@@ -8,6 +8,7 @@
 1. Unity Hub 로그인 확인 (배치 모드 검증에 필요)
 2. 예약 루틴 `girl-adventure-improve` 는 **꺼 둔 채로** — 이 대화에서 사용자 명령 / 알아서 퀄리티 개선
 3. `docs/BACKLOG.md` 맨 위부터 (P·C5·C4·U 는 모두 완료, **Q 퀄리티 Q-1~15 완료 2026-10-04**: 이름표·모든 마을 집 안·선택 창 스크롤(대장간 9줄 버그)·상태 창·눈 효과음·용암/눈 구멍·열린 상자 그림·✏️ 표시 정리·도감 사는 곳·편지 퀘스트·어두운 상자·성장 곡선). 다음 후보: Q 계속(화면 점검), PLAN_NEXT 62(지훈 기술 🙋 이름)·75(태블릿)·76(소리 평가), 🙋 답 반영
+   - **Gemini 그림 (2026-10-04, Q-18~23)**: 지하세계 5종(조금 무섭게)·용암/눈 젤리·화산 대장·동굴 보스 2·무서운 예티·얼음 골렘 → 모든 적이 Gemini 그림(`enemies.json` Art). 챕터 완료 카드 `Resources/Cards/chN_clear` (4·5 있음, 1~3 은 아직 기본 그림 → 다음 후보). 순서: 기준 그림 한 장으로 합쳐 `tools/clip_image.py` → Gemini 새 채팅·이미지 만들기(버튼은 find 로 ref 찾기가 좌표보다 안전) → 다운로드 → `assets/monsters/gen` + `docs/monsters/monsters.json` → `python tools/monster_catalog.py`(`clear_holes`) → `python tools/prepare_unity_art.py monsters`
    - 화면 점검 요령: 프로브 스크린샷 여러 장을 PIL 로 한 장에 모아 보기 (scratchpad), SmokeTest 그림 내보내기(`ExportSheet`·map_snow·chests)
    - 동료는 `party.json` (지훈 jihun·아빠 dad), 화면은 동료 배열(`AllyView`·`Follower`·`allyHuds`), 동료 공용 대사 `ally_*`, 지훈은 예전 `bro_*`
    - 챕터 추가 자리: `WorldMap.LastChapter`(지금 5)·`ForChapter`·`HasTown`·`ForPlayer`, `Quest.StartChapterN`·`QuickStart`(챕터 고르기 레벨·장비), View `SurfaceMap`·`TravelRoutine`·`StartNextChapter`·`ChapterNRoutine`·`ShowEnding`
