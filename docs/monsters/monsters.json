@@ -46,6 +46,9 @@
   ],
   "snow_flake_icicle.png": [
    2
+  ],
+  "cave_guard_general.png": [
+   2
   ]
  },
  "monsters": [
@@ -440,6 +443,30 @@
    "sketch": null,
    "ingame": "고드름 젤리",
    "desc": "고드름 왕관을 쓴 얼음 젤리. (임시 디자인)"
+  },
+  {
+   "id": "cave_guard",
+   "name": "바위 대장 젤리",
+   "region": "동굴",
+   "tier": "중간 보스",
+   "sheet": "cave_guard_general.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "바위 대장 젤리",
+   "desc": "젤리 장군의 보물상자를 지키는 바위 같은 젤리. 쿵쿵!"
+  },
+  {
+   "id": "cave_general",
+   "name": "젤리 장군",
+   "region": "동굴",
+   "tier": "보스",
+   "sheet": "cave_guard_general.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "젤리 장군",
+   "desc": "동굴 젤리 기지의 대장. 뿔 투구를 쓰고 돌격해요."
   }
  ]
 }
