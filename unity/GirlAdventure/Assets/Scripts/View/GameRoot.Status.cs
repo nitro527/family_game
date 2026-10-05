@@ -138,7 +138,7 @@ namespace GirlAdventure.View
                 var parts = new System.Collections.Generic.List<string>();
                 foreach (var k in c.Def.Skills ?? new string[0])
                     if (System.Enum.TryParse<Cmd>(k, out var cmd) && P.Lv >= GameData.Skill(cmd).Lv)
-                        parts.Add(full ? ShortSkill(cmd) : SkillLevels.Grows(cmd) ? $"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color>{UltTag(cmd)}</size>" : GameData.Skill(cmd).Name);
+                        parts.Add(full ? ShortSkill(cmd) : SkillLevels.Grows(cmd) ? $"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color>{(crowded ? UltStar(cmd) : UltTag(cmd))}</size>" : GameData.Skill(cmd).Name);   // 셋이면 줄이 길어 ★ 만 (넘쳐서 "궁극기"만 아랫줄에 남던 것)
                 mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", parts)}" + "\n");
             }
             stMid.fontSize = crowded ? 16 : 19;
@@ -170,6 +170,13 @@ namespace GirlAdventure.View
             foreach (var u in Ultimates.All)
                 if (u.basic == c)
                     return Ultimates.Knows(P, u.ult) ? $" <color=#FFE27A>★{GameData.Skill(u.ult).Name}</color>" : " <color=#7A80A0>Lv3 궁극기</color>";
+            return "";
+        }
+
+        /// <summary>궁극기를 배웠으면 금빛 ★ 하나 (좁은 줄용).</summary>
+        string UltStar(Cmd c)
+        {
+            foreach (var u in Ultimates.All) if (u.basic == c && Ultimates.Knows(P, u.ult)) return "<color=#FFE27A>★</color>";
             return "";
         }
 
