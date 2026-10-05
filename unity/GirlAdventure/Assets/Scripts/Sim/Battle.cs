@@ -328,7 +328,7 @@ namespace GirlAdventure.Sim
         /// 지훈 자동 공격 (설정 "지훈 자동 공격", PLAN_NEXT 71 — 3살 지훈이가 명령을 고르지 않아도 되게):
         /// 보스에게는 MP 가 있으면 번개, 아니면 검. 대상은 HP 가 가장 적게 남은 적 (하나씩 쓰러뜨리게).
         /// </summary>
-        public (Cmd cmd, int target) BroAuto() => (Boss && AtkUp == 0 && BroCanUse(Cmd.Cheer) ? Cmd.Cheer : AliveCount > 1 && BroCanUse(Cmd.BigBolt) ? Cmd.BigBolt : Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());   // 무리면 큰 번개
+        public (Cmd cmd, int target) BroAuto() => (Boss && AtkUp == 0 && BroCanUse(Cmd.Cheer) ? Cmd.Cheer : AliveCount > 1 && BroCanUse(Cmd.BigBolt) ? Cmd.BigBolt : Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, AutoTarget());   // 무리면 큰 번개
 
         /// <summary>
         /// 동료 자동 (Q-32, 설정 "○○ 자동 공격"): 지훈은 BroAuto. 다른 동료(아빠, 나중에 엄마)는 공용 규칙 ✏️ —
@@ -345,7 +345,7 @@ namespace GirlAdventure.Sim
                 foreach (int w in P.Members()) { if (P.MemberDown(w)) down = true; else if (P.MemberHp(w) * 2 <= P.MemberMaxHp(w)) hurt = true; }
                 var u = ult.Value;
                 if ((u == Cmd.UltBolt && (Boss || AliveCount > 1)) || (u == Cmd.UltGuard && (Boss || hurt)) || (u == Cmd.UltCure && (down || hurt)))
-                    return (u, WeakestAlive());
+                    return (u, AutoTarget());
             }
             if (m.Id == Sim.Party.Brother) return BroAuto();
             if (MemberCanUse(a, Cmd.Hug))           // 엄마: 누가 HP 1/3 이하면 그 사람을 포옹 (가장 위험한 사람)
@@ -369,7 +369,7 @@ namespace GirlAdventure.Sim
             Cmd? pick = null;
             foreach (var name in m.Def.Skills ?? new string[0])
                 if (Enum.TryParse(name, out Cmd c) && !Support(c) && MemberCanUse(a, c)) pick = c;
-            return (pick ?? Cmd.Guard, WeakestAlive());
+            return (pick ?? Cmd.Guard, AutoTarget());
         }
 
         /// <summary>적을 치지 않는 기술 (지키기·회복·버프): 대상 적을 고르지 않고, 자동 공격의 "센 공격" 고르기에서 뺀다.</summary>
@@ -485,6 +485,15 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>살아 있는 적 중 HP 가 가장 적은 적 번호 (같으면 앞쪽, 모두 쓰러졌으면 -1).</summary>
+        /// <summary>자동 공격 대상: 친구를 회복시키거나 부하를 부르는 적이 있으면 그중 HP 가 적은 것부터 (표지판 힌트 "회복하는 쪽부터"), 없으면 가장 약한 적.</summary>
+        public int AutoTarget()
+        {
+            int best = -1;
+            for (int i = 0; i < Foes.Count; i++)
+                if (!Foes[i].Down && (Foes[i].Def.Skill == "heal" || Foes[i].Def.Skill == "call") && (best < 0 || Foes[i].Hp < Foes[best].Hp)) best = i;
+            return best >= 0 ? best : WeakestAlive();
+        }
+
         public int WeakestAlive()
         {
             int best = -1;

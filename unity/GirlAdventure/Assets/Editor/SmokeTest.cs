@@ -1398,6 +1398,7 @@ namespace GirlAdventure.EditorTools
             b4.Foes[1].Hp = 10;
             var h1 = b4.EnemyAct(0);
             bool fheal = h1.Special == "heal" && h1.HealFoe == 1 && b4.Foes[1].Hp == 10 + h1.HealAmt && h1.HealAmt > 0;
+            fheal &= b4.AutoTarget() == 0 && b4.WeakestAlive() == 1;     // 자동 공격은 회복하는 적(0)부터
             // 합체
             var green = GameData.Normal[1];
             var gm = With(green, "merge");
