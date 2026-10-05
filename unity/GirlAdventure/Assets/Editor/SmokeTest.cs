@@ -486,6 +486,7 @@ namespace GirlAdventure.EditorTools
             ForestTests();
             SupportSkillTests();
             GimmickTests();
+            MapQuestTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -1272,6 +1273,51 @@ namespace GirlAdventure.EditorTools
             bool bro = b.AllyAuto(0) == b.BroAuto();
             Check("Q-32 dad auto: guard when someone is low, else sword the weakest",
                   calm == (Cmd.Sword, 1) && worried.cmd == Cmd.Guard && self.cmd == Cmd.Sword && bro, $"calm={calm} worried={worried} self={self} bro={bro}");
+        }
+
+        /// <summary>
+        /// 맵마다 찾기 부탁 + 숨겨진 이벤트 (G-4): 부탁하는 사람이 있고, 찾을 칸 셋이 서로 다르고 걸어서 닿고,
+        /// 받기 → 찾기 → 보상 흐름, 숨겨진 물건이 그 맵에 있고 옆 칸에서 닿는지, 보상·대사가 있는지.
+        /// </summary>
+        static void MapQuestTests()
+        {
+            WorldMap MapOf(MapKind k) => k == MapKind.Field ? new WorldMap() : k == MapKind.Cave ? WorldMap.Cave() : k == MapKind.Desert ? WorldMap.Desert()
+                : k == MapKind.Lava ? WorldMap.Lava() : k == MapKind.Snow ? WorldMap.Snow() : k == MapKind.Library ? WorldMap.Library() : k == MapKind.Forest ? WorldMap.Forest()
+                : k == MapKind.LavaTown ? WorldMap.LavaTown() : k == MapKind.SnowTown ? WorldMap.SnowTown() : k == MapKind.Oasis ? WorldMap.OasisTown() : WorldMap.Village();
+            string bad = "";
+            foreach (var q in Quests.All)
+            {
+                var m = MapOf(Quests.KindOf(q.Map));
+                var reach = Reach(m, m.SpawnPoint);
+                var spots = Quests.Spots(q, m);
+                bool ok = spots.Count == 3 && new HashSet<(int, int)>(spots).Count == 3;
+                foreach (var sp in spots) ok &= sp.x >= 0 && reach[sp.x, sp.y] && m.EncounterRate(sp.x, sp.y) >= 0;
+                bool giver = false; foreach (var n in Npcs.All) giver |= n.Id == q.Giver;
+                ok &= giver && GameData.Item(q.Reward) != null && GameData.HasTalk($"q_{q.Id}_ask") && GameData.HasTalk($"q_{q.Id}_done") && GameData.HasTalk($"q_{q.Id}_after");
+                // 흐름
+                var p = PlayerState.NewGame("q"); p.Chapter = q.Chapter;
+                string a1 = Quests.Talk(q.Giver, p, out var r1);
+                var active = Quests.ActiveSpots(p, m);
+                string a2 = Quests.Talk(q.Giver, p, out _);
+                foreach (var sp in spots) Quests.FindAt(p, m, sp.x, sp.y);
+                string a3 = Quests.Talk(q.Giver, p, out var r3);
+                string a4 = Quests.Talk(q.Giver, p, out var r4);
+                ok &= a1.EndsWith("_ask") && r1 == null && active.Count == 3 && a2.EndsWith("_progress") && a3.EndsWith("_done") && r3 == q.Reward && p.Gear.Contains(q.Reward)
+                      && a4.EndsWith("_after") && r4 == null && Quests.ActiveSpots(p, m).Count == 0;
+                if (!ok) bad += $"{q.Id}(spots {string.Join(" ", spots)}) ";
+            }
+            foreach (var sc in Quests.AllSecrets)
+            {
+                var m = MapOf(Quests.KindOf(sc.Map));
+                var reach = Reach(m, m.SpawnPoint);
+                var at = Quests.SecretSpot(sc, m);
+                bool near = at.x >= 0 && ((at.x > 0 && reach[at.x - 1, at.y]) || (at.x < WorldMap.W - 1 && reach[at.x + 1, at.y]) || (at.y > 0 && reach[at.x, at.y - 1]) || (at.y < WorldMap.H - 1 && reach[at.x, at.y + 1]));
+                var p = PlayerState.NewGame("s"); p.Boss7Down = true;
+                bool ok = near && GameData.Item(sc.Reward) != null && GameData.HasTalk(sc.Talk) && Quests.TrySecret(p, m, at.x, at.y) == sc && p.Gear.Contains(sc.Reward)
+                          && Quests.TrySecret(p, m, at.x, at.y) == null;
+                if (!ok) bad += $"secret {sc.Id}(at {at} near {near}) ";
+            }
+            Check("G-4 quests: 7 find quests + 7 secrets, spots reachable, accept→find→reward flow, hidden objects exist", Quests.All.Count >= 7 && Quests.AllSecrets.Count >= 7 && bad == "", bad);
         }
 
         /// <summary>

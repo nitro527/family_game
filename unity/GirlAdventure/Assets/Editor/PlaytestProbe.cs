@@ -1717,6 +1717,37 @@ namespace GirlAdventure.EditorTools
             Expect("chapter 7 starts in the forest camp with four", G.P.Chapter == 7 && G.MapKindNow == MapKind.Forest && G.FollowerVisible("mom") && G.FollowerVisible("dad")
                    && (G.P.X, G.P.Y) == WorldMap.ForStart && G.P.Companions.Count == 3);
             ExpectBgm("forest");
+            // 찾기 부탁 (G-4): 도토리 젤리의 부탁 → 반짝이 셋 → 하나 밟기 → "찾았다! (1/3)"
+            G.DebugMobs(true, true);
+            G.DebugAcceptQuest("acorns");
+            yield return .3f;
+            Expect("quest sparkles shown after accepting", G.QuestSparklesShown == 3, $"shown {G.QuestSparklesShown}");
+            {
+                var fm = WorldMap.Forest();
+                var sp = G.DebugQuestSpots[0];
+                foreach (var (ddx, ddy, dir, key) in new[] { (-1, 0, "right", KeyCode.RightArrow), (1, 0, "left", KeyCode.LeftArrow), (0, 1, "up", KeyCode.UpArrow), (0, -1, "down", KeyCode.DownArrow) })
+                    if (Quest.Walkable(fm, G.P, sp.x + ddx, sp.y + ddy))
+                    {
+                        G.DebugTeleport(sp.x + ddx, sp.y + ddy, dir);
+                        yield return .4f;
+                        Shot("quest_sparkle");
+                        Keys.Hold(key, true); yield return .15f; Keys.Hold(key, false);
+                        break;
+                    }
+            }
+            yield return (Func<bool>)(() => G.MessageText.Contains("찾았다"));
+            Shot("quest_found");
+            Expect("stepped on a sparkle: found 1/3", G.QuestFindCount > 0 && G.MessageText.Contains("1/3"), G.MessageText);
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            // 나무 흔들기 (G-3): 쉼터 옆 나무에 부딪히면 잎이 흩날린다
+            int shakes0 = G.TreeShakes;
+            G.DebugTeleport(2, 16, "left");
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            yield return .2f;
+            Shot("tree_shake");
+            Expect("bumping a tree rustles its leaves", G.TreeShakes > shakes0, $"shakes {G.TreeShakes}");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             // 전투 기믹 (사용자 2026-10-06): 꼬마 악마 둘 → 합체, 버섯 젤리 → 독 (확률 무시)
             BattleSystem.ForceSkills = true;
             G.DebugBattleDefs(GameData.Library[0], GameData.Library[0]);

@@ -180,6 +180,7 @@ namespace GirlAdventure.View
         {
             bool cave = map.Kind == MapKind.Cave;
             RefreshHoles();
+            RefreshQuestSpots();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
             letterSR.enabled = map.Kind == MapKind.Desert && !Quest.HasLetter(P);
@@ -556,6 +557,7 @@ namespace GirlAdventure.View
 
         void TickField()
         {
+            TickQuestSparkles();
             if (moveT >= 0)
             {
                 moveT += Time.deltaTime / StepTime;
@@ -599,6 +601,9 @@ namespace GirlAdventure.View
             {
                 if (Keys.AnyDown) sfx.Play("bump");
                 char c = map.At(nx, ny);
+                var secret = busy ? null : Quests.TrySecret(P, map, nx, ny);      // 숨겨진 이벤트 (G-4): 표시 없는 물건을 살펴보면
+                if (secret != null) { StartCoroutine(SecretRoutine(secret)); return; }
+                if (Keys.AnyDown && BumpObject(nx, ny, c)) return;               // 나무 흔들기·물방울 (G-3)
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
                 else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow || map.Kind == MapKind.Library || map.Kind == MapKind.Forest ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
@@ -831,6 +836,9 @@ namespace GirlAdventure.View
             if (slid && !P.Opened.Contains("ice_hint")) { P.Opened.Add("ice_hint"); StartCoroutine(IceHintRoutine()); }
             sfx.Play(map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown ? "step_snow" : "step");
             char here = map.At(P.X, P.Y);
+            StepFx(here);
+            var found = Quests.FindAt(P, map, P.X, P.Y);                       // 찾기 부탁 (G-4): 반짝이는 칸을 밟으면
+            if (found != null) { StartCoroutine(QuestFoundRoutine(found)); return; }
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
             if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }

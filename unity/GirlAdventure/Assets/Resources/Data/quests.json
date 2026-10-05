@@ -1,0 +1,21 @@
+{
+  "_comment": "G-4 맵마다 찾기 부탁 + 숨겨진 이벤트 (사용자 2026-10-06, 내용은 모두 임시 — docs/ideas/quests_g4.md). Wish = 찾을 자리 근처, 실제 칸은 근처 바닥에서 자동 (Quests.Spots)",
+  "Quests": [
+    {"Id": "stars", "Chapter": 1, "Giver": "kid", "Map": "field", "Wish": "6,12;24,8;30,18", "Item": "별 조각", "Reward": "star_brooch"},
+    {"Id": "crystals", "Chapter": 2, "Giver": "miner", "Map": "cave", "Wish": "6,16;12,12;28,14", "Item": "반딧불 수정", "Reward": "crystal_earring"},
+    {"Id": "bells", "Chapter": 3, "Giver": "cowkid", "Map": "desert", "Wish": "6,10;22,6;30,14", "Item": "낙타 방울", "Reward": "desert_rose"},
+    {"Id": "lavastones", "Chapter": 4, "Giver": "smith", "Map": "lava", "Wish": "8,8;22,16;28,4", "Item": "식은 용암석", "Reward": "flame_bangle"},
+    {"Id": "buttons", "Chapter": 5, "Giver": "snow_kid", "Map": "snow", "Wish": "6,6;14,16;30,10", "Item": "눈사람 단추", "Reward": "snow_mittens"},
+    {"Id": "books", "Chapter": 6, "Giver": "librarian", "Map": "library", "Wish": "4,13;14,9;30,13", "Item": "흩어진 그림책", "Reward": "magic_bookmark"},
+    {"Id": "acorns", "Chapter": 7, "Giver": "acorn", "Map": "forest", "Wish": "6,9;24,9;30,14", "Item": "숨은 도토리", "Reward": "fairy_wings"}
+  ],
+  "Secrets": [
+    {"Id": "clover", "Map": "field", "Tile": "T", "Wish": "28,4", "Reward": "clover", "Talk": "secret_clover"},
+    {"Id": "pearl", "Map": "cave", "Tile": "w", "Wish": "20,12", "Reward": "cave_pearl", "Talk": "secret_pearl"},
+    {"Id": "cactus", "Map": "desert", "Tile": "Y", "Wish": "20,10", "Reward": "cactus_flower", "Talk": "secret_cactus"},
+    {"Id": "pebble", "Map": "lavatown", "Tile": "w", "Wish": "18,10", "Reward": "warm_pebble", "Talk": "secret_pebble"},
+    {"Id": "carrot", "Map": "snow", "Tile": "n", "Wish": "20,6", "Reward": "carrot_charm", "Talk": "secret_carrot"},
+    {"Id": "diary", "Map": "library", "Tile": "q", "Wish": "33,11", "Reward": "old_diary", "Talk": "secret_diary"},
+    {"Id": "goldacorn", "Map": "forest", "Tile": "K", "Wish": "31,5", "Reward": "golden_acorn", "Talk": "secret_goldacorn", "Need": "boss7"}
+  ]
+}

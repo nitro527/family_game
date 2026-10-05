@@ -68,7 +68,9 @@ namespace GirlAdventure.View
             sfx.Play("select");
             faceOverride = JellySprite(NpcLook(n));
             if (n.Inn) { yield return InnTalk(); faceOverride = null; talkingNpc = null; HideMessage(); busy = false; yield break; }
-            yield return Talk(Npcs.TalkId(n, P), ("name", P.Name));
+            bool questTalk = false;                     // 찾기 부탁 (G-4)
+            yield return QuestNpcTalk(n, h => questTalk = h);
+            if (!questTalk) yield return Talk(Npcs.TalkId(n, P), ("name", P.Name));
             faceOverride = null;
             talkingNpc = null;
             HideMessage();
