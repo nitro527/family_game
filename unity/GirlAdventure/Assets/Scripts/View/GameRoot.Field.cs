@@ -656,7 +656,9 @@ namespace GirlAdventure.View
             // 카메라: 맵 밖이 보이지 않게 가둔다
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
             float cx = Mathf.Clamp(rx + .5f, halfW, WorldMap.W - halfW);
-            float cy = Mathf.Clamp(-(ry + .5f), -WorldMap.H + halfH, -halfH);
+            // 위쪽 끝에선 상태창 높이만큼 더 내려가게 (맵 맨 윗줄이 상태창에 가리지 않게 — 사용자 "상태창이 게임 화면을 가린다")
+            float hudWorld = 2 * halfH * (8 + 118 * HudScale) / UIKit.RefH;
+            float cy = Mathf.Clamp(-(ry + .5f), -WorldMap.H + halfH, -halfH + hudWorld);
             if (map.Kind == MapKind.Home)           // 집 안: 방 전체가 보이게 고정 (왼쪽 위 HUD 창 옆으로 비켜서)
             {
                 cx = 11.8f + halfW - 2 * halfW * .28f;

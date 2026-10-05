@@ -27,6 +27,45 @@ namespace GirlAdventure.EditorTools
         static int fails;
         static GameRoot G => GameRoot.Instance;
 
+        static bool layoutOnly;
+
+        /// <summary>화면 배치 점검 (사용자 "상태창이 몬스터를 가린다"): 넷 파티로 필드·여러 보스·무리 전투만 찍는다 → unity/playtest_layout.</summary>
+        public static void RunLayout()
+        {
+            layoutOnly = true;
+            Run();
+            outDir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../playtest_layout"));
+            if (Directory.Exists(outDir)) Directory.Delete(outDir, true);
+            Directory.CreateDirectory(outDir);
+        }
+
+        static IEnumerator LayoutScenario()
+        {
+            yield return 2f;
+            G.DebugQuickStart(6, 3);
+            yield return 1.5f;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            G.DebugJoin("mom");
+            G.DebugMobs(true, true);
+            yield return 1f;
+            Shot("field_four");
+            foreach (var def in new[] { GameData.LibraryBoss, GameData.SnowBoss, GameData.LavaBoss, GameData.King, GameData.Library[0] })
+            {
+                G.DebugBattleWith(def);
+                yield return (Func<bool>)(() => G.CommandOpen);
+                yield return .6f;
+                Shot("battle_" + def.Name);
+                G.DebugBackToField();
+                yield return .8f;
+            }
+            G.DebugGroupBattle(3, 1);
+            yield return (Func<bool>)(() => G.CommandOpen);
+            yield return .6f;
+            Shot("battle_group3");
+            G.DebugBackToField();
+            yield return .5f;
+        }
+
         public static void Run()
         {
             outDir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../playtest"));
@@ -46,7 +85,7 @@ namespace GirlAdventure.EditorTools
         static void Tick()
         {
             if (!EditorApplication.isPlaying || G == null) return;
-            if (script == null) { script = Scenario(); waitUntil = 0; waitCond = null; Camera.main.aspect = 16f / 9f; }
+            if (script == null) { script = layoutOnly ? LayoutScenario() : Scenario(); waitUntil = 0; waitCond = null; Camera.main.aspect = 16f / 9f; }
             double now = EditorApplication.timeSinceStartup;
             if (now < waitUntil) return;
             if (waitCond != null)

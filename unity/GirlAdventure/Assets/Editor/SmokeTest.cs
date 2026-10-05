@@ -478,6 +478,7 @@ namespace GirlAdventure.EditorTools
             AllyAutoTests();
             ComboPairTests();
             MomTests();
+            FamilyComboTests();
             LibraryTests();
             PartyTests();
             LavaTests();
@@ -1189,7 +1190,7 @@ namespace GirlAdventure.EditorTools
             var b = new BattleSystem(p, foes, new System.Random(8));
             bool afterBro = b.ComboAfter(0, true) == BattleSystem.ComboSisBro;
             var dadKey = b.ComboAfter(1, true);
-            bool afterDad = dadKey == BattleSystem.ComboSisDad || dadKey == BattleSystem.ComboBroDad;
+            bool afterDad = dadKey == BattleSystem.ComboSisDad || dadKey == BattleSystem.ComboBroDad || dadKey == "sisbrodad";
             var o = b.ComboAct(BattleSystem.ComboSisDad);
             int hit = 0; foreach (var d in o.Damages) if (d > 0) hit++;
             var b2 = new BattleSystem(p, foes, new System.Random(8));
@@ -1199,11 +1200,39 @@ namespace GirlAdventure.EditorTools
             bool sisDown = b2.ComboAfter(1, true) == BattleSystem.ComboBroDad && b2.ComboAfter(0, true) == null;
             p.Hp = p.MaxHp;
             bool art = true;
-            foreach (var k in new[] { "star", "bigbolt", "guard", "combo_sisbro", "combo_sisdad", "combo_brodad" })
-                for (int i = 1; i <= 3; i++) art &= Resources.Load<Texture2D>($"Cutin/{k}_{i}") != null;
+            var keys = new List<string> { "star", "bigbolt", "guard", "cure" };
+            foreach (var c in BattleSystem.Combos) keys.Add("combo_" + c.Key);
+            foreach (var k in keys)                                  // 영상에서 뽑은 30장 (사용자 "30컷 정도로 자연스럽게")
+                for (int i = 1; i <= 30; i++) art &= Resources.Load<Texture2D>($"Cutin/{k}_{i}") != null;
             Check("Q-34 combo pairs (sister+brother / sister+dad all foes / brother+dad one) + Q-33 cut-in frames",
                   afterBro && afterDad && hit == 3 && hit2 == 1 && o2.Target == 2 && sisDown && art && GameData.HasTalk("combo_sisdad") && GameData.HasTalk("combo_brodad") && GameData.HasTalk("combo_hit_all"),
                   $"bro={afterBro} dad={dadKey} hit={hit} hit2={hit2} sisDown={sisDown} art={art}");
+        }
+
+        /// <summary>엄마 포함 협동 공격 + 셋·넷 조합 (사용자 2026-10-05): 엄마 뒤에 7가지 후보, 넷 필살기는 적 모두, 주사위는 한 번, 대사·그림.</summary>
+        static void FamilyComboTests()
+        {
+            var p = PlayerState.NewGame("f");
+            p.GainExp(PlayerState.NextExp(19));
+            p.Join("jihun"); p.Join("dad"); p.Join("mom");
+            var foes = new[] { GameData.Library[0], GameData.Library[1], GameData.Library[0] };
+            var seen = new HashSet<string>();
+            for (int i = 0; i < 300; i++) seen.Add(new BattleSystem(p, foes, new System.Random(i)).ComboAfter(2, true));
+            bool momCands = seen.SetEquals(new[] { "sismom", "bromom", "dadmom", "sisbromom", "sisdadmom", "brodadmom", "family" });
+            var b = new BattleSystem(p, foes, new System.Random(3));
+            var o = b.ComboAct("family");
+            int hit = 0; foreach (var d in o.Damages) if (d > 0) hit++;
+            int n = 0; var rr = new BattleSystem(p, foes, new System.Random(9));
+            for (int i = 0; i < 4000; i++) if (rr.ComboAfter(2) != null) n++;
+            float rate = n / 4000f;                                  // 둘 15% + 셋 4%×3 + 넷 3% ≈ 30%
+            bool talk = true, members = true;
+            foreach (var c in BattleSystem.Combos)
+            {
+                talk &= GameData.HasTalk(c.Key == BattleSystem.ComboSisBro ? "combo" : "combo_" + c.Key);
+                members &= Array.IndexOf(b.ComboMembers(c.Key), -2) < 0;
+            }
+            Check("family combos: 7 candidates after mom, family hits all, ~30% chance, every combo has talk", momCands && hit == 3 && rate > .26f && rate < .34f && talk && members,
+                  $"cands={string.Join(",", seen)} hit={hit} rate={rate:P1} talk={talk} members={members}");
         }
 
         /// <summary>챕터 6 엄마 (현자 ✏️ 기술): 빛의 화살(MP 0, 한 마리)·엄마의 빛(MP 8, 서 있는 사람 모두 회복), 자동은 누가 절반 이하면 엄마의 빛.</summary>

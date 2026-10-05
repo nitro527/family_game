@@ -175,14 +175,44 @@ namespace GirlAdventure.View
                 any |= on;
                 if (allyHuds[i].win.activeSelf != on) { allyHuds[i].win.SetActive(on); if (on) RefreshHud(); }
             }
+            LayoutHud();
             bool crowded = P != null && P.Companions.Count >= 2;
             float bx = crowded ? 640 : 586, bw = crowded ? 312 : 366;
             if (hintBand != null && hintBand.anchoredPosition.x != bx)
             {
-                hintBand.anchoredPosition = new Vector2(bx, hintBand.anchoredPosition.y);
+                hintBand.anchoredPosition = new Vector2(bx, crowded ? -(UIKit.RefH - 38) : -8);     // 붐비면 화면 아래 오른쪽 (상태창과 안 겹치게)
                 hintBand.sizeDelta = new Vector2(bw, hintBand.sizeDelta.y);
                 hintText.rectTransform.sizeDelta = new Vector2(bw - 20, hintText.rectTransform.sizeDelta.y);
                 hintText.text = crowded ? "방향키 이동 · Esc 상태 · M 음악" : "방향키 이동 · Esc 상태 · 가게 쇼핑 · M 음악";
+            }
+        }
+
+        /// <summary>상태창 크기 (사용자 "상태창이 게임 화면·몬스터를 가린다"): 동료가 많을수록 작게 — 혼자·둘 1, 셋 0.9, 넷 0.8.</summary>
+        float HudScale => P == null ? 1 : P.Companions.Count >= 3 ? .8f : P.Companions.Count == 2 ? .9f : 1;
+        /// <summary>상태창 줄의 오른쪽 끝 x (보스 이름표를 그 오른쪽 빈자리에).</summary>
+        float HudRight
+        {
+            get
+            {
+                float s = HudScale; int n = P == null ? 0 : Mathf.Min(P.Companions.Count, allyHuds.Count);
+                return 10 + 250 * s + n * (AllyHudW * s + 6);
+            }
+        }
+        float hudLaidScale = -1;
+
+        void LayoutHud()
+        {
+            float s = HudScale;
+            if (Mathf.Approximately(s, hudLaidScale) || hudWin == null) return;
+            hudLaidScale = s;
+            var r = (RectTransform)hudWin.transform;
+            r.localScale = Vector3.one * s;
+            r.anchoredPosition = new Vector2(10, -8);
+            for (int i = 0; i < allyHuds.Count; i++)
+            {
+                var a = (RectTransform)allyHuds[i].win.transform;
+                a.localScale = Vector3.one * s;
+                a.anchoredPosition = new Vector2(10 + 250 * s + 6 + i * (AllyHudW * s + 6), -8);
             }
         }
 
@@ -503,10 +533,14 @@ namespace GirlAdventure.View
             cutinPanel = UIKit.Stretch(ui, "Cutin").gameObject;
             UIKit.Fill(cutinPanel.transform, "Bg", new Color32(34, 14, 70, 245));
             cutinArt = UIKit.Img(cutinPanel.transform, "Art", Art.UI("art_ultimate"), 250, -40, 460, 640, true);
+            cutinAnimBack = UIKit.Img(cutinPanel.transform, "AnimBack", null, 0, 0, 640, 640, true);   // 앞 장 (새 장이 그 위로 서서히 겹친다)
             cutinAnim = UIKit.Img(cutinPanel.transform, "Anim", null, 0, 0, 640, 640, true);       // Q-33 기술 장면 (가운데 기준으로 줌·흔들림)
-            cutinAnim.rectTransform.pivot = new Vector2(.5f, .5f);
-            cutinAnim.rectTransform.anchoredPosition = CutinCenter;
-            cutinAnim.enabled = false;
+            foreach (var img in new[] { cutinAnimBack, cutinAnim })
+            {
+                img.rectTransform.pivot = new Vector2(.5f, .5f);
+                img.rectTransform.anchoredPosition = CutinCenter;
+                img.enabled = false;
+            }
             cutinWhite = UIKit.Fill(cutinPanel.transform, "White", new Color(1, 1, 1, 0));            // 장이 바뀔 때 번쩍
             cutinWhite.raycastTarget = false;
             cutinText = UIKit.Label(cutinPanel.transform, "Text", GameData.Skill(Cmd.Star).Name + "!!", 0, 430, 960, 90, 64, TextAnchor.MiddleCenter,
@@ -544,7 +578,7 @@ namespace GirlAdventure.View
             CutinShowing = null;
         }
 
-        Image cutinAnim, cutinWhite;
+        Image cutinAnim, cutinAnimBack, cutinWhite;
         static readonly Vector2 CutinCenter = new Vector2(480, -262);
         readonly Dictionary<string, Sprite[]> cutinFrames = new Dictionary<string, Sprite[]>();
         /// <summary>한 전투에 한 번만 보여 주는 컷인 (아빠 지키기 — 자주 쓰니까). 전투가 시작될 때 비운다.</summary>
@@ -555,7 +589,7 @@ namespace GirlAdventure.View
         {
             if (cutinFrames.TryGetValue(key, out var f)) return f;
             var list = new List<Sprite>();
-            for (int i = 1; i <= 6; i++)
+            for (int i = 1; i <= 48; i++)
             {
                 var t = Resources.Load<Texture2D>($"Cutin/{key}_{i}");
                 if (t == null) break;
@@ -568,8 +602,9 @@ namespace GirlAdventure.View
         public readonly HashSet<string> CutinsPlayed = new HashSet<string>();
 
         /// <summary>
-        /// 기술 컷인 애니메이션 (Q-33, 사용자 "카드 말고 간단한 애니메이션"): 캐릭터가 기술을 쓰는 장면 3장(Qwen)을 차례로 넘긴다.
-        /// 장마다 천천히 다가가고, 장이 바뀔 때 하얗게 번쩍, 마지막 장은 쾅(크게 → 제자리 + 흔들림)과 기술 이름.
+        /// 기술 컷인 애니메이션 (Q-33, 사용자 "카드 말고 애니메이션 · 30컷 정도로 자연스럽게"): Resources/Cutin/{key}_1, _2, … 를 넘긴다.
+        /// 장이 많으면(영상에서 뽑은 프레임, 10장 이상) 초당 15장으로 그대로 재생 + 천천히 다가감,
+        /// 장이 적으면 장 사이를 서서히 겹쳐 바꾼다. 마지막 장에서 잠깐 멈추며 쾅(살짝 커졌다 제자리 + 흔들림 + 번쩍)과 기술 이름.
         /// "화면 번쩍임 끔"이면 번쩍·흔들림 없이. 그림이 없으면 예전 카드 컷인. oncePerBattle 이면 한 전투에 한 번만.
         /// </summary>
         IEnumerator SkillCutin(string key, string text, string sound = "star", bool oncePerBattle = false)
@@ -582,41 +617,51 @@ namespace GirlAdventure.View
             CutinShowing = text;
             cutinArt.enabled = false;
             cutinAnim.enabled = true;
+            cutinAnimBack.enabled = true;
             cutinPanel.SetActive(true);
             sfx.Play(sound);
-            var rt = cutinAnim.rectTransform;
             var txt = cutinText.rectTransform;
-            const float per = .5f, last = .9f, flashTime = .12f;
-            float total = per * (frames.Length - 1) + last, white = 0;
+            bool video = frames.Length >= 10;
+            float per = video ? 1f / 15f : .5f, fade = video ? 0 : .2f, hold = video ? .75f : .85f;
+            float run = per * (frames.Length - 1), total = run + hold, white = 0;
+            const float flashTime = .14f;
             int shown = -1;
+            float shownAt = 0;
             for (float t = 0; t < total; t += Time.deltaTime)
             {
                 int f = Mathf.Min(frames.Length - 1, (int)(t / per));
-                float ft = t - f * per;
-                bool final = f == frames.Length - 1;
+                bool final = t >= run;
                 if (f != shown)
                 {
-                    shown = f;
-                    if (final) CutinsPlayed.Add(key);
+                    cutinAnimBack.sprite = shown >= 0 ? frames[shown] : frames[f];   // 앞 장은 뒤에 남겨 두고 새 장이 그 위로 서서히
+                    shown = f; shownAt = t;
                     cutinAnim.sprite = frames[f];
-                    if (f > 0 && Settings.Flash) white = flashTime;
-                    if (final && frames.Length > 1) sfx.Play("hit");
+                    if (f == frames.Length - 1)
+                    {
+                        CutinsPlayed.Add(key);
+                        if (frames.Length > 1) sfx.Play("hit");
+                        if (Settings.Flash) white = flashTime;
+                    }
                 }
-                float punch = 1 - Mathf.Pow(1 - Mathf.Clamp01(ft / .25f), 2);
-                rt.localScale = Vector3.one * (final ? Mathf.Lerp(1.16f, 1f, punch) : Mathf.Lerp(1f, 1.06f, ft / per));
-                Vector2 shake = final && Settings.Flash && ft < .35f ? Random.insideUnitCircle * 9 * (1 - ft / .35f) : Vector2.zero;
-                rt.anchoredPosition = CutinCenter + shake;
-                cutinAnim.color = new Color(1, 1, 1, f == 0 ? Mathf.Clamp01(t * 6) : 1);
-                cutinWhite.color = new Color(1, 1, 1, white > 0 ? white / flashTime * .8f : 0);
+                float ft = t - shownAt, ht = t - run;
+                float zoom = Mathf.Lerp(1f, video ? 1.07f : 1.05f, Mathf.Clamp01(t / Mathf.Max(.01f, run)));       // 처음부터 끝까지 천천히 다가간다
+                if (final) zoom *= Mathf.Lerp(1.08f, 1f, 1 - Mathf.Pow(1 - Mathf.Clamp01(ht / .25f), 2));      // 마지막 장: 쾅
+                foreach (var img in new[] { cutinAnim, cutinAnimBack }) img.rectTransform.localScale = Vector3.one * zoom;
+                Vector2 shake = final && Settings.Flash && ht < .35f ? Random.insideUnitCircle * 8 * (1 - ht / .35f) : Vector2.zero;
+                cutinAnim.rectTransform.anchoredPosition = cutinAnimBack.rectTransform.anchoredPosition = CutinCenter + shake;
+                float intro = Mathf.Clamp01(t * 6);
+                cutinAnim.color = new Color(1, 1, 1, intro * (fade > 0 && f > 0 ? Mathf.Clamp01(ft / fade) : 1));
+                cutinAnimBack.color = new Color(1, 1, 1, intro);
+                cutinWhite.color = new Color(1, 1, 1, white > 0 ? white / flashTime * .7f : 0);
                 white -= Time.deltaTime;
-                float tk = final ? Mathf.Clamp01((ft - .1f) / .3f) : 0;
+                float tk = final ? Mathf.Clamp01((ht - .05f) / .3f) : 0;
                 txt.localScale = Vector3.one * Mathf.Lerp(2.4f, 1f, tk);
                 cutinText.color = new Color(1, .95f, .98f, tk);
                 yield return null;
             }
             cutinPanel.SetActive(false);
             cutinWhite.color = new Color(1, 1, 1, 0);
-            cutinAnim.enabled = false;
+            cutinAnim.enabled = cutinAnimBack.enabled = false;
             cutinArt.enabled = true;
             cutinText.text = keepText;
             CutinShowing = null;

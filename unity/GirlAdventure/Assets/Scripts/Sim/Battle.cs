@@ -258,55 +258,91 @@ namespace GirlAdventure.Sim
             return o;
         }
 
-        // ---- 협동 공격 (Q-34, 사용자 2026-10-05): 누나+동생(합동 공격), 누나+아빠, 동생+아빠. 이름·피해는 ✏️
+        // ---- 협동 공격 (Q-34 + 사용자 2026-10-05 "엄마 포함 조합, 삼인·사인 조합도"): 이름·피해는 ✏️
         public const string ComboSisBro = "sisbro", ComboSisDad = "sisdad", ComboBroDad = "brodad";
-        const string DadId = "dad";
+        const string DadId = "dad", MomId = "mom", SisId = "sis";
         int DadIndex => P.Companions.FindIndex(c => c.Id == DadId);
 
-        /// <summary>협동 공격 이름 (✏️ 누나+아빠 · 동생+아빠는 임시 이름).</summary>
-        public static string ComboName(string key) => key == ComboSisDad ? "별빛 소나기" : key == ComboBroDad ? "번개 십자 베기" : "합동 공격";
-
-        /// <summary>협동 공격에 나오는 두 사람 (-1 = 서진, 동료 번호).</summary>
-        public (int a, int b) ComboPair(string key) => key == ComboSisDad ? (-1, DadIndex) : key == ComboBroDad ? (BroIndex, DadIndex) : (-1, BroIndex);
+        /// <summary>협동 공격 하나: 함께하는 사람(sis = 서진, 동료 id), 이름, 적 모두에게인가, 피해 배율(공격력 합 × Mul / 12).</summary>
+        public class ComboDef { public string Key, Name; public string[] Who; public bool All; public int Mul12; public double Rate; }
 
         /// <summary>
-        /// 동료 a 가 행동한 뒤 나올 협동 공격 (없으면 null). 짝의 뒤 사람이 행동했을 때만: 지훈 뒤 → 누나+동생, 아빠 뒤 → 누나+아빠 / 동생+아빠.
-        /// 둘 다 서 있고 적이 남았을 때 ComboRate (짝이 둘이면 하나를 고른다). force = 프로브용 (확률 없이).
-        /// 누나+동생만 있을 때는 ComboReady 와 같은 주사위 (예전 전투 결과 그대로).
+        /// 협동 공격 목록. 둘 = ComboRate 를 나눠 가짐 (누나+동생만 있을 땐 예전과 같은 확률·피해), 셋 0.04, 넷 0.03.
+        /// 피해: 한 마리 = 공격력 합 + 0~5, 적 모두 = 공격력 합 × Mul12/12 + 0~(2+사람 수×2).
+        /// </summary>
+        public static readonly ComboDef[] Combos =
+        {
+            new ComboDef { Key = "family", Name = "우리 가족 필살기", Who = new[] { SisId, Sim.Party.Brother, DadId, MomId }, All = true, Mul12 = 9, Rate = .03 },
+            new ComboDef { Key = "sisbrodad", Name = "삼총사 돌격", Who = new[] { SisId, Sim.Party.Brother, DadId }, All = true, Mul12 = 7, Rate = .04 },
+            new ComboDef { Key = "sisbromom", Name = "별빛 번개 축제", Who = new[] { SisId, Sim.Party.Brother, MomId }, All = true, Mul12 = 7, Rate = .04 },
+            new ComboDef { Key = "sisdadmom", Name = "별빛 방패 축복", Who = new[] { SisId, DadId, MomId }, All = true, Mul12 = 7, Rate = .04 },
+            new ComboDef { Key = "brodadmom", Name = "번개 사자의 빛", Who = new[] { Sim.Party.Brother, DadId, MomId }, All = true, Mul12 = 7, Rate = .04 },
+            new ComboDef { Key = ComboSisBro, Name = "합동 공격", Who = new[] { SisId, Sim.Party.Brother } },
+            new ComboDef { Key = ComboSisDad, Name = "별빛 소나기", Who = new[] { SisId, DadId }, All = true, Mul12 = 8 },
+            new ComboDef { Key = ComboBroDad, Name = "번개 십자 베기", Who = new[] { Sim.Party.Brother, DadId } },
+            new ComboDef { Key = "sismom", Name = "달빛 별빛 노래", Who = new[] { SisId, MomId }, All = true, Mul12 = 8 },
+            new ComboDef { Key = "bromom", Name = "빛의 용사 칼", Who = new[] { Sim.Party.Brother, MomId } },
+            new ComboDef { Key = "dadmom", Name = "사자와 달의 빛", Who = new[] { DadId, MomId }, All = true, Mul12 = 8 },
+        };
+
+        public static ComboDef ComboInfo(string key) => Array.Find(Combos, c => c.Key == key);
+        public static string ComboName(string key) => ComboInfo(key)?.Name ?? "합동 공격";
+
+        /// <summary>사람 id → 차례 번호 (-1 서진, 동료 번호, 없으면 -2).</summary>
+        int WhoIndex(string id) => id == SisId ? -1 : P.Companions.FindIndex(c => c.Id == id) is int i && i >= 0 ? i : -2;
+        bool Standing(int who) => who == -1 ? !SisterDown : !AllyDown(who);
+
+        /// <summary>협동 공격에 나오는 사람들 (-1 = 서진, 동료 번호).</summary>
+        public int[] ComboMembers(string key) => Array.ConvertAll(ComboInfo(key).Who, WhoIndex);
+        /// <summary>예전 이름 (두 사람).</summary>
+        public (int a, int b) ComboPair(string key) { var m = ComboMembers(key); return (m[0], m[1]); }
+
+        /// <summary>
+        /// 동료 a 가 행동한 뒤 나올 협동 공격 (없으면 null): 그 조합에서 차례가 가장 늦은 사람이 a 이고, 모두 서 있고, 적이 남았을 때.
+        /// 주사위 한 번으로 큰 조합(넷 → 셋 → 둘)부터 확률을 쌓아 고른다. force = 프로브용 (확률 없이, 후보 중 하나).
         /// </summary>
         public string ComboAfter(int a, bool force = false)
         {
             if (EnemyDown || AllyDown(a)) return null;
-            var id = P.Companions[a].Id;
-            var cand = new List<string>();
-            if (id == Sim.Party.Brother && !SisterDown) cand.Add(ComboSisBro);
-            if (id == DadId)
+            var cand = new List<ComboDef>();
+            int pairs = 0;
+            foreach (var c in Combos)
             {
-                if (!SisterDown) cand.Add(ComboSisDad);
-                if (!BrotherDown) cand.Add(ComboBroDad);
+                var m = ComboMembers(c.Key);
+                if (Array.IndexOf(m, -2) >= 0 || Array.Exists(m, w => !Standing(w))) continue;
+                int last = int.MinValue; foreach (var w in m) last = Math.Max(last, w);
+                if (last != a) continue;
+                cand.Add(c);
+                if (c.Who.Length == 2) pairs++;
             }
-            if (cand.Count == 0 || (!force && r.NextDouble() >= ComboRate)) return null;
-            return cand.Count == 1 ? cand[0] : cand[r.Next(cand.Count)];
+            if (cand.Count == 0) return null;
+            if (force) return cand.Count == 1 ? cand[0].Key : cand[r.Next(cand.Count)].Key;
+            double x = r.NextDouble(), acc = 0;
+            foreach (var c in cand)
+            {
+                acc += c.Who.Length == 2 ? ComboRate / pairs : c.Rate;
+                if (x < acc) return c.Key;
+            }
+            return null;
         }
 
-        /// <summary>
-        /// 협동 공격 실행. 누나+동생 = Combo (한 마리). 누나+아빠 "별빛 소나기" = 살아 있는 적 모두에게 (서진+아빠 공격력)×2/3 + 0~5.
-        /// 동생+아빠 "번개 십자 베기" = 한 마리에게 지훈+아빠 공격력 + 0~5. 빗나가지 않는다.
-        /// </summary>
+        /// <summary>협동 공격 실행. 누나+동생 = Combo (예전 그대로). 빗나가지 않는다.</summary>
         public PlayerOutcome ComboAct(string key, int target = -1)
         {
             if (key == ComboSisBro) return Combo(target);
+            var def = ComboInfo(key);
             var o = new PlayerOutcome { Cmd = Cmd.Slash, Ally = -1, Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : WeakestAlive() };
-            int dad = DadIndex;
-            if (o.Target < 0 || dad < 0) { o.Failed = true; return o; }
-            int dadAtk = P.AtkOf(P.Companions[dad]);
+            var m = ComboMembers(key);
+            if (o.Target < 0 || def == null || Array.IndexOf(m, -2) >= 0) { o.Failed = true; return o; }
+            int atk = 0;
+            foreach (var w in m) atk += w < 0 ? P.Atk : P.AtkOf(P.Companions[w]);
             o.Damages = new int[Foes.Count];
-            if (key == ComboSisDad)
+            if (def.All)
             {
                 for (int k = 0; k < Foes.Count; k++)
-                    if (!Foes[k].Down) o.Damages[k] = (P.Atk + dadAtk) * 2 / 3 + r.Next(0, 6);
+                    if (!Foes[k].Down) o.Damages[k] = atk * def.Mul12 / 12 + r.Next(0, 3 + m.Length * 2);
             }
-            else o.Damages[o.Target] = P.BroAtk + dadAtk + r.Next(0, 6);
+            else o.Damages[o.Target] = atk + r.Next(0, 6);
             o.Damage = o.Damages[o.Target];
             for (int k = 0; k < Foes.Count; k++) Foes[k].Hp = Math.Max(0, Foes[k].Hp - o.Damages[k]);
             return o;

@@ -18,9 +18,11 @@ namespace GirlAdventure.View
         // 넷이면 (챕터 6 엄마): 아빠 맨 왼쪽 · 엄마 그 오른쪽 조금 뒤 · 서진 · 지훈 오른쪽 앞
         int NAllies => battle != null ? P.Companions.Count : 0;
         /// <summary>서진의 무대 x: 혼자면 가운데 왼쪽, 동료가 있으면 비켜 선다.</summary>
-        float HeroX => NAllies >= 3 ? 262 : NAllies >= 2 ? 195 : NAllies == 1 ? 140 : 215;
-        float AllyX(int i) => NAllies >= 3 ? (i == 0 ? 372 : i == 1 ? 78 : 172) : NAllies >= 2 ? (i == 0 ? 312 : 82) : 278;
-        float AllyY(int i) => NAllies >= 3 ? (i == 1 ? 440 : i == 2 ? 420 : 434) : NAllies >= 2 && i == 1 ? 440 : 434;
+        // 넷이면 조금 작게(0.86) 앞줄(서진·지훈)·뒷줄(아빠·엄마, 조금 위)로 나눠 서서 서로 가리지 않게 (사용자 "레이아웃 신경 써라")
+        float HeroX => NAllies >= 3 ? 268 : NAllies >= 2 ? 195 : NAllies == 1 ? 140 : 215;
+        float AllyX(int i) => NAllies >= 3 ? (i == 0 ? 378 : i == 1 ? 84 : 178) : NAllies >= 2 ? (i == 0 ? 312 : 82) : 278;
+        float AllyY(int i) => NAllies >= 3 ? (i == 1 ? 404 : i == 2 ? 396 : 436) : NAllies >= 2 && i == 1 ? 440 : 434;
+        float PartyScale => NAllies >= 3 ? .86f : 1f;
         float BroX => AllyX(BroIndex);
         int BroIndex => P.Companions.FindIndex(c => c.Id == Party.Brother);
 
@@ -239,7 +241,8 @@ namespace GirlAdventure.View
             if (def.Boss) camShake = .45f;      // 보스는 땅이 울리며 솟아오른다
             pose = "ready";
             // 큰 젤리·도감 그림은 머리가 높아 이름표도 위로 (코드 젤리 머리 높이 기준, 1 단위 ≈ 88.6px)
-            enemyLabel.rectTransform.anchoredPosition = new Vector2(battle.Party && def.Boss ? (P.Companions.Count >= 2 ? 545 : 500) : 360,   // 보스 이름표: 동료 HUD 창 오른쪽으로 (셋이면 더)
+            LayoutHud();
+            enemyLabel.rectTransform.anchoredPosition = new Vector2(battle.Party && def.Boss ? Mathf.Clamp(HudRight + 4, 500, 560) : 360,   // 보스 이름표: 상태창 줄 오른쪽 빈자리 (넷이면 상태창이 작아진다)
                                                                      def.Boss ? -18 : -160 + (HeadUnits(def) * def.Size - JellyHeadUnits) * 1.05f * 88.6f);
             enemyLabel.text = GroupBattle ? "" : def.Name;         // 무리는 적마다 작은 이름표 (GroupTags)
             for (int i = 0; i < groupTags.Length; i++) { groupTags[i].text = GroupBattle && i < defs.Count ? FoeName(i) : ""; groupShown[i] = 1; }
@@ -410,14 +413,15 @@ namespace GirlAdventure.View
             string key = battle.ComboAfter(a, DebugCombo > 0);
             if (key == null) yield break;
             ComboCount++;
-            var (m1, m2) = battle.ComboPair(key);
+            var members = battle.ComboMembers(key);
             void Pose(int m, string ps) { if (m < 0) { pose = ps == "attack" ? "cast" : ps; heroLunge = ps == "attack" ? 1 : heroLunge; } else { AV(m).pose = ps; if (ps == "attack") AV(m).lunge = 1; } }
+            void PoseAll(string ps) { foreach (var m in members) Pose(m, ps); }
             sfx.Play("star");
-            Pose(m1, "attack"); Pose(m2, "attack");
+            PoseAll("attack");
             yield return Talk(key == BattleSystem.ComboSisBro ? "combo" : "combo_" + key);
             yield return SkillCutin("combo_" + key, BattleSystem.ComboName(key) + "!!");
             var o = battle.ComboAct(key, target);
-            if (o.Failed) { Pose(m1, "ready"); Pose(m2, "ready"); yield break; }
+            if (o.Failed) { PoseAll("ready"); yield break; }
             for (int f = 0; f < battle.Foes.Count; f++)
             {
                 if (o.Damages == null || o.Damages[f] <= 0) continue;
@@ -433,9 +437,9 @@ namespace GirlAdventure.View
             }
             camShake = Mathf.Max(camShake, .3f);
             RefreshHud();
-            if (key == BattleSystem.ComboSisDad && GroupBattle) yield return Talk("combo_hit_all");
+            if (BattleSystem.ComboInfo(key).All && GroupBattle) yield return Talk("combo_hit_all");
             else yield return Talk("combo_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
-            Pose(m1, "ready"); Pose(m2, "ready");
+            PoseAll("ready");
             yield return AfterAct(o);
         }
 
@@ -960,6 +964,7 @@ namespace GirlAdventure.View
             float breathe = pose == "ready" ? Mathf.Sin(battleT * 2.6f) * .06f : 0;
             float jump = pose == "victory" ? Mathf.Abs(Mathf.Sin(battleT * 6)) * .35f : 0;
             heroSR.transform.position = Px(HeroX, HeroY) + new Vector3(sx + lunge, breathe + jump, 0);
+            heroSR.transform.localScale = Vector3.one * PartyScale;
             heroShake = Mathf.Max(0, heroShake - dt);
             heroLunge = Mathf.Max(0, heroLunge - dt * 4);
             bool party = battle != null && battle.Party;
@@ -978,6 +983,7 @@ namespace GirlAdventure.View
                 float bbreathe = v.pose == "ready" && !down ? Mathf.Sin(battleT * 2.9f + 1 + ai) * .05f : 0;
                 float bjump = v.pose == "victory" ? Mathf.Abs(Mathf.Sin(battleT * 6 + .8f + ai)) * .3f : 0;
                 v.sr.transform.position = Px(AllyX(ai), AllyY(ai)) + new Vector3(bsx + blunge, bbreathe + bjump, 0);
+                v.sr.transform.localScale = Vector3.one * PartyScale;
                 v.sr.color = down ? new Color(.55f, .55f, .65f, .8f) : Color.white;
                 v.shake = Mathf.Max(0, v.shake - dt);
                 v.lunge = Mathf.Max(0, v.lunge - dt * 3);
