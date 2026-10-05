@@ -1778,7 +1778,9 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             // 부하 부르기 (킹 젤리 → 파랑 젤리)
-            G.DebugBattleDefs(GameData.King);
+            var kingCopy = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(GameData.King));   // 진짜 챕터 1 보스로 부르면 이기는 순간 엔딩 → 복사본 (HP 넉넉히)
+            kingCopy.Boss = false; kingCopy.Hp = 9999;
+            G.DebugBattleDefs(kingCopy);
             yield return 1.5f;
             for (float t = 0; t < 60 && G.CallCount == 0 && G.Current == GameRoot.Mode.Battle; t += .2f)
             {
