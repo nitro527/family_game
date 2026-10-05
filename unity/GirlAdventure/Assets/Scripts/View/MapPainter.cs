@@ -1700,6 +1700,7 @@ namespace GirlAdventure.View
         public static Texture2D OpenDoorTexture()
         {
             var R = new Raster(T, 2 * T);
+            if (Prop(R, "gate_open", T / 2f, 2 * T)) return R.ToTexture(FilterMode.Bilinear, true);     // 소품 그림: 열린 성문 (새 성벽 jellybase 와 맞춤, 맵 확인 도구가 읽게 readable)
             R.Rect(1, 6, 46, 2 * T - 6, H("#15201A"));
             R.Circle(24, 14, 23, H("#15201A"));
             R.Rect(6, 16, 36, 2 * T - 16, H("#08060C"));
