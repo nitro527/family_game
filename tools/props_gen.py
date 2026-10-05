@@ -66,6 +66,9 @@ PROPS = [
     ("snowpine0", "One snow-covered green fir tree with thick snow on its branches.", 54, 2),
     ("snowpine1", "One small snow-covered fir tree, slightly tilted, with a little snow pile at its base.", 54, 5),
     ("darkbox", "One mysterious dark wooden box with purple glowing cracks and a small lock, spooky but cute, a few purple wisps rising.", 46, 2),
+    ("stonebridge", "One long flat horizontal stone bridge walkway seen from above (top-down RPG map tile style), going left to right, gray stone slabs with a low stone railing along the top edge and the bottom edge. Only the bridge itself, nothing under it, no water, no lava, no ground. Very wide and thin shape.", 440, 7, (1344, 384)),
+    ("lavarock0", "One big dark volcanic boulder of black basalt with thin glowing orange cracks.", 52, 2),
+    ("lavarock1", "One cluster of two dark volcanic rocks of black basalt with a little glowing orange lava in the cracks.", 52, 4),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 

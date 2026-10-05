@@ -24,6 +24,7 @@ namespace GirlAdventure.Sim
         public string Id, Map, Name;        // Map: "field" / "village" / "cave"
         public int X, Y;
         public string Color, Dark, Look;    // 겉모습 (EnemyDef.Looks 중 하나)
+        public string Art;                  // 그림 (Resources/Monsters/npc_<Id>, tools/npc_art_gen.py — 없으면 코드로 그린 젤리)
         public string Talk, TalkAfter;
         public NpcTalk[] Talks;             // 조건 붙은 대사 (위에서부터 먼저 맞는 것)
         public bool Inn;                    // 여관 주인: 말 걸면 묵을지 묻는다 (Sim.Inn)
@@ -32,7 +33,8 @@ namespace GirlAdventure.Sim
         public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : Map == "desert" ? MapKind.Desert : Map == "oasis" ? MapKind.Oasis : Map == "lavatown" ? MapKind.LavaTown : Map == "home" ? MapKind.Home : Map == "snowtown" ? MapKind.SnowTown : Map == "library" ? MapKind.Library : MapKind.Field;
 
         /// <summary>그림용 젤리 정의 (View 가 Painter.Jelly 로 그린다).</summary>
-        public EnemyDef AsJelly() => new EnemyDef { Name = Name, Color = Color, Dark = Dark, Look = Look, Hp = 1, Atk = 1, Exp = 1, Move = "hop", Attack = "-" };
+        public EnemyDef AsJelly() => jelly ??= new EnemyDef { Name = Name, Color = Color, Dark = Dark, Look = Look, Art = Art, Hp = 1, Atk = 1, Exp = 1, Move = "hop", Attack = "-" };
+        [NonSerialized] EnemyDef jelly;     // 한 번만 만든다 (그림 캐시가 정의 단위)
     }
 
     [Serializable]

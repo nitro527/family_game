@@ -143,6 +143,18 @@ namespace GirlAdventure.View
                 }
         }
 
+        /// <summary>이미지 전체를 (dx,dy) 에 dw×dh 크기로 늘리거나 줄여 찍는다 (가장 가까운 픽셀, 투명도는 섞는다). 길이가 다른 다리 같은 소품용.</summary>
+        public void StampFit(TileImage src, int dx, int dy, int dw, int dh)
+        {
+            if (dw <= 0 || dh <= 0) return;
+            for (int y = 0; y < dh; y++)
+                for (int x = 0; x < dw; x++)
+                {
+                    var c = src.At(Mathf.Min(src.W - 1, x * src.W / dw), Mathf.Min(src.H - 1, y * src.H / dh));
+                    if (c.a > 0) Blend(dx + x, dy + y, c);
+                }
+        }
+
         public Texture2D ToTexture(FilterMode filter = FilterMode.Bilinear, bool readable = false)
         {
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false) { filterMode = filter, wrapMode = TextureWrapMode.Clamp };

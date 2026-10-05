@@ -476,6 +476,16 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'b')
                     {
+                        // 소품 그림 (Qwen 돌다리): 다리 한 줄(이어진 'b')을 통째로, 양 끝은 둑까지 14px 더
+                        if (Props != null && Props.TryGetValue("stonebridge", out var sb))
+                        {
+                            if (m.At(x - 1, y) == 'b') continue;
+                            int x2 = x; while (m.At(x2 + 1, y) == 'b') x2++;
+                            int bx0 = x * T - 18, bw = (x2 - x + 1) * T + 36, bh = T + 16;
+                            R.Ellipse(bx0 + bw / 2f + 6, y * T + T + 4, bw / 2f, 7, new Color32(0, 0, 0, 80));
+                            R.StampFit(sb, bx0, y * T - 8, bw, bh);
+                            continue;
+                        }
                         // 용암 가장자리가 부드럽게 번져 그려지므로, 다리 양 끝은 둑까지 조금 더 뻗는다
                         float x0 = x * T - (m.At(x - 1, y) != 'b' ? 14 : 0), x1 = x * T + T + (m.At(x + 1, y) != 'b' ? 14 : 0);
                         R.Rect(x0, y * T + 6, x1 - x0, T - 12, H("#6E6A72"));
@@ -488,6 +498,7 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'R')
                     {
+                        if (Prop(R, Hash(x, y, 77) < .5f ? "lavarock0" : "lavarock1", x * T + 24, y * T + T)) continue;   // 소품 그림: 화산 바위 (덤불처럼 보이던 회색 타일 대신)
                         if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "RK", x, y);
                         else { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#5A5662")); }
                     }
@@ -845,6 +856,7 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'R')
                     {
+                        if (Prop(R, Hash(x, y, 78) < .5f ? "lavarock0" : "lavarock1", x * T + 24, y * T + T)) continue;   // 소품 그림: 화산 바위
                         if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "R", x, y);
                         else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640"));
                     }

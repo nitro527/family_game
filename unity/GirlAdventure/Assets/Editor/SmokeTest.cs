@@ -481,6 +481,7 @@ namespace GirlAdventure.EditorTools
             FamilyComboTests();
             UltimateTests();
             DogamDataTests();
+            NpcArtTests();
             LibraryTests();
             PartyTests();
             LavaTests();
@@ -1242,6 +1243,21 @@ namespace GirlAdventure.EditorTools
             foreach (var g in games)
                 if (!string.IsNullOrEmpty(g.Art) && !Array.Exists(dogam.monsters, m => m.id == g.Art)) bad += $"[{g.Name}: 그림 {g.Art} 가 도감에 없음] ";
             Check("dogam (monsters.json) and enemies.json agree", bad == "", bad);
+        }
+
+        /// <summary>마을 사람 그림 (tools/npc_art_gen.py): 모든 마을 사람이 그림을 쓰고, 그 그림이 Resources/Monsters 에 있다.</summary>
+        static void NpcArtTests()
+        {
+            string bad = "";
+            int n = 0;
+            foreach (MapKind k in Enum.GetValues(typeof(MapKind)))
+                foreach (var npc in Npcs.On(k))
+                {
+                    n++;
+                    if (string.IsNullOrEmpty(npc.Art) || Resources.Load<Texture2D>("Monsters/" + npc.Art) == null) bad += npc.Id + " ";
+                    else if (npc.AsJelly().Art != npc.Art) bad += npc.Id + "(AsJelly) ";
+                }
+            Check("every villager jelly has drawn art (npc_<id>)", n > 30 && bad == "", $"n={n} missing: {bad}");
         }
 
         /// <summary>Q-39 궁극기: 스킬 Lv3 에 배움, 게이지(행동 +15·맞으면 +10)가 차야 씀, 쓰면 0, 별빛 대폭풍·천둥 대번개·황금 사자 방패·엄마의 큰 빛, 궁극 합동 공격 조건.</summary>
