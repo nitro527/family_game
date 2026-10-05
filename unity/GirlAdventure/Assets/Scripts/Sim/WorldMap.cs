@@ -61,7 +61,8 @@ namespace GirlAdventure.Sim
         // 도서관 (챕터 6, C6 ⭐): 왼쪽 아래 입구(열람실)에서 셋이 출발, 가운데 위 마법진에 엄마, 오른쪽 위 책 더미 옥좌에 악마 대장
         public static readonly (int x, int y) LibStart = (4, 20), LibSpring = (7, 19), LibSign = (6, 21), LibShop = (11, 18),
                                                     MomCircle = (17, 3),    // 엄마의 마법진 (부딪히면 합류)
-                                                    LibBoss = (31, 3);      // 악마 대장 (옥좌 앞 칸)
+                                                    LibBoss = (31, 3),      // 악마 대장 (옥좌 앞 칸)
+                                                    LibChest = (34, 14);    // 오른쪽 구석 보물상자 (✏️ 탐험거리)
         // 눈꽃 마을 (챕터 5, C5-4, ✏️ 임시 이름): 눈 덮인 땅 동쪽 문(SnowGate) ↔ 마을 아래쪽 출구
         public static readonly (int x, int y) SnowTownStart = (18, 19), SnowTownExit = (18, 20), SnowTownFire = (14, 9), SnowTownSign = (20, 18), SnowTownShop = (12, 13);
         public static readonly (int x, int y)[] SnowTownHouses = { (7, 5), (23, 4), (7, 14), (25, 14) };
@@ -425,6 +426,7 @@ namespace GirlAdventure.Sim
             m.Set(LibSpring.x, LibSpring.y, 'F');
             m.Set(LibSign.x, LibSign.y, 'S');
             m.Set(LibShop.x, LibShop.y, 'M');
+            m.Set(LibChest.x, LibChest.y, 'H');
             return m;
         }
 

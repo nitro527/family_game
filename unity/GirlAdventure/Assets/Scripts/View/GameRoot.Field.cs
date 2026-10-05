@@ -182,8 +182,8 @@ namespace GirlAdventure.View
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
             letterSR.enabled = map.Kind == MapKind.Desert && !Quest.HasLetter(P);
-            (int x, int y) hc = map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? map.Find('H') : (-1, -1);
-            homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(map.Kind == MapKind.Snow ? Quest.SnowChestId : Quest.HomeChestId(map.Room));
+            (int x, int y) hc = map.Kind == MapKind.Home || map.Kind == MapKind.Snow || map.Kind == MapKind.Library ? map.Find('H') : (-1, -1);
+            homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(map.Kind == MapKind.Snow ? Quest.SnowChestId : map.Kind == MapKind.Library ? Quest.LibChestId : Quest.HomeChestId(map.Room));
             if (homeChestSR.enabled) homeChestSR.transform.localPosition = new Vector3(hc.x, -hc.y, 0);
             wellWaterSR.enabled = map.Kind == MapKind.Oasis && P.Boss3Down;      // 사막 보스를 이기면 마른 우물에 물이 찬다
             sandTwisterSR.enabled = map.Kind == MapKind.Desert && !P.Boss3Down && sandTwisterSR.sprite != null;
@@ -442,8 +442,8 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            bool snow = map.Kind == MapKind.Snow;
-            var r = snow ? Quest.OpenSnowChest(P, out var what) : Quest.OpenHomeChest(P, map.Room, out what);
+            bool snow = map.Kind == MapKind.Snow, lib = map.Kind == MapKind.Library;
+            var r = snow ? Quest.OpenSnowChest(P, out var what) : lib ? Quest.OpenLibraryChest(P, out what) : Quest.OpenHomeChest(P, map.Room, out what);
             if (r == ChestResult.Got)
             {
                 sfx.Play("chest");
@@ -453,7 +453,7 @@ namespace GirlAdventure.View
                     SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
                 AutoSave();
                 RefreshHud();
-                yield return Talk(snow ? "snow_chest_open" : "chest_open", ("item", what));
+                yield return Talk(snow ? "snow_chest_open" : lib ? "lib_chest_open" : "chest_open", ("item", what));
             }
             else yield return Talk("chest_empty");
             HideMessage();
@@ -600,7 +600,7 @@ namespace GirlAdventure.View
                 char c = map.At(nx, ny);
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
-                else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
+                else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow || map.Kind == MapKind.Library ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
                 else if (c == 'h' && map.IsTown && dir == "up" && WorldMap.HouseAtDoor(map.Kind, nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(map.Kind, nx, ny)));
                 else if (c == 'Q' && map.Kind == MapKind.Desert) StartCoroutine(LetterRoutine());
                 else if (c == 'Z' && map.Kind == MapKind.Underworld) StartCoroutine(TalkOnce("dark_box"));

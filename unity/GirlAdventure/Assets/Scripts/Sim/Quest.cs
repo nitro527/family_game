@@ -139,6 +139,18 @@ namespace GirlAdventure.Sim
             return ChestResult.Got;
         }
 
+        /// <summary>도서관 오른쪽 구석 보물상자 (챕터 6 ✏️ 탐험거리): 엄마의 별자리 로브.</summary>
+        public const string LibChestId = "library_chest", LibChestItem = "sage_robe";
+
+        public static ChestResult OpenLibraryChest(PlayerState p, out string what)
+        {
+            what = GameData.ItemName(LibChestItem);
+            if (p.Opened.Contains(LibChestId)) return ChestResult.Empty;
+            p.Opened.Add(LibChestId);
+            if (!p.Gear.Contains(LibChestItem)) p.Gear.Add(LibChestItem);
+            return ChestResult.Got;
+        }
+
         /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
         public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16, 20 };
         /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>

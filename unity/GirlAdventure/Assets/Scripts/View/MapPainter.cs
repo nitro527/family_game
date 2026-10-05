@@ -580,6 +580,7 @@ namespace GirlAdventure.View
                     else if (c == 'O') { if (!Prop(R, "magiccircle", X + T / 2f, Y + T / 2f + 54)) { R.Ellipse(X + T / 2, Y + T / 2, 50, 40, H("#E8C860", 120)); } }
                     else if (c == 'F') { R.Ellipse(X + 26, Y + 44, 18, 5, new Color32(0, 0, 0, 70)); if (!Prop(R, "lectern", X + T / 2f, Y + T - 2)) Fountain(R, X, Y, false); }
                     else if (c == 'S') Sign(R, X, Y);
+                    else if (c == 'H') Painter.Chest(R, X, Y, false);
                     else if (c == 'M') { R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(0, 0, 0, 80)); if (!Prop(R, "libdesk", X + T / 2f, Y + T - 1)) CandyShop(R, X, Y); }
                     else if (c == 'K' && m.At(x - 1, y) != 'K' && m.At(x, y - 1) != 'K')       // 책 더미 옥좌: 3×2 의 왼쪽 위 칸에서 한 번
                     {

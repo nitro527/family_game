@@ -623,6 +623,11 @@ namespace GirlAdventure.EditorTools
             bool data = GameData.Library.Length == 5 && boss != null && boss.Boss && Resources.Load<Texture2D>("Monsters/lib_king") != null && Resources.Load<Texture2D>("Battle/library") != null
                         && Resources.Load<Texture2D>("Battle/library_boss") != null && GameData.EncounterPool(MapKind.Library, 18, 8).Length > 0 && GameData.RegionOf(boss) == "도서관"
                         && GameData.HasTalk("ch6_intro") && GameData.HasTalk("mom_meet") && GameData.HasTalk("ch6_clear") && GameData.HasTalk("ending_card6");
+            var lc = WorldMap.LibChest;
+            var lp = PlayerState.NewGame("lc");
+            bool chest = m.At(lc.x, lc.y) == 'H' && reach[lc.x - 1, lc.y] && Quest.OpenLibraryChest(lp, out _) == ChestResult.Got && lp.Gear.Contains(Quest.LibChestItem)
+                         && Quest.OpenLibraryChest(lp, out _) == ChestResult.Empty && GameData.HasTalk("lib_chest_open");
+            layout &= chest;
             Check("chapter 6 library: map links start→mom→throne, boss locked until mom joins, save v16, data/art", layout && start && locked && joined && saved && data,
                   $"layout={layout} start={start}(lv {p.Lv}) locked={locked} joined={joined} saved={saved} data={data}");
             float Win(int lv, bool gear)
