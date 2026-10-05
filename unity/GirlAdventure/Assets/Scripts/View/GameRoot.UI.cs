@@ -167,6 +167,14 @@ namespace GirlAdventure.View
             hudMp.text = $"MP {P.Mp}/{P.MaxMp}   사탕 ×{P.Candy}" + (P.Chapter == 2 && P.HasItem(Quest.KeyItem) ? "  <color=#F2C443>열쇠</color>" : "");     // 열쇠는 동굴(챕터 2)에서만
             hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
             hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;
+            if (battle != null && Current == Mode.Battle)                // 가족 버프 남은 차례 (두 번째 스킬): 서진 창 MP 줄 끝에 작게
+            {
+                var tags = "";
+                if (battle.DefUp > 0) tags += $" <color=#7FC8FF>방어↑{battle.DefUp}</color>";
+                if (battle.AtkUp > 0) tags += $" <color=#FF9A7A>공격↑{battle.AtkUp}</color>";
+                if (battle.Regen > 0) tags += $" <color=#7DFF9A>회복{battle.Regen}</color>";
+                if (tags != "") hudMp.text += $"  <size=15>{tags.Trim()}</size>";
+            }
             if (P.Hp <= 0) hudHp.text = "<color=#FF6060>HP 0 (쓰러짐)</color>";
             SetUltBar(hudUltBar, -1);
             for (int i = 0; i < P.Companions.Count && i < allyHuds.Count; i++)

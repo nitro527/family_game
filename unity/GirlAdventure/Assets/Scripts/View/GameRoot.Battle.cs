@@ -278,6 +278,7 @@ namespace GirlAdventure.View
                 yield return EnemyTurn();
                 if (battle.PlayerDown) { yield return Defeat(); yield break; }
                 battle.RoundEnd();                  // 지속 회복 한 번 + 버프 차례 줄이기
+                RefreshHud();
                 yield return RegenShow();
             }
         }

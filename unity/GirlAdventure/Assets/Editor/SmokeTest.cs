@@ -1349,7 +1349,7 @@ namespace GirlAdventure.EditorTools
             bool sisDown = b2.ComboAfter(1, true) == BattleSystem.ComboBroDad && b2.ComboAfter(0, true) == null;
             p.Hp = p.MaxHp;
             bool art = true;
-            var keys = new List<string> { "star", "bigbolt", "guard", "cure" };
+            var keys = new List<string> { "star", "bigbolt", "guard", "cure", "rally", "cheer", "hug" };
             foreach (var c in BattleSystem.Combos) keys.Add("combo_" + c.Key);
             foreach (var k in keys)                                  // 영상에서 뽑은 30장 (사용자 "30컷 정도로 자연스럽게")
                 for (int i = 1; i <= 30; i++) art &= Resources.Load<Texture2D>($"Cutin/{k}_{i}") != null && Resources.Load<Texture2D>($"Cutin/{k}_b_{i}") != null;   // A 얼굴 + B 쏟아지는 장면

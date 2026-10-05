@@ -94,7 +94,7 @@ LIGHT = {
               "several small softly glowing blue shield-shaped lights floating over a grassy field.",
               "The small blue shield lights float up gently and glow a little brighter one by one."),
     'cheer': ("The little boy hero pumps his fist in the air and cheers loudly with a big happy grin; little red and orange sparkles pop around him.", 1,
-              "small red and orange sparkles and little musical notes bursting over a grassy field.",
+              "small red and orange sparkles and little musical notes bursting in the air over a sunny green grassy battlefield under a bright blue sky with white clouds.",
               "Little red and orange sparkles pop and float upward with a few musical notes."),
     'hug': ("The young mom sage opens her arms wide with a warm loving smile as if to give a big hug; soft pink and golden light glows around her.", 1,
             "a big soft glowing pink heart of light over a small flower meadow, little sparkles.",
