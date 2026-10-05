@@ -884,6 +884,16 @@ namespace GirlAdventure.View
         public int AtkUpLeft => battle != null ? battle.AtkUp : 0;
         public int DefUpLeft => battle != null ? battle.DefUp : 0;
 
+        /// <summary>상태 이상 색 (전투 그림): 얼음 = 하늘, 화상 = 주황, 독 = 보라로 천천히 물들었다 돌아온다. 없으면 흰색.</summary>
+        Color StatusTint(int who)
+        {
+            if (battle == null) return Color.white;
+            Color tint = battle.FrozenOf(who) ? new Color(.6f, .85f, 1f) : battle.PoisonOf(who) > 0 ? (battle.PoisonName(who) == "화상" ? new Color(1f, .7f, .5f) : new Color(.85f, .65f, 1f)) : Color.white;
+            if (tint == Color.white) return tint;
+            float k = .55f + .45f * Mathf.Sin(Time.time * 4f);
+            return Color.Lerp(Color.white, tint, battle.FrozenOf(who) ? .9f : k);
+        }
+
         /// <summary>프로브용: 기믹이 나온 횟수.</summary>
         public int ChargeCount { get; private set; }
         public int MergeCount { get; private set; }
@@ -1256,7 +1266,7 @@ namespace GirlAdventure.View
             heroLunge = Mathf.Max(0, heroLunge - dt * 4);
             bool party = battle != null && battle.Party;
             if (party && battle.SisterDown) heroSR.sprite = poses["damage"];
-            heroSR.color = party && battle.SisterDown ? new Color(.55f, .55f, .65f, .8f) : Color.white;   // 쓰러지면 흐리게
+            heroSR.color = party && battle.SisterDown ? new Color(.55f, .55f, .65f, .8f) : StatusTint(-1);   // 쓰러지면 흐리게, 독·화상·얼음이면 그 색이 살짝 깜빡
 
             // 동료들 (합류 순서)
             for (int ai = 0; party && ai < P.Companions.Count; ai++)
@@ -1271,7 +1281,7 @@ namespace GirlAdventure.View
                 float bjump = v.pose == "victory" ? Mathf.Abs(Mathf.Sin(battleT * 6 + .8f + ai)) * .3f : 0;
                 v.sr.transform.position = Px(AllyX(ai), AllyY(ai)) + new Vector3(bsx + blunge, bbreathe + bjump, 0);
                 v.sr.transform.localScale = Vector3.one * PartyScale;
-                v.sr.color = down ? new Color(.55f, .55f, .65f, .8f) : Color.white;
+                v.sr.color = down ? new Color(.55f, .55f, .65f, .8f) : StatusTint(ai);
                 v.shake = Mathf.Max(0, v.shake - dt);
                 v.lunge = Mathf.Max(0, v.lunge - dt * 3);
             }
