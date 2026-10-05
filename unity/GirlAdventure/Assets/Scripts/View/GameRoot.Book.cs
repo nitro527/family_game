@@ -52,11 +52,11 @@ namespace GirlAdventure.View
             bookDown = UIKit.Label(win, "More Down", "▼", GridX, GridY + BookRows * (CellH + 8) - 6, BookCols * (CellW + 8) - 8, 20, 16, TextAnchor.MiddleCenter, UIKit.Gold);
             var line = UIKit.Img(win, "Line", UIKit.White, InfoX - 16, 24, 2, BookH - 48, false);
             line.color = new Color(1, 1, 1, .18f);
-            bookBig = UIKit.Img(win, "Big", null, InfoX + 60, 30, 220, 200);
-            bookName = UIKit.Label(win, "BigName", "", InfoX, 240, BookW - InfoX - 24, 38, 28, TextAnchor.UpperCenter, Color.white, true);
-            bookInfo = UIKit.Label(win, "Info", "", InfoX, 282, BookW - InfoX - 24, 60, 19, TextAnchor.UpperCenter);
+            bookBig = UIKit.Img(win, "Big", null, InfoX + 70, 28, 200, 182);
+            bookName = UIKit.Label(win, "BigName", "", InfoX, 214, BookW - InfoX - 24, 38, 28, TextAnchor.UpperCenter, Color.white, true);
+            bookInfo = UIKit.Label(win, "Info", "", InfoX, 254, BookW - InfoX - 24, 76, 18, TextAnchor.UpperCenter);
             bookInfo.supportRichText = true;
-            bookDesc = UIKit.Label(win, "Desc", "", InfoX + 6, 340, BookW - InfoX - 36, 110, 21, TextAnchor.UpperLeft);
+            bookDesc = UIKit.Label(win, "Desc", "", InfoX + 6, 338, BookW - InfoX - 36, 88, 20, TextAnchor.UpperLeft);   // 정보 세 줄(★·HP·사는 곳) 아래로 (겹치던 것)
             bookTitle = UIKit.Label(win, "Title", "", InfoX, 428, BookW - InfoX - 24, 32, 22, TextAnchor.UpperCenter, UIKit.Gold, true);
             var close = UIKit.Button(win, "Close", "닫기", BookW - 124, BookH - 58, 100, 40, 19, new Color32(190, 190, 215, 255));
             close.onClick.AddListener(() => bookClose = true);
