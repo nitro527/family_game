@@ -116,7 +116,16 @@ namespace GirlAdventure.Sim
             string a = d.Atk > 0 ? $"공격+{d.Atk}" : "", b = d.Def > 0 ? $"방어+{d.Def}" : "";
             string t = a != "" && b != "" ? a + " " + b : a + b;
             if (!string.IsNullOrEmpty(d.Resist)) t += (t != "" ? " " : "") + ResistText(d.Resist);
+            if (d.Perk == "dodge") t += (t != "" ? " " : "") + "잘 피함";
+            if (d.Perk == "gold") t += (t != "" ? " " : "") + "골드+25%";
             return t;
+        }
+
+        /// <summary>끼고 있는 장비 중 이 특기(Perk)가 있나.</summary>
+        public static bool HasPerk(PlayerState p, string perk)
+        {
+            foreach (var id in p.Equipped.Values) { var d = GameData.Item(id); if (d != null && d.Perk == perk) return true; }
+            return false;
         }
 
         /// <summary>"poison,freeze" → "독·얼음 막기".</summary>

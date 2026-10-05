@@ -149,7 +149,7 @@ namespace GirlAdventure.Sim
         public int AliveCount => Foes.FindAll(f => !f.Down).Count;
         /// <summary>이기면 받는 경험치·골드 (무리는 합계).</summary>
         public int TotalExp { get { int n = 0; foreach (var f in Foes) n += f.Def.Exp; return n; } }
-        public int TotalGold { get { int n = 0; foreach (var f in Foes) n += f.Def.Gold; return n; } }
+        public int TotalGold { get { int n = 0; foreach (var f in Foes) n += f.Def.Gold; return Equipment.HasPerk(P, "gold") ? n * 5 / 4 : n; } }   // 황금 도토리: +25%
 
         /// <summary>살아 있는 첫 적 번호 (모두 쓰러졌으면 -1).</summary>
         public int FirstAlive() => Foes.FindIndex(f => !f.Down);
@@ -668,7 +668,7 @@ namespace GirlAdventure.Sim
                 else { int k = r.Next(standing.Count + 1); o.Ally = k == standing.Count ? -1 : standing[k]; }
             }
             o.OnBrother = o.Ally >= 0 && P.Companions[o.Ally].Id == Sim.Party.Brother;
-            if (r.NextDouble() < DodgeRate) { o.Dodged = true; return o; }
+            if (r.NextDouble() < DodgeRate + (Equipment.HasPerk(P, "dodge") ? .06 : 0)) { o.Dodged = true; return o; }   // 네잎클로버: 조금 더 잘 피함
             AddGauge(o.Ally, Ultimates.GaugeHit);                  // 맞으면 궁극 게이지가 찬다
             o.Blocked = Barrier;                                    // 황금 사자 방패: 이번 차례 가족 모두 피해 반 (아래에서)
             if (o.Ally >= 0)
