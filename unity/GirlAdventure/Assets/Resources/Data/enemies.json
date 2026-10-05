@@ -44,6 +44,14 @@
     {"Name": "촛불 악마", "Art": "lib_candle", "Color": "#9AD8FF", "Dark": "#3A7AB8", "Hp": 360, "Atk": 50, "Exp": 64, "Gold": 62, "Move": "spin", "Attack": "푸른 불꽃 빙글빙글", "Evade": 0.12, "Desc": "푸른 불꽃 얼굴로 둥둥 떠다니는 촛불. 가끔 휙 피해요."},
     {"Name": "큰 꼬마 악마", "Art": "lib_imp", "Color": "#9A6AD8", "Dark": "#5A3A8A", "Hp": 540, "Atk": 53, "Exp": 96, "Gold": 90, "Move": "slam", "Attack": "쿵쿵 박쥐 날개 돌진", "Tier": 2, "Desc": "꼬마 악마가 크게 자란 2단 악마. 도서관 깊은 곳에 있어요."}
   ],
+  "Forest": [
+    {"Name": "벌레 젤리", "Art": "forest_bug", "Color": "#C8E040", "Dark": "#6A8A10", "Hp": 380, "Atk": 54, "Exp": 70, "Gold": 66, "Move": "hop", "Attack": "붕붕 날개 박치기", "Desc": "무당벌레 등껍질에 날개가 붕붕. 신나는 젤리. (서진이 도감)"},
+    {"Name": "버섯 젤리", "Art": "forest_mushroom", "Color": "#F0E0C0", "Dark": "#B03030", "Hp": 430, "Atk": 56, "Exp": 76, "Gold": 70, "Move": "slam", "Attack": "퐁퐁 포자 뿌리기", "Desc": "빨간 점박이 버섯 모자를 쓴 졸린 젤리. 포자를 퐁퐁."},
+    {"Name": "나무 젤리", "Art": "forest_tree", "Color": "#8A9A50", "Dark": "#4A5A20", "Hp": 480, "Atk": 58, "Exp": 80, "Gold": 74, "Move": "charge", "Attack": "나뭇가지 휘두르기", "Desc": "나뭇가지가 자라는 느긋한 젤리. 머리에 새 둥지! (서진이 도감)"},
+    {"Name": "꿀벌 젤리", "Art": "forest_bee", "Color": "#F8D030", "Dark": "#806010", "Hp": 420, "Atk": 61, "Exp": 84, "Gold": 78, "Move": "spin", "Attack": "톡 침 쏘기", "Evade": 0.14, "Desc": "줄무늬 꿀벌 젤리. 붕붕 날다가 톡 쏘아요. 가끔 휙 피해요."},
+    {"Name": "큰 나무 젤리", "Art": "forest_tree", "Color": "#8A9A50", "Dark": "#4A5A20", "Hp": 760, "Atk": 64, "Exp": 130, "Gold": 120, "Move": "slam", "Attack": "쿵쿵 뿌리 밟기", "Tier": 2, "Desc": "나무 젤리가 크게 자란 2단 젤리. 숲 깊은 곳에 있어요."}
+  ],
+  "ForestBoss": {"Name": "장수풍뎅이 대장", "Art": "forest_beetle", "Color": "#3A6A3A", "Dark": "#1A3A1A", "Hp": 7200, "Atk": 74, "Exp": 1200, "Gold": 1300, "Boss": true, "Move": "charge", "Attack": "커다란 뿔 들이받기", "Backdrop": "forest_boss", "Desc": "큰 고목을 차지하고 숲의 빛나는 도토리를 혼자 다 가져간 심술쟁이 대장."},
   "LibraryBoss": {"Name": "악마 대장", "Art": "lib_king", "Color": "#5A3A8A", "Dark": "#2A1A4A", "Hp": 5400, "Atk": 66, "Exp": 900, "Gold": 1000, "Boss": true, "Move": "charge", "Attack": "저주의 책 번개", "Backdrop": "library_boss", "Desc": "도서관을 점령한 악마들의 대장. 저주받은 마법책으로 도서관을 이상하게 바꿔 버렸어요."},
   "SnowBoss": {"Name": "예티", "Color": "#E8F0FF", "Dark": "#A8C0E0", "Hp": 2650, "Atk": 50, "Exp": 600, "Gold": 700, "Boss": true, "Move": "slam", "Attack": "쿵쿵 눈보라 발구르기", "Backdrop": "snow_boss", "Art": "yeti_scary", "Desc": "눈 산 동굴의 왕. 새빨간 눈으로 크와앙! 눈보라를 일으켜 마을을 얼리려 했어요. (서진이 그림, 무서운 예티)"},
   "LavaBoss": { "Name": "화산 젤리 대장", "Art": "lava_boss", "Color": "#E8401A", "Dark": "#8A1A0A", "Hp": 1850, "Atk": 41, "Exp": 400, "Gold": 500, "Boss": true, "Move": "slam", "Attack": "화산 쿵쿵 누르기", "Look": "magma", "Backdrop": "lava_boss", "Desc": "화산 속에서 자다 깨어 심술이 난 대장 젤리. 서진이가 새 모습을 그려 줄 거예요!" },

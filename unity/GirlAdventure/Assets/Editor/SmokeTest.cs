@@ -483,6 +483,7 @@ namespace GirlAdventure.EditorTools
             DogamDataTests();
             NpcArtTests();
             LibraryTests();
+            ForestTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -596,6 +597,82 @@ namespace GirlAdventure.EditorTools
                     Debug.Log($"[SWEEP6] hp {hp} atk {atk}: g22 {Win(22, true):P0} g21 {Win(21, true):P0} n21 {Win(21, false):P0}");
                 }
             UnityEditor.EditorApplication.Exit(0);
+        }
+
+        /// <summary>밸런스 탐색 (장수풍뎅이 대장): -executeMethod GirlAdventure.EditorTools.SmokeTest.SweepBoss7 → [SWEEP7] 줄.</summary>
+        public static void SweepBoss7()
+        {
+            DataLoader.Load();
+            var baseDef = GameData.ForestBoss;
+            foreach (int hp in new[] { 5600, 6400, 7200 })
+                foreach (int atk in new[] { 68, 74, 80 })
+                {
+                    var boss = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(baseDef)); boss.Hp = hp; boss.Atk = atk; boss.Boss = true;
+                    float r26 = ForestWin(boss, 26, true, false, 200), r25 = ForestWin(boss, 25, true, false, 200), u25 = ForestWin(boss, 25, true, true, 200);
+                    Debug.Log($"[SWEEP7] hp {hp} atk {atk}: noult g26 {r26:P0} g25 {r25:P0} | ult g25 {u25:P0}");
+                }
+            UnityEditor.EditorApplication.Exit(0);
+        }
+
+        /// <summary>넷 (Lv, 숲 장비 또는 도서관 장비) 이 장수풍뎅이 대장을 이기는 비율.</summary>
+        static float ForestWin(EnemyDef boss, int lv, bool gear, bool ult, int runs)
+        {
+            var r = new System.Random(777);
+            int wins = 0;
+            for (int run = 0; run < runs; run++)
+            {
+                var d = PlayerState.NewGame("d");
+                d.GainExp(PlayerState.NextExp(lv - 1));
+                d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad"); d.Join("mom");
+                if (ult) foreach (var u in Ultimates.All) d.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses[1];
+                var kit = gear ? new[] { "acorn_wand", "leaf_cape", "oak_sword", "bro_shield", "oak_blade", "lion_shield", "vine_staff", "sage_robe" }
+                               : new[] { "book_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield", "sage_staff", "sage_robe" };
+                foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
+                d.Candy = 6;
+                if (FightDuo(d, new List<EnemyDef> { boss }, r)) wins++;
+            }
+            return wins / (float)runs;
+        }
+
+        /// <summary>
+        /// 챕터 7 숲 (✏️, 숲·나무/벌레 젤리는 서진이 노트 ⭐): 쉼터 → 다리 → 큰 고목 길, 보물상자, 세이브 v17, 정령 대사,
+        /// 숲 젤리 출현표·그림, 챕터 고르기 Lv23 (넷), 넷 + 숲 장비 밸런스.
+        /// </summary>
+        static void ForestTests()
+        {
+            var m = WorldMap.Forest();
+            var reach = Reach(m, WorldMap.ForStart);
+            var bs = WorldMap.ForBoss;
+            int bridges = 0;
+            for (int y = 0; y < WorldMap.H; y++) for (int x = 0; x < WorldMap.W; x++) if (m.At(x, y) == 'b') bridges++;
+            bool layout = m.At(bs.x, bs.y) == 'B' && reach[bs.x - 1, bs.y] && m.At(bs.x, bs.y - 1) == 'K' && m.At(WorldMap.ForSpring.x, WorldMap.ForSpring.y) == 'F'
+                          && m.At(WorldMap.ForShop.x, WorldMap.ForShop.y) == 'M' && bridges >= 1 && m.Holes.Count >= 3
+                          && m.EncounterRate(WorldMap.ForStart.x, WorldMap.ForStart.y) == 0 && m.EncounterRate(4, 5) > 0 && m.EncounterRate(16, 15) == 0
+                          && WorldMap.ForChapter(7).Kind == MapKind.Forest && !WorldMap.HasTown(7) && WorldMap.LastChapter >= 7;
+            var fc = WorldMap.ForChest;
+            var cp = PlayerState.NewGame("fc");
+            bool chest = m.At(fc.x, fc.y) == 'H' && (reach[fc.x - 1, fc.y] || reach[fc.x + 1, fc.y] || reach[fc.x, fc.y - 1])
+                         && Quest.OpenForestChest(cp, out _) == ChestResult.Got && cp.Gear.Contains(Quest.ForChestItem) && Quest.OpenForestChest(cp, out _) == ChestResult.Empty
+                         && GameData.HasTalk("for_chest_open");
+            var p = Quest.QuickStart("t", 7);
+            bool start = p.Chapter == 7 && p.Lv == 23 && (p.X, p.Y) == WorldMap.ForStart && p.Companions.Count == 3 && Quest.MomJoined(p) && p.Boss6Down && !p.Boss7Down;
+            p.Boss7Down = true;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            var npcs = new List<NpcDef>(Npcs.On(MapKind.Forest));
+            bool saved = SaveData.CurrentVersion >= 17 && q.Boss7Down && q.Companions.Count == 3
+                         && Npcs.TalkId(npcs.Find(n => n.Id == "spirit"), q) == "npc_spirit_end" && Npcs.TalkId(npcs.Find(n => n.Id == "spirit"), PlayerState.NewGame("x")) == "npc_spirit";
+            var boss = GameData.ForestBoss;
+            bool data = GameData.Forest.Length == 5 && boss != null && boss.Boss && boss.Backdrop == "forest_boss" && GameData.RegionOf(boss) == "숲"
+                        && Resources.Load<Texture2D>("Monsters/forest_beetle") != null && Resources.Load<Texture2D>("Monsters/forest_tree") != null
+                        && Resources.Load<Texture2D>("Monsters/spirit_nature") != null && Resources.Load<Texture2D>("Battle/forest") != null
+                        && Resources.Load<Texture2D>("Battle/forest_boss") != null && Resources.Load<Texture2D>("Cards/ch7_clear") != null
+                        && GameData.EncounterPool(MapKind.Forest, 4, 5).Length > 0 && Shop.Goods(MapKind.Forest).Count >= 5
+                        && GameData.HasTalk("ch7_intro") && GameData.HasTalk("boss7_meet") && GameData.HasTalk("ch7_clear") && GameData.HasTalk("ending_card7") && GameData.HasTalk("sign_forest");
+            Check("chapter 7 forest: camp→bridge→old oak, chest, quick start four Lv23, save v17, spirit talk, data/art", layout && chest && start && saved && data,
+                  $"layout={layout} chest={chest} start={start}(lv {p.Lv}) saved={saved} data={data}");
+            float g26 = ForestWin(boss, 26, true, false, 400), g25 = ForestWin(boss, 25, true, false, 400), u25 = ForestWin(boss, 25, true, true, 400), n25 = ForestWin(boss, 25, false, true, 400);
+            Debug.Log($"[BALANCE BOSS7] no ult Lv26+forest gear={g26:P1} Lv25+gear={g25:P1} | ult Lv25+gear={u25:P1} Lv25 library gear={n25:P1}");
+            Check("beetle boss balance (no ultimates: Lv26+gear ≥85%, Lv25+gear ≥75%; ultimates ≤99%)", g26 >= .85f && g25 >= .75f && u25 <= .99f, $"{g26:P1}/{g25:P1}, ult {u25:P1} {n25:P1}");
         }
 
         /// <summary>
@@ -939,7 +1016,7 @@ namespace GirlAdventure.EditorTools
             {
                 var p = Quest.QuickStart("t", ch);
                 var start = WorldMap.ForChapter(ch).SpawnPoint;
-                int mates = ch >= 4 ? 2 : ch == 3 ? 1 : 0;
+                int mates = ch >= 7 ? 3 : ch >= 4 ? 2 : ch == 3 ? 1 : 0;
                 var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
                 Check($"quick start chapter {ch}: level, party, gear, place, bosses",
                       p.Chapter == ch && p.Lv == Quest.QuickLevels[ch] && p.Companions.Count == mates && (p.X, p.Y) == start
@@ -1422,6 +1499,7 @@ namespace GirlAdventure.EditorTools
                 (10, "{\"Version\":10,\"Name\":\"a\",\"Lv\":11,\"Exp\":340,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":4,\"Y\":15,\"Chapter\":3,\"BossDown\":true,\"Boss2Down\":true,\"Boss3Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5}"),
                 (14, "{\"Version\":14,\"Name\":\"a\",\"Lv\":14,\"Exp\":1100,\"Hp\":90,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Boss4Down\":true,\"Party\":[\"jihun:90:10\",\"dad:100:5\"]}"),
                 (15, "{\"Version\":15,\"Name\":\"a\",\"Lv\":17,\"Exp\":2400,\"Hp\":110,\"Mp\":50,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":5,\"Boss2Down\":true,\"Boss3Down\":true,\"Boss4Down\":true,\"Boss5Down\":true,\"Party\":[\"jihun:120:12\",\"dad:130:8\"]}"),
+                (16, "{\"Version\":16,\"Name\":\"a\",\"Lv\":22,\"Exp\":5000,\"Hp\":130,\"Mp\":60,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":6,\"Boss2Down\":true,\"Boss3Down\":true,\"Boss4Down\":true,\"Boss5Down\":true,\"Boss6Down\":true,\"Party\":[\"jihun:140:14\",\"dad:150:10\",\"mom:110:30\"]}"),
                 (13, "{\"Version\":13,\"Name\":\"a\",\"Lv\":12,\"Exp\":700,\"Hp\":80,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Party\":[\"jihun:90:10\",\"dad:0:5\"]}"),
                 (12, "{\"Version\":12,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":20,\"Y\":16,\"Chapter\":3,\"Underground\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":40,\"BroMp\":3}"),
                 (11, "{\"Version\":11,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":18,\"Y\":17,\"Chapter\":3,\"InVillage\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5,\"SkillUses\":[\"Fire:31\",\"Bolt:2\"]}"),

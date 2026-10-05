@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
-    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home, Snow, SnowTown, Library }
+    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home, Snow, SnowTown, Library, Forest }
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
@@ -23,6 +23,8 @@ namespace GirlAdventure.Sim
     /// 눈 덮인 땅 (챕터 5, 서진이 2026-10-03) — '.' 눈밭  ':' 출발 자리(안전)  '=' 밟힌 눈길  'i' 꽁꽁 언 호수  'P' 눈 덮인 전나무  'R' 바위  'n' 눈사람  'K' 눈 산(4×4)  'B' 눈 산 동굴 입구(예티)  'V' 눈꽃 마을 문  'F' 모닥불(회복)  'S' 표지판
     /// 도서관 (챕터 6, ⭐ 사용자 2026-10-05: 악마들이 점령해 이상하게 변한 도서관, 현자 엄마가 되돌리는 중) — '#' 벽  '.' 바닥(인카운트)  ':' 입구(안전)
     ///        'q' 책장  'a' 책상  'O' 엄마의 마법진 (부딪히면 엄마 합류)  'F' 빛나는 책 받침대(회복)  'S' 표지판  'M' 사서 가게  'N' 사서 젤리  'B' 책 더미 옥좌(악마 대장, 엄마가 합류해야 다가갈 수 있다)
+    /// 숲 (챕터 7, 숲 ⭐ 서진이 노트 1 · 배치·이야기 ✏️) — 'T' 나무  '.' 숲 바닥(인카운트)  ',' 수풀(인카운트↑)  '=' 흙길  'w' 개울  'b' 나무다리  'L' 쓰러진 통나무
+    ///        ':' 숲 속 쉼터(안전)  'F' 요정 샘(회복)  'S' 표지판  'M' 그루터기 가게  'H' 보물상자  'K' 큰 고목(3×3)  'B' 고목 구멍 앞(장수풍뎅이 대장)  'N' 숲 사람(자연의 정령 등)
     /// 눈꽃 마을 (챕터 5, ✏️ 임시 이름) — '.' 눈밭  '=' 눈길  'P' 전나무  'h' 통나무집  'i' 스케이트 연못(그냥 걸어 다님)  'F' 모닥불(회복)  'M' 털옷 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// 온천 마을 (챕터 4, ✏️ 임시 이름) — '.' 잿빛 땅  'R' 바위  'h' 돌집  'w' 온천 웅덩이  'F' 온천(회복)  'M' 대장간(가게)  'S' 표지판  'E' 출구  'N' 마을 사람
     /// 집 안 (P-5, 별빛 마을 집 5채) — ' ' 바깥(까맘)  'W' 벽  '.' 나무 바닥  'k' 침대(위아래 두 칸)  'q' 책장(벽에 붙음)  'a' 식탁  'H' 보물상자  'E' 문(밟으면 마을로)  'N' 주민 젤리
@@ -63,6 +65,10 @@ namespace GirlAdventure.Sim
                                                     MomCircle = (17, 3),    // 엄마의 마법진 (부딪히면 합류)
                                                     LibBoss = (31, 3),      // 악마 대장 (옥좌 앞 칸)
                                                     LibChest = (34, 14);    // 오른쪽 구석 보물상자 (✏️ 탐험거리)
+        // 숲 (챕터 7 ✏️): 왼쪽 아래 숲 속 쉼터에서 넷이 출발, 흙길 따라 개울 다리를 건너 오른쪽 위 큰 고목에 장수풍뎅이 대장
+        public static readonly (int x, int y) ForStart = (4, 20), ForSpring = (7, 18), ForSign = (10, 21), ForShop = (11, 18),
+                                                    ForBoss = (31, 5),      // 큰 고목 구멍 앞 (밟으면 보스전)
+                                                    ForChest = (29, 21);    // 개울 건너 오른쪽 아래 숨은 보물상자 (✏️ 탐험거리)
         // 눈꽃 마을 (챕터 5, C5-4, ✏️ 임시 이름): 눈 덮인 땅 동쪽 문(SnowGate) ↔ 마을 아래쪽 출구
         public static readonly (int x, int y) SnowTownStart = (18, 19), SnowTownExit = (18, 20), SnowTownFire = (14, 9), SnowTownSign = (20, 18), SnowTownShop = (12, 13);
         public static readonly (int x, int y)[] SnowTownHouses = { (7, 5), (23, 4), (7, 14), (25, 14) };
@@ -128,16 +134,16 @@ namespace GirlAdventure.Sim
 
         public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : Kind == MapKind.Desert ? DesertStart
                                             : Kind == MapKind.Oasis ? TownStart : Kind == MapKind.Underworld ? UnderStart : Kind == MapKind.Lava ? LavaStart
-                                            : Kind == MapKind.LavaTown ? LavaTownStart : Kind == MapKind.Home ? HomeStart : Kind == MapKind.Snow ? SnowStart : Kind == MapKind.SnowTown ? SnowTownStart : Kind == MapKind.Library ? LibStart : CaveStart;
+                                            : Kind == MapKind.LavaTown ? LavaTownStart : Kind == MapKind.Home ? HomeStart : Kind == MapKind.Snow ? SnowStart : Kind == MapKind.SnowTown ? SnowTownStart : Kind == MapKind.Library ? LibStart : Kind == MapKind.Forest ? ForStart : CaveStart;
         /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리, 사막은 오아시스 샘, 오아시스 마을은 마른 우물).</summary>
         public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : Kind == MapKind.Desert ? OasisSpring
                                         : Kind == MapKind.Oasis ? TownWell : Kind == MapKind.Underworld ? UnderSpring : Kind == MapKind.Lava ? LavaSpring
-                                        : Kind == MapKind.LavaTown ? LavaTownSpring : Kind == MapKind.Snow ? SnowFire : Kind == MapKind.SnowTown ? SnowTownFire : Kind == MapKind.Library ? LibSpring : CaveSpring;
+                                        : Kind == MapKind.LavaTown ? LavaTownSpring : Kind == MapKind.Snow ? SnowFire : Kind == MapKind.SnowTown ? SnowTownFire : Kind == MapKind.Library ? LibSpring : Kind == MapKind.Forest ? ForSpring : CaveSpring;
         public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : Kind == MapKind.Village ? VillageSign : Kind == MapKind.Desert ? DesertSign
                                          : Kind == MapKind.Oasis ? TownSign : Kind == MapKind.Underworld ? UnderSign : Kind == MapKind.Lava ? LavaSign
-                                         : Kind == MapKind.LavaTown ? LavaTownSign : Kind == MapKind.Snow ? SnowSign : Kind == MapKind.SnowTown ? SnowTownSign : Kind == MapKind.Library ? LibSign : CaveSign;
+                                         : Kind == MapKind.LavaTown ? LavaTownSign : Kind == MapKind.Snow ? SnowSign : Kind == MapKind.SnowTown ? SnowTownSign : Kind == MapKind.Library ? LibSign : Kind == MapKind.Forest ? ForSign : CaveSign;
         /// <summary>사탕 가게 (초원·사막 바깥에는 없다 — 마을 가게를 쓴다).</summary>
-        public (int x, int y) ShopPos => Kind == MapKind.Village ? VillageShop : Kind == MapKind.Cave ? CaveShop : Kind == MapKind.Oasis ? TownShop : Kind == MapKind.LavaTown ? LavaTownShop : Kind == MapKind.SnowTown ? SnowTownShop : Kind == MapKind.Library ? LibShop : (-1, -1);
+        public (int x, int y) ShopPos => Kind == MapKind.Village ? VillageShop : Kind == MapKind.Cave ? CaveShop : Kind == MapKind.Oasis ? TownShop : Kind == MapKind.LavaTown ? LavaTownShop : Kind == MapKind.SnowTown ? SnowTownShop : Kind == MapKind.Library ? LibShop : Kind == MapKind.Forest ? ForShop : (-1, -1);
         /// <summary>동굴처럼 어둡고 바위벽('#')인 맵 (동굴·지하세계): 어둠·빛·수정 그림을 같이 쓴다.</summary>
         public bool IsCaveLike => Kind == MapKind.Cave || Kind == MapKind.Underworld;
 
@@ -185,10 +191,10 @@ namespace GirlAdventure.Sim
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
         public (int x, int y) RevivePoint => (Spring.x - 1, Spring.y + 1);
 
-        public const int LastChapter = 6;
-        public static WorldMap ForChapter(int chapter) => chapter >= 6 ? Library() : chapter == 5 ? Snow() : chapter == 4 ? Lava() : chapter == 3 ? Desert() : chapter == 2 ? Cave() : new WorldMap();
+        public const int LastChapter = 7;
+        public static WorldMap ForChapter(int chapter) => chapter >= 7 ? Forest() : chapter == 6 ? Library() : chapter == 5 ? Snow() : chapter == 4 ? Lava() : chapter == 3 ? Desert() : chapter == 2 ? Cave() : new WorldMap();
         /// <summary>그 챕터에 들어가 볼 마을이 있나 (챕터 1 별빛 마을, 챕터 3 오아시스 마을).</summary>
-        public static bool HasTown(int chapter) => chapter <= 1 || (chapter >= 3 && chapter <= 5);     // 챕터 2 동굴·챕터 6 도서관은 마을이 없다 (도서관은 입구 열람실이 쉼터)
+        public static bool HasTown(int chapter) => chapter <= 1 || (chapter >= 3 && chapter <= 5);     // 챕터 2 동굴·챕터 6 도서관·챕터 7 숲은 마을이 없다 (입구 열람실·숲 속 쉼터가 쉼터)
         /// <summary>지금 있어야 할 맵 (지하세계 안이면 지하세계, 마을 안이면 그 챕터의 마을).</summary>
         public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false) =>
             underground ? Underworld() : inVillage && chapter <= 1 ? Village() : inVillage && chapter == 3 ? OasisTown() : inVillage && chapter == 4 ? LavaTown() : inVillage && chapter == 5 ? SnowTown() : ForChapter(chapter);
@@ -432,6 +438,43 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>
+        /// 숲 (챕터 7 — 숲은 서진이 노트 1 ⭐, 배치·이야기 ✏️): 사방이 나무. 가운데를 위아래로 흐르는 개울(나무다리 하나),
+        /// 왼쪽 아래 숲 속 쉼터(안전)에서 흙길이 다리를 건너 오른쪽 위 큰 고목(장수풍뎅이 대장)으로. 나무 무리·수풀·쓰러진 통나무,
+        /// 개울 건너 오른쪽 아래 구석에 숨은 보물상자.
+        /// </summary>
+        public static WorldMap Forest()
+        {
+            var m = new WorldMap(MapKind.Forest);
+            m.Fill(0, 0, W - 1, H - 1, '.');
+            m.Fill(0, 0, W - 1, 1, 'T'); m.Fill(0, H - 2, W - 1, H - 1, 'T');
+            m.Fill(0, 0, 1, H - 1, 'T'); m.Fill(W - 2, 0, W - 1, H - 1, 'T');
+            for (int y = 2; y <= 21; y++)                                   // 개울: 위에서 아래로 살짝 굽이친다 (폭 2)
+            {
+                int cx = 21 + (int)Math.Round(Math.Sin(y * .5) * 1.2);
+                m.Fill(cx, y, cx + 1, y, 'w');
+            }
+            foreach (var (a, b, c, d) in new[] { (5, 4, 9, 7), (12, 3, 14, 8), (3, 10, 7, 13), (24, 15, 30, 19), (28, 9, 31, 12), (17, 3, 18, 5), (10, 14, 11, 15), (15, 20, 19, 21), (32, 15, 33, 20), (25, 2, 26, 3) })
+                m.Fill(a, b, c, d, 'T');                                    // 나무 무리
+            foreach (var (x, y) in new[] { (4, 8), (10, 5), (16, 10), (19, 15), (23, 8), (26, 11), (14, 12), (2, 7), (9, 11) }) m.Set(x, y, 'T');
+            m.Fill(9, 9, 13, 12, ','); m.Fill(24, 4, 26, 7, ','); m.Fill(13, 15, 17, 18, ',');      // 수풀
+            m.Fill(11, 19, 16, 19, '='); m.Fill(16, 12, 16, 19, '=');      // 흙길: 쉼터 → 위로 → 다리 → 고목
+            for (int x = 16; x <= 27; x++) m.Set(x, 12, m.tiles[x, 12] == 'w' ? 'b' : '=');
+            m.Fill(27, 6, 27, 12, '=');
+            m.Set(18, 8, 'L'); m.Set(19, 8, 'L'); m.Set(8, 16, 'L'); m.Set(9, 16, 'L');           // 쓰러진 통나무
+            m.Fill(28, 2, 33, 7, '.');                                      // 큰 고목 앞 빈터
+            m.Fill(27, 6, 29, 6, '=');
+            m.Fill(30, 2, 32, 4, 'K');                                      // 큰 고목 (그림은 View)
+            m.Set(ForBoss.x, ForBoss.y, 'B');
+            m.Set(ForChest.x, ForChest.y, 'H');
+            m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));      // 수상한 구멍 (서진이 소원)
+            m.Fill(2, 17, 12, 21, ':');                                     // 숲 속 쉼터 (안전) + 요정 샘 + 표지판 + 그루터기 가게
+            m.Set(ForSpring.x, ForSpring.y, 'F');
+            m.Set(ForSign.x, ForSign.y, 'S');
+            m.Set(ForShop.x, ForShop.y, 'M');
+            return m;
+        }
+
+        /// <summary>
         /// 눈꽃 마을 (챕터 5, C5-4, ✏️ 임시 이름): 전나무 숲에 둘러싸인 작은 마을. 가운데 스케이트 연못, 통나무집 넷(여관 하나),
         /// 털옷 가게·모닥불·표지판, 아래 출구. 몬스터가 없다.
         /// </summary>
@@ -654,6 +697,7 @@ namespace GirlAdventure.Sim
         public double EncounterRate(int x, int y)
         {
             if (IsTown || Kind == MapKind.Home) return 0;   // 마을·집 안엔 몬스터가 없다
+            if (Kind == MapKind.Forest) { char fc = At(x, y); return fc == ',' ? 0.14 : fc == '.' ? 0.07 : 0; }   // 숲: 바닥·수풀에서만 (흙길·쉼터·다리는 쉬는 곳)
             if (Kind == MapKind.Library) return At(x, y) == '.' ? 0.07 : 0;  // 도서관 바닥에서만 (입구 열람실은 쉬는 곳)
             if (Kind == MapKind.Snow) return At(x, y) == '.' ? 0.07 : 0;     // 눈밭에서만 (눈길·언 호수·출발 자리는 쉬는 곳)
             if (Kind == MapKind.Desert) return At(x, y) == '.' ? 0.07 : 0;

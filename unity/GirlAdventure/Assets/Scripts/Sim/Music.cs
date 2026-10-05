@@ -149,6 +149,20 @@ namespace GirlAdventure.Sim
             },
             new Song
             {
+                Name = "forest", Bpm = 104, SoftLead = true,
+                // 숲 (챕터 7 ✏️): A 는 사장조로 새소리처럼 통통 튀고, B 는 마단조로 깊은 숲 속에 살짝 들어갔다가 햇살로 돌아온다
+                Lead = "G5.2 B5.2 D6.2 B5.2 | C6.2 A5.2 B5.4 | G5.2 A5.2 B5.2 D6.2 | E6.4 D6.4 |" +
+                       "C6.2 B5.2 A5.2 G5.2 | A5.2 B5.2 C6.4 | B5.2 A5.2 G5.2 F#5.2 | G5.6 R.2 |" +
+                       "E5.2 G5.2 B5.4 | A5.2 G5.2 F#5.4 | G5.2 A5.2 B5.2 C6.2 | B5.6 R.2 |" +
+                       "C6.2 D6.2 E6.4 | D6.2 B5.2 G5.4 | A5.2 B5.2 A5.2 F#5.2 | G5.6 R.2",
+                Bass = "G1.4 D2.4 | C2.4 G1.4 | G1.4 B1.4 | C2.4 D2.4 |" +
+                       "A1.4 E2.4 | D2.4 A1.4 | D2.4 D2.4 | G1.4 G1.4 |" +
+                       "E2.4 B1.4 | A1.4 D2.4 | E2.4 A1.4 | B1.4 B1.4 |" +
+                       "C2.4 G1.4 | G1.4 E2.4 | D2.4 D2.4 | G1.4 G1.4",
+                Drums = "k.h.s.h.k.hks.h.k.h.s.h.k.hks.hhk.h.s.h.k.hks.h.k.h.s.h.k.hks.hhk.h.s.h.k.hks.h.k.h.s.h.k.hks.hhk.h.s.h.k.hks.h.k.h.s.h.k.hks.hh",
+            },
+            new Song
+            {
                 Name = "snow", Bpm = 100, SoftLead = true,
                 // 눈 덮인 땅 (챕터 5): A 는 라장조로 사뿐사뿐 눈 밟는 소리 (썰매 방울 같은 하이햇), B 는 나단조로 살짝 차갑게 갔다가 돌아온다
                 Lead = "D5.2 F#5.2 A5.2 F#5.2 | G5.2 B5.2 A5.4 | F#5.2 A5.2 D6.2 C#6.2 | B5.4 A5.4 |" +

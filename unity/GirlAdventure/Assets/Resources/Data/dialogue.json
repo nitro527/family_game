@@ -244,6 +244,33 @@
       { "Text": "사막을 지나 한참을 걸어가자, 땅이 점점 뜨거워졌다…", "Face": "surprised", "Hold": 1.3 },
       { "Text": "부글부글 끓는 용암이 흐르는 곳, 여기는 용암 땅!", "Face": "surprised", "Hold": 1.3 },
       { "Text": "누나, 발이 뜨거워! 무서워…", "Face": "bro_cry", "Hold": 1.2 } ] },
+    { "Id": "ch7_intro", "Lines": [
+      { "Text": "도서관이 원래대로 돌아온 날 밤, 엄마가 책장에서 초록빛으로 반짝이는 그림책 한 권을 꺼냈어요.", "Face": "surprised", "Hold": 1.4 },
+      { "Text": "\"이건 숲의 정령이 보낸 책이야. '숲이 시들고 있어요… 도와주세요' 라고 쓰여 있구나.\"", "Face": "mom_worried", "Hold": 1.6 },
+      { "Text": "숲? 벌레 젤리도 있어? 나 벌레 좋아!", "Face": "bro_laugh", "Hold": 1.1 },
+      { "Text": "\"우리 가족 넷이 함께라면 어디든 갈 수 있지. 숲으로 가자!\"", "Face": "dad_serious", "Hold": 1.5 } ] },
+    { "Id": "boss7_meet", "Lines": [
+      { "Text": "큰 고목 구멍 속에서 커다란 뿔이 쑥 나왔다!", "Face": "surprised", "Hold": 1.2 },
+      { "Text": "\"쿠웅! 이 숲의 빛나는 도토리는 전부 내 거야! 아무도 못 가져가!\"", "Face": "surprised", "Hold": 1.6 },
+      { "Text": "도토리를 혼자 다 가지면 숲이 시들잖아! 다 같이 나눠야지!", "Face": "laugh", "Hold": 1.4 } ] },
+    { "Id": "ch7_clear", "Lines": [
+      { "Text": "장수풍뎅이 대장이 벌러덩 뒤집혔다! 다리를 버둥버둥…", "Face": "laugh", "Hold": 1.3 },
+      { "Text": "\"으앙… 미안해. 도토리가 너무 반짝여서 혼자 갖고 싶었어…\"", "Face": "surprised", "Hold": 1.5 },
+      { "Text": "대장이 빛나는 도토리를 내려놓자, 시들던 나무마다 초록 잎이 쑥쑥 돋아났어요!", "Face": "laugh", "Hold": 1.5 },
+      { "Text": "\"고마워, 꼬마 마법사 가족. 숲이 다시 숨을 쉬어.\" 자연의 정령이 반짝이며 웃었다.", "Face": "mom_smile", "Hold": 1.6 } ] },
+    { "Id": "ending_card7", "Lines": [ { "Text": "꼬마 마법사 <color=#F2C443>{name:과/와}</color> 꼬마 용사 <color=#F2C443>{bro}</color>,\n기사 아빠와 현자 엄마가 장수풍뎅이 대장을 달랬어요!\n숲이 다시 초록빛이 되었어요.\n\n최종 레벨 {lv}\n<color=#F2C443>'숲을 살린 가족'</color> 칭호를 얻었다!\n(다음 이야기는 준비 중이에요)" } ] },
+    { "Id": "sign_forest", "Lines": [
+      { "Text": "표지판: \"숲 속 쉼터. 요정 샘물에서 쉬어 가세요. 큰 고목은 흙길을 따라 개울 다리를 건너 오른쪽 위!\"", "Face": "smile" } ] },
+    { "Id": "for_chest_open", "Lines": [ { "Text": "개울 건너 숨은 보물상자! {item:을/를} 손에 넣었다!", "Face": "laugh", "Hold": 1.2 }, { "Text": "\"반짝반짝 나뭇잎 왕관이네!\" (상태 창 장비에서 써 보세요)", "Face": "mom_smile" } ] },
+    { "Id": "npc_spirit", "Lines": [
+      { "Text": "\"나는 이 숲을 지키는 자연의 정령이야. 장수풍뎅이 대장이 큰 고목을 차지하고, 숲의 빛나는 도토리를 혼자 다 가져가 버렸어…\"", "Face": "surprised" },
+      { "Text": "\"그래서 숲이 시들고 있단다. 흙길을 따라 개울을 건너면 큰 고목이 있어.\"", "Face": "smile" } ] },
+    { "Id": "npc_spirit_end", "Lines": [
+      { "Text": "\"고마워! 숲이 다시 초록빛이야. …언젠가 불·물·바람의 정령 친구들도 너희를 만나고 싶어 할 거야.\"", "Face": "laugh" } ] },
+    { "Id": "npc_acorn", "Lines": [
+      { "Text": "\"도토리 젤리야! 그루터기 가게에 숲의 장비가 있어. 지팡이도, 망토도, 엄마 아빠 것도!\"", "Face": "smile" } ] },
+    { "Id": "npc_acorn_end", "Lines": [
+      { "Text": "\"도토리가 다시 반짝반짝! 나무들도 신이 났어. 고마워!\"", "Face": "laugh" } ] },
     { "Id": "ch6_intro", "Lines": [
       { "Text": "눈 덮인 땅을 지나 돌아오는 길, 언덕 위에 커다란 도서관이 보였다…", "Face": "surprised", "Hold": 1.3 },
       { "Text": "그런데 도서관이 이상해요! 창문마다 보랏빛이 번쩍이고, 책들이 하늘을 둥둥 날아다녀요!", "Face": "surprised", "Hold": 1.5 },

@@ -42,7 +42,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m) : m.Kind == MapKind.Library ? Library(m)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m) : m.Kind == MapKind.Library ? Library(m) : m.Kind == MapKind.Forest ? Forest(m)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -587,6 +587,107 @@ namespace GirlAdventure.View
                         R.Ellipse(X + 1.5f * T + 6, Y + 2 * T - 4, 1.6f * T, 12, new Color32(40, 0, 60, 90));
                         if (!Prop(R, "bookthrone", X + 1.5f * T, Y + 2 * T + 8)) R.Rect(X, Y, 3 * T, 2 * T, H("#3A2050"));
                     }
+                }
+            return R;
+        }
+
+        /// <summary>
+        /// 숲 (챕터 7 ✏️): 짙은 풀밭(얼룩·햇살 무늬) + 흙길 + 개울(물가 젖은 흙) → 수풀 잎·작은 버섯 → 나무다리 → 소품(Qwen):
+        /// 나무(oak0/oak1, 테두리는 조금 어둡게)·큰 고목(bigoak)·요정 샘·그루터기 가게·쓰러진 통나무. 위에서 아래로 그려 아래 것이 위를 덮는다.
+        /// </summary>
+        static Raster Forest(WorldMap m)
+        {
+            int w = WorldMap.W * T, h = WorldMap.H * T;
+            var R = new Raster(w, h);
+            var path = Mask(m, "=b");
+            var water = Mask(m, "wb");
+            var tall = Mask(m, ",");
+            var camp = Mask(m, ":FSMN");
+            Color32 g0 = H("#2F6E2A"), g1 = H("#4A8E34"), g2 = H("#6AAE48"), tallC = H("#2A6A26"), sun = H("#C8E070");
+            Color32 s0 = H("#9A7448"), s1 = H("#B88E5A"), sRim = H("#6E5030"), w0 = H("#5ABEE0"), w1 = H("#2A78B0"), foam = H("#E8FAFF");
+            for (int py = 0; py < h; py++)
+                for (int px = 0; px < w; px++)
+                {
+                    float n = Fbm(px, py, 81), fine = Hash(px, py, 82);
+                    float wob = (Noise(px / 14f, py / 14f, 83) - .5f) * 14;
+                    var c = n < .5f ? Lerp(g0, g1, n * 2) : Lerp(g1, g2, (n - .5f) * 2);
+                    c = Lerp(c, tallC, Smooth(.3f, .7f, Soft(tall, px + wob * 1.6f, py + wob * 1.6f)) * .45f);
+                    float beam = Fbm(px * .5f + py * .35f, py * .2f, 84);           // 나뭇잎 사이로 비치는 햇살 얼룩
+                    if (beam > .62f) c = Lerp(c, sun, Mathf.Min(.35f, (beam - .62f) * 2.2f));
+                    float cp = Soft(camp, px + wob * .5f, py - wob * .5f);           // 쉼터: 밝은 잔디밭
+                    c = Lerp(c, Lerp(H("#7ABE58"), H("#94CE64"), n), Smooth(.4f, .6f, cp) * .8f);
+                    c = Mul(c, .95f + fine * .1f);
+                    float pw = Soft(path, px + wob, py - wob);
+                    if (pw > .38f)
+                    {
+                        var dirt = Mul(Lerp(s0, s1, Fbm(px, py, 85)), .94f + fine * .12f);
+                        c = Lerp(c, Lerp(sRim, dirt, Smooth(.5f, .66f, pw)), Smooth(.40f, .56f, pw));
+                    }
+                    float ww = Soft(water, px - wob * .6f, py + wob * .6f);
+                    if (ww > .3f)
+                    {
+                        if (ww < .5f) c = Lerp(c, Mul(c, .7f), Smooth(.3f, .5f, ww));
+                        else
+                        {
+                            c = Lerp(w0, w1, Smooth(.5f, .9f, ww) * .7f + (Fbm(px, py, 86) - .5f) * .25f);
+                            float f = 1 - Mathf.Abs(ww - .56f) / .05f;
+                            if (f > 0) c = Lerp(c, foam, f * .8f);
+                            if (Hash(px / 2, py / 2, 87) > .992f) c = foam;            // 물 반짝임
+                        }
+                    }
+                    R.Blend(px, py, c);
+                }
+            var rnd = new System.Random(17);
+            float Rn() => (float)rnd.NextDouble();
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    float X = x * T, Y = y * T;
+                    if (ch == '.' || ch == ':')
+                        for (int i = 0; i < 3; i++) Tuft(R, X + Rn() * 40 + 4, Y + Rn() * 40 + 6, H("#24602A", 200), H("#7CC85A", 220));
+                    if (ch == ',')
+                        for (int i = 0; i < 18; i++)
+                        {
+                            float bx = X - 4 + Rn() * 56, by = Y + 10 + Rn() * 40, bh = 12 + Rn() * 12;
+                            R.Polygon(new[] { new Vector2(bx - 3, by), new Vector2(bx + Rn() * 6 - 3, by - bh), new Vector2(bx + 3, by) },
+                                      (px, py) => Lerp(H("#1E5420"), H("#7CC85A"), (by - py) / bh));
+                        }
+                    if (ch == '.' && Hash(x, y, 88) > .94f && !Prop(R, "mushrooms", X + 10 + Hash(x, y, 89) * 28, Y + 40))
+                        R.Circle(X + 24, Y + 34, 4, H("#D03030"));
+                    if (ch == ':' && Hash(x, y, 90) > .8f)
+                        Flower(R, X + 8 + Rn() * 32, Y + 10 + Rn() * 30, new[] { "#FFFFFF", "#FFD84A", "#FF8FB0", "#B9A2FF" }[rnd.Next(4)]);
+                }
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'b') Bridge(R, m, x, y);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char c = m.At(x, y);
+                    float X = x * T, Y = y * T;
+                    if (c == 'T')
+                    {
+                        bool border = x < 2 || y < 2 || x >= WorldMap.W - 2 || y >= WorldMap.H - 2;
+                        float jx = (Hash(x, y, 91) - .5f) * 10, jy = Hash(x, y, 92) * 6;
+                        R.Ellipse(X + T / 2f + 6 + jx, Y + T - 3 + jy, 22, 7, new Color32(0, 0, 0, 70));
+                        if (!Prop(R, Hash(x, y, 93) > .5f ? "oak0" : "oak1", X + T / 2f + jx, Y + T + 4 + jy)) Tree(R, x, y, border);
+                    }
+                    else if (c == 'L' && m.At(x - 1, y) != 'L')
+                    {
+                        bool pair = m.At(x + 1, y) == 'L';
+                        R.Ellipse(X + (pair ? T : T / 2f) + 4, Y + T - 6, pair ? 44 : 24, 7, new Color32(0, 0, 0, 70));
+                        if (!Prop(R, "log", X + (pair ? T : T / 2f), Y + T - 2)) R.Rect(X + 2, Y + 20, (pair ? 2 * T : T) - 4, 18, H("#6B4424"));
+                    }
+                    else if (c == 'K' && m.At(x - 1, y) != 'K' && m.At(x, y - 1) != 'K')       // 큰 고목: 3×3 의 왼쪽 위 칸에서 한 번
+                    {
+                        R.Ellipse(X + 1.5f * T + 8, Y + 3 * T - 4, 1.7f * T, 14, new Color32(0, 0, 0, 90));
+                        if (!Prop(R, "bigoak", X + 1.5f * T, Y + 3 * T + 30)) { R.Rect(X + T, Y + T, T, 2 * T, H("#6B4424")); R.Circle(X + 1.5f * T, Y + T, 70, H("#2F6E2A")); }
+                    }
+                    else if (c == 'F') { R.Ellipse(X + 26, Y + 44, 22, 6, new Color32(0, 0, 0, 60)); if (!Prop(R, "fairyspring", X + T / 2f, Y + T + 2)) Fountain(R, X, Y, false); }
+                    else if (c == 'S') Sign(R, X, Y);
+                    else if (c == 'H') Painter.Chest(R, X, Y, false);
+                    else if (c == 'M') { R.Ellipse(X + 26, Y + 45, 26, 6, new Color32(0, 0, 0, 80)); if (!Prop(R, "stumpshop", X + T / 2f, Y + T + 2)) CandyShop(R, X, Y); }
                 }
             return R;
         }

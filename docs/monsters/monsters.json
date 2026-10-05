@@ -56,6 +56,12 @@
   ],
   "library_demon_king.png": [
    1
+  ],
+  "forest_mushroom_bee.png": [
+   2
+  ],
+  "forest_beetle_king.png": [
+   1
   ]
  },
  "monsters": [
@@ -200,7 +206,7 @@
    "slot": 1,
    "idea": "daughter_note_01",
    "sketch": "forest_tree.png",
-   "ingame": null,
+   "ingame": "나무 젤리",
    "desc": "나뭇가지가 자라는 느긋한 젤리. 머리에 새 둥지!"
   },
   {
@@ -212,7 +218,7 @@
    "slot": 2,
    "idea": "daughter_note_01",
    "sketch": "forest_bug.png",
-   "ingame": null,
+   "ingame": "벌레 젤리",
    "desc": "무당벌레 등껍질에 날개가 붕붕. 신나는 젤리."
   },
   {
@@ -558,6 +564,42 @@
    "sketch": null,
    "ingame": "악마 대장",
    "desc": "도서관을 점령한 악마들의 대장. 저주받은 마법책을 들고 있다. ✏️ (챕터 6 도서관 ⭐ 사용자 2026-10-05, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "forest_mushroom",
+   "name": "버섯 젤리",
+   "region": "숲",
+   "tier": "중간",
+   "sheet": "forest_mushroom_bee.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "버섯 젤리",
+   "desc": "빨간 점박이 버섯 모자를 쓴 졸린 젤리. 포자를 퐁퐁. ✏️ (챕터 7 숲 테스트 버전, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "forest_bee",
+   "name": "꿀벌 젤리",
+   "region": "숲",
+   "tier": "어려움",
+   "sheet": "forest_mushroom_bee.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "꿀벌 젤리",
+   "desc": "줄무늬 꿀벌 젤리. 붕붕 날다가 톡 쏘아요. ✏️ (챕터 7 숲 테스트 버전, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "forest_beetle",
+   "name": "장수풍뎅이 대장",
+   "region": "숲",
+   "tier": "보스",
+   "sheet": "forest_beetle_king.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "장수풍뎅이 대장",
+   "desc": "커다란 뿔과 단단한 등껍질, 도토리 왕관을 쓴 숲의 심술쟁이 대장. ✏️ (챕터 7 숲 테스트 버전, 모습·이름은 임시, Qwen)"
   }
  ]
 }

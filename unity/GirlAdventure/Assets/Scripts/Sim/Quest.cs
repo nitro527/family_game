@@ -152,7 +152,7 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
-        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16, 20 };
+        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16, 20, 23 };
         /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>
         static readonly string[][] QuickGear =
         {
@@ -162,6 +162,7 @@ namespace GirlAdventure.Sim
             new[] { "sun_wand", "sand_cape", "star_pendant", "bro_sword", "bro_shield" },
             new[] { "flame_wand", "lava_robe", "star_pendant", "flame_sword", "bro_shield", "lion_blade", "lion_shield" },
             new[] { "snow_wand", "fur_cape", "snow_pendant", "ice_sword", "bro_shield", "frost_blade", "lion_shield" },
+            new[] { "book_wand", "fur_cape", "snow_pendant", "ice_sword", "bro_shield", "frost_blade", "lion_shield", "sage_staff", "sage_robe" },
         };
 
         /// <summary>
@@ -178,6 +179,7 @@ namespace GirlAdventure.Sim
             if (chapter >= 4) p.Boss3Down = true;
             if (chapter >= 5) p.Boss4Down = true;
             if (chapter >= 6) p.Boss5Down = true;
+            if (chapter >= 7) p.Boss6Down = true;
             foreach (var id in QuickGear[chapter])
             {
                 if (!p.Gear.Contains(id)) p.Gear.Add(id);
@@ -193,7 +195,8 @@ namespace GirlAdventure.Sim
             else if (chapter == 3) StartChapter3(p);
             else if (chapter == 4) StartChapter4(p);
             else if (chapter == 5) StartChapter5(p);
-            else StartChapter6(p);
+            else if (chapter == 6) StartChapter6(p);
+            else StartChapter7(p);
             return p;
         }
 
@@ -221,6 +224,32 @@ namespace GirlAdventure.Sim
             p.RestoreAll();
             p.X = WorldMap.LibStart.x;
             p.Y = WorldMap.LibStart.y;
+        }
+
+        /// <summary>챕터 6 을 깬 뒤 챕터 7 (숲 ✏️)로: 넷이 함께 회복하고 숲 속 쉼터에서 출발.</summary>
+        public static void StartChapter7(PlayerState p)
+        {
+            TryJoinBrother(p);
+            p.Join("dad");
+            p.Join("mom");
+            p.Chapter = 7;
+            p.InVillage = false;
+            p.Underground = false;
+            p.RestoreAll();
+            p.X = WorldMap.ForStart.x;
+            p.Y = WorldMap.ForStart.y;
+        }
+
+        /// <summary>숲 개울 건너 숨은 보물상자 (챕터 7 ✏️ 탐험거리): 나뭇잎 왕관.</summary>
+        public const string ForChestId = "forest_chest", ForChestItem = "leaf_crown";
+
+        public static ChestResult OpenForestChest(PlayerState p, out string what)
+        {
+            what = GameData.ItemName(ForChestItem);
+            if (p.Opened.Contains(ForChestId)) return ChestResult.Empty;
+            p.Opened.Add(ForChestId);
+            if (!p.Gear.Contains(ForChestItem)) p.Gear.Add(ForChestItem);
+            return ChestResult.Got;
         }
 
         /// <summary>엄마(현자)가 합류했나 (챕터 6 도서관 마법진에서).</summary>

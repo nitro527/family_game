@@ -35,6 +35,9 @@ SCENES = {
     'snow': "a snowy land with snow-covered trees and soft snowfall.",
     'snow_boss': "the cave on the snowy mountain where the yeti lives, as in picture 1.",
 }
+# 숲 (챕터 7 ✏️): 참고 그림 없이 글로만 그림 (초원 참고로 그리면 초원을 그대로 다시 그림) — 2026-10-05
+#   python tools/qwen_gen.py "Wide battle background ... deep magical green forest ..." --w 1376 --h 768 --seed 3  → forest
+#   같은 방식 "heart of a deep dark forest at dusk, gigantic ancient hollow oak ... Pure landscape scenery only: absolutely no creatures" --seed 5 → forest_boss
 
 
 def main():

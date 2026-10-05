@@ -128,7 +128,7 @@ namespace GirlAdventure.View
         Sprite Backdrop(EnemyDef def)
         {
             bool cave = map.IsCaveLike;
-            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : map.Kind == MapKind.Library ? "library" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : cave ? "cave"
+            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : map.Kind == MapKind.Forest ? "forest" : map.Kind == MapKind.Library ? "library" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : cave ? "cave"
                         : map.Kind == MapKind.Desert ? "desert" : "meadow";
             if (!backdrops.TryGetValue(name, out var s))
             {
@@ -918,6 +918,13 @@ namespace GirlAdventure.View
             {
                 P.GuardDown = true;             // 보물상자를 열 수 있게 된다 (EndBattle → EnterField 가 지킴이 그림을 치우고 저장)
                 yield return Talk("guard_down");
+            }
+            else if (def == GameData.ForestBoss)
+            {
+                P.Boss7Down = true;
+                LeaveBattleStage();
+                yield return Chapter7ClearRoutine();
+                yield break;
             }
             else if (def == GameData.LibraryBoss)
             {

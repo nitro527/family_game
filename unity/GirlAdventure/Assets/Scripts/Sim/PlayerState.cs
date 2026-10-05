@@ -7,7 +7,7 @@ namespace GirlAdventure.Sim
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 16;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도, 12: 지하세계, 13: 파티(동료 목록), 14: 화산 보스, 15: 눈 산 보스, 16: 도서관 보스
+        public const int CurrentVersion = 17;       // 2: 챕터·아이템·연 상자, 3: 골드, 4: 도구 가방, 5: 장비, 6: 중간 보스, 7: 마을 안, 8: 몬스터 도감, 9: 동생 합류, 10: 사막 보스, 11: 스킬 숙련도, 12: 지하세계, 13: 파티(동료 목록), 14: 화산 보스, 15: 눈 산 보스, 16: 도서관 보스, 17: 숲 보스
         public int Version = CurrentVersion;
         public string Name;
         public int Lv, Exp, Hp, Mp, Candy, X, Y;
@@ -18,6 +18,7 @@ namespace GirlAdventure.Sim
         public bool Boss4Down;          // 버전 14: 화산 젤리 대장 (챕터 4)
         public bool Boss5Down;          // 버전 15: 예티 (챕터 5)
         public bool Boss6Down;          // 버전 16: 악마 대장 (챕터 6)
+        public bool Boss7Down;          // 버전 17: 장수풍뎅이 대장 (챕터 7)
         public int Chapter;
         public bool InVillage;          // 버전 7: 별빛 마을 안에서 저장 (X, Y 는 마을 좌표)
         public string[] Items, Opened;
@@ -62,6 +63,7 @@ namespace GirlAdventure.Sim
         public bool Boss4Down;              // 화산 젤리 대장 (챕터 4, ✏️) — 화산이 잠잠해진다
         public bool Boss5Down;              // 예티 (챕터 5, 서진이 도감 그림) — 눈보라가 그친다
         public bool Boss6Down;              // 악마 대장 (챕터 6 ✏️) — 도서관이 원래대로 돌아온다
+        public bool Boss7Down;              // 장수풍뎅이 대장 (챕터 7 ✏️) — 숲이 다시 초록빛
         public bool Boss3Down;              // 카우보이 젤리 대장 (챕터 3) — 사막에 물이 돌아온다
         public int Chapter = 1;
         public bool InVillage;              // 별빛 마을 맵 안 (챕터 1)
@@ -219,7 +221,7 @@ namespace GirlAdventure.Sim
 
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
-            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = Home >= 0 ? WorldMap.HomeDoorFront(Home).x : X, Y = Home >= 0 ? WorldMap.HomeDoorFront(Home).y : Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, Boss3Down = Boss3Down, Boss4Down = Boss4Down, Boss5Down = Boss5Down, Boss6Down = Boss6Down, SavedAt = savedAt,
+            Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = Home >= 0 ? WorldMap.HomeDoorFront(Home).x : X, Y = Home >= 0 ? WorldMap.HomeDoorFront(Home).y : Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, Boss3Down = Boss3Down, Boss4Down = Boss4Down, Boss5Down = Boss5Down, Boss6Down = Boss6Down, Boss7Down = Boss7Down, SavedAt = savedAt,
             Chapter = Chapter, InVillage = InVillage, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
             Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),
@@ -267,6 +269,7 @@ namespace GirlAdventure.Sim
             p.Boss4Down = s.Boss4Down;          // 옛 세이브(버전 13 이하)는 false
             p.Boss5Down = s.Boss5Down;          // 옛 세이브(버전 14 이하)는 false
             p.Boss6Down = s.Boss6Down;          // 옛 세이브(버전 15 이하)는 false
+            p.Boss7Down = s.Boss7Down;          // 옛 세이브(버전 16 이하)는 false
             // 옛 세이브(버전 5 이하)에서 이미 열쇠를 얻었으면 지킴이는 쓰러진 것으로 친다
             p.GuardDown = s.GuardDown || (s.Items != null && System.Array.IndexOf(s.Items, Quest.KeyItem) >= 0);
             p.Chapter = Math.Max(1, Math.Min(WorldMap.LastChapter, s.Chapter));   // 옛 세이브(버전 1)는 0 → 챕터 1

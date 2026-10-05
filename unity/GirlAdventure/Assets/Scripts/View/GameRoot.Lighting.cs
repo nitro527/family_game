@@ -79,6 +79,7 @@ namespace GirlAdventure.View
                 vignette.enabled = Current == Mode.Field;
                 vignette.color = map.IsCaveLike ? new Color(0, 0, 0, .6f)
                                : map.Kind == MapKind.Desert || map.Kind == MapKind.Oasis ? new Color(.35f, .2f, .05f, .3f)      // 사막: 따뜻한 햇볕 테두리
+                               : map.Kind == MapKind.Forest ? (P.Boss7Down ? new Color(.3f, .32f, .08f, .2f) : new Color(.04f, .2f, .1f, .38f))   // 숲: 시든 숲의 짙은 초록 그늘 → 이기면 햇살
                                : map.Kind == MapKind.Library ? (P.Boss6Down ? new Color(.4f, .3f, .12f, .3f) : new Color(.3f, .08f, .45f, .5f))   // 도서관: 악마 기운 보랏빛 → 이기면 따뜻한 등불빛
                                : map.Kind == MapKind.Lava ? new Color(.45f, .06f, .02f, .5f)
                                : map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown ? new Color(.45f, .62f, .85f, .35f)                                      // 눈 덮인 땅: 차가운 푸른 테두리

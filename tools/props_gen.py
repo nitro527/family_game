@@ -75,6 +75,13 @@ PROPS = [
     ("cavespring", "One small round rock pool in a cave with glowing light blue magical healing water and tiny sparkles rising.", 60, 2),
     ("letter", "One rolled-up cream paper letter scroll tied with a red ribbon bow, with a few tiny sparkles, lying on the ground.", 40, 2),
     ("gate_open", "One OPEN fortress gate front view: a mossy stone archway with two heavy wooden doors swung open to the sides, a dark passage inside, iron bars pulled up.", 48, 2),
+    ("oak0", "One big round leafy forest tree with a thick brown trunk and a lush dark green crown, a few highlights on the leaves.", 66, 2),
+    ("oak1", "One tall leafy forest tree with a twisted brown trunk, a rounded bright green crown and a few tiny red berries.", 66, 3),
+    ("bigoak", "One gigantic ancient hollow oak tree with a huge gnarled trunk, a big dark hollow opening at the bottom center of the trunk like a cave entrance, thick roots and a wide dark green crown with acorns.", 170, 2),
+    ("mushrooms", "One small cluster of three cute red mushrooms with white spots, on a tiny patch of moss.", 40, 2),
+    ("stumpshop", "One tiny forest shop stall built on a big tree stump counter, a leaf canopy roof on two branch poles, baskets of acorns, berries and little potion bottles on the counter.", 70, 2),
+    ("fairyspring", "One small round forest pond lined with mossy stones and ferns, glowing bright green-blue magical healing water with tiny fairy sparkles rising.", 64, 2),
+    ("log", "One fallen mossy log lying sideways with a few small mushrooms and ferns growing on it.", 90, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 
