@@ -34,6 +34,7 @@ namespace GirlAdventure.View
                 if (t == null || !t.isReadable) { Debug.LogWarning($"[Tiles] Resources/Tiles/{n} 없음 또는 읽기 불가"); return null; }
                 return new TileImage(t);
             }
+            MapPainter.LoadProps();
             var f = new FieldTiles { Sheet = L("pipo_sheet"), Grass = L("pipo_at_kusa"), Path = L("pipo_at_miti"), Water = L("pipo_at_umi"), Forest = L("pipo_at_mori"),
                                      Sand = L("pipo_at_sabaku"), Rock = L("pipo_at_yama2"), GrayRock = L("pipo_at_yama3") };
             return f.Sheet != null && f.Grass != null && f.Path != null && f.Water != null && f.Forest != null ? f : null;

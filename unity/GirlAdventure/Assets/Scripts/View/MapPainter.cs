@@ -16,7 +16,27 @@ namespace GirlAdventure.View
         const int T = Painter.Tile;
         static readonly Color32 Ink = Painter.Ink;
 
-        public static Texture2D Render(WorldMap m) => RenderRaster(m).ToTexture();
+        public static Texture2D Render(WorldMap m) { if (Props == null) LoadProps(); return RenderRaster(m).ToTexture(); }
+
+        /// <summary>맵 소품 그림 (Resources/Tiles/Props, Qwen 그림을 tools/make_prop.py 로 줄인 것). 이름 → 픽셀. 메인 스레드에서 불러 둔다.</summary>
+        public static Dictionary<string, TileImage> Props;
+
+        public static void LoadProps()
+        {
+            var d = new Dictionary<string, TileImage>();
+            foreach (var t in Resources.LoadAll<Texture2D>("Tiles/Props"))
+                if (t.isReadable) d[t.name] = new TileImage(t);
+                else Debug.LogWarning($"[Props] {t.name} 읽기 불가");
+            Props = d;
+        }
+
+        /// <summary>소품 그림이 있으면 (cx, bottom) 아래 가운데에 찍고 true. 없으면 false → 예전 코드 그림.</summary>
+        static bool Prop(Raster R, string name, float cx, float bottom)
+        {
+            if (Props == null || !Props.TryGetValue(name, out var img)) return false;
+            R.Stamp(img, 0, 0, img.W, img.H, Mathf.RoundToInt(cx - img.W / 2f), Mathf.RoundToInt(bottom - img.H));
+            return true;
+        }
 
         /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
@@ -344,6 +364,7 @@ namespace GirlAdventure.View
             float w = 3 * T, h = 2 * T;
             Color32 wall = stone ? (v % 2 == 0 ? H("#8E8A92") : H("#7E7A84")) : v % 2 == 0 ? H("#E2B47A") : H("#D9A06A"), wallD = Mul(wall, .82f), wallL = Mul(wall, 1.1f);   // stone = 온천 마을 돌집
             R.Ellipse(X + w / 2 + 8, Y + h - 2, w / 2 + 6, 10, new Color32(0, 0, 0, 70));          // 그림자
+            if (Prop(R, (stone ? "stone" : "adobe") + v % 2, X + w / 2, Y + h + 4)) return;
             R.Rect(X + 4, Y + 10, w - 8, h - 12, Ink);
             R.Rect(X + 7, Y + 13, w - 14, h - 18, wall);
             R.Rect(X + 7, Y + 13, w - 14, 10, wallL);                                               // 지붕 턱
@@ -370,6 +391,7 @@ namespace GirlAdventure.View
             float cx = X + T, bot = Y + 2 * T - 6;
             Color32 a = v % 2 == 0 ? H("#D8574A") : H("#3F86C8"), b = H("#F6EBD2");
             R.Ellipse(cx + 8, bot, 46, 9, new Color32(0, 0, 0, 70));
+            if (Prop(R, "tent" + v % 2, cx, bot + 6)) return;
             var pts = new[] { new Vector2(cx, Y + 8), new Vector2(cx + 44, bot - 4), new Vector2(cx - 44, bot - 4) };
             R.Polygon(pts, (x, y) => ((int)((x - cx + 60) / 11) % 2 == 0) ? a : b, Ink, 4);
             R.Polygon(new[] { new Vector2(cx, Y + 46), new Vector2(cx + 13, bot - 4), new Vector2(cx - 13, bot - 4) }, H("#3A2418"));
@@ -381,6 +403,7 @@ namespace GirlAdventure.View
         static void DryWell(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 42, 24, 7, new Color32(0, 0, 0, 70));
+            if (Prop(R, "drywell", X + 24, Y + 46)) return;
             R.Ellipse(X + 24, Y + 32, 21, 12, H("#7A6A58"));
             R.Ellipse(X + 24, Y + 30, 16, 8, H("#C9A66A"));                                        // 모래로 찬 속
             R.Line(X + 16, Y + 29, X + 24, Y + 32, 1.5f, H("#8A6A44"));                           // 금
@@ -599,6 +622,7 @@ namespace GirlAdventure.View
             float w = 3 * T, h = 2 * T;
             Color32 log = v % 2 == 0 ? H("#9A6238") : H("#8A5530"), logD = Mul(log, .75f), logL = Mul(log, 1.15f);
             R.Ellipse(X + w / 2 + 8, Y + h - 2, w / 2 + 6, 10, new Color32(60, 80, 130, 70));
+            if (Prop(R, "cabin" + v % 2, X + w / 2, Y + h + 4)) return;
             R.Rect(X + 6, Y + 28, w - 12, h - 30, Ink);
             R.Rect(X + 8, Y + 30, w - 16, h - 34, log);
             for (float ly = Y + 34; ly < Y + h - 6; ly += 10)                                       // 통나무 줄
@@ -633,6 +657,7 @@ namespace GirlAdventure.View
         static void FurShop(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(60, 80, 130, 80));
+            if (Prop(R, "furshop", X + 24, Y + 47)) return;
             R.Rect(X + 3, Y - 8, 5, 50, H("#6B4424"));
             R.Rect(X + 40, Y - 8, 5, 50, H("#6B4424"));
             R.Polygon(new[] { new Vector2(X - 4, Y - 6), new Vector2(X + 52, Y - 6), new Vector2(X + 48, Y + 8), new Vector2(X, Y + 8) },
@@ -681,6 +706,7 @@ namespace GirlAdventure.View
         /// <summary>모닥불 (눈 덮인 땅의 회복 자리): 눈 녹은 자리 + 돌 + 장작 + 불꽃.</summary>
         static void Campfire(Raster R, float X, float Y)
         {
+            if (Prop(R, "campfire", X + 24, Y + 44)) return;
             R.Ellipse(X + 24, Y + 36, 22, 9, H("#A8B4C4"));
             for (int i = 0; i < 7; i++)
             {
@@ -698,6 +724,7 @@ namespace GirlAdventure.View
         static void Snowman(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 44, 16, 5, new Color32(60, 80, 130, 60));
+            if (Prop(R, "snowman", X + 24, Y + 46)) return;
             R.Circle(X + 24, Y + 33, 13, Ink); R.Circle(X + 24, Y + 33, 11.5f, H("#FFFFFF"));
             R.Circle(X + 24, Y + 14, 9.5f, Ink); R.Circle(X + 24, Y + 14, 8, H("#FFFFFF"));
             R.Circle(X + 21, Y + 12, 1.6f, Ink); R.Circle(X + 27, Y + 12, 1.6f, Ink);
@@ -760,6 +787,7 @@ namespace GirlAdventure.View
         static void Forge(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 44, 24, 5, new Color32(0, 0, 0, 80));
+            if (Prop(R, "forge", X + 24, Y + 47)) return;
             R.Rect(X + 2, Y + 8, 26, 34, Ink);                                     // 화덕
             R.Rect(X + 4, Y + 10, 22, 30, H("#6E6A72"));
             R.Ellipse(X + 15, Y + 30, 7, 6, H("#FF7A2A"));
@@ -777,6 +805,7 @@ namespace GirlAdventure.View
         static void HotSpring(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 40, 24, 7, new Color32(0, 0, 0, 80));
+            if (Prop(R, "hotspring", X + 24, Y + 44)) return;
             R.Ellipse(X + 24, Y + 30, 22, 14, H("#6E6A72"));
             R.Ellipse(X + 24, Y + 29, 18, 10, H("#5FC8E8"));
             R.Ellipse(X + 20, Y + 27, 8, 3, H("#C8F4FF", 200));
@@ -1026,6 +1055,7 @@ namespace GirlAdventure.View
             var rc = roofs[roof % 3];
             float w = 3 * T, h = 2 * T;
             R.Ellipse(X + w / 2 + 6, Y + h - 2, w / 2 + 4, 10, new Color32(0, 0, 0, 70));          // 그림자
+            if (Prop(R, "house" + roof % 3, X + w / 2, Y + h + 4)) return;
             // 벽
             R.Rect(X + 6, Y + 30, w - 12, h - 32, H("#6B4A30"));
             R.Rect(X + 8, Y + 32, w - 16, h - 36, H("#F4E3C4"));
@@ -1068,6 +1098,7 @@ namespace GirlAdventure.View
         static void Well(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 42, 24, 7, new Color32(0, 0, 0, 70));
+            if (Prop(R, "well", X + 24, Y + 46)) return;
             R.Ellipse(X + 24, Y + 32, 21, 12, H("#6E6A78"));
             R.Ellipse(X + 24, Y + 30, 19, 10, H("#A8A4B4"));
             R.Ellipse(X + 24, Y + 29, 14, 6, H("#1E2A5A"));
@@ -1187,6 +1218,7 @@ namespace GirlAdventure.View
         static void Fountain(Raster R, float X, float Y, bool cave)
         {
             R.Ellipse(X + 26, Y + 38, 24, 9, new Color32(0, 0, 0, 70));
+            if (!cave && Prop(R, "fountain", X + 24, Y + 44)) return;
             if (cave)
             {
                 R.Ellipse(X + 24, Y + 30, 23, 15, H("#3A3346"));
@@ -1208,6 +1240,7 @@ namespace GirlAdventure.View
         static void Sign(Raster R, float X, float Y)
         {
             R.Ellipse(X + 27, Y + 44, 12, 4, new Color32(0, 0, 0, 60));
+            if (Prop(R, "sign", X + 24, Y + 46)) return;
             R.Rect(X + 21, Y + 18, 6, 26, H("#6B4020"));
             R.Rect(X + 4, Y + 4, 40, 24, H("#5A3418"));
             R.Rect(X + 6, Y + 6, 36, 20, H("#C9A064"));
@@ -1224,6 +1257,7 @@ namespace GirlAdventure.View
         {
             Color32 wood = H("#A8743F"), woodL = H("#C9955A"), woodD = H("#6B4424"), pink = H("#FF86BE"), cream = H("#FFF4E8");
             R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(0, 0, 0, 80));                                  // 발밑 그림자
+            if (Prop(R, "candyshop", X + 24, Y + 47)) return;
             R.Rect(X + 3, Y - 8, 5, 50, woodD);                                                          // 기둥
             R.Rect(X + 40, Y - 8, 5, 50, woodD);
             // 가게 아주머니 (계산대 뒤)
