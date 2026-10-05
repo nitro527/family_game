@@ -604,6 +604,9 @@ namespace GirlAdventure.View
         public void DebugSetUnderground(bool on) { P.Underground = on; ApplyMap(); bgm.Play(MapSong); RefreshQuestProps(); UpdatePlayerVisual(); }
         public void DebugSetBroAuto(bool on) => Settings.SetBroAuto(on);
         public void DebugSetAllyAuto(string id, bool on) => Settings.SetAllyAuto(id, on);
+        /// <summary>프로브용: 궁극기를 모두 배운 상태로 (스킬 Lv3) · 전투 중 궁극 게이지를 채운다.</summary>
+        public void DebugLearnUltimates() { foreach (var u in Ultimates.All) P.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses[1]; RefreshHud(); }
+        public void DebugFillGauges(int amount = 100) { if (battle == null) return; for (int w = -1; w < P.Companions.Count; w++) battle.AddGauge(w, amount); RefreshHud(); }
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
         public void DebugNearLibraryBoss() => DebugTeleport(WorldMap.LibBoss.x - 1, WorldMap.LibBoss.y, "right");

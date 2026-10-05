@@ -270,12 +270,12 @@ namespace GirlAdventure.View
             while (true)
             {
                 var known = new List<Cmd>();
-                foreach (var c in BattleSystem.Spells) if (BattleSystem.Knows(P, c)) known.Add(c);
+                foreach (var c in BattleSystem.Spells) if (BattleSystem.Knows(P, c) && (!Ultimates.IsUlt(c) || Ultimates.Knows(P, c))) known.Add(c);
                 var labels = new string[known.Count + 1];
                 for (int i = 0; i < known.Count; i++)
                 {
                     var s = GameData.Skill(known[i]);
-                    string mp = $"<size=15><color=#9AA3C7>MP {s.Mp}</color></size>";
+                    string mp = Ultimates.IsUlt(known[i]) ? $"<size=15><color=#F2C443>궁극 {battle.GaugeOf(-1)}%</color></size>" : $"<size=15><color=#9AA3C7>MP {s.Mp}</color></size>";
                     labels[i] = battle.CanUse(known[i]) ? $"{s.Name}{LvTag(known[i])} {mp}" : $"<color=#80808C>{s.Name}</color>{LvTag(known[i])} {mp}";
                 }
                 labels[known.Count] = "그만두기";
@@ -288,6 +288,7 @@ namespace GirlAdventure.View
                 if (battle.CanUse(pick)) { sfx.Play("select"); pickedSpell = pick; yield break; }
                 sfx.Play("miss");
                 bool fullHp = pick == Cmd.Heal && P.Mp >= GameData.Skill(pick).Mp;
+                if (Ultimates.IsUlt(pick)) { yield return Talk("ult_nogauge", ("skill", GameData.Skill(pick).Name)); continue; }
                 yield return Talk(fullHp ? "spell_noneed" : "spell_nomp", ("skill", GameData.Skill(pick).Name));
             }
         }

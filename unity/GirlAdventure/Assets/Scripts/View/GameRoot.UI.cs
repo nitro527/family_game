@@ -28,7 +28,8 @@ namespace GirlAdventure.View
         Image hudHpBar, hudMpBar;
         // 동생 지훈 HUD (합류한 뒤, 서진 창 오른쪽)
         // 동료 HUD (합류한 순서대로 서진 창 오른쪽에, 동료마다 하나)
-        class AllyHud { public GameObject win; public Text name, hp, mp; public Image hpBar, mpBar; }
+        class AllyHud { public GameObject win; public Text name, hp, mp; public Image hpBar, mpBar, ultBar; }
+        Image hudUltBar;    // 궁극 게이지 (Q-39): 전투 중, 궁극기를 배운 사람만
         readonly System.Collections.Generic.List<AllyHud> allyHuds = new System.Collections.Generic.List<AllyHud>();
         RectTransform hintBand;
         Text hintText;
@@ -60,6 +61,8 @@ namespace GirlAdventure.View
             var list = new System.Collections.Generic.List<Cmd>();
             foreach (var s in P.Companions[a].Def.Skills)
                 if (System.Enum.TryParse<Cmd>(s, out var c) && P.Lv >= GameData.Skill(c).Lv) list.Add(c);   // 아직 못 배운 기술(큰 번개 Lv14)은 숨김
+            var ult = Ultimates.UltOf(P, a);                         // 궁극기 (Q-39): 배운 뒤에만, 게이지가 안 차면 흐리게
+            if (ult != null && Ultimates.Knows(P, ult.Value)) list.Add(ult.Value);
             list.Add(Cmd.Run);
             return list.ToArray();
         }
@@ -120,6 +123,7 @@ namespace GirlAdventure.View
             hudHpBar = UIKit.Bar(t, "HPBar", 16, 60, 218, 8, new Color32(86, 212, 106, 255));
             hudMp = UIKit.Label(t, "MP", "", 16, 70, 230, 24, 18);
             hudMpBar = UIKit.Bar(t, "MPBar", 16, 94, 218, 8, new Color32(90, 168, 255, 255));
+            hudUltBar = UIKit.Bar(t, "UltBar", 16, 106, 218, 5, new Color32(242, 196, 67, 255));
             for (int i = 0; i < 3; i++)             // 동료 창 (최대 3명: 지훈·아빠·엄마)
             {
                 var h = new AllyHud { win = UIKit.Window(ui, "AllyHUD" + i, 272 + i * (AllyHudW + AllyHudGap), 12, AllyHudW, 118).gameObject };
@@ -129,6 +133,7 @@ namespace GirlAdventure.View
                 h.hpBar = UIKit.Bar(b, "HPBar", 14, 60, AllyHudW - 30, 8, new Color32(86, 212, 106, 255));
                 h.mp = UIKit.Label(b, "MP", "", 14, 70, AllyHudW - 20, 24, 18);
                 h.mpBar = UIKit.Bar(b, "MPBar", 14, 94, AllyHudW - 30, 8, new Color32(90, 168, 255, 255));
+                h.ultBar = UIKit.Bar(b, "UltBar", 14, 106, AllyHudW - 30, 5, new Color32(242, 196, 67, 255));
                 h.win.SetActive(false);
                 allyHuds.Add(h);
             }
@@ -142,6 +147,18 @@ namespace GirlAdventure.View
             hintLabel = band.gameObject;
         }
 
+        /// <summary>궁극 게이지 막대: 전투 중이고 궁극기를 배웠을 때만, 가득 차면 반짝 (Q-39).</summary>
+        void SetUltBar(Image bar, int who)
+        {
+            if (bar == null) return;
+            bool on = battle != null && Current == Mode.Battle && Ultimates.Learned(P, who);
+            bar.transform.parent.gameObject.SetActive(on);
+            if (!on) return;
+            float k = battle.GaugeOf(who) / (float)Ultimates.GaugeMax;
+            bar.fillAmount = k;
+            bar.color = k >= 1 ? Color.Lerp(new Color32(255, 226, 122, 255), Color.white, Mathf.PingPong(Time.time * 2, 1)) : new Color32(242, 196, 67, 255);
+        }
+
         void RefreshHud()
         {
             hudName.text = $"{P.Name} · 마법사 Lv {P.Lv}";
@@ -151,6 +168,7 @@ namespace GirlAdventure.View
             hudHpBar.fillAmount = P.Hp / (float)P.MaxHp;
             hudMpBar.fillAmount = P.Mp / (float)P.MaxMp;
             if (P.Hp <= 0) hudHp.text = "<color=#FF6060>HP 0 (쓰러짐)</color>";
+            SetUltBar(hudUltBar, -1);
             for (int i = 0; i < P.Companions.Count && i < allyHuds.Count; i++)
             {
                 var c = P.Companions[i];
@@ -161,6 +179,7 @@ namespace GirlAdventure.View
                 h.mp.text = $"MP {c.Mp}/{maxMp}";
                 h.hpBar.fillAmount = c.Hp / (float)maxHp;
                 h.mpBar.fillAmount = c.Mp / (float)Mathf.Max(1, maxMp);
+                SetUltBar(h.ultBar, i);
             }
         }
 
@@ -351,7 +370,10 @@ namespace GirlAdventure.View
                     int n = 0;
                     foreach (var id in Items.Owned(P)) n += P.Count(id);
                     return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{n}</color></size>";
-                case Cmd.Guard: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>가족 대신 막기</color></size>";
+                case Cmd.Guard: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>가족 대신 막기</color></size>";
+                case Cmd.UltStar: case Cmd.UltBolt: case Cmd.UltGuard: case Cmd.UltCure:
+                    int g = battle != null ? battle.GaugeOf(allyTurn) : 0;
+                    return $"<color=#F2C443>{GameData.Skill(c).Name}</color> <size=15><color={(g >= Ultimates.GaugeMax ? "#FFE27A" : "#9AA3C7")}>궁극 {g}%</color></size>";
                 case Cmd.BigBolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>모두 · MP {GameData.Skill(c).Mp}</color></size>";
                 case Cmd.Bolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>MP {GameData.Skill(c).Mp}</color></size>";
                 default: return GameData.Skill(c).Name + LvTag(c);

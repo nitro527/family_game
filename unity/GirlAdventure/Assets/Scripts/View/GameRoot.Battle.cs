@@ -419,8 +419,10 @@ namespace GirlAdventure.View
             sfx.Play("star");
             PoseAll("attack");
             yield return Talk(key == BattleSystem.ComboSisBro ? "combo" : "combo_" + key);
-            yield return SkillCutin("combo_" + key, BattleSystem.ComboName(key) + "!!");
-            var o = battle.ComboAct(key, target);
+            bool ult = battle.ComboUltReady(key) && battle.RollHalf();      // 모두 궁극기를 배웠으면 반 확률로 궁극 합동 공격 (Q-39)
+            if (ult) yield return Talk("combo_ult");
+            yield return SkillCutin((ult ? "ult_combo_" : "combo_") + key, (ult ? "궁극 " : "") + BattleSystem.ComboName(key) + "!!");
+            var o = battle.ComboAct(key, target, ult);
             if (o.Failed) { PoseAll("ready"); yield break; }
             for (int f = 0; f < battle.Foes.Count; f++)
             {
@@ -463,6 +465,12 @@ namespace GirlAdventure.View
             if (isAlly) AV(ally).pose = "victory"; else pose = "victory";
             if (isAlly) yield return TalkAlly(ally, "skill_up", ("skill", GameData.Skill(c).Name), ("lv", lv));
             else yield return Talk("skill_up", ("skill", GameData.Skill(c).Name), ("lv", lv));
+            foreach (var u in Ultimates.All)                          // 스킬 Lv3: 궁극기를 배운다 (Q-39)
+                if (u.basic == c && lv == Ultimates.LearnLevel)
+                {
+                    sfx.Play("lvup");
+                    yield return Talk("ult_learn", ("skill", GameData.Skill(c).Name), ("ult", GameData.Skill(u.ult).Name));
+                }
             if (isAlly) AV(ally).pose = "ready"; else pose = "ready";
         }
 
@@ -477,10 +485,11 @@ namespace GirlAdventure.View
             var v = AV(a);
             if (P.Companions[a].Id == Party.Brother) BroActCount++;
             AllyActCount++;
-            if (o.Cmd == Cmd.Guard)
+            if (o.Cmd == Cmd.Guard || o.Cmd == Cmd.UltGuard)
             {
                 GuardCount++;
-                yield return SkillCutin("guard", GameData.Skill(Cmd.Guard).Name + "!!", "chest", true);   // Q-33 아빠 대표 기술 ✏️ (한 전투에 한 번)
+                if (o.Cmd == Cmd.UltGuard) yield return SkillCutin("ult_guard", GameData.Skill(o.Cmd).Name + "!!", "chest");    // 궁극기: 늘
+                else yield return SkillCutin("guard", GameData.Skill(Cmd.Guard).Name + "!!", "chest", true);   // 기본: 한 전투에 한 번
                 v.pose = "guard";
                 sfx.Play("chest");
                 var at = Px(AllyX(a) + 30, AllyY(a) - 120);
@@ -490,15 +499,15 @@ namespace GirlAdventure.View
                     float ang = i / 12f * Mathf.PI * 2;
                     Spawn(starSprite, at + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 1.2f, Vector3.zero, .7f, .3f, new Color(1f, .9f, .5f), 200);
                 }
-                yield return TalkAlly(a, "guard");
+                yield return TalkAlly(a, o.Cmd == Cmd.UltGuard ? "ultguard" : "guard");
                 yield break;
             }
-            if (o.Cmd == Cmd.Cure)                 // 엄마의 빛 (챕터 6 ✏️): 장면 애니메이션 → 서 있는 사람마다 빛기둥 → 모두 회복
+            if (o.Cmd == Cmd.Cure || o.Cmd == Cmd.UltCure)   // 엄마의 빛 · 엄마의 큰 빛 (궁극기: 쓰러진 가족도 일으킨다)
             {
                 v.pose = "attack";
                 RefreshHud();
-                yield return TalkAlly(a, "cast", ("skill", GameData.Skill(Cmd.Cure).Name));
-                yield return SkillCutin("cure", GameData.Skill(Cmd.Cure).Name + "!!", "heal");
+                yield return TalkAlly(a, "cast", ("skill", GameData.Skill(o.Cmd).Name));
+                yield return SkillCutin(Ultimates.CutinKey(o.Cmd), GameData.Skill(o.Cmd).Name + "!!", "heal");
                 sfx.Play("heal");
                 for (int w = -1; w < P.Companions.Count; w++)
                     if (o.Heals != null && o.Heals[w + 1] > 0) StartCoroutine(HealPillar(w));
@@ -510,12 +519,12 @@ namespace GirlAdventure.View
                 v.pose = "ready";
                 yield break;
             }
-            if (o.Cmd == Cmd.BigBolt)
+            if (o.Cmd == Cmd.BigBolt || o.Cmd == Cmd.UltBolt)
             {
                 v.pose = "attack"; v.lunge = 1;
                 RefreshHud();
                 yield return TalkAlly(a, "bigbolt", ("skill", GameData.Skill(o.Cmd).Name));
-                yield return SkillCutin("bigbolt", GameData.Skill(o.Cmd).Name + "!!");                      // Q-33 지훈 대표 기술
+                yield return SkillCutin(Ultimates.CutinKey(o.Cmd), GameData.Skill(o.Cmd).Name + "!!");          // 기본 = 라이트 장면, 궁극 = 화려한 장면
                 for (int k = 0; k < battle.Foes.Count; k++)
                     if (o.Damages != null && o.Damages[k] > 0) yield return Lightning(k);
                 for (int k = 0; k < battle.Foes.Count; k++)
@@ -567,10 +576,11 @@ namespace GirlAdventure.View
                     yield return Talk("fire_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
                     break;
                 case Cmd.Star:
+                case Cmd.UltStar:                                  // 별빛 대폭풍 (궁극기): 화려한 장면, 같은 별 폭풍을 더 세게
                     pose = "cast";
                     RefreshHud();
-                    yield return Talk("star_cast");
-                    yield return SkillCutin("star", GameData.Skill(Cmd.Star).Name + "!!");
+                    yield return Talk(o.Cmd == Cmd.UltStar ? "ult_cast" : "star_cast", ("skill", GameData.Skill(o.Cmd).Name));
+                    yield return SkillCutin(Ultimates.CutinKey(o.Cmd), GameData.Skill(o.Cmd).Name + "!!");
                     sfx.Play("star");
                     yield return StarStorm();
                     for (int i = 0; i < battle.Foes.Count; i++)
@@ -795,6 +805,12 @@ namespace GirlAdventure.View
             {
                 if (e.Ally >= 0) yield return TalkAlly(e.Ally, "dodge");
                 else yield return Talk("dodge");
+                yield break;
+            }
+            if (e.Blocked)                                       // 황금 사자 방패 (궁극기)
+            {
+                sfx.Play("chest");
+                yield return Talk("ult_blocked");
                 yield break;
             }
             if (e.Ally >= 0)

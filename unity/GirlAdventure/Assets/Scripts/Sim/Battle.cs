@@ -38,7 +38,7 @@ namespace GirlAdventure.Sim
     /// Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).
     /// Spell 은 "주문" 목록을 여는 명령 (실제로 쓰는 것은 Star·Heal).
     /// </summary>
-    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt, Light, Cure }   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기), Light·Cure = 엄마 (빛의 화살·엄마의 빛, 챕터 6 ✏️)
+    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt, Light, Cure, UltStar, UltBolt, UltGuard, UltCure }   // Ult* = 궁극기 (Q-39, 스킬 Lv3 에 배우고 궁극 게이지로)   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기), Light·Cure = 엄마 (빛의 화살·엄마의 빛, 챕터 6 ✏️)
 
     public struct PlayerOutcome
     {
@@ -65,6 +65,7 @@ namespace GirlAdventure.Sim
         public bool OnBrother;  // 동생 지훈이 맞았다
         public int Ally;        // 맞은 동료 번호 (P.Companions, -1 = 서진)
         public bool Guarded;    // 지키는 동료가 대신 막았다 (피해 반)
+        public bool Blocked;    // 황금 사자 방패(궁극기)가 막았다 (피해 0)
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -90,7 +91,7 @@ namespace GirlAdventure.Sim
         public static int StarCost => GameData.Skill(Cmd.Star).Mp;
         public static int CandyHeal => GameData.Item(Shop.CandyId).Hp;
         /// <summary>"주문" 목록에 나오는 주문 (순서대로). 배우는 레벨은 skills.json 의 Lv.</summary>
-        public static readonly Cmd[] Spells = { Cmd.Star, Cmd.Heal };
+        public static readonly Cmd[] Spells = { Cmd.Star, Cmd.Heal, Cmd.UltStar };     // 별빛 대폭풍(궁극기)은 배운 뒤에만 목록에
 
         /// <summary>이 레벨에서 배운 주문인가.</summary>
         public static bool Knows(PlayerState p, Cmd c) => p.Lv >= GameData.Skill(c).Lv;
@@ -106,6 +107,7 @@ namespace GirlAdventure.Sim
             if (defs == null || defs.Count == 0 || defs.Count > MaxFoes) throw new ArgumentException("적은 1~3마리");
             P = p;
             foreach (var d in defs) Foes.Add(new Foe(d));
+            Gauge = new int[p.Companions.Count + 1];
             r = rng;
         }
 
@@ -136,6 +138,7 @@ namespace GirlAdventure.Sim
             switch (c)
             {
                 case Cmd.Star: return P.Mp >= StarCost;
+                case Cmd.UltStar: return Ultimates.Knows(P, c) && GaugeFull(-1);
                 case Cmd.Fire: return P.Mp >= GameData.Skill(c).Mp;
                 case Cmd.Heal: return Knows(P, c) && P.Mp >= GameData.Skill(c).Mp && HealWho() != -2;
                 case Cmd.Spell:
@@ -174,6 +177,13 @@ namespace GirlAdventure.Sim
         /// </summary>
         public PlayerOutcome Act(Cmd c, string item = null, int target = -1, int ally = -1)
         {
+            var o = ActCore(c, item, target, ally);
+            if (!o.Failed && c != Cmd.Run) { if (Ultimates.IsUlt(c)) Gauge[0] = 0; else AddGauge(-1, Ultimates.GaugeAct); }
+            return o;
+        }
+
+        PlayerOutcome ActCore(Cmd c, string item, int target, int ally)
+        {
             var o = new PlayerOutcome { Cmd = c, Target = -1, Ally = -1 };
             if (c == Cmd.Candy) item = Shop.CandyId;
             if (c == Cmd.Spell || !CanUse(c) || ((c == Cmd.Candy || c == Cmd.Item) && !Items.CanUse(P, item))) { o.Failed = true; return o; }
@@ -191,6 +201,7 @@ namespace GirlAdventure.Sim
                     o.Damage = o.Damages[o.Target] = Roll(s, power);
                     break;
                 case Cmd.Star:                  // 살아 있는 적 모두에게 (적마다 따로 굴림)
+                case Cmd.UltStar:               // 별빛 대폭풍 (궁극기 ✏️): 같은 방식, 훨씬 세게
                     o.Target = FirstAlive();
                     o.Damages = new int[Foes.Count];
                     for (int i = 0; i < Foes.Count; i++)
@@ -231,6 +242,15 @@ namespace GirlAdventure.Sim
         public (Cmd cmd, int target) AllyAuto(int a)
         {
             var m = P.Companions[a];
+            var ult = Ultimates.UltOf(P, a);                        // 궁극기가 준비되면 (Q-39 ✏️ 규칙)
+            if (ult != null && MemberCanUse(a, ult.Value))
+            {
+                bool hurt = false, down = false;
+                foreach (int w in P.Members()) { if (P.MemberDown(w)) down = true; else if (P.MemberHp(w) * 2 <= P.MemberMaxHp(w)) hurt = true; }
+                var u = ult.Value;
+                if ((u == Cmd.UltBolt && (Boss || AliveCount > 1)) || (u == Cmd.UltGuard && (Boss || hurt)) || (u == Cmd.UltCure && (down || hurt)))
+                    return (u, WeakestAlive());
+            }
             if (m.Id == Sim.Party.Brother) return BroAuto();
             if (MemberCanUse(a, Cmd.Cure))          // 엄마: 누가 HP 절반 이하면 엄마의 빛 (모두 회복)
                 foreach (int w in P.Members())
@@ -326,10 +346,13 @@ namespace GirlAdventure.Sim
             return null;
         }
 
-        /// <summary>협동 공격 실행. 누나+동생 = Combo (예전 그대로). 빗나가지 않는다.</summary>
-        public PlayerOutcome ComboAct(string key, int target = -1)
+        /// <summary>궁극 합동 공격을 할 수 있나: 구성원이 모두 자기 궁극기를 배웠다.</summary>
+        public bool ComboUltReady(string key) => Array.TrueForAll(ComboMembers(key), w => w >= -1 && Ultimates.Learned(P, w));
+
+        /// <summary>협동 공격 실행. 누나+동생 = Combo (예전 그대로). 빗나가지 않는다. ult = 궁극 합동 공격 (피해 1.6배).</summary>
+        public PlayerOutcome ComboAct(string key, int target = -1, bool ult = false)
         {
-            if (key == ComboSisBro) return Combo(target);
+            if (key == ComboSisBro && !ult) return Combo(target);
             var def = ComboInfo(key);
             var o = new PlayerOutcome { Cmd = Cmd.Slash, Ally = -1, Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : WeakestAlive() };
             var m = ComboMembers(key);
@@ -343,6 +366,7 @@ namespace GirlAdventure.Sim
                     if (!Foes[k].Down) o.Damages[k] = atk * def.Mul12 / 12 + r.Next(0, 3 + m.Length * 2);
             }
             else o.Damages[o.Target] = atk + r.Next(0, 6);
+            if (ult) for (int k = 0; k < Foes.Count; k++) o.Damages[k] = o.Damages[k] * 8 / 5;
             o.Damage = o.Damages[o.Target];
             for (int k = 0; k < Foes.Count; k++) Foes[k].Hp = Math.Max(0, Foes[k].Hp - o.Damages[k]);
             return o;
@@ -370,6 +394,7 @@ namespace GirlAdventure.Sim
         public bool MemberCanUse(int i, Cmd c)
         {
             if (AllyDown(i)) return false;
+            if (Ultimates.IsUlt(c)) return Ultimates.UltOf(P, i) == c && Ultimates.Knows(P, c) && GaugeFull(i);
             var m = P.Companions[i];
             if (c == Cmd.Cure && HealReceivers().Count == 0) return false;     // 엄마의 빛: 다친 사람이 없으면 안 쓴다
             return Sim.Party.Knows(m.Def, c) && P.Lv >= GameData.Skill(c).Lv && m.Mp >= GameData.Skill(c).Mp;   // Lv = 배우는 레벨 (큰 번개 Lv14)
@@ -382,10 +407,27 @@ namespace GirlAdventure.Sim
         public int Guarding { get; private set; } = -1;
 
         /// <summary>새 차례 (서진 명령 전에 부른다): 지키기를 푼다.</summary>
-        public void NewRound() => Guarding = -1;
+        public void NewRound() { Guarding = -1; Barrier = false; }
+
+        // ---- 궁극 게이지 (Q-39): 사람마다 (-1 서진 → [0], 동료 i → [i+1]), 전투마다 0 에서
+        public readonly int[] Gauge;
+        public int GaugeOf(int who) => who + 1 >= 0 && who + 1 < Gauge.Length ? Gauge[who + 1] : 0;
+        public bool GaugeFull(int who) => GaugeOf(who) >= Ultimates.GaugeMax;
+        public void AddGauge(int who, int n) { if (who + 1 >= 0 && who + 1 < Gauge.Length) Gauge[who + 1] = Math.Min(Ultimates.GaugeMax, Gauge[who + 1] + n); }
+        /// <summary>황금 사자 방패(궁극기): 이번 차례 적 공격을 모두 막는다.</summary>
+        public bool Barrier { get; private set; }
+        /// <summary>반 확률 (궁극 합동 공격).</summary>
+        public bool RollHalf() => r.NextDouble() < .5;
 
         /// <summary>동료 i 의 공격 기술 (한 마리, 기술의 빗나감·위력·스킬 레벨은 서진 주문과 같은 규칙).</summary>
         public PlayerOutcome MemberAct(int i, Cmd c, int target = -1)
+        {
+            var o = MemberActCore(i, c, target);
+            if (!o.Failed) { if (Ultimates.IsUlt(c)) Gauge[i + 1] = 0; else AddGauge(i, Ultimates.GaugeAct); }
+            return o;
+        }
+
+        PlayerOutcome MemberActCore(int i, Cmd c, int target)
         {
             var o = new PlayerOutcome { Cmd = c, Target = -1 };
             if (!MemberCanUse(i, c)) { o.Failed = true; return o; }
@@ -393,8 +435,17 @@ namespace GirlAdventure.Sim
             var s = GameData.Skill(c);
             m.Mp -= s.Mp;
             if (c == Cmd.Guard) { Guarding = i; return o; }
+            if (c == Cmd.UltGuard) { Guarding = i; Barrier = true; return o; }      // 황금 사자 방패: 이번 차례 적 공격을 모두 막는다
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
+            if (c == Cmd.UltCure)                   // 엄마의 큰 빛 (궁극기 ✏️): 모두 가득 회복, 쓰러진 가족도 HP 절반으로 일으킨다
+            {
+                o.Heals = new int[P.Companions.Count + 1];
+                foreach (int w in P.Members())
+                    o.Heals[w + 1] = P.Refill(w, P.MemberDown(w) ? P.MemberMaxHp(w) / 2 : P.MemberMaxHp(w), 0).hp;
+                foreach (var h in o.Heals) o.Heal += h;
+                return o;
+            }
             if (c == Cmd.Cure)                      // 엄마의 빛 (챕터 6 ✏️): 서 있는 사람 모두 HP 회복 (쓰러진 사람은 못 깨운다)
             {
                 o.Heals = new int[P.Companions.Count + 1];
@@ -403,7 +454,7 @@ namespace GirlAdventure.Sim
                 foreach (var h in o.Heals) o.Heal += h;
                 return o;
             }
-            if (c == Cmd.BigBolt)                   // 큰 번개 (PLAN 62): 살아 있는 적 모두에게 (적마다 따로 굴림, 잘 피하는 적은 피할 수 있다)
+            if (c == Cmd.BigBolt || c == Cmd.UltBolt)  // 큰 번개 (PLAN 62) · 천둥 대번개 (궁극기 ✏️): 살아 있는 적 모두에게 (적마다 따로 굴림, 잘 피하는 적은 피할 수 있다)
             {
                 o.Target = FirstAlive();
                 o.Damages = new int[Foes.Count];
@@ -443,6 +494,8 @@ namespace GirlAdventure.Sim
             }
             o.OnBrother = o.Ally >= 0 && P.Companions[o.Ally].Id == Sim.Party.Brother;
             if (r.NextDouble() < DodgeRate) { o.Dodged = true; return o; }
+            if (Barrier) { o.Blocked = true; o.Damage = 0; return o; }
+            AddGauge(o.Ally, Ultimates.GaugeHit);                  // 맞으면 궁극 게이지가 찬다
             if (o.Ally >= 0)
             {
                 var m = P.Companions[o.Ally];

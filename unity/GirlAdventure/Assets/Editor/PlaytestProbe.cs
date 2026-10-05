@@ -60,8 +60,9 @@ namespace GirlAdventure.EditorTools
             }
             G.DebugGroupBattle(3, 1);
             yield return (Func<bool>)(() => G.CommandOpen);
+            G.DebugFillGauges(60);                     // 궁극 게이지 막대 (Q-39): 60% 차 있는 모습
             yield return .6f;
-            Shot("battle_group3");
+            Shot("battle_group3_gauge");
             G.DebugBackToField();
             yield return .5f;
         }

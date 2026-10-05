@@ -4,7 +4,8 @@ B: 넓은 화면으로 기술이 쏟아지는 장면 (<이름>_b_start.png — �
 Wan 2.2 14B (wan_gen.py --big), 576×752, 16fps 3초 → 각 30장: <이름>_1…30.png (A), <이름>_b_1…30.png (B).
 게임은 A → 번쩍(시점 전환) → B → 기술 이름 (GameRoot.SkillCutin). 그다음 python tools/prepare_cutins.py
 
-  python tools/cutins_video.py            # 모두
+  python tools/cutins_video.py            # 기본 기술 (라이트) 모두 → <이름>_…
+  python tools/cutins_video.py --ult      # 궁극기 (화려) 모두 → ult_<이름>_…
   python tools/cutins_video.py star cure  # 그것만
   python tools/cutins_video.py star --b   # B 장면만 다시
 """
@@ -19,7 +20,7 @@ B_PIC = ("Anime key visual of a spectacular special move effect for a children's
          "Wide dramatic shot: {0} Strong sense of speed and power. Scenery and magic only: no people, no characters, no monsters, no text.")
 
 WHO2 = "{0} leap forward together with a brave shout and raise their weapons at the same time"
-# 이름: (A 동작, 사람 수, B 그림, B 동작)
+# 궁극기 (ult_<이름>, 사용자 "지금 만든 건 궁극기용"): 이름: (A 동작, 사람 수, B 그림, B 동작)
 CUTS = {
     'star': ("The little girl wizard swings her pink star wand in a big fast circle over her head and then thrusts it up to the sky; a huge swirl of magic sparkles spins around her and the star on the wand flares brighter and brighter with golden light. Her purple cape and black pigtails whip in a strong magic wind.", 1,
              "a giant swirling vortex of stars opens in a deep blue magical night sky and hundreds of glowing golden and pink shooting stars rain down toward a grassy battlefield below, long sparkle trails, glowing magic circles in the sky.",
@@ -69,6 +70,61 @@ CUTS = {
 }
 
 
+STYLE_LIGHT = "Single continuous shot with no cuts, cute anime action, bright cartoon with clean outlines, gentle and light. "
+STYLE_LIGHT_B = "Single continuous shot with no cuts, light anime magic effect, bright cartoon, simple and clean, no people. "
+B_PIC_LIGHT = ("Anime illustration of a small magic effect for a children's fantasy RPG, bright cheerful cartoon style with clean outlines. "
+               "Medium shot: {0} Simple and light, not too flashy. Scenery and magic only: no people, no characters, no monsters, no text.")
+SMALL2 = "{0} smile at each other, nod and raise their weapons together; a few small sparkles twinkle around them"
+# 기본 기술 (라이트, 사용자 "기본 스킬 이펙트는 라이트하게, 애니메이션은 다 만들어"): 같은 얼굴 시작 그림, 짧고 가벼운 동작 + 작은 효과
+LIGHT = {
+    'star': ("The little girl wizard smiles and gives her pink star wand a quick little flick; a short trail of sparkles follows the wand tip.", 1,
+             "a handful of small golden stars falling gently from a starry night sky onto a grassy field.",
+             "A handful of small golden stars fall gently from the sky and land on the grass with little twinkles."),
+    'bigbolt': ("The little boy hero points his small sword forward with a short brave shout; a few little yellow sparks crackle on the blade.", 1,
+                "a single bright yellow lightning bolt striking down from a small dark cloud onto a rocky field.",
+                "A single yellow lightning bolt flashes down from the small cloud and sparks on the ground."),
+    'guard': ("The kind dad knight raises his lion crest shield in front of him with a calm smile; the lion emblem glows softly.", 1,
+              "a softly glowing golden shield of light with a lion emblem standing on a grassy field.",
+              "The golden shield of light glows a little brighter and a soft ring of light ripples outward once."),
+    'cure': ("The young mom sage raises her crescent moon staff gently with a warm smile; a few golden lights float up around her.", 1,
+             "a soft golden ray of healing light shining down onto a small flower meadow, a few hearts floating.",
+             "A soft golden ray of light shines down and a few little hearts float slowly upward."),
+    'combo_sisbro': (SMALL2.format("The little girl wizard and her little brother"), 2,
+                     "a single pink star-shaped slash of light across a field.",
+                     "A pink star-shaped slash of light sweeps across once and sparkles fade."),
+    'combo_sisdad': (SMALL2.format("The dad knight and his daughter"), 2,
+                     "a few golden stars falling from a glowing lion emblem in the sky over a field.",
+                     "A few golden stars fall from the lion emblem and twinkle on the grass."),
+    'combo_brodad': (SMALL2.format("The little boy and the dad knight"), 2,
+                     "a small X-shaped flash of yellow light over a field.",
+                     "A small X-shaped flash of yellow light appears and fades with sparks."),
+    'combo_sismom': (SMALL2.format("The little girl wizard and the mom sage"), 2,
+                     "a crescent moon and a few stars shining softly over a field at night.",
+                     "The crescent moon glows and a few stars drift down softly."),
+    'combo_bromom': (SMALL2.format("The mom sage and her son"), 2,
+                     "a glowing golden sword of light standing in a field.",
+                     "The golden sword of light glows brighter once and sparkles rise from it."),
+    'combo_dadmom': (SMALL2.format("The dad knight and the mom sage"), 2,
+                     "a small golden lion of light and a silver crescent moon side by side over a field.",
+                     "The small golden lion of light shakes its mane and the moon glows softly."),
+    'combo_sisbrodad': (SMALL2.format("The little girl wizard, the little boy hero and the dad knight"), 3,
+                        "three small lights, pink, yellow and gold, flying together over a field.",
+                        "Three small lights in pink, yellow and gold fly together across the field and twinkle."),
+    'combo_sisbromom': (SMALL2.format("The mom sage, the little girl wizard and the little boy hero"), 3,
+                        "a few small colorful sparkles like tiny fireworks over a field at dusk.",
+                        "A few small colorful sparkles pop like tiny fireworks and fade."),
+    'combo_sisdadmom': (SMALL2.format("The dad knight, the mom sage and their daughter"), 3,
+                        "a small glowing shield of light with a star and a moon over a field.",
+                        "The small shield of light glows and a few stars twinkle down."),
+    'combo_brodadmom': (SMALL2.format("The dad knight, the mom sage and their son"), 3,
+                        "a small lion made of yellow light standing on a field under the moon.",
+                        "The small yellow light lion gives a little roar and sparks flicker."),
+    'combo_family': (SMALL2.format("The whole family of four"), 4,
+                     "a small rainbow of stars, sparkles and hearts over a field.",
+                     "A small rainbow of stars, sparkles and hearts glows and gently fades."),
+}
+
+
 def run(start, prompt, prefix, here):
     tmp = os.path.join(CUT, '_tmp_' + prefix)
     subprocess.run([sys.executable, os.path.join(here, 'wan_gen.py'), start, prompt, tmp, '--big', '--w', '576', '--h', '752', '--length', '49', '--seed', '11'], check=True)
@@ -81,20 +137,25 @@ def run(start, prompt, prefix, here):
 
 
 def main():
+    """--ult = 궁극기(화려, ult_<이름>), 기본은 라이트 (<이름>). --b = B 장면만 다시."""
     args = sys.argv[1:]
     only_b = '--b' in args
+    ult = '--ult' in args
     only = [a for a in args if not a.startswith('--')]
     here = os.path.dirname(os.path.abspath(__file__))
-    for name, (a_motion, n, b_pic, b_motion) in CUTS.items():
+    table, pre = (CUTS, 'ult_') if ult else (LIGHT, '')
+    sty, sty_b, pic, end = (STYLE, STYLE_B, B_PIC, END_A) if ult else (STYLE_LIGHT, STYLE_LIGHT_B, B_PIC_LIGHT, " Eyes open with clear pupils.")
+    for name, (a_motion, n, b_pic, b_motion) in table.items():
         if only and name not in only:
             continue
+        key = pre + name
         if not only_b:
-            run(os.path.join(CUT, f'{name}_start.png'), STYLE + a_motion + END_A.format(s='s' if n > 1 else ''), name, here)
-        b_start = os.path.join(CUT, f'{name}_b_start.png')
+            run(os.path.join(CUT, f'{key}_start.png'), sty + a_motion + end.format(s='s' if n > 1 else ''), key, here)
+        b_start = os.path.join(CUT, f'{key}_b_start.png')
         if not os.path.exists(b_start):
-            subprocess.run([sys.executable, os.path.join(here, 'qwen_gen.py'), B_PIC.format(b_pic), '--w', '896', '--h', '1152', '-o', b_start, '--seed', '21'], check=True)
-        run(b_start, STYLE_B + b_motion, name + '_b', here)
-        print(name, 'done', flush=True)
+            subprocess.run([sys.executable, os.path.join(here, 'qwen_gen.py'), pic.format(b_pic), '--w', '896', '--h', '1152', '-o', b_start, '--seed', '21'], check=True)
+        run(b_start, sty_b + b_motion, key + '_b', here)
+        print(key, 'done', flush=True)
 
 
 if __name__ == '__main__':

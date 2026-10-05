@@ -479,6 +479,7 @@ namespace GirlAdventure.EditorTools
             ComboPairTests();
             MomTests();
             FamilyComboTests();
+            UltimateTests();
             LibraryTests();
             PartyTests();
             LavaTests();
@@ -1207,6 +1208,45 @@ namespace GirlAdventure.EditorTools
             Check("Q-34 combo pairs (sister+brother / sister+dad all foes / brother+dad one) + Q-33 cut-in frames",
                   afterBro && afterDad && hit == 3 && hit2 == 1 && o2.Target == 2 && sisDown && art && GameData.HasTalk("combo_sisdad") && GameData.HasTalk("combo_brodad") && GameData.HasTalk("combo_hit_all"),
                   $"bro={afterBro} dad={dadKey} hit={hit} hit2={hit2} sisDown={sisDown} art={art}");
+        }
+
+        /// <summary>Q-39 궁극기: 스킬 Lv3 에 배움, 게이지(행동 +15·맞으면 +10)가 차야 씀, 쓰면 0, 별빛 대폭풍·천둥 대번개·황금 사자 방패·엄마의 큰 빛, 궁극 합동 공격 조건.</summary>
+        static void UltimateTests()
+        {
+            var p = PlayerState.NewGame("u");
+            p.GainExp(PlayerState.NextExp(19));
+            p.Join("jihun"); p.Join("dad"); p.Join("mom");
+            p.Hp = p.MaxHp; p.Mp = p.MaxMp;
+            var foes = new[] { GameData.Library[0], GameData.Library[1], GameData.Library[2] };
+            var b = new BattleSystem(p, foes, new System.Random(5));
+            bool notYet = !Ultimates.Learned(p, -1) && !b.CanUse(Cmd.UltStar) && !b.ComboUltReady("family");
+            foreach (var u in Ultimates.All) p.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses[1];   // 30번 = Lv3
+            bool learned = Ultimates.Learned(p, -1) && Ultimates.Learned(p, 0) && Ultimates.Learned(p, 1) && Ultimates.Learned(p, 2) && b.ComboUltReady("family");
+            bool needGauge = !b.CanUse(Cmd.UltStar) && !b.MemberCanUse(2, Cmd.UltCure);
+            int g0 = b.GaugeOf(-1);
+            b.Act(Cmd.Fire);
+            bool fills = b.GaugeOf(-1) == g0 + Ultimates.GaugeAct;
+            b.AddGauge(-1, 100);
+            var o = b.Act(Cmd.UltStar);
+            int hit = 0; foreach (var d in o.Damages) if (d > 0) hit++;
+            bool star = !o.Failed && hit >= 2 && b.GaugeOf(-1) == 0;
+            b.AddGauge(1, 100);
+            b.MemberAct(1, Cmd.UltGuard);
+            var e = b.EnemyAct(0);
+            bool guard = b.Barrier && (e.Dodged || (e.Blocked && e.Damage == 0)) && b.GaugeOf(1) == 0;
+            b.NewRound();
+            p.Companions[0].Hp = 0; p.Hp = 5;
+            b.AddGauge(2, 100);
+            var auto = b.AllyAuto(2);
+            var c = b.MemberAct(2, Cmd.UltCure);
+            bool cure = auto.cmd == Cmd.UltCure && !c.Failed && p.Companions[0].Hp == p.MaxHpOf(p.Companions[0]) / 2 && p.Hp == p.MaxHp;
+            var q = Quest.QuickStart("q", 6);
+            bool quick = Ultimates.Learned(q, -1) && Ultimates.Learned(q, 0) && Ultimates.Learned(q, 1);
+            bool art = Resources.Load<Texture2D>("Cutin/ult_star_1") != null && Resources.Load<Texture2D>("Cutin/ult_star_b_30") != null && Resources.Load<Texture2D>("Cutin/ult_combo_family_1") != null
+                       && GameData.HasTalk("ult_learn") && GameData.HasTalk("ult_blocked") && GameData.HasTalk("combo_ult");
+            Check("Q-39 ultimates: learn at skill Lv3, gauge fills and empties, star/bolt all, golden shield blocks, big light revives, quick start knows them",
+                  notYet && learned && needGauge && fills && star && guard && cure && quick && art,
+                  $"notYet={notYet} learned={learned} needGauge={needGauge} fills={fills} star={star} guard={guard} cure={cure} quick={quick} art={art}");
         }
 
         /// <summary>엄마 포함 협동 공격 + 셋·넷 조합 (사용자 2026-10-05): 엄마 뒤에 7가지 후보, 넷 필살기는 적 모두, 주사위는 한 번, 대사·그림.</summary>

@@ -172,6 +172,8 @@ namespace GirlAdventure.Sim
                 Equipment.Equip(p, id);
             }
             p.GainGold(150 * chapter);
+            if (chapter >= 5)                                    // 챕터 5 부터는 기술이 손에 익어 궁극기를 배운 채로 (Q-39, 스킬 Lv3 = 30번)
+                foreach (var u in Ultimates.All) p.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses.Length > 1 ? GameData.SkillLevelUses[1] : 30;
             p.Candy = PlayerState.MaxCandy;
             p.AddItem("potion", 2);
             if (chapter >= 3) p.AddItem("moon", 2);
