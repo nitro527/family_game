@@ -421,6 +421,7 @@ namespace GirlAdventure.Sim
             m.Fill(29, 3, 34, 5, '.');
             m.Fill(32, 3, 34, 4, 'K');                                     // 책 더미 옥좌 (그림은 View)
             m.Set(LibBoss.x, LibBoss.y, 'B');
+            m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));  // 수상한 구멍 (서진이 소원, 책장 사이 바닥)
             // 입구 열람실 (안전) + 회복 받침대 + 표지판 + 사서 가게
             m.Fill(1, 17, 13, 22, ':');
             m.Set(LibSpring.x, LibSpring.y, 'F');

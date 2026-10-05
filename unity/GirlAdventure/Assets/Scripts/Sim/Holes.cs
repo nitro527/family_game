@@ -19,8 +19,9 @@ namespace GirlAdventure.Sim
         static readonly (int x, int y)[] DesertWish = { (9, 6), (27, 18), (14, 12) };
         static readonly (int x, int y)[] LavaWish = { (11, 4), (25, 6), (20, 20) };      // 용암 땅 (Q-8): 강 서쪽 하나, 동쪽 둘
         static readonly (int x, int y)[] SnowWish = { (9, 9), (24, 4), (21, 17) };       // 눈 덮인 땅 (Q-8)
+        static readonly (int x, int y)[] LibWish = { (6, 8), (24, 13), (31, 8) };        // 도서관 (챕터 6 ✏️ 탐험거리): 책장 사이 바닥
 
-        public static bool Has(MapKind k) => k == MapKind.Field || k == MapKind.Cave || k == MapKind.Desert || k == MapKind.Lava || k == MapKind.Snow;
+        public static bool Has(MapKind k) => k == MapKind.Field || k == MapKind.Cave || k == MapKind.Desert || k == MapKind.Lava || k == MapKind.Snow || k == MapKind.Library;
 
         /// <summary>이 맵의 수상한 구멍을 모두 들여다봤나 (숨겨진 구멍이 열리는 조건).</summary>
         public static bool AllLooked(PlayerState p, WorldMap m)
@@ -41,8 +42,8 @@ namespace GirlAdventure.Sim
         {
             var list = new List<(int, int)>();
             if (!Has(m.Kind)) return list;
-            string floor = m.Kind == MapKind.Cave ? "_" : m.Kind == MapKind.Desert || m.Kind == MapKind.Lava || m.Kind == MapKind.Snow ? "." : ".,f";
-            foreach (var (wx, wy) in m.Kind == MapKind.Cave ? CaveWish : m.Kind == MapKind.Desert ? DesertWish : m.Kind == MapKind.Lava ? LavaWish : m.Kind == MapKind.Snow ? SnowWish : FieldWish)
+            string floor = m.Kind == MapKind.Cave ? "_" : m.Kind == MapKind.Desert || m.Kind == MapKind.Lava || m.Kind == MapKind.Snow || m.Kind == MapKind.Library ? "." : ".,f";
+            foreach (var (wx, wy) in m.Kind == MapKind.Cave ? CaveWish : m.Kind == MapKind.Desert ? DesertWish : m.Kind == MapKind.Lava ? LavaWish : m.Kind == MapKind.Snow ? SnowWish : m.Kind == MapKind.Library ? LibWish : FieldWish)
             {
                 // 바라는 칸부터 거리 0,1,2 로 넓혀 가며 첫 바닥 칸
                 bool done = false;
