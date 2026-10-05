@@ -848,7 +848,7 @@ namespace GirlAdventure.EditorTools
             // 2단 "큰 돌멩이 젤리" (딸의 노트): 필드에서 옆 칸 작은 젤리보다 크게 보이고, 전투에서도 크게
             G.DebugMobs(true, true);
             G.DebugTeleport(15, 19, "right");
-            G.DebugSpawnMob(16, 19, 3);
+            G.DebugSpawnMob(16, 19, 4);   // 4 = 큰 돌멩이 젤리 (3 은 호박 젤리)
             G.DebugSpawnMob(14, 18, 0);
             yield return .4f;
             Shot("cave_big_jelly_field");
