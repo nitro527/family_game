@@ -15,7 +15,7 @@ STYLE = ("Game asset for a top-down 2D fantasy RPG town map (classic JRPG 3/4 to
          "One isolated object centered on a pure plain white background, no ground, no grass, no shadow, no people, no text.")
 HOUSE = "One single cute {0}, a wooden front door exactly in the center of the front wall at the bottom, two warm glowing windows."
 
-# 이름, 설명, 맵에서의 폭(px, 1칸=48), 시드
+# 이름, 설명, 맵에서의 폭(px, 1칸=48), 시드[, (생성 폭, 높이)]
 PROPS = [
     ("house0", HOUSE.format("storybook cottage with a red tiled roof, cream plaster walls with wooden beams, small chimney"), 156, 2),
     ("house1", HOUSE.format("storybook cottage with a blue tiled roof, cream plaster walls with wooden beams, small chimney"), 156, 2),
@@ -56,6 +56,16 @@ PROPS = [
     ("lectern", "One wooden library lectern stand holding a glowing open magic book, warm golden healing light and sparkles rising from the pages.", 50, 2),
     ("libdesk", "One small library front desk counter made of dark wood with stacks of books, a little bell, an ink pot and a quill, front view.", 64, 2),
     ("libtable", "One small square wooden reading desk seen from slightly above, with an open book, a stack of two books and a lit candle on it. Standing on nothing, no floor, no grass.", 46, 2),
+    # Q-30 남은 코드 그림 (2026-10-05)
+    ("jellybase", "A long front view of a stone fortress wall of a jelly army inside a cave: mossy green-gray stone blocks with battlements on top, a closed heavy wooden gate with iron bars exactly in the center at the bottom, two green slime banners and two torches beside the gate. The wall is very wide and short.", 540, 2, (1344, 352)),
+    ("jellythrone", "One small royal throne for a jelly general: a golden chair with a red cushion and a little crown on top of the backrest, front view.", 48, 2),
+    ("boulder0", "One round gray cave boulder with a few cracks and small pebbles, slightly purple tint.", 44, 2),
+    ("boulder1", "One cluster of two gray cave rocks, one big and one small, with moss spots.", 44, 4),
+    ("crystal_blue", "One cluster of glowing light blue cave crystals pointing upward, sparkling.", 40, 2),
+    ("crystal_pink", "One cluster of glowing pink and violet cave crystals pointing upward, sparkling.", 40, 2),
+    ("snowpine0", "One snow-covered green fir tree with thick snow on its branches.", 54, 2),
+    ("snowpine1", "One small snow-covered fir tree, slightly tilted, with a little snow pile at its base.", 54, 5),
+    ("darkbox", "One mysterious dark wooden box with purple glowing cracks and a small lock, spooky but cute, a few purple wisps rising.", 46, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 
@@ -63,14 +73,15 @@ PROPS = [
 def main():
     only = sys.argv[1:]
     here = os.path.dirname(os.path.abspath(__file__))
-    for name, desc, width, seed in PROPS:
+    for name, desc, width, seed, *size in PROPS:
         raw = os.path.join(GEN, name + '.png')
         if only and name not in only:
             continue
         if not only and os.path.exists(raw):
             continue
         os.makedirs(GEN, exist_ok=True)
-        subprocess.run([sys.executable, os.path.join(here, 'qwen_gen.py'), STYLE.format(desc), '-o', raw, '--seed', str(seed)], check=True)
+        wh = ['--w', str(size[0][0]), '--h', str(size[0][1])] if size else []
+        subprocess.run([sys.executable, os.path.join(here, 'qwen_gen.py'), STYLE.format(desc), '-o', raw, '--seed', str(seed)] + wh, check=True)
         print(name, make(raw, name, width))
 
 

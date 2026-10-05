@@ -480,6 +480,7 @@ namespace GirlAdventure.EditorTools
             MomTests();
             FamilyComboTests();
             UltimateTests();
+            DogamDataTests();
             LibraryTests();
             PartyTests();
             LavaTests();
@@ -1215,6 +1216,32 @@ namespace GirlAdventure.EditorTools
             Check("Q-34 combo pairs (sister+brother / sister+dad all foes / brother+dad one) + Q-33 cut-in frames",
                   afterBro && afterDad && hit == 3 && hit2 == 1 && o2.Target == 2 && sisDown && art && GameData.HasTalk("combo_sisdad") && GameData.HasTalk("combo_brodad") && GameData.HasTalk("combo_hit_all"),
                   $"bro={afterBro} dad={dadKey} hit={hit} hit2={hit2} sisDown={sisDown} art={art}");
+        }
+
+        [Serializable] class DogamEntry { public string id, name, ingame; }
+        [Serializable] class DogamFile { public DogamEntry[] monsters; }
+
+        /// <summary>
+        /// 설정 → 데이터 한 곳에서 (PLAN 57, 회고 D): 몬스터 도감(docs/monsters/monsters.json)과 게임 적(enemies.json)이 어긋나지 않게 —
+        /// 도감에 "ingame" 으로 적힌 이름은 게임에 있고 그 그림(Art)이 도감 id 와 같다, 게임 적이 쓰는 그림은 도감에 있다.
+        /// </summary>
+        static void DogamDataTests()
+        {
+            var path = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../../docs/monsters/monsters.json"));
+            if (!System.IO.File.Exists(path)) { Check("dogam ↔ enemies.json", false, "monsters.json 없음 " + path); return; }
+            var dogam = JsonUtility.FromJson<DogamFile>(System.IO.File.ReadAllText(path));
+            var games = new List<EnemyDef>(GameData.AllEnemies());
+            string bad = "";
+            foreach (var m in dogam.monsters)
+            {
+                if (string.IsNullOrEmpty(m.ingame)) continue;
+                var d = games.Find(g => g.Name == m.ingame);
+                if (d == null) bad += $"[도감 {m.id}: 게임에 '{m.ingame}' 없음] ";
+                else if (!string.IsNullOrEmpty(d.Art) && d.Art != m.id && !games.Exists(g => g.Name == m.ingame && g.Art == m.id)) bad += $"[{m.ingame}: 그림 {d.Art} ≠ 도감 {m.id}] ";
+            }
+            foreach (var g in games)
+                if (!string.IsNullOrEmpty(g.Art) && !Array.Exists(dogam.monsters, m => m.id == g.Art)) bad += $"[{g.Name}: 그림 {g.Art} 가 도감에 없음] ";
+            Check("dogam (monsters.json) and enemies.json agree", bad == "", bad);
         }
 
         /// <summary>Q-39 궁극기: 스킬 Lv3 에 배움, 게이지(행동 +15·맞으면 +10)가 차야 씀, 쓰면 0, 별빛 대폭풍·천둥 대번개·황금 사자 방패·엄마의 큰 빛, 궁극 합동 공격 조건.</summary>

@@ -751,6 +751,7 @@ namespace GirlAdventure.View
         {
             float cx = X + T / 2f + (k - .5f) * 6;
             R.Ellipse(cx + 5, Y + T - 3, 19, 6, new Color32(60, 80, 130, 60));
+            if (Prop(R, k < .5f ? "snowpine0" : "snowpine1", cx, Y + T + 2)) return;
             R.Rect(cx - 4, Y + T - 14, 8, 12, H("#6B4A30"));
             for (int i = 0; i < 3; i++)
             {
@@ -1563,6 +1564,7 @@ namespace GirlAdventure.View
         static void DarkBox(Raster R, float X, float Y)
         {
             R.Ellipse(X + 24, Y + 40, 22, 9, new Color32(150, 80, 255, 70));                     // 바닥에 번진 기운
+            if (Prop(R, "darkbox", X + 24, Y + 46)) return;
             R.Rect(X + 5, Y + 16, 38, 26, Ink);
             R.Rect(X + 7, Y + 18, 34, 22, H("#3A2458"));
             R.Ellipse(X + 24, Y + 17, 19, 8, Ink);
@@ -1604,6 +1606,7 @@ namespace GirlAdventure.View
         static void Boulder(Raster R, float X, float Y, float v)
         {
             R.Ellipse(X + 28, Y + 40, 20, 7, new Color32(0, 0, 0, 90));
+            if (Prop(R, v < .5f ? "boulder0" : "boulder1", X + 24, Y + 46)) return;
             R.Ellipse(X + 24, Y + 26, 20, 18, H("#2A2230"));
             R.Ellipse(X + 24, Y + 25, 18, 16, Lerp(H("#6A5E74"), H("#7A6A70"), v));
             R.Ellipse(X + 19, Y + 19, 9, 7, H("#968AA0"));
@@ -1614,6 +1617,7 @@ namespace GirlAdventure.View
         {
             Color32 dark = pink ? H("#9A3FB0") : H("#1E7FB0"), mid = pink ? H("#E07AF0") : H("#48C8F0"), lite = pink ? H("#FFD0FF") : H("#D0F8FF");
             R.Ellipse(x, y - 2, 20, 8, new Color32(pink ? (byte)255 : (byte)120, pink ? (byte)120 : (byte)230, 255, 50));   // 바닥에 번진 빛
+            if (Prop(R, pink ? "crystal_pink" : "crystal_blue", x, y + 2)) return;
             float[] ang = { -24, -6, 14, 30 };
             float[] len = { 16, 26, 20, 12 };
             for (int i = 0; i < 4; i++)
@@ -1631,6 +1635,7 @@ namespace GirlAdventure.View
         static void JellyBase(Raster R, int x0, int x1, int doorX, int doorY)
         {
             float X = x0 * T, Y = (doorY - 1) * T, w = (x1 - x0 + 1) * T, h = 2 * T;
+            if (Prop(R, "jellybase", X + w / 2, Y + h + 6)) return;         // 소품 그림: 가운데 문이 doorX 칸 (x0~x1 가운데)
             Color32 wall = H("#4E6A4E"), wallL = H("#6A8A62"), seam = H("#344A36");
             R.Rect(X, Y + h, w, 10, new Color32(0, 0, 0, 90));
             R.Rect(X - 2, Y - 22, w + 4, h + 22, H("#15201A"));
@@ -1698,6 +1703,8 @@ namespace GirlAdventure.View
             R.Rect(X + 10, Y + 20, 28, 2 * T, H("#8A1E2E"));          // 붉은 융단 (아래로)
             R.Rect(X + 12, Y + 20, 24, 2 * T, H("#B8303E"));
             R.Rect(X + 12, Y + 20, 3, 2 * T, H("#E8B040"));
+            R.Rect(X + 33, Y + 20, 3, 2 * T, H("#E8B040"));
+            if (Prop(R, "jellythrone", X + 24, Y + 34)) return;          // 소품 그림: 융단 위 의자
             R.Rect(X + 33, Y + 20, 3, 2 * T, H("#E8B040"));
             R.Rect(X + 6, Y - 16, 36, 30, H("#2A1A10"));             // 의자 등받이
             R.Rect(X + 8, Y - 14, 32, 26, H("#C89A3A"));

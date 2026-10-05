@@ -168,7 +168,7 @@ B. **딸의 아이디어 노트 (2026-09-27, docs/ideas/daughter_note_01.md)** �
 39. [x] (완료 2026-09-27) **여관**: 마을 여관 주인 젤리에게 말 걸면 "하룻밤 10G" → HP·MP 가득 + 저장 + 밤→아침 화면 어두워졌다 밝아지는 연출과 짧은 자장가(Sfx). 샘물은 초원·동굴용으로 유지
 40. [x] (완료 2026-09-27 — 가게는 마을 동서 길 위 (12,10), 초원 가게 없앰, 마을 곡 "village" 16마디 삼각파) **마을로 가게 옮기기 + 마을 BGM**: 초원 가게를 마을 안으로(동굴 가게는 그대로), 36번 마을 곡(8~16마디, 삼각파 부드러운 선율)
 41. [x] (완료 2026-09-27 — npcs.json `Talks` [{If, Talk}], 조건 boss·boss2·guard·key·door·chN·lvN·!, Lv5 되면 밀짚모자·촌장 "이제 성에 가 봐", 동굴 입구 광부 젤리가 진행 단계별로 안내) **NPC 대사가 진행에 따라 바뀜**: npcs.json 대사에 조건(챕터·보스 격파·열쇠) — "킹 젤리를 물리쳤구나!" 등, SmokeTest 조건 검사
-57. [ ] **설정 → 데이터 한 곳에서 (회고 D)**: docs/monsters/monsters.json 과 enemies.json 이름·설명·그림(Art)이 어긋나지 않는지 SmokeTest 로 검사 (ingame 칸 기준), 나중엔 도감에서 enemies.json 을 생성
+57. [x] (완료 2026-10-05 — SmokeTest `DogamDataTests`: 도감 ingame 이름·그림 ↔ enemies.json, 게임 그림은 도감에) **설정 → 데이터 한 곳에서 (회고 D)**: docs/monsters/monsters.json 과 enemies.json 이름·설명·그림(Art)이 어긋나지 않는지 SmokeTest 로 검사 (ingame 칸 기준), 나중엔 도감에서 enemies.json 을 생성
 ### ROADMAP M3 "전투의 깊이"
 42. [x] (완료 2026-09-27 — 명령창 "리본 파이어·주문·도구·도망", 주문 목록은 배운 것만·못 쓰면 흐리게, 반짝 힐 Lv4 MP4 HP 20~25. 밸런스 기준은 힐 없는 5살 규칙 유지, 힐을 쓰면 킹 99.8%·바위 대장 100%·젤리 장군 77%(힐이 별빛 폭풍 MP를 먹음) → 로그만 `[BALANCE +heal]`) **주문 목록 메뉴**: 전투 명령 "주문" → 목록(MP 표시, 부족하면 흐리게). 새 주문 "반짝 힐"(Lv4, MP4, HP 회복) — skills.json, 밸런스 시뮬레이션 반영
 43. [x] (완료 2026-09-27 — `BattleSystem.Foes` 1~3마리, Act(target), 별빛 폭풍 전체, EnemyTurn(), TotalExp/Gold, `GameData.RollEncounter`, encounters.json Group·MaxGroup: 시작 근처 0, 중간 20%(2), 먼 곳 30%(3), 동굴 25%/30%. 무리 승률 시뮬 모두 100%. 필드는 아직 한 마리만 → 44에서 `RollEncounter` 로 연결) **몬스터 그룹 전투 a (Sim)**: `BattleSystem` 이 적 1~3마리, 대상 고르기, 별빛 폭풍은 전체 공격, 경험치·골드 합산. encounters.json 에 무리 확률. SmokeTest·밸런스
