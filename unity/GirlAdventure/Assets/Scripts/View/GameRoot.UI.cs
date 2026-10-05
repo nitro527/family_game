@@ -58,7 +58,8 @@ namespace GirlAdventure.View
         Cmd[] AllyCmds(int a)
         {
             var list = new System.Collections.Generic.List<Cmd>();
-            foreach (var s in P.Companions[a].Def.Skills) if (System.Enum.TryParse<Cmd>(s, out var c)) list.Add(c);
+            foreach (var s in P.Companions[a].Def.Skills)
+                if (System.Enum.TryParse<Cmd>(s, out var c) && P.Lv >= GameData.Skill(c).Lv) list.Add(c);   // 아직 못 배운 기술(큰 번개 Lv14)은 숨김
             list.Add(Cmd.Run);
             return list.ToArray();
         }
@@ -321,6 +322,7 @@ namespace GirlAdventure.View
                     foreach (var id in Items.Owned(P)) n += P.Count(id);
                     return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{n}</color></size>";
                 case Cmd.Guard: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>가족 대신 막기</color></size>";
+                case Cmd.BigBolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>모두 · MP {GameData.Skill(c).Mp}</color></size>";
                 case Cmd.Bolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>MP {GameData.Skill(c).Mp}</color></size>";
                 default: return GameData.Skill(c).Name + LvTag(c);
             }

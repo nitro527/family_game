@@ -473,6 +473,7 @@ namespace GirlAdventure.EditorTools
             UnderworldTests();
             SaveSafetyTests();
             BroAutoTests();
+            BigBoltTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -1050,6 +1051,25 @@ namespace GirlAdventure.EditorTools
         }
 
         /// <summary>지훈 자동 공격 (PLAN_NEXT 71): 보스엔 번개(MP 있으면), 보통 적엔 검, 가장 약한 적부터.</summary>
+        /// <summary>큰 번개 (PLAN 62, ✏️ 이름): 지훈 Lv14 부터, 적 모두에게, MP 7, 자동 공격은 무리일 때 큰 번개.</summary>
+        static void BigBoltTests()
+        {
+            var p = PlayerState.NewGame("b");
+            p.GainExp(PlayerState.NextExp(12)); p.Boss2Down = true; Quest.TryJoinBrother(p);
+            var g13 = new BattleSystem(p, new[] { GameData.Lava[0], GameData.Lava[1], GameData.Lava[0] }, new System.Random(4));
+            bool lockedAt13 = p.Lv == 13 && !g13.BroCanUse(Cmd.BigBolt);
+            p.GainExp(PlayerState.NextExp(13) - p.Exp);
+            var g = new BattleSystem(p, new[] { GameData.Lava[0], GameData.Lava[1], GameData.Lava[0] }, new System.Random(4));
+            int mp0 = p.BroMp;
+            var auto = g.BroAuto().cmd;
+            var o = g.BroAct(Cmd.BigBolt);
+            int hit = 0;
+            for (int i = 0; i < 3; i++) if (o.Damages != null && o.Damages[i] > 0 && g.Foes[i].Hp == g.Foes[i].Def.Hp - o.Damages[i]) hit++;
+            Check("big bolt: learned at Lv14, hits every foe, costs 7 MP, auto uses it on groups",
+                  lockedAt13 && p.Lv == 14 && auto == Cmd.BigBolt && !o.Failed && hit == 3 && p.BroMp == mp0 - GameData.Skill(Cmd.BigBolt).Mp && GameData.HasTalk("bro_bigbolt"),
+                  $"lv {p.Lv} auto {auto} hit {hit} mp {mp0}->{p.BroMp}");
+        }
+
         static void BroAutoTests()
         {
             var p = PlayerState.NewGame("a");

@@ -338,7 +338,7 @@ namespace GirlAdventure.View
                 else
                 {
                     int target = -1;
-                    if (c != Cmd.Guard && battle.AliveCount > 1)
+                    if (c != Cmd.Guard && c != Cmd.BigBolt && battle.AliveCount > 1)   // 큰 번개는 모두에게라 대상을 안 고른다
                     {
                         yield return PickTarget();
                         if (pickedTarget < 0) continue;     // 그만두기 → 다시 명령 고르기
@@ -462,6 +462,21 @@ namespace GirlAdventure.View
                     Spawn(starSprite, at + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 1.2f, Vector3.zero, .7f, .3f, new Color(1f, .9f, .5f), 200);
                 }
                 yield return TalkAlly(a, "guard");
+                yield break;
+            }
+            if (o.Cmd == Cmd.BigBolt)
+            {
+                v.pose = "attack"; v.lunge = 1;
+                RefreshHud();
+                yield return TalkAlly(a, "bigbolt", ("skill", GameData.Skill(o.Cmd).Name));
+                for (int k = 0; k < battle.Foes.Count; k++)
+                    if (o.Damages != null && o.Damages[k] > 0) yield return Lightning(k);
+                for (int k = 0; k < battle.Foes.Count; k++)
+                    if (o.Damages != null && o.Damages[k] > 0) HitFoe(k, o.Damages[k], true);
+                RefreshHud();
+                if (GroupBattle) yield return TalkAlly(a, "bigbolt_hit");
+                else yield return TalkAlly(a, "hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
+                v.pose = "ready";
                 yield break;
             }
             bool bolt = o.Cmd == Cmd.Bolt;

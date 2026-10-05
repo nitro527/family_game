@@ -1499,6 +1499,16 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             Expect("won against the icicle jelly", G.Current == GameRoot.Mode.Field && G.P.Chapter == 5);
+            // 큰 번개 (PLAN 62): Lv14 이상 지훈 자동 공격은 무리 전투에서 큰 번개
+            G.DebugSetBroAuto(true);
+            bigBoltShot = false;
+            G.DebugGroupBattle(3, 1);
+            yield return 1.5f;
+            G.DebugSetAllFoesHp(400);                   // 지훈 차례가 오도록 넉넉히
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            G.DebugSetBroAuto(false);
+            Expect("brother used big bolt on a group", bigBoltShot);
             G.DebugBackToField();
             yield return .5f;
             // 예티 (C5-5): 눈 산 동굴 입구 → 예티 → 눈보라가 그침 → 챕터 5 완료
@@ -1545,7 +1555,7 @@ namespace GirlAdventure.EditorTools
             Expect("quick start chapter 4 on lava with dad", G.Current == GameRoot.Mode.Field && G.MapKindNow == MapKind.Lava && G.P.Lv == Quest.QuickLevels[4] && G.FollowerVisible("dad"));
         }
 
-        static bool skillUpSeen, broCmdSeen, comboShot;
+        static bool skillUpSeen, broCmdSeen, comboShot, bigBoltShot;
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
@@ -1578,6 +1588,7 @@ namespace GirlAdventure.EditorTools
                 if (G.MessageText.Contains("레벨이 올랐다!") && !G.MessageText.Contains("스킬") && lvShot++ == 0) Shot("levelup");
                 if (G.MessageText.Contains("스킬 레벨이 올랐다") && !skillUpSeen) { skillUpSeen = true; Shot("skill_up"); }
                 if (G.MessageText.Contains("둘이 함께 공격") && !comboShot) { comboShot = true; Shot("combo"); }
+                if (G.MessageText.Contains("우르르") && !bigBoltShot) { bigBoltShot = true; Shot("big_bolt"); }
             }
         }
 

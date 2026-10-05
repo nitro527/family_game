@@ -38,7 +38,7 @@ namespace GirlAdventure.Sim
     /// Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).
     /// Spell 은 "주문" 목록을 여는 명령 (실제로 쓰는 것은 Star·Heal).
     /// </summary>
-    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard }   // Slash·Bolt = 동생 지훈 (검·번개), Sword·Guard = 아빠 (검·지키기)
+    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt }   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기)
 
     public struct PlayerOutcome
     {
@@ -200,7 +200,7 @@ namespace GirlAdventure.Sim
         /// 지훈 자동 공격 (설정 "지훈 자동 공격", PLAN_NEXT 71 — 3살 지훈이가 명령을 고르지 않아도 되게):
         /// 보스에게는 MP 가 있으면 번개, 아니면 검. 대상은 HP 가 가장 적게 남은 적 (하나씩 쓰러뜨리게).
         /// </summary>
-        public (Cmd cmd, int target) BroAuto() => (Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());
+        public (Cmd cmd, int target) BroAuto() => (AliveCount > 1 && BroCanUse(Cmd.BigBolt) ? Cmd.BigBolt : Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());   // 무리면 큰 번개
 
         /// <summary>합동 공격이 나오나 (둘 다 서 있고 적이 남았을 때 ComboRate 확률). 혼자일 때는 주사위를 굴리지 않는다.</summary>
         public bool ComboReady() => Party && !SisterDown && !BrotherDown && !EnemyDown && r.NextDouble() < ComboRate;
@@ -239,7 +239,7 @@ namespace GirlAdventure.Sim
         {
             if (AllyDown(i)) return false;
             var m = P.Companions[i];
-            return Sim.Party.Knows(m.Def, c) && m.Mp >= GameData.Skill(c).Mp;
+            return Sim.Party.Knows(m.Def, c) && P.Lv >= GameData.Skill(c).Lv && m.Mp >= GameData.Skill(c).Mp;   // Lv = 배우는 레벨 (큰 번개 Lv14)
         }
 
         /// <summary>
@@ -262,6 +262,19 @@ namespace GirlAdventure.Sim
             if (c == Cmd.Guard) { Guarding = i; return o; }
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
+            if (c == Cmd.BigBolt)                   // 큰 번개 (PLAN 62): 살아 있는 적 모두에게 (적마다 따로 굴림, 잘 피하는 적은 피할 수 있다)
+            {
+                o.Target = FirstAlive();
+                o.Damages = new int[Foes.Count];
+                for (int k = 0; k < Foes.Count; k++)
+                    if (!Foes[k].Down && !Evades(k))
+                    {
+                        o.Damages[k] = SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
+                        Foes[k].Hp = Math.Max(0, Foes[k].Hp - o.Damages[k]);
+                    }
+                o.Damage = o.Target >= 0 ? o.Damages[o.Target] : 0;
+                return o;
+            }
             o.Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : FirstAlive();
             if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; return o; }
             if (Evades(o.Target)) { o.Missed = true; return o; }            // 잘 피하는 적
