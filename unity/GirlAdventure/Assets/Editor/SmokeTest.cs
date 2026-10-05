@@ -1484,6 +1484,8 @@ namespace GirlAdventure.EditorTools
             p7.Companions[0].Hp = 3;
             var momAuto = b7.AllyAuto(2);
             bool auto = dadAuto.cmd == Cmd.Rally && broAuto.cmd == Cmd.Cheer && momAuto == (Cmd.Hug, 0);
+            b7.Foes[0].Charging = true;                                  // 기믹 대응: 적이 힘을 모으면 아빠는 지키기
+            auto &= b7.AllyAuto(1).cmd == Cmd.Guard;
             bool data = GameData.Skill(Cmd.Rally).Lv == 16 && GameData.Skill(Cmd.Cheer).Lv == 16 && GameData.Skill(Cmd.Hug).Lv == 21
                         && GameData.HasTalk("skill_rally") && GameData.HasTalk("skill_cheer") && GameData.HasTalk("skill_hug") && GameData.HasTalk("regen_tick");
             Check("second skills: cheer atk up, rally def up, mom's light regen, mom's hug, auto rules", atk && def && regen && hugOk && auto && data,

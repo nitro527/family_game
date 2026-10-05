@@ -89,7 +89,7 @@ namespace GirlAdventure.Sim
     {
         public EnemyDef Def { get; private set; }
         public int Hp;
-        public bool Charging;   // 힘을 모았다 (다음 공격 2배)
+        public bool Charging;   // 힘을 모았다 (다음 공격 1.5배)
         public bool Changed;    // 변신·합체를 했다 (한 번만)
         public bool JustCalled; // 이번 차례에 불려 왔다 (다음 차례부터 움직인다)
         public Foe(EnemyDef def) { Def = def; Hp = def.Hp; }
@@ -355,9 +355,13 @@ namespace GirlAdventure.Sim
                     if (!P.MemberDown(w) && (float)P.MemberHp(w) / P.MemberMaxHp(w) <= least) { least = (float)P.MemberHp(w) / P.MemberMaxHp(w); worst = w; }
                 if (worst != -2) return (Cmd.Hug, worst);
             }
+            if (MemberCanUse(a, Cmd.Cure))                  // 누가 독·화상·얼음에 걸렸으면 엄마의 빛으로 모두 풀어 준다 (기믹 대응)
+                foreach (int w in P.Members())
+                    if (!P.MemberDown(w) && (PoisonOf(w) > 0 || FrozenOf(w))) return (Cmd.Cure, -1);
             if (MemberCanUse(a, Cmd.Cure) && Regen == 0)    // 누가 HP 절반 이하이고 지속 회복이 없으면 엄마의 빛 (모두 + 계속)
                 foreach (int w in P.Members())
                     if (!P.MemberDown(w) && P.MemberHp(w) * 2 <= P.MemberMaxHp(w)) return (Cmd.Cure, -1);
+            if (MemberCanUse(a, Cmd.Guard) && Foes.Exists(f => !f.Down && f.Charging)) return (Cmd.Guard, -1);   // 아빠: 적이 힘을 모았으면 지키기 (기믹 대응)
             if (Boss && DefUp == 0 && MemberCanUse(a, Cmd.Rally)) return (Cmd.Rally, -1);   // 아빠: 보스전에서 튼튼 함성이 꺼져 있으면
             if (MemberCanUse(a, Cmd.Guard))
                 foreach (int w in P.Members())
