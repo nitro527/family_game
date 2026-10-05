@@ -20,3 +20,4 @@ unity/playtest_layout/
 assets/cutins/*_[0-9]*.png
 assets/cutins/preview/
 unity/BuildWeb/
+unity/*.out
