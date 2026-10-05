@@ -1205,7 +1205,8 @@ namespace GirlAdventure.EditorTools
             var fam = PlayerState.NewGame("f");
             fam.GainExp(PlayerState.NextExp(12)); fam.Boss2Down = true; Quest.TryJoinBrother(fam);
             var papa = fam.Join("dad");
-            var gb = new BattleSystem(fam, GameData.DesertBoss, new System.Random(3));
+            var plainBoss = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(GameData.DesertBoss)); plainBoss.Skill = null;   // 지키기만 보려고 기믹(부하 부르기) 없이
+            var gb = new BattleSystem(fam, plainBoss, new System.Random(3));
             var g = gb.MemberAct(1, Cmd.Guard);
             int toDad = 0, half = 0;
             for (int i = 0; i < 50; i++)
