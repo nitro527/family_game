@@ -1094,6 +1094,7 @@ namespace GirlAdventure.View
                 if (battle.AllyDown(e.Ally) && !battle.PlayerDown) yield return TalkAlly(e.Ally, "down");
                 else v.pose = battle.Guarding == e.Ally ? "guard" : "ready";
                 if (e.Status) yield return StatusShow(e);
+                else if (e.Resisted != null) yield return Talk("status_resisted", ("item", GameData.ItemName(e.Resisted)), ("kind", e.Special == "freeze" ? "얼음" : e.Special == "burn" ? "화상" : "독"));
                 yield break;
             }
             sfx.Play("hurt");
@@ -1106,6 +1107,7 @@ namespace GirlAdventure.View
             if (battle.Party && battle.SisterDown && !battle.PlayerDown) { yield return Talk("sis_down"); yield break; }
             pose = "ready";
             if (e.Status) yield return StatusShow(e);
+                else if (e.Resisted != null) yield return Talk("status_resisted", ("item", GameData.ItemName(e.Resisted)), ("kind", e.Special == "freeze" ? "얼음" : e.Special == "burn" ? "화상" : "독"));
         }
 
         IEnumerator Victory()

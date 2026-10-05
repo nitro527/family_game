@@ -59,6 +59,7 @@ namespace GirlAdventure.Sim
         public int Atk, Def;            // 장비: 공격력·방어력 보너스
         public int Price;               // 가게 가격 (0 이면 팔지 않음)
         public string Shops;            // 파는 가게 "field,cave"
+        public string Resist;           // 장신구: 끼고 있으면 가족 모두 이 상태 이상에 안 걸린다 ("poison,burn,freeze" 중, 2026-10-06 기믹과 보상 연결)
     }
 
     [Serializable]

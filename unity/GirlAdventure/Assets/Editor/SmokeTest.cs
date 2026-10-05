@@ -1419,6 +1419,14 @@ namespace GirlAdventure.EditorTools
             bool call = king.Skill == "call" && k1.Special == "call" && k1.Called == 1 && b7.Foes[1].Def.Name == king.CallName && w1.Special == "wait"
                         && k2.Special == "call" && b7.Foes.Count == 3 && k3.Special != "call";
             morph &= call;
+            // 장신구가 막기 (동굴 진주 = 독): 공격은 맞아도 독은 안 걸린다
+            var pr = PlayerState.NewGame("r"); pr.GainExp(PlayerState.NextExp(9)); pr.Hp = pr.MaxHp;
+            pr.Gear.Add("cave_pearl"); Equipment.Equip(pr, "cave_pearl");
+            var b8 = new BattleSystem(pr, new[] { With(GameData.Snow[0], "poison") }, new System.Random(9));
+            EnemyOutcome r1 = default;
+            for (int k = 0; k < 10 && r1.Resisted == null; k++) { pr.Hp = pr.MaxHp; r1 = b8.EnemyAct(0); }
+            bool resist = r1.Resisted == "cave_pearl" && !r1.Status && b8.PoisonOf(-1) == 0 && Equipment.BonusText("fairy_wings").Contains("독·화상·얼음 막기");
+            morph &= resist;
             int skilled = 0; foreach (var d in GameData.AllEnemies()) if (d != null && !string.IsNullOrEmpty(d.Skill)) skilled++;
             bool data = skilled >= 20 && GameData.HasTalk("foe_merge") && GameData.HasTalk("foe_transform") && GameData.HasTalk("status_poison");
             Check("battle gimmicks: poison ticks (never kills), freeze skips a turn, heal cures, charge→double, foe heal, merge, yeti transforms",

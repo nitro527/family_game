@@ -243,6 +243,7 @@
     { "Id": "status_freeze", "Lines": [ { "Text": "{who:은/는} 꽁꽁 얼어 버렸다! 다음 차례는 움직일 수 없어요.", "Face": "surprised", "Hold": 0.8 } ] },
     { "Id": "status_frozen_turn", "Lines": [ { "Text": "{who:은/는} 꽁꽁 얼어서 움직일 수 없다… 얼음이 녹았다!", "Face": "surprised", "Hold": 0.8 } ] },
     { "Id": "status_poison_tick", "Lines": [ { "Text": "독·화상으로 HP가 조금 줄었다… (반짝 힐이나 엄마의 빛으로 풀 수 있어요)", "Face": "surprised", "Hold": 0.7 } ] },
+    { "Id": "status_resisted", "Lines": [ { "Text": "반짝! {item} 덕분에 {kind:이/가} 걸리지 않았다!", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "status_cured", "Lines": [ { "Text": "독·화상·얼음이 깨끗이 풀렸다!", "Face": "laugh", "Hold": 0.7 } ] },
     { "Id": "skill_rally", "Lines": [ { "Text": "\"다 같이 힘을 모아! 튼튼하게 버티자!\" 가족 모두 방어력이 올랐다! (3차례)", "Face": "dad_serious", "Hold": 1.0 } ] },
     { "Id": "skill_cheer", "Lines": [ { "Text": "\"누나! 엄마! 아빠! 힘내라 힘! 으쌰으쌰!\" 가족 모두 공격력이 올랐다! (3차례)", "Face": "bro_laugh", "Hold": 1.0 } ] },

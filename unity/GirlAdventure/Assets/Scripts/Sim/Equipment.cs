@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
@@ -113,7 +114,28 @@ namespace GirlAdventure.Sim
             var d = GameData.Item(id);
             if (d == null) return "";
             string a = d.Atk > 0 ? $"공격+{d.Atk}" : "", b = d.Def > 0 ? $"방어+{d.Def}" : "";
-            return a != "" && b != "" ? a + " " + b : a + b;
+            string t = a != "" && b != "" ? a + " " + b : a + b;
+            if (!string.IsNullOrEmpty(d.Resist)) t += (t != "" ? " " : "") + ResistText(d.Resist);
+            return t;
+        }
+
+        /// <summary>"poison,freeze" → "독·얼음 막기".</summary>
+        public static string ResistText(string resist)
+        {
+            var names = new System.Collections.Generic.List<string>();
+            foreach (var k in resist.Split(',')) names.Add(k == "poison" ? "독" : k == "burn" ? "화상" : k == "freeze" ? "얼음" : k);
+            return string.Join("·", names) + " 막기";
+        }
+
+        /// <summary>끼고 있는 장비 중 이 상태 이상(poison·burn·freeze)을 막는 것 (없으면 null).</summary>
+        public static string ResistItem(PlayerState p, string kind)
+        {
+            foreach (var id in p.Equipped.Values)
+            {
+                var d = GameData.Item(id);
+                if (d != null && !string.IsNullOrEmpty(d.Resist) && Array.IndexOf(d.Resist.Split(','), kind) >= 0) return id;
+            }
+            return null;
         }
     }
 }

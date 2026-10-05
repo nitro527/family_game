@@ -78,6 +78,7 @@ namespace GirlAdventure.Sim
         public bool Shielded;   // 튼튼 함성(아빠)으로 가족 방어력이 올라 피해가 줄었다
         public string Special;  // 기믹: poison·burn·freeze (공격 + 상태) · charge(힘 모으기, 공격 없음) · charged(모은 힘으로 2배) · heal(적 회복) · transform(변신, 공격 없음)
         public bool Status;     // 맞은 사람에게 독·화상·얼음이 걸렸다
+        public string Resisted; // 장신구가 막았다 (그 장비 id)
         public int HealFoe;     // heal: 회복한 적 번호 (-1 없음)
         public int HealAmt;
         public int Called;      // call: 불려 온 적 번호 (-1 없음)
@@ -665,7 +666,7 @@ namespace GirlAdventure.Sim
                 if (o.Guarded || Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
                 if (DefUp > 0) { o.Damage = Math.Max(1, o.Damage * 7 / 10); o.Shielded = true; }
                 m.Hp = Math.Max(0, m.Hp - o.Damage);
-                if (!m.Down) o.Status = AddStatus(o.Ally, o.Special);
+                if (!m.Down) { o.Resisted = Blocks(o.Special); if (o.Resisted == null) o.Status = AddStatus(o.Ally, o.Special); }
                 return o;
             }
             o.Damage = Math.Max(1, (int)((Foes[foe].Def.Atk + r.Next(0, 3) - P.Def) * mul));     // 방어력(장비)만큼 줄지만 최소 1
@@ -673,9 +674,12 @@ namespace GirlAdventure.Sim
             if (Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
             if (DefUp > 0) { o.Damage = Math.Max(1, o.Damage * 7 / 10); o.Shielded = true; }
             P.Hp = Math.Max(0, P.Hp - o.Damage);
-            if (P.Hp > 0) o.Status = AddStatus(-1, o.Special);
+            if (P.Hp > 0) { o.Resisted = Blocks(o.Special); if (o.Resisted == null) o.Status = AddStatus(-1, o.Special); }
             return o;
         }
+
+        /// <summary>이 상태 이상을 막는 장신구를 끼고 있으면 그 장비 id (가족 모두 막는다).</summary>
+        string Blocks(string kind) => kind == "poison" || kind == "burn" || kind == "freeze" ? Equipment.ResistItem(P, kind) : null;
 
         bool AddStatus(int who, string kind)
         {
