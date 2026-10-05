@@ -1764,16 +1764,18 @@ namespace GirlAdventure.EditorTools
             G.DebugSetAllFoesHp(1);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            int status0 = G.StatusCount;
             G.DebugBattleDefs(GameData.Forest[1]);
             yield return 1.5f;
-            for (float t = 0; t < 60 && G.StatusCount == 0 && G.Current == GameRoot.Mode.Battle; t += .2f)
+            for (float t = 0; t < 60 && G.StatusCount == status0 && G.Current == GameRoot.Mode.Battle; t += .2f)
             {
                 if (G.CommandOpen || G.ChoiceOpen) Keys.Press(KeyCode.Return); else Keys.Press(KeyCode.Z);
                 yield return .2f;
             }
-            yield return .3f;
+            yield return (Func<bool>)(() => G.MessageText.Contains("걸렸다"));
+            yield return .4f;
             Shot("gimmick_poison");
-            Expect("mushroom jelly poisoned someone (HUD tag)", G.StatusCount > 0, $"status {G.StatusCount}");
+            Expect("mushroom jelly poisoned someone (HUD tag)", G.StatusCount > status0, $"status {G.StatusCount}");
             G.DebugSetAllFoesHp(1);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
