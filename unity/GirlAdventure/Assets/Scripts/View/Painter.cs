@@ -14,6 +14,7 @@ namespace GirlAdventure.View
         /// <summary>보물상자 (open=true 면 뚜껑이 열리고 안이 반짝인다). (x, y) 는 타일 왼쪽 위 px.</summary>
         public static void Chest(Raster R, float x, float y, bool open)
         {
+            if (MapPainter.Prop(R, open ? "chest_open" : "chest", x + 24, y + 47)) return;     // 소품 그림 (Qwen, 닫힘·열림 짝)
             Color32 wood = Raster.Hex("#B8742E"), dark = Raster.Hex("#7A4518"), gold = Raster.Hex("#FFD84A");
             R.Rect(x + 5, y + 20, 38, 24, Ink);
             R.Rect(x + 7, y + 22, 34, 20, wood);

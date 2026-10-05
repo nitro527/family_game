@@ -31,7 +31,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>소품 그림이 있으면 (cx, bottom) 아래 가운데에 찍고 true. 없으면 false → 예전 코드 그림.</summary>
-        static bool Prop(Raster R, string name, float cx, float bottom)
+        internal static bool Prop(Raster R, string name, float cx, float bottom)
         {
             if (Props == null || !Props.TryGetValue(name, out var img)) return false;
             R.Stamp(img, 0, 0, img.W, img.H, Mathf.RoundToInt(cx - img.W / 2f), Mathf.RoundToInt(bottom - img.H));
@@ -1315,7 +1315,7 @@ namespace GirlAdventure.View
         static void Fountain(Raster R, float X, float Y, bool cave)
         {
             R.Ellipse(X + 26, Y + 38, 24, 9, new Color32(0, 0, 0, 70));
-            if (!cave && Prop(R, "fountain", X + 24, Y + 44)) return;
+            if (Prop(R, cave ? "cavespring" : "fountain", X + 24, Y + 44)) return;
             if (cave)
             {
                 R.Ellipse(X + 24, Y + 30, 23, 15, H("#3A3346"));

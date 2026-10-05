@@ -69,6 +69,10 @@ PROPS = [
     ("stonebridge", "One long flat horizontal stone bridge walkway seen from above (top-down RPG map tile style), going left to right, gray stone slabs with a low stone railing along the top edge and the bottom edge. Only the bridge itself, nothing under it, no water, no lava, no ground. Very wide and thin shape.", 440, 7, (1344, 384)),
     ("lavarock0", "One big dark volcanic boulder of black basalt with thin glowing orange cracks.", 52, 2),
     ("lavarock1", "One cluster of two dark volcanic rocks of black basalt with a little glowing orange lava in the cracks.", 52, 4),
+    # 보물상자 짝 (닫힘 seed 4 / 열림은 '열린 상자' 설명으로 seed 9 — 48칸 텍스처에 들어가게 폭 42)
+    ("chest", "One closed wooden treasure chest with golden metal bands, a golden lock and a rounded lid.", 44, 4),
+    ("chest_open", "One OPEN wooden treasure chest with golden metal bands: the rounded lid is lifted wide open and tilted back, shiny golden coins and sparkles inside.", 42, 9),
+    ("cavespring", "One small round rock pool in a cave with glowing light blue magical healing water and tiny sparkles rising.", 60, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 
