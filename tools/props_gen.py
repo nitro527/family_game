@@ -84,6 +84,9 @@ PROPS = [
     ("log", "One fallen mossy log lying sideways with a few small mushrooms and ferns growing on it.", 90, 2),
     ("pot", "One round clay pot with a small lid, warm terracotta color with a simple painted pattern, cute storybook style.", 36, 2),
     # 바닥 장식 (2026-10-06 맵 퀄리티: 넓은 바닥이 텅 비어 보이던 것 — 걸어 지나가는 작은 그림, MapPainter.Scatter)
+    ("dec_mossrock", "One small round grey rock with green moss on top and a few grass blades around it.", 30, 2),
+    ("dec_wildflowers", "A small cluster of colorful wildflowers (yellow, white and pink) with green leaves.", 30, 2),
+    ("dec_stump", "One small cut tree stump with visible rings on top and a tiny green sprout.", 32, 2),
     ("dec_shrub", "One small dry desert tumbleweed shrub, round tangle of light brown twigs.", 30, 2),
     ("dec_sandrocks", "A tiny cluster of three smooth sandy orange pebbles half buried in sand.", 30, 2),
     ("dec_sandflower", "One tiny desert plant with a single small pink flower and two green leaves.", 24, 3),

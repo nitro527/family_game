@@ -240,6 +240,7 @@ namespace GirlAdventure.View
                         else R.Stamp(t.Sheet, 0, 2 * T, T, 64, x * T, y * T);
                     }
                 }
+            Scatter(R, m, ".", new[] { "dec_mossrock", "dec_wildflowers", "dec_stump", "mushrooms" }, .07f, 205);   // 바닥 장식 (넓은 풀밭이 단조롭던 것)
             Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
             Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
             // 숲: 위 칸부터 (아래 줄 나무가 위 줄을 살짝 덮게)
@@ -271,7 +272,7 @@ namespace GirlAdventure.View
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
-                    if (floor.IndexOf(m.At(x, y)) < 0 || m.Safe(x, y) || Hash(x, y, seed) >= density) continue;
+                    if (floor.IndexOf(m.At(x, y)) < 0 || Hash(x, y, seed) >= density) continue;
                     string name = names[(int)(Hash(x, y, seed + 1) * names.Length) % names.Length];
                     float cx = x * T + 12 + Hash(x, y, seed + 2) * (T - 24), by = y * T + 28 + Hash(x, y, seed + 3) * 16;
                     Prop(R, name, cx, by);
@@ -1142,6 +1143,7 @@ namespace GirlAdventure.View
                     for (int x = 0; x < WorldMap.W; x++)
                         if ("=E".IndexOf(m.At(x, y)) >= 0) R.Rect(x * T, y * T, T, T, H("#D9B77A"));
             }
+            Scatter(R, m, ".", new[] { "dec_wildflowers", "dec_mossrock" }, .10f, 206);                    // 바닥 장식 (마을 풀밭)
             // 울타리 (텃밭) — 울타리 뒤(위)에 채소 줄
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
