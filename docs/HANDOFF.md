@@ -56,5 +56,5 @@ U="/c/Program Files/Unity/Hub/Editor/6000.5.3f1/Editor/Unity.exe"; P="C:\\code_w
 
 ## 지켜 온 규칙
 - 한국어로, 폴더 깔끔하게(임시 파일은 끝나면 삭제), `사진/`·원본 에셋 삭제 금지, git push 금지(원격 없음)
-- 소리 없이 테스트, 루틴은 한 번에 하나(lock 파일 `.autoimprove.lock`), 사용량 85~90%에서 멈춤
+- 소리 없이 테스트, 루틴은 한 번에 하나(lock 파일 `.autoimprove.lock`), 사용량 95%에서 멈춤 (2026-10-05 사용자)
 - PowerShell 은 막혀 있음 → Bash 만
