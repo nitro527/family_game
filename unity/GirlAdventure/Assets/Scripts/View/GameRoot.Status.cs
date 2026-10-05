@@ -94,8 +94,15 @@ namespace GirlAdventure.View
             stExpBar.fillAmount = P.LevelProgress;
 
             var mid = new System.Text.StringBuilder();
+            bool full = P.Companions.Count >= 3;       // 넷이면 (사용자 "레이아웃 신경 써라") 가운데 칸을 짧게: 사람마다 장비 한 줄·기술 한 줄, 궁극기는 ★
             mid.Append("<color=#F2C443>장비</color>\n");
-            foreach (var slot in Equipment.Slots)
+            if (full)
+            {
+                var mine = new System.Collections.Generic.List<string>();
+                foreach (var slot in Equipment.Slots) { string id = Equipment.In(P, slot); if (id != null) mine.Add(GameData.ItemName(id)); }
+                mid.Append($"  <color=#9AA3C7>{P.Name}</color> {(mine.Count > 0 ? string.Join(" <color=#9AA3C7>·</color> ", mine) : "<color=#9AA3C7>없음</color>")}\n");
+            }
+            else foreach (var slot in Equipment.Slots)
             {
                 string id = Equipment.In(P, slot);
                 mid.Append($"  <color=#9AA3C7>{Equipment.SlotName(slot)}</color> ");
@@ -113,16 +120,25 @@ namespace GirlAdventure.View
                 mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", names)}" + "\n");
             }
             bool crowded = P.Companions.Count >= 2;    // 셋이면 줄이 많아 부제를 빼고 글씨를 작게 (아빠 기술 줄이 아래 버튼에 가리던 것)
-            mid.Append(crowded ? "<color=#F2C443>주문</color>\n" : "<color=#F2C443>주문</color> <size=15><color=#9AA3C7>스킬 레벨 · 다음 레벨까지</color></size>\n");
-            mid.Append(SkillLine(Cmd.Fire)).Append(SkillLine(Cmd.Star));
-            if (BattleSystem.Knows(P, Cmd.Heal)) mid.Append(SkillLine(Cmd.Heal));
+            mid.Append(full ? "<color=#F2C443>기술</color> <size=14><color=#9AA3C7>Lv = 스킬 레벨 · <color=#FFE27A>★</color> = 궁극기 배움</color></size>\n"
+                       : crowded ? "<color=#F2C443>주문</color>\n" : "<color=#F2C443>주문</color> <size=15><color=#9AA3C7>스킬 레벨 · 다음 레벨까지</color></size>\n");
+            if (full)
+            {
+                var mine = new System.Collections.Generic.List<string> { ShortSkill(Cmd.Fire), ShortSkill(Cmd.Star) };
+                if (BattleSystem.Knows(P, Cmd.Heal)) mine.Add(ShortSkill(Cmd.Heal));
+                mid.Append($"  <color=#9AA3C7>{P.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", mine)}\n");
+            }
+            else
+            {
+                mid.Append(SkillLine(Cmd.Fire)).Append(SkillLine(Cmd.Star));
+                if (BattleSystem.Knows(P, Cmd.Heal)) mid.Append(SkillLine(Cmd.Heal));
+            }
             foreach (var c in P.Companions)             // 동료 기술은 한 줄씩 (자라는 기술은 Lv 도)
             {
                 var parts = new System.Collections.Generic.List<string>();
                 foreach (var k in c.Def.Skills ?? new string[0])
-                    if (System.Enum.TryParse<Cmd>(k, out var cmd) && SkillLevels.Grows(cmd))
-                        parts.Add($"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color>{UltTag(cmd)}</size>");
-                    else if (System.Enum.TryParse<Cmd>(k, out var cmd2)) parts.Add(GameData.Skill(cmd2).Name);
+                    if (System.Enum.TryParse<Cmd>(k, out var cmd) && P.Lv >= GameData.Skill(cmd).Lv)
+                        parts.Add(full ? ShortSkill(cmd) : SkillLevels.Grows(cmd) ? $"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color>{UltTag(cmd)}</size>" : GameData.Skill(cmd).Name);
                 mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", parts)}" + "\n");
             }
             stMid.fontSize = crowded ? 16 : 19;
@@ -147,6 +163,14 @@ namespace GirlAdventure.View
                 if (u.basic == c)
                     return Ultimates.Knows(P, u.ult) ? $" <color=#FFE27A>★{GameData.Skill(u.ult).Name}</color>" : " <color=#7A80A0>Lv3 궁극기</color>";
             return "";
+        }
+
+        /// <summary>짧은 기술 표시 (넷일 때): "큰 번개 Lv3★".</summary>
+        string ShortSkill(Cmd c)
+        {
+            string star = "";
+            foreach (var u in Ultimates.All) if (u.basic == c && Ultimates.Knows(P, u.ult)) star = "<color=#FFE27A>★</color>";
+            return SkillLevels.Grows(c) ? $"{GameData.Skill(c).Name}<size=14><color=#F2C443>Lv{SkillLevels.Level(P, c)}</color></size>{star}" : GameData.Skill(c).Name;
         }
 
         string SkillLine(Cmd c)

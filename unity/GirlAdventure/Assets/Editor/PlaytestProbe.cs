@@ -49,6 +49,11 @@ namespace GirlAdventure.EditorTools
             G.DebugMobs(true, true);
             yield return 1f;
             Shot("field_four");
+            Keys.Press(KeyCode.Escape);                             // 상태 창 (넷 + 궁극기 표시)
+            yield return .5f;
+            Shot("status_four");
+            Keys.Press(KeyCode.Escape);
+            yield return .5f;
             foreach (var def in new[] { GameData.LibraryBoss, GameData.SnowBoss, GameData.LavaBoss, GameData.King, GameData.Library[0] })
             {
                 G.DebugBattleWith(def);
