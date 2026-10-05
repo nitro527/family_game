@@ -336,7 +336,13 @@ namespace GirlAdventure.View
         IEnumerator AllyTurn(int a)
         {
             bool bro = P.Companions[a].Id == Party.Brother;
-            if (Settings.AllyAuto(P.Companions[a].Id))      // 자동 공격 (지훈, Q-32 아빠·엄마도): 명령창 없이 바로
+            bool autoNow = Settings.AllyAuto(P.Companions[a].Id);
+            if (bro && !autoNow && Settings.BroOneButton)   // 지훈 한 버튼 모드 (PLAN 70): 아무 버튼이나 누르면 알아서 공격
+            {
+                yield return BroOneButtonWait();
+                autoNow = true;
+            }
+            if (autoNow)      // 자동 공격 (지훈, Q-32 아빠·엄마도): 명령창 없이 바로
             {
                 var (ac, at) = battle.AllyAuto(a);
                 var ao = battle.MemberAct(a, ac, at);
@@ -374,6 +380,21 @@ namespace GirlAdventure.View
                 yield break;
             }
         }
+
+        /// <summary>지훈 한 버튼 모드: "지훈아, 아무 버튼이나 눌러!" 를 띄우고 아무 키·클릭·터치를 기다린다.</summary>
+        IEnumerator BroOneButtonWait()
+        {
+            ShowMessageWindow(false);
+            SetFace("bro_determined");
+            msgText.text = FillText(GameData.Talk("bro_onebutton")[0].Text, new (string, object)[0]);
+            yield return null;
+            while (!(Keys.AnyDown || Input.GetMouseButtonDown(0))) yield return null;
+            sfx.Play("select");
+            OneButtonPresses++;
+        }
+
+        /// <summary>프로브용: 한 버튼 모드로 지훈이가 공격한 횟수.</summary>
+        public int OneButtonPresses { get; private set; }
 
         /// <summary>동료 대사: 지훈은 예전 "bro_*" (누나를 부르는 말투), 다른 동료는 공용 "ally_*" ({ally} = 이름, 얼굴은 그 동료).</summary>
         IEnumerator TalkAlly(int a, string key, params (string key, object val)[] vars)

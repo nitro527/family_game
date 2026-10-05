@@ -145,6 +145,7 @@
     { "Id": "bro_cast",     "Lines": [ { "Text": "{bro}의 {skill}!", "Face": "bro_determined", "Hold": 0.45 } ] },
     { "Id": "bro_bolt",     "Lines": [ { "Text": "{bro}의 {skill}! 하늘에서 번개가 번쩍!", "Face": "bro_determined", "Hold": 0.55 } ] },
     { "Id": "bro_miss",     "Lines": [ { "Text": "앗, 빗나갔다!", "Face": "bro_angry", "Hold": 0.9 } ] },
+    { "Id": "bro_onebutton", "Lines": [ { "Text": "{bro}아, 아무 버튼이나 꾹 눌러! 씩씩하게 공격하자! ⚔", "Face": "bro_determined" } ] },
     { "Id": "bro_bigbolt",  "Lines": [ { "Text": "{bro}의 {skill}! 하늘이 번쩍번쩍, 번개가 우르르 쏟아진다!", "Face": "bro_determined", "Hold": 0.7 } ] },
     { "Id": "ally_bigbolt", "Lines": [ { "Text": "{ally}의 {skill}! 번개가 우르르 쏟아진다!", "Face": "ally_brave", "Hold": 0.7 } ] },
     { "Id": "bro_bigbolt_hit", "Lines": [ { "Text": "젤리들이 모두 찌릿찌릿! 번개를 맞았다!", "Face": "bro_laugh", "Hold": 0.9 } ] },

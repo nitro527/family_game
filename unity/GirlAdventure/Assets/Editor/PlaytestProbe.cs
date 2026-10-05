@@ -1555,6 +1555,24 @@ namespace GirlAdventure.EditorTools
             G.DebugSetBroAuto(false);
             Expect("brother used big bolt on a group", bigBoltShot);
             Expect("Q-33 skill cut-in animations (star, big bolt)", G.CutinsPlayed.Contains("star") && G.CutinsPlayed.Contains("bigbolt"), string.Join(",", G.CutinsPlayed));
+            // 지훈 한 버튼 모드 (PLAN 70): 지훈 차례에 "아무 버튼이나 눌러!" → 아무 키 → 알아서 공격
+            G.DebugSetBroOneButton(true);
+            int presses0 = G.OneButtonPresses;
+            G.DebugGroupBattle(2, 0);
+            yield return 1.5f;
+            for (float t = 0; t < 60 && G.Current == GameRoot.Mode.Battle && G.OneButtonPresses == presses0; t += .2f)
+            {
+                if (G.MessageText.Contains("아무 버튼")) { Shot("bro_one_button"); Keys.Press(KeyCode.X); }
+                else if (G.CommandOpen) Keys.Press(KeyCode.Return);
+                else if (G.ChoiceOpen) Keys.Press(KeyCode.Return);
+                else Keys.Press(KeyCode.Z);
+                yield return .2f;
+            }
+            G.DebugSetBroOneButton(false);
+            Expect("brother one-button mode attacked on any key", G.OneButtonPresses > presses0);
+            G.DebugSetAllFoesHp(1);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             // Q-31 반짝 힐을 동료에게: 서진·지훈이 다쳤으면 "누구에게 쓸까?" → 지훈
             G.DebugGroupBattle(1, 0);
             yield return (Func<bool>)(() => G.CommandOpen);

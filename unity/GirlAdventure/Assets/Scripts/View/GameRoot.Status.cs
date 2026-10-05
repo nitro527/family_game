@@ -225,9 +225,21 @@ namespace GirlAdventure.View
                     $"글자 크기  <color=#F2C443>{(Settings.BigText ? "크게" : "보통")}</color>",
                 };
                 foreach (var id in autoIds) lines.Add($"{Party.Def(id)?.Name ?? id} 자동 공격  <color=#F2C443>{(Settings.AllyAuto(id) ? "켬" : "끔")}</color>");
+                int oneIdx = P.BrotherJoined ? lines.Count : -1;        // 지훈 한 버튼 모드 (PLAN 70)
+                if (oneIdx >= 0) lines.Add($"지훈 한 버튼 모드  <color=#F2C443>{(Settings.BroOneButton ? "켬" : "끔")}</color>");
                 lines.Add("닫기");
                 yield return Choose(lines.ToArray());
                 int picked = choicePicked;
+                if (picked == oneIdx)
+                {
+                    Settings.ToggleBroOneButton();
+                    PlayerPrefs.Save();
+                    sfx.Play("select");
+                    yield return Say(Settings.BroOneButton ? "지훈이 차례에는 아무 버튼이나 누르면 지훈이가 씩씩하게 공격해요! (자동 공격이 켜져 있으면 자동이 먼저)" : "지훈이 차례에 명령을 골라요.",
+                                     Settings.BroOneButton ? "bro_laugh" : "bro_smile", .6f);
+                    choiceIndex = picked;
+                    continue;
+                }
                 if (picked >= 5 + autoIds.Count) break;
                 if (picked == 0) bgm.CycleVolume();
                 else if (picked == 1) Settings.CycleSfx();

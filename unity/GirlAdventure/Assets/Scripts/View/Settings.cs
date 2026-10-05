@@ -60,6 +60,11 @@ namespace GirlAdventure.View
         public static void SetAllyAuto(string id, bool on) => PlayerPrefs.SetInt(AutoKey(id), on ? 1 : 0);
         static string AutoKey(string id) => id == Sim.Party.Brother ? "broAuto" : "auto_" + id;
 
+        /// <summary>지훈 한 버튼 모드 (PLAN 70, 3살 지훈이용): 지훈 차례에 명령창 대신 "아무 버튼이나 눌러!" → 누르면 알아서 공격.</summary>
+        public static bool BroOneButton => PlayerPrefs.GetInt("broOneButton", 0) != 0;
+        public static void SetBroOneButton(bool on) => PlayerPrefs.SetInt("broOneButton", on ? 1 : 0);
+        public static void ToggleBroOneButton() => SetBroOneButton(!BroOneButton);
+
         public static int MessageFontSize => BigText ? 26 : 23;
         public static int ChoiceFontSize => BigText ? 25 : 22;
 
@@ -78,6 +83,7 @@ namespace GirlAdventure.View
             PlayerPrefs.DeleteKey("bigText");
             PlayerPrefs.DeleteKey("broAuto");
             PlayerPrefs.DeleteKey("auto_dad");
+            PlayerPrefs.DeleteKey("broOneButton");
             PlayerPrefs.DeleteKey("auto_mom");
         }
     }
