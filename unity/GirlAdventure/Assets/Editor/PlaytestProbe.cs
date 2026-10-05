@@ -1765,7 +1765,8 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             int status0 = G.StatusCount;
-            G.DebugBattleDefs(GameData.Forest[1]);
+            var shroom = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(GameData.Forest[1])); shroom.Hp = 9999;   // 넷이 첫 차례에 쓰러뜨리지 않게
+            G.DebugBattleDefs(shroom);
             yield return 1.5f;
             for (float t = 0; t < 60 && G.StatusCount == status0 && G.Current == GameRoot.Mode.Battle; t += .2f)
             {
