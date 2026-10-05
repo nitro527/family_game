@@ -46,6 +46,8 @@
     {"Id": "home_guest", "Map": "home", "Room": 2, "X": 20, "Y": 9, "Name": "여행자 젤리", "Color": "#FFE08A", "Dark": "#D0A84E", "Look": "hat", "Talk": "npc_home_guest"},
     {"Id": "home_reader", "Map": "home", "Room": 3, "X": 20, "Y": 10, "Name": "책벌레 젤리", "Color": "#B8C8FF", "Dark": "#7888D0", "Look": "", "Talk": "npc_home_reader", "TalkAfter": "npc_home_reader_after"},
     {"Id": "home_cook", "Map": "home", "Room": 4, "X": 20, "Y": 10, "Name": "요리사 젤리", "Color": "#FFFFFF", "Dark": "#C8C0B8", "Look": "hat", "Talk": "npc_home_cook"},
+    {"Id": "librarian", "Map": "library", "X": 10, "Y": 17, "Name": "사서 젤리", "Color": "#C8B8E8", "Dark": "#8A78B8", "Look": "bow", "Talk": "npc_librarian", "Talks": [{"If": "boss6", "Talk": "npc_librarian_end"}]},
+    {"Id": "reader", "Map": "library", "X": 3, "Y": 18, "Name": "책벌레 젤리", "Color": "#A8E0B8", "Dark": "#5AA070", "Look": "hat", "Talk": "npc_reader", "Talks": [{"If": "boss6", "Talk": "npc_reader_end"}, {"If": "mom", "Talk": "npc_reader_mom"}]},
     {"Id": "snow_elder", "Map": "snowtown", "X": 16, "Y": 15, "Name": "눈꽃 마을 어른 젤리", "Color": "#E8F0FF", "Dark": "#A8B8D8", "Look": "frost", "Talk": "npc_snow_elder", "Talks": [{"If": "boss5", "Talk": "npc_snow_elder_end"}]},
     {"Id": "furrier", "Map": "snowtown", "X": 11, "Y": 12, "Name": "털옷 가게 젤리", "Color": "#F0D8B8", "Dark": "#C0A080", "Look": "hat", "Talk": "npc_furrier"},
     {"Id": "skater", "Map": "snowtown", "X": 23, "Y": 10, "Name": "스케이트 젤리", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Look": "bow", "Talk": "npc_skater"},

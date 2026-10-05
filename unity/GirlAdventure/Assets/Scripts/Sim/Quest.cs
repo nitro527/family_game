@@ -48,7 +48,7 @@ namespace GirlAdventure.Sim
 
         /// <summary>이 칸으로 걸어갈 수 있나 (열린 기지 문 포함, 지킴이 자리는 못 지나감).</summary>
         public static bool Walkable(WorldMap m, PlayerState p, int x, int y) =>
-            !GuardAt(m, p, x, y) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)) || (m.At(x, y) == 'Q' && HasLetter(p)));
+            !GuardAt(m, p, x, y) && !(m.Kind == MapKind.Library && m.At(x, y) == 'B' && !MomJoined(p)) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)) || (m.At(x, y) == 'Q' && HasLetter(p)));
 
         /// <summary>
         /// 리본 편지 (서진이 노트 3 ⭐ "편지 = 퀘스트 아이템, 읽으면 퀘스트 시작, 3스테이지 마법사가 전하는 말", Q-13):
@@ -140,7 +140,7 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>챕터 골라 시작의 레벨 (챕터 번호 → 레벨). 밸런스 시뮬레이션 기준: 동굴 Lv6, 사막 Lv10, 용암 땅 Lv13.</summary>
-        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16 };
+        public static readonly int[] QuickLevels = { 1, 1, 6, 10, 13, 16, 20 };
         /// <summary>챕터 골라 시작의 장비: 앞 챕터 가게에서 샀을 장비를 끼고 시작한다.</summary>
         static readonly string[][] QuickGear =
         {
@@ -149,6 +149,7 @@ namespace GirlAdventure.Sim
             new[] { "crystal_wand", "moon_robe", "star_pendant" },
             new[] { "sun_wand", "sand_cape", "star_pendant", "bro_sword", "bro_shield" },
             new[] { "flame_wand", "lava_robe", "star_pendant", "flame_sword", "bro_shield", "lion_blade", "lion_shield" },
+            new[] { "snow_wand", "fur_cape", "snow_pendant", "ice_sword", "bro_shield", "frost_blade", "lion_shield" },
         };
 
         /// <summary>
@@ -164,6 +165,7 @@ namespace GirlAdventure.Sim
             if (chapter >= 3) { p.GuardDown = true; p.Boss2Down = true; }
             if (chapter >= 4) p.Boss3Down = true;
             if (chapter >= 5) p.Boss4Down = true;
+            if (chapter >= 6) p.Boss5Down = true;
             foreach (var id in QuickGear[chapter])
             {
                 if (!p.Gear.Contains(id)) p.Gear.Add(id);
@@ -176,7 +178,8 @@ namespace GirlAdventure.Sim
             if (chapter == 2) StartChapter2(p);
             else if (chapter == 3) StartChapter3(p);
             else if (chapter == 4) StartChapter4(p);
-            else StartChapter5(p);
+            else if (chapter == 5) StartChapter5(p);
+            else StartChapter6(p);
             return p;
         }
 
@@ -191,6 +194,30 @@ namespace GirlAdventure.Sim
             p.RestoreAll();
             p.X = WorldMap.SnowStart.x;
             p.Y = WorldMap.SnowStart.y;
+        }
+
+        /// <summary>챕터 5 를 깬 뒤 챕터 6 (도서관 ⭐ 사용자 2026-10-05)으로: 셋이 함께 회복하고 도서관 입구 열람실에서 출발. 엄마는 안에서 만난다.</summary>
+        public static void StartChapter6(PlayerState p)
+        {
+            TryJoinBrother(p);
+            p.Join("dad");
+            p.Chapter = 6;
+            p.InVillage = false;
+            p.Underground = false;
+            p.RestoreAll();
+            p.X = WorldMap.LibStart.x;
+            p.Y = WorldMap.LibStart.y;
+        }
+
+        /// <summary>엄마(현자)가 합류했나 (챕터 6 도서관 마법진에서).</summary>
+        public static bool MomJoined(PlayerState p) => p.Has("mom");
+
+        /// <summary>엄마 합류 (챕터 6, 마법진에 다가가면): 챕터 6 이고 아직이면 합류하고 true. 연출은 View.</summary>
+        public static bool TryJoinMom(PlayerState p)
+        {
+            if (p.Chapter < 6 || MomJoined(p)) return false;
+            p.Join("mom");
+            return true;
         }
 
         /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>

@@ -50,6 +50,12 @@ PROPS = [
     ("coffin", "One spooky but cute wooden coffin standing upright, golden trim, the lid slightly open with darkness inside.", 44, 2),
     ("snowpeak", "One snowy mountain peak: blue-gray rocky mountain with a thick white snow cap, a dark spooky cave entrance at the bottom center, a few icicles around the cave mouth.", 200, 2),
     ("volcano", "One small volcano: dark brown rocky cone with glowing orange lava bubbling out of the crater and dripping down the sides, a dark cave opening at the bottom center. Dark ash and black rocks around the base, no grass, no plants.", 200, 3),
+    # 챕터 6 도서관 (⭐ 2026-10-05)
+    ("magiccircle", "One glowing magic circle drawn on the floor seen from above at an angle: golden runes and a star pattern, soft golden and violet light rising from it, no person.", 110, 2),
+    ("bookthrone", "One spooky throne made of a big pile of old books and scrolls, purple cursed glow, small bat wing decorations, a dark cushion seat, front view.", 150, 2),
+    ("lectern", "One wooden library lectern stand holding a glowing open magic book, warm golden healing light and sparkles rising from the pages.", 50, 2),
+    ("libdesk", "One small library front desk counter made of dark wood with stacks of books, a little bell, an ink pot and a quill, front view.", 64, 2),
+    ("libtable", "One small square wooden reading desk seen from slightly above, with an open book, a stack of two books and a lit candle on it. Standing on nothing, no floor, no grass.", 46, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 

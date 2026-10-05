@@ -11,6 +11,8 @@
     { "Map": "lava", "MinFar": 0,  "Pool": ["숯 젤리", "숯 젤리", "용암 젤리"], "Group": 0.25, "MaxGroup": 2 },
     { "Map": "lava", "MinFar": 32, "Pool": ["숯 젤리", "용암 젤리", "용암 젤리", "큰 용암 젤리"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "snow", "MinFar": 0,  "Pool": ["눈송이 젤리", "눈송이 젤리", "고드름 젤리"], "Group": 0.25, "MaxGroup": 2 },
+    { "Map": "library", "MinFar": 0,  "Pool": ["꼬마 악마", "꼬마 악마", "책 악마", "잉크 악마"], "Group": 0.3, "MaxGroup": 2 },
+    { "Map": "library", "MaxY": 10,   "Pool": ["책 악마", "잉크 악마", "촛불 악마", "촛불 악마", "큰 꼬마 악마"], "Group": 0.4, "MaxGroup": 3 },
     { "Map": "snow", "MinFar": 36, "Pool": ["눈송이 젤리", "고드름 젤리", "고드름 젤리", "큰 눈송이 젤리", "얼음 골렘"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "cave",  "MaxY": 9,    "Pool": ["돌멩이 젤리", "돌멩이 젤리", "광물 젤리", "광물 젤리", "수정 젤리", "수정 젤리", "수정 젤리", "수정 젤리", "큰 돌멩이 젤리", "큰 돌멩이 젤리", "호박 젤리"], "Group": 0.3, "MaxGroup": 3 }
   ]

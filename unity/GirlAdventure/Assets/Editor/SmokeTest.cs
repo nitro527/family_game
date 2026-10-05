@@ -478,6 +478,7 @@ namespace GirlAdventure.EditorTools
             AllyAutoTests();
             ComboPairTests();
             MomTests();
+            LibraryTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -561,6 +562,82 @@ namespace GirlAdventure.EditorTools
                 if (fights > 60 || gearFights > 60) worst += $"ch{row.ch} ";
             }
             Check("progression: no chapter needs more than 60 fights for level or gear", worst == "", worst);
+        }
+
+        /// <summary>밸런스 탐색 (악마 대장): -executeMethod GirlAdventure.EditorTools.SmokeTest.SweepBoss6 → [SWEEP6] 줄.</summary>
+        public static void SweepBoss6()
+        {
+            DataLoader.Load();
+            var baseDef = GameData.LibraryBoss;
+            foreach (int hp in new[] { 5000, 5200, 5400, 5600 })
+                foreach (int atk in new[] { 64, 66, 68 })
+                {
+                    var boss = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(baseDef)); boss.Hp = hp; boss.Atk = atk; boss.Boss = true;
+                    float Win(int lv, bool gear)
+                    {
+                        var r = new System.Random(666); int wins = 0;
+                        for (int run = 0; run < 200; run++)
+                        {
+                            var d = PlayerState.NewGame("d"); d.GainExp(PlayerState.NextExp(lv - 1));
+                            d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad"); d.Join("mom");
+                            var kit = gear ? new[] { "book_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield", "sage_staff", "sage_robe" }
+                                           : new[] { "snow_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield" };
+                            foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
+                            d.Candy = 6;
+                            if (FightDuo(d, new List<EnemyDef> { boss }, r)) wins++;
+                        }
+                        return wins / 200f;
+                    }
+                    Debug.Log($"[SWEEP6] hp {hp} atk {atk}: g22 {Win(22, true):P0} g21 {Win(21, true):P0} n21 {Win(21, false):P0}");
+                }
+            UnityEditor.EditorApplication.Exit(0);
+        }
+
+        /// <summary>
+        /// 챕터 6 도서관 (⭐ 사용자 2026-10-05): 입구 열람실에서 마법진 엄마·옥좌까지 이어짐, 엄마 합류 전엔 옥좌에 못 감,
+        /// 합류·세이브 v16·마을 사람 대사, 악마 출현표·그림, 챕터 고르기 Lv20, 넷 + 도서관 장비 밸런스.
+        /// </summary>
+        static void LibraryTests()
+        {
+            var m = WorldMap.Library();
+            var reach = Reach(m, WorldMap.LibStart);
+            var c = WorldMap.MomCircle; var bs = WorldMap.LibBoss;
+            bool layout = m.At(c.x, c.y) == 'O' && reach[c.x, c.y + 1] && m.At(bs.x, bs.y) == 'B' && reach[bs.x - 1, bs.y] && m.At(WorldMap.LibSpring.x, WorldMap.LibSpring.y) == 'F'
+                          && m.EncounterRate(WorldMap.LibStart.x, WorldMap.LibStart.y) == 0 && m.EncounterRate(18, 8) > 0 && WorldMap.ForChapter(6).Kind == MapKind.Library && !WorldMap.HasTown(6);
+            var p = Quest.QuickStart("t", 6);
+            bool start = p.Chapter == 6 && p.Lv == 20 && (p.X, p.Y) == WorldMap.LibStart && p.Companions.Count == 2 && !Quest.MomJoined(p) && p.Boss5Down;
+            bool locked = !Quest.Walkable(m, p, bs.x, bs.y);
+            bool joined = Quest.TryJoinMom(p) && Quest.MomJoined(p) && !Quest.TryJoinMom(p) && Quest.Walkable(m, p, bs.x, bs.y);
+            p.Boss6Down = true;
+            var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
+            bool saved = SaveData.CurrentVersion >= 16 && q.Boss6Down && Quest.MomJoined(q) && q.Companions.Count == 3
+                         && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.Library)).Find(n => n.Id == "librarian"), q) == "npc_librarian_end";
+            var boss = GameData.LibraryBoss;
+            bool data = GameData.Library.Length == 5 && boss != null && boss.Boss && Resources.Load<Texture2D>("Monsters/lib_king") != null && Resources.Load<Texture2D>("Battle/library") != null
+                        && Resources.Load<Texture2D>("Battle/library_boss") != null && GameData.EncounterPool(MapKind.Library, 18, 8).Length > 0 && GameData.RegionOf(boss) == "도서관"
+                        && GameData.HasTalk("ch6_intro") && GameData.HasTalk("mom_meet") && GameData.HasTalk("ch6_clear") && GameData.HasTalk("ending_card6");
+            Check("chapter 6 library: map links start→mom→throne, boss locked until mom joins, save v16, data/art", layout && start && locked && joined && saved && data,
+                  $"layout={layout} start={start}(lv {p.Lv}) locked={locked} joined={joined} saved={saved} data={data}");
+            float Win(int lv, bool gear)
+            {
+                var r = new System.Random(666);
+                int wins = 0;
+                for (int run = 0; run < 400; run++)
+                {
+                    var d = PlayerState.NewGame("d");
+                    d.GainExp(PlayerState.NextExp(lv - 1));
+                    d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad"); d.Join("mom");
+                    var kit = gear ? new[] { "book_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield", "sage_staff", "sage_robe" }
+                                   : new[] { "snow_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield" };
+                    foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
+                    d.Candy = 6;
+                    if (FightDuo(d, new List<EnemyDef> { boss }, r)) wins++;
+                }
+                return wins / 400f;
+            }
+            float g22 = Win(22, true), g21 = Win(21, true), n21 = Win(21, false);
+            Debug.Log($"[BALANCE BOSS6] four Lv22+library gear={g22:P1} Lv21+gear={g21:P1} Lv21 snow gear only={n21:P1}");
+            Check("demon boss balance (Lv22+gear ≥90%, Lv21+gear ≥80%, without new gear <75%)", g22 >= .9f && g21 >= .8f && n21 < .75f, $"g22 {g22:P1} g21 {g21:P1} n21 {n21:P1}");
         }
 
         /// <summary>예티 (C5-5): 눈 산 동굴 입구, 데이터·그림, 세이브 v15, 마을 대사, 셋 + 털옷 가게 장비 밸런스.</summary>
@@ -730,7 +807,7 @@ namespace GirlAdventure.EditorTools
             p.Boss2Down = true; Quest.TryJoinBrother(p); p.Join("dad"); p.Chapter = 4; p.Boss4Down = true; p.InVillage = true; p.Hp = 1;
             Quest.StartChapter5(p);
             Check("chapter 4 → 5: three together at the snow start, healed, snow town",
-                  WorldMap.LastChapter == 5 && p.Chapter == 5 && !p.InVillage && (p.X, p.Y) == WorldMap.SnowStart && p.Companions.Count == 2 && p.Hp == p.MaxHp
+                  WorldMap.LastChapter >= 5 && p.Chapter == 5 && !p.InVillage && (p.X, p.Y) == WorldMap.SnowStart && p.Companions.Count == 2 && p.Hp == p.MaxHp
                   && WorldMap.HasTown(5) && WorldMap.ForPlayer(5, true).Kind == MapKind.SnowTown && WorldMap.ForPlayer(4, true).Kind == MapKind.LavaTown);
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
             Check("chapter 5 save loads on the snow map", q.Chapter == 5 && (q.X, q.Y) == WorldMap.SnowStart && q.Companions.Count == 2);
@@ -1220,6 +1297,7 @@ namespace GirlAdventure.EditorTools
                 (9, "{\"Version\":9,\"Name\":\"a\",\"Lv\":9,\"Exp\":240,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":28,\"Y\":3,\"Chapter\":2,\"BossDown\":true,\"Boss2Down\":true,\"GuardDown\":true,\"BrotherJoined\":true,\"BroHp\":0,\"BroMp\":5}"),
                 (10, "{\"Version\":10,\"Name\":\"a\",\"Lv\":11,\"Exp\":340,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":4,\"Y\":15,\"Chapter\":3,\"BossDown\":true,\"Boss2Down\":true,\"Boss3Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5}"),
                 (14, "{\"Version\":14,\"Name\":\"a\",\"Lv\":14,\"Exp\":1100,\"Hp\":90,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Boss4Down\":true,\"Party\":[\"jihun:90:10\",\"dad:100:5\"]}"),
+                (15, "{\"Version\":15,\"Name\":\"a\",\"Lv\":17,\"Exp\":2400,\"Hp\":110,\"Mp\":50,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":5,\"Boss2Down\":true,\"Boss3Down\":true,\"Boss4Down\":true,\"Boss5Down\":true,\"Party\":[\"jihun:120:12\",\"dad:130:8\"]}"),
                 (13, "{\"Version\":13,\"Name\":\"a\",\"Lv\":12,\"Exp\":700,\"Hp\":80,\"Mp\":40,\"Candy\":3,\"X\":4,\"Y\":20,\"Chapter\":4,\"Boss2Down\":true,\"Boss3Down\":true,\"Party\":[\"jihun:90:10\",\"dad:0:5\"]}"),
                 (12, "{\"Version\":12,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":60,\"Mp\":30,\"Candy\":3,\"X\":20,\"Y\":16,\"Chapter\":3,\"Underground\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":40,\"BroMp\":3}"),
                 (11, "{\"Version\":11,\"Name\":\"a\",\"Lv\":10,\"Exp\":300,\"Hp\":70,\"Mp\":30,\"Candy\":3,\"X\":18,\"Y\":17,\"Chapter\":3,\"InVillage\":true,\"Boss2Down\":true,\"BrotherJoined\":true,\"BroHp\":50,\"BroMp\":5,\"SkillUses\":[\"Fire:31\",\"Bolt:2\"]}"),
@@ -1952,9 +2030,15 @@ namespace GirlAdventure.EditorTools
                         if (b.EnemyDown) return true;
                         if (b.ComboReady()) { b.Combo(); if (b.EnemyDown) return true; }      // 합동 공격 (화면과 같은 규칙)
                     }
-                    else
+                    else if (p.Companions[a].Id == "dad")
                     {
                         b.MemberAct(a, !b.SisterDown && p.Hp < p.MaxHp * .5f && b.MemberCanUse(a, Cmd.Guard) ? Cmd.Guard : Cmd.Sword);
+                        if (b.EnemyDown) return true;
+                    }
+                    else                                            // 엄마 (챕터 6): 화면 자동 모드와 같은 규칙
+                    {
+                        var (ac, at) = b.AllyAuto(a);
+                        b.MemberAct(a, ac, at);
                         if (b.EnemyDown) return true;
                     }
                 }
@@ -2243,13 +2327,13 @@ namespace GirlAdventure.EditorTools
         static void MusicTests()
         {
             Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
-            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "underworld", "lava", "snow", "snowtown", "battle", "boss", "ending" })
+            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "underworld", "lava", "snow", "snowtown", "library", "battle", "boss", "ending" })
             {
                 var s = Music.Get(name);
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert" || name == "underworld" || name == "lava" || name == "snow" || name == "snowtown";     // A-B 16마디 곡
+                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert" || name == "underworld" || name == "lava" || name == "snow" || name == "snowtown" || name == "library";     // A-B 16마디 곡
                 Check($"bgm {name} loops cleanly", (longSong ? lead == 128 : lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;

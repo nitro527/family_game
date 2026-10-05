@@ -1,8 +1,8 @@
 {
   "Items": [
-    { "Id": "candy",  "Name": "사탕",      "Kind": "use", "Hp": 18, "Price": 8,  "Shops": "village,cave,oasis,lavatown,snowtown", "Desc": "먹으면 HP가 회복되는 달콤한 사탕" },
-    { "Id": "potion", "Name": "마법 물약", "Kind": "use", "Mp": 12, "Price": 15, "Shops": "village,cave,oasis,lavatown,snowtown", "Desc": "마시면 MP가 회복되는 반짝이는 물약" },
-    { "Id": "moon",   "Name": "달님 사탕", "Kind": "use", "Hp": 60, "Price": 30, "Shops": "cave,oasis,lavatown,snowtown", "Desc": "HP가 아주 많이 회복되는 커다란 달 모양 사탕" },
+    { "Id": "candy",  "Name": "사탕",      "Kind": "use", "Hp": 18, "Price": 8,  "Shops": "village,cave,oasis,lavatown,snowtown,library", "Desc": "먹으면 HP가 회복되는 달콤한 사탕" },
+    { "Id": "potion", "Name": "마법 물약", "Kind": "use", "Mp": 12, "Price": 15, "Shops": "village,cave,oasis,lavatown,snowtown,library", "Desc": "마시면 MP가 회복되는 반짝이는 물약" },
+    { "Id": "moon",   "Name": "달님 사탕", "Kind": "use", "Hp": 60, "Price": 30, "Shops": "cave,oasis,lavatown,snowtown,library", "Desc": "HP가 아주 많이 회복되는 커다란 달 모양 사탕" },
     { "Id": "star_wand",    "Name": "별빛 지팡이", "Kind": "weapon", "Atk": 2, "Price": 50,  "Shops": "village", "Desc": "끝에 작은 별이 달린 지팡이" },
     { "Id": "flower_cape",  "Name": "꽃잎 망토",   "Kind": "armor",  "Def": 1, "Price": 40,  "Shops": "village", "Desc": "꽃잎을 엮어 만든 가볍고 튼튼한 망토" },
     { "Id": "ribbon",       "Name": "리본 머리띠", "Kind": "acc",    "Def": 1, "Price": 30,  "Shops": "village", "Desc": "엄마가 달아 준 행운의 리본" },
@@ -24,6 +24,9 @@
     {"Id": "snow_wand", "Name": "눈꽃 지팡이", "Kind": "weapon", "Atk": 18, "Price": 420, "Shops": "snowtown", "Desc": "끝에 커다란 눈꽃 결정이 달린 지팡이"},
     {"Id": "fur_cape", "Name": "하얀 털 망토", "Kind": "armor", "Def": 11, "Price": 380, "Shops": "snowtown", "Desc": "눈보라도 막아 주는 폭신한 털 망토"},
     {"Id": "ice_sword", "Name": "얼음 칼", "Kind": "bro_weapon", "Atk": 13, "Price": 340, "Shops": "snowtown", "Desc": "녹지 않는 얼음으로 만든 지훈이의 칼"},
+    {"Id": "sage_staff", "Name": "현자의 지팡이", "Kind": "mom_weapon", "Atk": 8, "Price": 380, "Shops": "library", "Desc": "엄마의 빛을 더 밝게 해 주는 은빛 지팡이"},
+    {"Id": "sage_robe", "Name": "별자리 로브", "Kind": "mom_robe", "Def": 7, "Price": 360, "Shops": "library", "Desc": "별자리가 수놓인 엄마의 로브"},
+    {"Id": "book_wand", "Name": "마법책 지팡이", "Kind": "weapon", "Atk": 24, "Price": 560, "Shops": "library", "Desc": "옛 마법책 한 장이 감긴 지팡이"},
     {"Id": "frost_blade", "Name": "서리 장검", "Kind": "dad_weapon", "Atk": 10, "Price": 360, "Shops": "snowtown", "Desc": "서리가 반짝이는 아빠의 장검"}
   ]
 }

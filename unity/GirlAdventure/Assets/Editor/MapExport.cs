@@ -20,7 +20,7 @@ namespace GirlAdventure.EditorTools
             {
                 ("field", new WorldMap()), ("village", WorldMap.Village()), ("cave", WorldMap.Cave()), ("desert", WorldMap.Desert()),
                 ("oasis", WorldMap.OasisTown()), ("underworld", WorldMap.Underworld()), ("lava", WorldMap.Lava()), ("lavatown", WorldMap.LavaTown()),
-                ("snow", WorldMap.Snow()), ("snowtown", WorldMap.SnowTown()), ("home0", WorldMap.Home(0)), ("home1", WorldMap.Home(1)),
+                ("snow", WorldMap.Snow()), ("snowtown", WorldMap.SnowTown()), ("home0", WorldMap.Home(0)), ("home1", WorldMap.Home(1)), ("library", WorldMap.Library()),
             };
             foreach (var (name, m) in maps)
             {

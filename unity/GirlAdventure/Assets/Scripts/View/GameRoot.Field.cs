@@ -14,7 +14,7 @@ namespace GirlAdventure.View
         const float StepTime = .17f, FieldCharHeight = 1.75f, MobHeight = 1.15f;
 
         Transform fieldRoot;
-        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR, wellWaterSR, sandTwisterSR;
+        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR, wellWaterSR, sandTwisterSR, momSR;
         const float GuardHeight = 1.6f;         // 보물상자 지킴이는 보통 젤리보다 크게
         Sprite[] sideFrames;
         Sprite[] frontFrames, backFrames;       // 앞/뒤 걷기: 한 발 → 두 발 모음 → 반대 발 → 두 발 모음 (tools/make_walk_frames.py)
@@ -34,7 +34,7 @@ namespace GirlAdventure.View
         readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
         bool sliding;                           // 얼음 위를 미끄러지는 중 (C5-3): 걷는 그림 대신 선 채로 쭉
-        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap;
+        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap, libraryMap;
         WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
         SpriteRenderer homeChestSR, letterSR;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
@@ -60,6 +60,7 @@ namespace GirlAdventure.View
             lavaMap = WorldMap.Lava();
             lavaTownMap = WorldMap.LavaTown();
             snowMap = WorldMap.Snow();
+            libraryMap = WorldMap.Library();
             snowTownMap = WorldMap.SnowTown();
             Npcs.Place(snowTownMap);
             homeMaps = new WorldMap[WorldMap.AllHouses.Length];
@@ -75,7 +76,7 @@ namespace GirlAdventure.View
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap })   // 집 안 18채는 미리 그리지 않고 처음 들어갈 때 그린다 (한 장 8MB, Q-16)
+            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap, libraryMap })   // 집 안 18채는 미리 그리지 않고 처음 들어갈 때 그린다 (한 장 8MB, Q-16)
             {
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
@@ -169,7 +170,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지하세계가 아닐 때 있어야 할 맵 (챕터·마을 안).</summary>
-        WorldMap SurfaceMap => P.Chapter >= 5 ? (P.InVillage ? snowTownMap : snowMap) : P.Chapter >= 4 ? (P.InVillage ? lavaTownMap : lavaMap) : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+        WorldMap SurfaceMap => P.Chapter >= 6 ? libraryMap : P.Chapter >= 5 ? (P.InVillage ? snowTownMap : snowMap) : P.Chapter >= 4 ? (P.InVillage ? lavaTownMap : lavaMap) : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
 
         /// <summary>연 상자·열린 문·보물상자 지킴이 그림.</summary>
         void RefreshQuestProps()
@@ -184,6 +185,16 @@ namespace GirlAdventure.View
             if (homeChestSR.enabled) homeChestSR.transform.localPosition = new Vector3(hc.x, -hc.y, 0);
             wellWaterSR.enabled = map.Kind == MapKind.Oasis && P.Boss3Down;      // 사막 보스를 이기면 마른 우물에 물이 찬다
             sandTwisterSR.enabled = map.Kind == MapKind.Desert && !P.Boss3Down && sandTwisterSR.sprite != null;
+            bool momHere = map.Kind == MapKind.Library && !Quest.MomJoined(P);
+            if (momHere && momSR == null)
+            {
+                momSR = new GameObject("MomAtCircle").AddComponent<SpriteRenderer>();
+                momSR.transform.SetParent(fieldRoot, false);
+                momSR.sprite = Art.Get("Mom/walk_front", FieldCharHeight * 1.12f);
+                momSR.sortingOrder = 2;
+                momSR.transform.localPosition = FeetAt(WorldMap.MomCircle.x, WorldMap.MomCircle.y - .35f);
+            }
+            if (momSR != null) momSR.enabled = momHere;
             bool guard = cave && Quest.GuardAlive(P);
             if (guard && guardSR == null)
             {
@@ -365,7 +376,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.Kind == MapKind.Home ? "village" : map.Kind == MapKind.SnowTown ? "snowtown" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => map.Kind == MapKind.Library ? "library" : map.Kind == MapKind.Home ? "village" : map.Kind == MapKind.SnowTown ? "snowtown" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -591,6 +602,8 @@ namespace GirlAdventure.View
                 else if (c == 'h' && map.IsTown && dir == "up" && WorldMap.HouseAtDoor(map.Kind, nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(map.Kind, nx, ny)));
                 else if (c == 'Q' && map.Kind == MapKind.Desert) StartCoroutine(LetterRoutine());
                 else if (c == 'Z' && map.Kind == MapKind.Underworld) StartCoroutine(TalkOnce("dark_box"));
+                else if (c == 'O' && map.Kind == MapKind.Library) StartCoroutine(MomJoinRoutine());
+                else if (c == 'B' && map.Kind == MapKind.Library) StartCoroutine(TalkOnce("lib_boss_locked"));
                 else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
                 else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
                 else if (c == 'D') StartCoroutine(DoorRoutine());
@@ -818,6 +831,7 @@ namespace GirlAdventure.View
             if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }
             if (here == 'B' && !P.Boss4Down && map.Kind == MapKind.Lava) { StartCoroutine(Boss4Routine()); return; }
             if (here == 'B' && !P.Boss5Down && map.Kind == MapKind.Snow) { StartCoroutine(Boss5Routine()); return; }
+            if (here == 'B' && !P.Boss6Down && map.Kind == MapKind.Library) { StartCoroutine(Boss6Routine()); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
             if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'E') { StartCoroutine(HomeRoutine(-1)); return; }
@@ -974,7 +988,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.SnowTown ? "sign_snowtown" : map.Kind == MapKind.Snow ? "sign_snow" : map.Kind == MapKind.LavaTown ? "sign_lavatown" : map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(map.Kind == MapKind.Library ? "sign_library" : map.Kind == MapKind.SnowTown ? "sign_snowtown" : map.Kind == MapKind.Snow ? "sign_snow" : map.Kind == MapKind.LavaTown ? "sign_lavatown" : map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
             HideMessage();
             busy = false;
         }
@@ -1012,6 +1026,33 @@ namespace GirlAdventure.View
             busy = true;
             yield return Talk("boss2_meet");
             yield return BattleRoutine(GameData.General);
+        }
+
+        /// <summary>악마 대장 (챕터 6 ✏️): 책 더미 옥좌 앞에서 저주의 책이 번쩍 → 보스전.</summary>
+        IEnumerator Boss6Routine()
+        {
+            busy = true;
+            yield return Talk("boss6_meet");
+            yield return BattleRoutine(GameData.LibraryBoss);
+        }
+
+        /// <summary>
+        /// 엄마 합류 (챕터 6 ⭐ "현자 엄마가 도서관을 되돌리는 중, 가족이 도우러 감"): 마법진의 엄마에게 다가가면
+        /// 만나는 대사 → "현자 엄마 합류!" 컷인 → 넷이 함께. 이미 합류했으면 마법진은 그냥 빛나는 바닥 그림.
+        /// </summary>
+        IEnumerator MomJoinRoutine()
+        {
+            if (busy || Quest.MomJoined(P)) yield break;
+            busy = true;
+            yield return Talk("mom_meet");
+            Quest.TryJoinMom(P);
+            yield return CutinRoutine(Art.UI("Mom/hero"), "현자 엄마 합류!", "lvup");
+            RefreshHud(); ResetBrother(); UpdatePlayerVisual();
+            RefreshQuestProps();
+            yield return Talk("mom_joined");
+            HideMessage();
+            AutoSave();
+            busy = false;
         }
 
         /// <summary>예티 (C5-5): 눈 산 동굴 입구에서 눈보라 → 예티가 걸어 나온다.</summary>

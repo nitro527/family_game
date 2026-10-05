@@ -180,14 +180,14 @@ namespace GirlAdventure.View
             PlayerPrefs.SetString("girlName", P.Name);
             facing = chapter >= 4 ? "right" : "down";
             sfx.Play("start");
-            StartCoroutine(chapter >= 5 ? Chapter5Routine() : chapter == 4 ? Chapter4Routine() : chapter == 3 ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(chapter >= 6 ? Chapter6Routine() : chapter == 5 ? Chapter5Routine() : chapter == 4 ? Chapter4Routine() : chapter == 3 ? Chapter3Routine() : Chapter2Routine());
         }
 
         /// <summary>프로브용: 타이틀에서 챕터 고르기 메뉴만 연다 / 고른 셈 치고 그 칸에서 바로 시작한다.</summary>
         public void DebugOpenChapterPick() => PickChapter();
         public void DebugQuickStart(int chapter, int slot) { StopAllCoroutines(); HideMessage(); busy = false; SaveStore.Slot = slot; BeginQuick(chapter); }
 
-        static string ChapterPlace(int c) => c == 2 ? "동굴" : c == 3 ? "사막" : c == 4 ? "용암 땅" : c == 5 ? "눈 덮인 곳" : "초원";
+        static string ChapterPlace(int c) => c == 2 ? "동굴" : c == 3 ? "사막" : c == 4 ? "용암 땅" : c == 5 ? "눈 덮인 곳" : c == 6 ? "도서관" : "초원";
 
         void ContinueGame()
         {
@@ -232,6 +232,19 @@ namespace GirlAdventure.View
         {
             yield return Talk("ch2_clear");
             yield return BrotherJoinRoutine(false);
+            HideMessage();
+            AutoSave();
+            Current = Mode.Ending;
+            ShowEnding();
+            bgm.Play("ending");
+            sfx.Play("lvup");
+        }
+
+        /// <summary>챕터 6 끝 (✏️): 악마 대장이 사라지고 도서관이 원래대로 → 번쩍 → 챕터 6 완료 카드.</summary>
+        IEnumerator Chapter6ClearRoutine()
+        {
+            yield return Talk("ch6_clear");
+            yield return Flash(.6f);
             HideMessage();
             AutoSave();
             Current = Mode.Ending;
@@ -299,13 +312,14 @@ namespace GirlAdventure.View
             if (Current != Mode.Ending || P.Chapter >= WorldMap.LastChapter) return;
             confirmFrame = Time.frameCount;
             int from = P.Chapter;
-            if (from == 4) Quest.StartChapter5(P);
+            if (from == 5) Quest.StartChapter6(P);
+            else if (from == 4) Quest.StartChapter5(P);
             else if (from == 3) Quest.StartChapter4(P);
             else if (from == 2) Quest.StartChapter3(P);
             else Quest.StartChapter2(P);
             facing = from >= 3 ? "right" : "down";
             sfx.Play("start");
-            StartCoroutine(from == 4 ? Chapter5Routine() : from == 3 ? Chapter4Routine() : from == 2 ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(from == 5 ? Chapter6Routine() : from == 4 ? Chapter5Routine() : from == 3 ? Chapter4Routine() : from == 2 ? Chapter3Routine() : Chapter2Routine());
         }
 
         /// <summary>챕터 4 시작 (사용자 2026-10-03): 용암 땅 도입 → 아빠 합류 대사 → "기사 아빠 합류!" 컷인 → 셋이 함께.</summary>
@@ -318,6 +332,17 @@ namespace GirlAdventure.View
             yield return CutinRoutine(Art.UI("Dad/hero"), "기사 아빠 합류!", "lvup");
             RefreshHud();
             yield return Talk("dad_joined");
+            HideMessage();
+            AutoSave();
+            busy = false;
+        }
+
+        /// <summary>챕터 6 시작 (도서관 ⭐ 사용자 2026-10-05): 악마가 점령한 도서관 도입 → 셋이 입구 열람실에서 출발 (엄마는 안에서).</summary>
+        IEnumerator Chapter6Routine()
+        {
+            EnterField();
+            busy = true;
+            yield return Talk("ch6_intro");
             HideMessage();
             AutoSave();
             busy = false;
@@ -578,8 +603,11 @@ namespace GirlAdventure.View
         public bool SandTwisterShown => sandTwisterSR != null && sandTwisterSR.enabled;
         public void DebugSetUnderground(bool on) { P.Underground = on; ApplyMap(); bgm.Play(MapSong); RefreshQuestProps(); UpdatePlayerVisual(); }
         public void DebugSetBroAuto(bool on) => Settings.SetBroAuto(on);
+        public void DebugSetAllyAuto(string id, bool on) => Settings.SetAllyAuto(id, on);
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
+        public void DebugNearLibraryBoss() => DebugTeleport(WorldMap.LibBoss.x - 1, WorldMap.LibBoss.y, "right");
+        public void DebugNearMom() => DebugTeleport(WorldMap.MomCircle.x, WorldMap.MomCircle.y + 1, "up");
         public void DebugNearSnowBoss() => DebugTeleport(WorldMap.SnowBossDoor.x, WorldMap.SnowBossDoor.y + 1, "up");
         public void DebugNearLavaBoss() => DebugTeleport(WorldMap.VolcanoDoor.x, WorldMap.VolcanoDoor.y + 1, "up");
         public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");

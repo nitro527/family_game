@@ -29,7 +29,7 @@ namespace GirlAdventure.Sim
         public bool Inn;                    // 여관 주인: 말 걸면 묵을지 묻는다 (Sim.Inn)
         public int Room;                    // Map "home" 일 때 몇 번째 집 (WorldMap.Houses)
 
-        public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : Map == "desert" ? MapKind.Desert : Map == "oasis" ? MapKind.Oasis : Map == "lavatown" ? MapKind.LavaTown : Map == "home" ? MapKind.Home : Map == "snowtown" ? MapKind.SnowTown : MapKind.Field;
+        public MapKind Kind => Map == "cave" ? MapKind.Cave : Map == "village" ? MapKind.Village : Map == "desert" ? MapKind.Desert : Map == "oasis" ? MapKind.Oasis : Map == "lavatown" ? MapKind.LavaTown : Map == "home" ? MapKind.Home : Map == "snowtown" ? MapKind.SnowTown : Map == "library" ? MapKind.Library : MapKind.Field;
 
         /// <summary>그림용 젤리 정의 (View 가 Painter.Jelly 로 그린다).</summary>
         public EnemyDef AsJelly() => new EnemyDef { Name = Name, Color = Color, Dark = Dark, Look = Look, Hp = 1, Atk = 1, Exp = 1, Move = "hop", Attack = "-" };
@@ -107,6 +107,8 @@ namespace GirlAdventure.Sim
                 case "boss3": return p.Boss3Down;
                 case "boss4": return p.Boss4Down;
                 case "boss5": return p.Boss5Down;
+                case "boss6": return p.Boss6Down;
+                case "mom": return Quest.MomJoined(p);
                 case "guard": return p.GuardDown;
                 case "key": return p.HasItem(Quest.KeyItem);
                 case "door": return Quest.DoorOpen(p);

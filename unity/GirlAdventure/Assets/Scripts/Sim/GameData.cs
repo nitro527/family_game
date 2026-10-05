@@ -20,6 +20,8 @@ namespace GirlAdventure.Sim
         public EnemyDef DesertBoss;     // 카우보이 젤리 대장 (챕터 3 보스)
         public EnemyDef LavaBoss;       // 화산 젤리 대장 (챕터 4 보스, ✏️)
         public EnemyDef SnowBoss;       // 예티 (챕터 5 보스, 서진이 도감 그림)
+        public EnemyDef[] Library;      // 도서관 악마 (챕터 6 ⭐, 모습·이름 ✏️ Qwen)
+        public EnemyDef LibraryBoss;    // 악마 대장 (챕터 6 보스 ✏️)
     }
 
     /// <summary>명령 하나의 수치. 피해 = Atk × AtkMul + Bonus + (0 ~ Rand-1).</summary>
@@ -109,17 +111,19 @@ namespace GirlAdventure.Sim
         public static EnemyDef[] Under { get; private set; }
         public static EnemyDef[] Lava { get; private set; }
         public static EnemyDef[] Snow { get; private set; }
+        public static EnemyDef[] Library { get; private set; }
 
         /// <summary>그 맵의 일반 적 목록 (출현표 인덱스가 가리키는 곳): 동굴 Cave, 사막 Desert, 나머지(초원·마을) Normal.</summary>
-        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : kind == MapKind.Lava ? Lava : kind == MapKind.Snow ? Snow : Normal;
+        public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : kind == MapKind.Lava ? Lava : kind == MapKind.Snow ? Snow : kind == MapKind.Library ? Library : Normal;
 
-        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : kind == MapKind.Underworld ? "under" : kind == MapKind.Lava ? "lava" : kind == MapKind.Snow ? "snow" : "field";
-        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "under" ? MapKind.Underworld : map == "lava" ? MapKind.Lava : map == "snow" ? MapKind.Snow : MapKind.Field;
+        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : kind == MapKind.Underworld ? "under" : kind == MapKind.Lava ? "lava" : kind == MapKind.Snow ? "snow" : kind == MapKind.Library ? "library" : "field";
+        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "under" ? MapKind.Underworld : map == "lava" ? MapKind.Lava : map == "snow" ? MapKind.Snow : map == "library" ? MapKind.Library : MapKind.Field;
         public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
         public static EnemyDef DesertBoss { get; private set; }
         public static EnemyDef LavaBoss { get; private set; }
         public static EnemyDef SnowBoss { get; private set; }
+        public static EnemyDef LibraryBoss { get; private set; }
         static readonly Dictionary<Cmd, SkillDef> skills = new Dictionary<Cmd, SkillDef>();
         static readonly Dictionary<string, Line[]> talk = new Dictionary<string, Line[]>();
         static readonly Dictionary<string, ItemDef> items = new Dictionary<string, ItemDef>();
@@ -150,6 +154,7 @@ namespace GirlAdventure.Sim
             Under = enemies.Under ?? new EnemyDef[0];
             Lava = enemies.Lava ?? new EnemyDef[0];
             Snow = enemies.Snow ?? new EnemyDef[0];
+            Library = enemies.Library ?? new EnemyDef[0];
             Guard = enemies.Guard;
             Guard.Boss = true;
             General = enemies.General;
@@ -160,6 +165,8 @@ namespace GirlAdventure.Sim
             if (LavaBoss != null) LavaBoss.Boss = true;
             SnowBoss = enemies.SnowBoss;
             if (SnowBoss != null) SnowBoss.Boss = true;
+            LibraryBoss = enemies.LibraryBoss;
+            if (LibraryBoss != null) LibraryBoss.Boss = true;
             skills.Clear();
             SkillLevelUses = skillTable.LevelUses ?? new int[0];
             SkillPowerPerLevel = skillTable.PowerPerLevel;
@@ -197,6 +204,8 @@ namespace GirlAdventure.Sim
             if (LavaBoss != null) yield return LavaBoss;
             foreach (var d in Snow) yield return d;
             if (SnowBoss != null) yield return SnowBoss;
+            foreach (var d in Library) yield return d;
+            if (LibraryBoss != null) yield return LibraryBoss;
         }
 
         /// <summary>도감에 쓰는 사는 곳 (Q-12): 어느 목록에 들어 있나로 정한다.</summary>
@@ -210,6 +219,7 @@ namespace GirlAdventure.Sim
             if (Array.IndexOf(Under, d) >= 0) return "지하세계";
             if (d == LavaBoss || Array.IndexOf(Lava, d) >= 0) return "용암 땅";
             if (d == SnowBoss || Array.IndexOf(Snow, d) >= 0) return "눈 덮인 땅";
+            if (d == LibraryBoss || Array.IndexOf(Library, d) >= 0) return "도서관";
             return "";
         }
 

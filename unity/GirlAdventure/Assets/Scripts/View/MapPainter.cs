@@ -42,7 +42,7 @@ namespace GirlAdventure.View
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m)
+            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m) : m.Kind == MapKind.Library ? Library(m)
             : tiles != null ? TiledField(m, tiles) : Field(m);
 
         // ------------------------------------------------------------------ noise / mask helpers
@@ -505,6 +505,80 @@ namespace GirlAdventure.View
         /// 눈 덮인 땅 (챕터 5, C5-1): 푸르스름한 눈밭(언덕 그늘·반짝이) → 밟힌 눈길 → 꽁꽁 언 호수(하얀 빗금·금) →
         /// 바위(눈 모자) → 눈 덮인 전나무(위 줄부터) → 눈 산(동굴 입구) → 모닥불·표지판·눈사람.
         /// </summary>
+        /// <summary>
+        /// 도서관 (챕터 6 ⭐, 그림 ✏️): 벽은 책등이 빽빽한 어두운 책장, 바닥은 나무 마루에 악마 기운(보랏빛 얼룩·빛나는 룬),
+        /// 입구 열람실은 붉은 양탄자. 책장·책상·마법진·책 더미 옥좌·책 받침대·사서 책상은 소품 그림 (Qwen, 없으면 간단한 코드 그림).
+        /// </summary>
+        static Raster Library(WorldMap m)
+        {
+            int w = WorldMap.W * T, h = WorldMap.H * T;
+            var R = new Raster(w, h);
+            var safe = Mask(m, ":FSMN");                                   // 열람실 양탄자 (위에 놓인 받침대·표지판·가게·사서도 양탄자 위)
+            Color32 wood0 = H("#7A5232"), wood1 = H("#9A6A42"), seam = H("#4E321E"), purple = H("#7A2AB8"), rune = H("#E8B8FF");
+            Color32 rug0 = H("#8A2A3A"), rug1 = H("#B8404E"), rugGold = H("#E8B040"), wall = H("#24160E"), board = H("#5A3A22");
+            Color32[] spines = { H("#8A2A2A"), H("#2A4A8A"), H("#2A6A3A"), H("#8A6A2A"), H("#5A2A6A"), H("#3A3A3A"), H("#A8784A") };
+            for (int py = 0; py < h; py++)
+                for (int px = 0; px < w; px++)
+                {
+                    int tx = px / T, ty = py / T;
+                    char c = m.At(tx, ty);
+                    Color32 col;
+                    if (c == '#')
+                    {
+                        int row = py % 24;                                  // 책장 칸: 한 칸 24px, 아래 4px 는 선반
+                        if (row >= 20) col = board;
+                        else
+                        {
+                            int sp = (px + (py / 24) * 3) / 6;              // 책 한 권 폭 6px
+                            float hh = Hash(sp, py / 24, 71);
+                            col = row < 3 + (int)(hh * 6) ? wall : Mul(spines[(int)(Hash(sp, py / 24, 72) * spines.Length) % spines.Length], .75f + hh * .25f);
+                            if (px % 6 == 0) col = wall;
+                        }
+                    }
+                    else
+                    {
+                        int plank = py / 12, off = (plank % 2) * 40;        // 마루: 12px 판자, 판자마다 이음매가 어긋난다
+                        float v = Hash((px + off) / 80, plank, 73);
+                        col = Lerp(wood0, wood1, v * .8f + Fbm(px, py, 74) * .3f);
+                        if (py % 12 == 0 || (px + off) % 80 == 0) col = seam;
+                        float sf = Soft(safe, px, py);
+                        if (sf > .01f)                                       // 열람실 양탄자 (금빛 테두리)
+                        {
+                            var rc = Lerp(rug0, rug1, Fbm(px, py, 75) * .6f);
+                            float edge = Smooth(.5f, .62f, sf) - Smooth(.7f, .82f, sf);
+                            rc = Lerp(rc, rugGold, Mathf.Max(0, edge) * .9f);
+                            col = Lerp(col, rc, Smooth(.35f, .5f, sf));
+                        }
+                        else
+                        {
+                            float n = Fbm(px, py, 61);                      // 악마 기운: 보랏빛 얼룩 + 반짝이는 룬 점
+                            if (n > .58f) col = Lerp(col, purple, Mathf.Min(.7f, (n - .58f) * 3.2f));
+                            if (n > .62f && Hash(px / 3, py / 3, 76) > .985f) col = rune;
+                        }
+                    }
+                    R.Blend(px, py, col);
+                }
+            // 소품 (위에서 아래로 — 아래 줄 소품이 윗줄을 덮는다)
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char c = m.At(x, y);
+                    float X = x * T, Y = y * T;
+                    if (c == 'q') { if (!Prop(R, "bookshelf", X + T / 2f, Y + T + 2)) { R.Rect(X + 2, Y - 20, T - 4, T + 20, H("#5A3A22")); R.Rect(X + 5, Y - 16, T - 10, T + 10, H("#8A2A2A")); } }
+                    else if (c == 'a') { R.Ellipse(X + T / 2 + 3, Y + T - 4, T / 2, 7, new Color32(0, 0, 0, 60)); if (!Prop(R, "libtable", X + T / 2f, Y + T - 2)) R.Ellipse(X + T / 2, Y + 22, T / 2 - 2, 14, H("#9A6238")); }
+                    else if (c == 'O') { if (!Prop(R, "magiccircle", X + T / 2f, Y + T / 2f + 54)) { R.Ellipse(X + T / 2, Y + T / 2, 50, 40, H("#E8C860", 120)); } }
+                    else if (c == 'F') { R.Ellipse(X + 26, Y + 44, 18, 5, new Color32(0, 0, 0, 70)); if (!Prop(R, "lectern", X + T / 2f, Y + T - 2)) Fountain(R, X, Y, false); }
+                    else if (c == 'S') Sign(R, X, Y);
+                    else if (c == 'M') { R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(0, 0, 0, 80)); if (!Prop(R, "libdesk", X + T / 2f, Y + T - 1)) CandyShop(R, X, Y); }
+                    else if (c == 'K' && m.At(x - 1, y) != 'K' && m.At(x, y - 1) != 'K')       // 책 더미 옥좌: 3×2 의 왼쪽 위 칸에서 한 번
+                    {
+                        R.Ellipse(X + 1.5f * T + 6, Y + 2 * T - 4, 1.6f * T, 12, new Color32(40, 0, 60, 90));
+                        if (!Prop(R, "bookthrone", X + 1.5f * T, Y + 2 * T + 8)) R.Rect(X, Y, 3 * T, 2 * T, H("#3A2050"));
+                    }
+                }
+            return R;
+        }
+
         static Raster SnowLand(WorldMap m)
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
