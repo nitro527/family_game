@@ -584,7 +584,7 @@ namespace GirlAdventure.View
         /// <summary>한 전투에 한 번만 보여 주는 컷인 (아빠 지키기 — 자주 쓰니까). 전투가 시작될 때 비운다.</summary>
         readonly HashSet<string> cutinSeen = new HashSet<string>();
 
-        /// <summary>기술 장면 그림 Resources/Cutin/{key}_1, _2, … (tools/prepare_cutins.py). 없으면 빈 배열.</summary>
+        /// <summary>기술 장면 그림 Resources/Cutin/{key}_1, _2, … (tools/prepare_cutins.py). 없으면 빈 배열. B 장면은 key + "_b".</summary>
         Sprite[] CutinFrames(string key)
         {
             if (cutinFrames.TryGetValue(key, out var f)) return f;
@@ -602,57 +602,73 @@ namespace GirlAdventure.View
         public readonly HashSet<string> CutinsPlayed = new HashSet<string>();
 
         /// <summary>
-        /// 기술 컷인 애니메이션 (Q-33, 사용자 "카드 말고 애니메이션 · 30컷 정도로 자연스럽게"): Resources/Cutin/{key}_1, _2, … 를 넘긴다.
-        /// 장이 많으면(영상에서 뽑은 프레임, 10장 이상) 초당 15장으로 그대로 재생 + 천천히 다가감,
-        /// 장이 적으면 장 사이를 서서히 겹쳐 바꾼다. 마지막 장에서 잠깐 멈추며 쾅(살짝 커졌다 제자리 + 흔들림 + 번쩍)과 기술 이름.
-        /// "화면 번쩍임 끔"이면 번쩍·흔들림 없이. 그림이 없으면 예전 카드 컷인. oncePerBattle 이면 한 전투에 한 번만.
+        /// 기술 컷인 애니메이션 (사용자 "얼굴에서 시작해서 스킬이 화려하게 쏟아지는 것까지, 시점이 바뀌고"):
+        /// A 장면(Resources/Cutin/{key}_N, 캐릭터 얼굴 클로즈업 주문) → 하얗게 번쩍·시점 전환 → B 장면({key}_b_N, 넓은 화면으로 기술이 쏟아짐) → 기술 이름.
+        /// 영상에서 뽑은 장(10장 이상)은 초당 15장, 적으면(옛 그림) 장 사이를 서서히 겹친다. 장면마다 천천히 다가가고, 마지막 장에서 쾅.
+        /// Z·Enter·스페이스·클릭으로 건너뛴다. "화면 번쩍임 끔"이면 번쩍·흔들림 없이. 그림이 없으면 예전 카드 컷인. oncePerBattle 이면 한 전투에 한 번만.
         /// </summary>
         IEnumerator SkillCutin(string key, string text, string sound = "star", bool oncePerBattle = false)
         {
             if (oncePerBattle && !cutinSeen.Add(key)) yield break;
-            var frames = CutinFrames(key);
-            if (frames.Length == 0) { yield return CutinRoutine(null, text, sound); yield break; }
+            var a = CutinFrames(key);
+            if (a.Length == 0) { yield return CutinRoutine(null, text, sound); yield break; }
+            var b = CutinFrames(key + "_b");
+            var frames = new List<Sprite>(a); frames.AddRange(b);
+            int cut = b.Length > 0 ? a.Length : -1;                     // 시점이 바뀌는 장 번호
             var keepText = cutinText.text;
+            var txt = cutinText.rectTransform;
             cutinText.text = text;
             CutinShowing = text;
             cutinArt.enabled = false;
-            cutinAnim.enabled = true;
-            cutinAnimBack.enabled = true;
+            cutinAnim.enabled = cutinAnimBack.enabled = true;
             cutinPanel.SetActive(true);
             sfx.Play(sound);
-            var txt = cutinText.rectTransform;
-            bool video = frames.Length >= 10;
-            float per = video ? 1f / 15f : .5f, fade = video ? 0 : .2f, hold = video ? .75f : .85f;
-            float run = per * (frames.Length - 1), total = run + hold, white = 0;
-            const float flashTime = .14f;
+            bool video = a.Length >= 10;
+            float per = video ? 1f / 15f : .5f, fade = video ? 0 : .2f, hold = video ? .8f : .85f;
+            float run = per * (frames.Count - 1), total = run + hold, white = 0, segStart = 0, segLen = cut > 0 ? per * cut : run;
+            const float flashTime = .16f;
             int shown = -1;
             float shownAt = 0;
             for (float t = 0; t < total; t += Time.deltaTime)
             {
-                int f = Mathf.Min(frames.Length - 1, (int)(t / per));
+                if (t > .3f && (Keys.Down(KeyCode.Z) || Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.Space) || Input.GetMouseButtonDown(0)))
+                {
+                    CutinsPlayed.Add(key);                                 // 건너뛰어도 본 것으로
+                    break;
+                }
+                int f = Mathf.Min(frames.Count - 1, (int)(t / per));
                 bool final = t >= run;
                 if (f != shown)
                 {
-                    cutinAnimBack.sprite = shown >= 0 ? frames[shown] : frames[f];   // 앞 장은 뒤에 남겨 두고 새 장이 그 위로 서서히
+                    cutinAnimBack.sprite = shown >= 0 && f != cut ? frames[shown] : frames[f];   // 시점 전환 땐 겹치지 않고 바로
                     shown = f; shownAt = t;
                     cutinAnim.sprite = frames[f];
-                    if (f == frames.Length - 1)
+                    if (f == cut)                                        // A → B: 하얗게 번쩍, 쾅, 다가가기 다시
+                    {
+                        if (Settings.Flash) white = flashTime;
+                        sfx.Play("hit");
+                        segStart = t; segLen = run - t;
+                    }
+                    if (f == frames.Count - 1)
                     {
                         CutinsPlayed.Add(key);
-                        if (frames.Length > 1) sfx.Play("hit");
-                        if (Settings.Flash) white = flashTime;
+                        if (frames.Count > 1 && cut < 0) sfx.Play("hit");
+                        if (Settings.Flash && cut < 0) white = flashTime;
                     }
                 }
-                float ft = t - shownAt, ht = t - run;
-                float zoom = Mathf.Lerp(1f, video ? 1.07f : 1.05f, Mathf.Clamp01(t / Mathf.Max(.01f, run)));       // 처음부터 끝까지 천천히 다가간다
-                if (final) zoom *= Mathf.Lerp(1.08f, 1f, 1 - Mathf.Pow(1 - Mathf.Clamp01(ht / .25f), 2));      // 마지막 장: 쾅
+                float ft = t - shownAt, ht = t - run, st = t - segStart;
+                float zoom = Mathf.Lerp(1f, video ? 1.08f : 1.05f, Mathf.Clamp01(st / Mathf.Max(.01f, segLen)));   // 장면마다 처음부터 천천히 다가간다
+                if (cut > 0 && t >= segStart && st < .25f) zoom *= Mathf.Lerp(1.12f, 1f, 1 - Mathf.Pow(1 - st / .25f, 2));   // 시점 전환: 쾅
+                if (final) zoom *= Mathf.Lerp(1.08f, 1f, 1 - Mathf.Pow(1 - Mathf.Clamp01(ht / .25f), 2));
                 foreach (var img in new[] { cutinAnim, cutinAnimBack }) img.rectTransform.localScale = Vector3.one * zoom;
-                Vector2 shake = final && Settings.Flash && ht < .35f ? Random.insideUnitCircle * 8 * (1 - ht / .35f) : Vector2.zero;
+                bool shaking = Settings.Flash && ((final && ht < .35f) || (cut > 0 && t >= segStart && st < .3f));
+                float sk = final ? 1 - ht / .35f : 1 - st / .3f;
+                Vector2 shake = shaking ? Random.insideUnitCircle * 9 * Mathf.Clamp01(sk) : Vector2.zero;
                 cutinAnim.rectTransform.anchoredPosition = cutinAnimBack.rectTransform.anchoredPosition = CutinCenter + shake;
                 float intro = Mathf.Clamp01(t * 6);
                 cutinAnim.color = new Color(1, 1, 1, intro * (fade > 0 && f > 0 ? Mathf.Clamp01(ft / fade) : 1));
                 cutinAnimBack.color = new Color(1, 1, 1, intro);
-                cutinWhite.color = new Color(1, 1, 1, white > 0 ? white / flashTime * .7f : 0);
+                cutinWhite.color = new Color(1, 1, 1, white > 0 ? white / flashTime * .8f : 0);
                 white -= Time.deltaTime;
                 float tk = final ? Mathf.Clamp01((ht - .05f) / .3f) : 0;
                 txt.localScale = Vector3.one * Mathf.Lerp(2.4f, 1f, tk);

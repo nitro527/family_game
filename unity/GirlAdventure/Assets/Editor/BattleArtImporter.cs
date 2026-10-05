@@ -54,6 +54,12 @@ namespace GirlAdventure.EditorTools
             imp.isReadable = tiles;
             imp.alphaIsTransparency = tiles || assetPath.Contains("/UI/");
             imp.textureCompression = tiles || assetPath.Contains("/UI/") ? TextureImporterCompression.Uncompressed : TextureImporterCompression.CompressedHQ;
+            if (assetPath.Contains("Assets/Resources/Cutin/"))      // 기술 장면 900장 (영상 30장 × A·B × 15): crunch 로 빌드 용량을 줄인다 (화질은 거의 그대로)
+            {
+                imp.textureCompression = TextureImporterCompression.Compressed;
+                imp.crunchedCompression = true;
+                imp.compressionQuality = 75;
+            }
         }
     }
 }

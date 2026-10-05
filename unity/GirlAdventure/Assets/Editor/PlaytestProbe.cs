@@ -1626,7 +1626,7 @@ namespace GirlAdventure.EditorTools
             G.DebugNearLibraryBoss();                                   // 엄마 없이 옥좌 → 막힘
             yield return .4f;
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
-            yield return .6f;
+            yield return (Func<bool>)(() => G.MessageText.Contains("엄마를 찾자"));    // 글자가 다 써질 때까지
             Expect("throne locked before mom joins", G.MessageText.Contains("엄마를 찾자") && G.Current == GameRoot.Mode.Field, G.MessageText);
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             G.DebugNearMom();

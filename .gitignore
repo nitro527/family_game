@@ -18,3 +18,4 @@ assets/thirdparty/painterly_battle_backgrounds/
 unity/playtest_layout/
 # 영상에서 뽑은 컷인 원본 장면 (tools/cutins_video.py 로 다시 만든다 — 시작 장면 *_start.png 만 저장소에)
 assets/cutins/*_[0-9]*.png
+assets/cutins/preview/
