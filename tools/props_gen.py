@@ -37,6 +37,17 @@ PROPS = [
     ("forge", "One small blacksmith forge: a stone furnace with glowing orange fire inside, an iron anvil with a hammer next to it, a short chimney with smoke.", 64, 2),
     ("hotspring", "One small round hot spring pool with a ring of gray stones, steaming light blue water.", 60, 2),
     ("snowman", "One cute snowman: two snowballs, coal eyes, carrot nose, red knitted scarf, a little bucket hat, stick arms.", 44, 2),
+    ("bed", "One single wooden bed seen from above (top-down), headboard at the top, white pillow, cozy patchwork quilt in warm colors, the bed is long and narrow (twice as tall as wide).", 44, 2),
+    ("bookshelf", "One tall narrow wooden bookshelf standing against a wall, front view, three shelves full of colorful books.", 44, 2),
+    ("table", "One small round wooden indoor table with a white lace tablecloth, a loaf of bread and a red apple on it. Standing on nothing, no floor, no grass, no plants.", 46, 3),
+    ("archvillage", "One wooden village entrance gate: two log posts and a wooden crossbeam on top with a small hanging sign showing a golden star, a little ivy.", 70, 2),
+    ("archtown", "One simple town entrance gate: two thick posts and a crossbeam on top decorated with a striped cloth banner and two small lanterns, front view, the opening is wide and empty.", 90, 2),
+    ("palm0", "One small palm tree with a slightly curved trunk, green drooping fronds and coconuts.", 64, 2),
+    ("palm1", "One small palm tree leaning slightly to the right, green drooping fronds and coconuts.", 64, 5),
+    ("cactus0", "One cute saguaro cactus with two arms raised, a small pink flower on top.", 40, 2),
+    ("cactus1", "One cute saguaro cactus with one arm, round and chubby.", 40, 4),
+    ("ghostlamp", "One old golden magic oil lamp (genie lamp shape) on the ground with spooky purple smoke curling out of its spout.", 48, 2),
+    ("coffin", "One spooky but cute wooden coffin standing upright, golden trim, the lid slightly open with darkness inside.", 44, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 

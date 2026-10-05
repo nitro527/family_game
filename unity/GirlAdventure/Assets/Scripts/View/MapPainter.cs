@@ -420,6 +420,7 @@ namespace GirlAdventure.View
         /// <summary>오아시스 마을 문: 흙벽돌 기둥 두 개 + 위에 걸친 줄무늬 천 (사막 쪽 입구와 마을 안 출구 같은 모양).</summary>
         static void TownArch(Raster R, float X, float Y)
         {
+            if (Prop(R, "archtown", X + 26, Y + 45)) return;
             foreach (float px in new[] { X - 14, X + 46 })
             {
                 R.Rect(px - 2, Y - 30, 20, 74, Ink);
@@ -830,6 +831,7 @@ namespace GirlAdventure.View
             float cx = tx * T + 24 + (v - .5f) * 8, top = ty * T + 2 + v2 * 6, bot = ty * T + 44;
             Color32 dark = H("#1F5A2C"), mid = Lerp(H("#3E9A4A"), H("#4FA84A"), v), lite = H("#7CCB6E");
             R.Ellipse(cx + 6, bot, 14, 4, new Color32(0, 0, 0, 70));         // 그림자
+            if (Prop(R, v < .5f ? "cactus0" : "cactus1", cx, bot + 2)) return;
             float ly = top + 16 + v * 8, ry = top + 10 + v2 * 8;            // 팔이 붙는 높이
             void Arm(float side, float y0, float up)
             {
@@ -856,6 +858,7 @@ namespace GirlAdventure.View
             float bx = tx * T + 24, by = ty * T + 44, lean = (v - .5f) * 14;
             float hx = bx + lean, hy = ty * T - 14;                          // 잎이 모이는 꼭대기
             R.Ellipse(bx + 10, by, 18, 5, new Color32(0, 0, 0, 70));
+            if (Prop(R, v < .5f ? "palm0" : "palm1", bx, by + 3)) return;
             for (int i = 0; i < 8; i++)                                       // 줄기 (아래 → 위로 굵기 줄임)
             {
                 float k0 = i / 8f, k1 = (i + 1) / 8f;
@@ -881,6 +884,7 @@ namespace GirlAdventure.View
         /// <summary>초원 쪽 마을 입구: 숲 사이 나무 아치 + 별 간판.</summary>
         static void VillageArch(Raster R, float X, float Y)
         {
+            if (Prop(R, "archvillage", X + 24, Y + 47)) return;
             Color32 wood = H("#8A5A30"), woodD = H("#5A3418"), woodL = H("#B98050");
             foreach (float px in new[] { X - 2, X + 42 })
             {
@@ -1011,6 +1015,7 @@ namespace GirlAdventure.View
                     if (c == 'k' && m.At(x, y + 1) == 'k')
                     {
                         R.Ellipse(X + T / 2 + 4, Y + 2 * T - 2, T / 2, 8, new Color32(0, 0, 0, 60));
+                        if (Prop(R, "bed", X + T / 2, Y + 2 * T)) continue;
                         R.Rect(X + 3, Y - 6, T - 6, 2 * T + 2, Ink);
                         R.Rect(X + 5, Y - 4, T - 10, 2 * T - 2, H("#9A6238"));             // 나무 틀
                         R.Rect(X + 8, Y + 4, T - 16, 2 * T - 14, H("#FFFFFF"));            // 시트
@@ -1021,6 +1026,7 @@ namespace GirlAdventure.View
                     }
                     else if (c == 'q')
                     {
+                        if (Prop(R, "bookshelf", X + T / 2, Y + T)) continue;
                         R.Rect(X + 2, Y - T + 10, T - 4, 2 * T - 10, Ink);
                         R.Rect(X + 4, Y - T + 12, T - 8, 2 * T - 14, H("#8A5A32"));
                         string[] books = { "#D8574A", "#4A7BD8", "#4FA85A", "#F0C040", "#A060D0", "#E88A40" };
@@ -1035,6 +1041,7 @@ namespace GirlAdventure.View
                     else if (c == 'a')
                     {
                         R.Ellipse(X + T / 2 + 3, Y + T - 4, T / 2, 7, new Color32(0, 0, 0, 60));
+                        if (Prop(R, "table", X + T / 2, Y + T - 2)) continue;
                         R.Rect(X + 10, Y + 24, 5, 20, H("#6B4A30"));
                         R.Rect(X + T - 15, Y + 24, 5, 20, H("#6B4A30"));
                         R.Ellipse(X + T / 2, Y + 22, T / 2 - 1, 15, Ink);
@@ -1497,6 +1504,7 @@ namespace GirlAdventure.View
         static void GhostLamp(Raster R, float X, float Y)
         {
             R.Ellipse(X + 26, Y + 42, 18, 5, new Color32(0, 0, 0, 90));
+            if (Prop(R, "ghostlamp", X + 24, Y + 45)) return;
             R.Ellipse(X + 24, Y + 34, 17, 9, Ink);
             R.Ellipse(X + 24, Y + 34, 14, 7, H("#E8B83A"));
             R.Ellipse(X + 18, Y + 31, 5, 2, H("#FFE27A"));
@@ -1509,6 +1517,7 @@ namespace GirlAdventure.View
         /// <summary>해골이 나오는 관 (나무 관, 금빛 테두리, 뚜껑이 살짝 열림).</summary>
         static void Coffin(Raster R, float X, float Y)
         {
+            if (Prop(R, "coffin", X + 24, Y + 48)) return;
             var pts = new[] { new Vector2(X + 24, Y + 2), new Vector2(X + 38, Y + 12), new Vector2(X + 34, Y + 46), new Vector2(X + 14, Y + 46), new Vector2(X + 10, Y + 12) };
             R.Polygon(pts, H("#6B4424"), Ink, 3);
             R.Polygon(new[] { new Vector2(X + 24, Y + 6), new Vector2(X + 34, Y + 13), new Vector2(X + 31, Y + 42), new Vector2(X + 17, Y + 42), new Vector2(X + 14, Y + 13) }, H("#8A5A30"), H("#E8B83A"), 2);
