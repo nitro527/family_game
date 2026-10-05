@@ -1216,6 +1216,16 @@ namespace GirlAdventure.View
                         R.Rect(X + 8, Y + 30, T - 16, 6, H(pc[1]));
                         for (int i = 0; i < 3; i++) R.Circle(X + 15 + i * 9, Y + 56 + (i % 2) * 14, 2.5f, H(pc[0]));
                     }
+                    else if (c == 'v')                                       // 항아리 (G-3)
+                    {
+                        R.Ellipse(X + T / 2 + 3, Y + T - 5, 16, 6, new Color32(0, 0, 0, 60));
+                        if (Prop(R, "pot", X + T / 2, Y + T - 2)) continue;
+                        R.Ellipse(X + T / 2, Y + 30, 15, 15, Ink);
+                        R.Ellipse(X + T / 2, Y + 30, 13, 13, H("#C07848"));
+                        R.Ellipse(X + T / 2 - 4, Y + 25, 4, 5, H("#E0A070"));
+                        R.Rect(X + T / 2 - 8, Y + 12, 16, 6, Ink);
+                        R.Rect(X + T / 2 - 7, Y + 13, 14, 4, H("#A0603A"));
+                    }
                     else if (c == 'q')
                     {
                         if (Prop(R, "bookshelf", X + T / 2, Y + T)) continue;

@@ -49,7 +49,7 @@ namespace GirlAdventure.View
                 if (!sr.enabled) continue;
                 float t = Time.time * 3f + i * 1.7f;
                 float k = .5f + .5f * Mathf.Sin(t);
-                sr.transform.localScale = Vector3.one * (.45f + .25f * k);
+                sr.transform.localScale = Vector3.one * (.7f + .35f * k);
                 sr.transform.localRotation = Quaternion.Euler(0, 0, Time.time * 40 + i * 30);
                 sr.color = new Color(1f, .95f, .55f, .55f + .45f * k);
             }
@@ -62,7 +62,7 @@ namespace GirlAdventure.View
             if (id == null) { handled(false); yield break; }
             var q = Quests.OfGiver(n.Id, P);
             bool special = id.EndsWith("_ask") || id.EndsWith("_done");
-            if (!special) yield return Talk(Npcs.TalkId(n, P), ("name", P.Name));      // 찾는 중·끝난 뒤엔 평소 말 + 한마디
+            if (!id.EndsWith("_done")) yield return Talk(Npcs.TalkId(n, P), ("name", P.Name));      // 평소 이야기(줄거리 힌트)를 먼저, 그다음 부탁·한마디
             if (reward != null) sfx.Play("chest");
             yield return Talk(id, ("name", P.Name), ("found", Quests.Found(P, q)), ("item", reward != null ? GameData.ItemName(reward) : q.Item));
             RefreshQuestSpots();
@@ -206,6 +206,23 @@ namespace GirlAdventure.View
             else if (here == 'f') FieldBurst(P.X, P.Y + .1f, DotSprite(), new Color(1f, .75f, .85f), new Color(1f, .95f, .6f), 3, 1.4f);
         }
 
+        /// <summary>항아리 살펴보기 (G-3): 달그락 → 선물 또는 빈 항아리.</summary>
+        IEnumerator PotRoutine(int x, int y)
+        {
+            if (busy) yield break;
+            busy = true;
+            PotLooks++;
+            sfx.Play("peek");
+            FieldBurst(x, y - .3f, DotSprite(), new Color(.75f, .6f, .45f), new Color(.95f, .85f, .7f), 4, 1.6f);
+            string got = Quest.LookPot(P, map.Room, x, y);
+            if (got != "empty") sfx.Play("coin");
+            RefreshHud();
+            yield return Talk("pot_" + got, ("gold", 10 + map.Room * 2));
+            HideMessage();
+            busy = false;
+        }
+
+        public int PotLooks { get; private set; }
         public int TreeShakes { get; private set; }
         public int TreeGifts { get; private set; }
 

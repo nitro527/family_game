@@ -152,6 +152,14 @@ namespace GirlAdventure.View
             foreach (var id in P.Items) sb.Append($"  <color=#F2C443>★</color> {GameData.ItemName(id)}\n");
             sb.Append("\n<color=#F2C443>지금 할 일</color>\n  ");
             sb.Append(Goal());
+            foreach (var q in Quests.All)                    // 받은 찾기 부탁 (G-4)
+            {
+                if (q.Chapter != P.Chapter || !Quests.Accepted(P, q) || Quests.Done(P, q)) continue;
+                string giver = q.Giver;
+                foreach (var n in Npcs.All) if (n.Id == q.Giver) giver = n.Name;
+                sb.Append(Quests.AllFound(P, q) ? $"\n  <color=#FFE27A>부탁</color> {q.Item} 다 모았어요! {giver}에게 가져가기"
+                                                : $"\n  <color=#FFE27A>부탁</color> {q.Item} {Quests.Found(P, q)}/{Quests.Count(q)} <size=16><color=#9AA3C7>({giver}, 반짝이는 곳)</color></size>");
+            }
             stRight.text = sb.ToString();
         }
 

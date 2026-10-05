@@ -1317,6 +1317,23 @@ namespace GirlAdventure.EditorTools
                           && Quests.TrySecret(p, m, at.x, at.y) == null;
                 if (!ok) bad += $"secret {sc.Id}(at {at} near {near}) ";
             }
+            // 항아리 (G-3): 집마다 두 개, 옆 칸에서 닿고, 처음만 선물
+            var kinds = new HashSet<string>();
+            bool pots = true;
+            for (int room = 0; room < WorldMap.AllHouses.Length; room++)
+            {
+                var hm = WorldMap.Home(room);
+                var hr = Reach(hm, WorldMap.HomeStart);
+                var pp = PlayerState.NewGame("pot"); pp.Candy = 0;
+                foreach (var (vx, vy) in new[] { (13, 14), (21, 14) })
+                {
+                    pots &= hm.At(vx, vy) == 'v' && (hr[vx + 1, vy] || hr[vx - 1, vy] || hr[vx, vy - 1]);
+                    kinds.Add(Quest.LookPot(pp, room, vx, vy));
+                    pots &= Quest.LookPot(pp, room, vx, vy) == "empty";
+                }
+            }
+            pots &= kinds.Count >= 3 && GameData.HasTalk("pot_candy") && GameData.HasTalk("pot_empty");
+            Check("G-3 pots: two per house, reachable, gift only the first look, varied", pots, string.Join(",", kinds));
             Check("G-4 quests: 7 find quests + 7 secrets, spots reachable, accept→find→reward flow, hidden objects exist", Quests.All.Count >= 7 && Quests.AllSecrets.Count >= 7 && bad == "", bad);
         }
 

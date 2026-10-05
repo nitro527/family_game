@@ -1,3 +1,4 @@
+using System;
 namespace GirlAdventure.Sim
 {
     public enum ChestResult { Sealed, Empty, Got, Guarded }
@@ -238,6 +239,23 @@ namespace GirlAdventure.Sim
             p.RestoreAll();
             p.X = WorldMap.ForStart.x;
             p.Y = WorldMap.ForStart.y;
+        }
+
+        /// <summary>
+        /// 집 안 항아리 (G-3, 드래곤 퀘스트처럼): 처음 살펴보면 한 번 작은 선물 — 항아리마다 정해진 것 (사탕·동전·물약·빈 항아리).
+        /// 돌려주는 값: "candy" · "gold" · "potion" · "empty" (이미 본 항아리도 "empty").
+        /// </summary>
+        public static string LookPot(PlayerState p, int room, int x, int y)
+        {
+            string key = $"pot_{room}_{x}_{y}";
+            if (p.Opened.Contains(key)) return "empty";
+            p.Opened.Add(key);
+            int h = Math.Abs((room * 92821) ^ (x * 7919) ^ (y * 104729)) % 4;
+            if (h == 0 && p.Candy < PlayerState.MaxCandy) { p.Candy++; return "candy"; }
+            if (h == 1) { p.AddItem("potion", 1); return "potion"; }
+            if (h == 3) return "empty";
+            p.GainGold(10 + room * 2);
+            return "gold";
         }
 
         /// <summary>숲 개울 건너 숨은 보물상자 (챕터 7 ✏️ 탐험거리): 나뭇잎 왕관.</summary>

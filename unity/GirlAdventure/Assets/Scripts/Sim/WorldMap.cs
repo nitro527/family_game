@@ -27,7 +27,7 @@ namespace GirlAdventure.Sim
     ///        ':' 숲 속 쉼터(안전)  'F' 요정 샘(회복)  'S' 표지판  'M' 그루터기 가게  'H' 보물상자  'K' 큰 고목(3×3)  'B' 고목 구멍 앞(장수풍뎅이 대장)  'N' 숲 사람(자연의 정령 등)
     /// 눈꽃 마을 (챕터 5, ✏️ 임시 이름) — '.' 눈밭  '=' 눈길  'P' 전나무  'h' 통나무집  'i' 스케이트 연못(그냥 걸어 다님)  'F' 모닥불(회복)  'M' 털옷 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// 온천 마을 (챕터 4, ✏️ 임시 이름) — '.' 잿빛 땅  'R' 바위  'h' 돌집  'w' 온천 웅덩이  'F' 온천(회복)  'M' 대장간(가게)  'S' 표지판  'E' 출구  'N' 마을 사람
-    /// 집 안 (P-5, 별빛 마을 집 5채) — ' ' 바깥(까맘)  'W' 벽  '.' 나무 바닥  'k' 침대(위아래 두 칸)  'q' 책장(벽에 붙음)  'a' 식탁  'H' 보물상자  'E' 문(밟으면 마을로)  'N' 주민 젤리
+    /// 집 안 (P-5, 별빛 마을 집 5채) — ' ' 바깥(까맘)  'W' 벽  '.' 나무 바닥  'k' 침대(위아래 두 칸)  'v' 항아리(살펴보면 한 번 선물)  'q' 책장(벽에 붙음)  'a' 식탁  'H' 보물상자  'E' 문(밟으면 마을로)  'N' 주민 젤리
     /// 오아시스 마을 (✏️ 임시 이름) — '.' 모래  'R' 바위  'h' 흙벽돌 집  't' 천막(2×2)  'u' 마른 우물  'p' 야자  'M' 가게  'S' 표지판  'E' 출구  'N' 마을 사람
     /// </summary>
     public class WorldMap
@@ -113,7 +113,7 @@ namespace GirlAdventure.Sim
             int inn = town == MapKind.Village ? InnHouse : town == MapKind.Oasis ? TownInn : town == MapKind.LavaTown ? LavaTownInn : SnowTownInn;
             return room - first == inn;
         }
-        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQZO";
+        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQZOv";
         // 집 안 (P-5): 방 하나 (바닥 13..21 × 8..14), 아래 벽 가운데 문
         public static readonly (int x, int y) HomeDoor = (17, 15), HomeStart = (17, 14);
         /// <summary>그 마을의 집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호(AllHouses), 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
@@ -314,6 +314,7 @@ namespace GirlAdventure.Sim
             else m.Set(left ? 21 : 13, 8, 'H');
             m.Set(left ? 16 : 18, 7, 'q');
             m.Set(left ? 18 : 16, 11, 'a');
+            m.Set(13, 14, 'v'); m.Set(21, 14, 'v');                        // 항아리 둘 (G-3, 아래 두 구석 — 살펴보면 한 번 작은 선물)
             return m;
         }
 

@@ -614,6 +614,7 @@ namespace GirlAdventure.View
                 else if (c == 'B' && map.Kind == MapKind.Library) StartCoroutine(TalkOnce("lib_boss_locked"));
                 else if (c == 'k' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_bed"));
                 else if (c == 'q' && map.Kind == MapKind.Home) StartCoroutine(TalkOnce("home_shelf"));
+                else if (c == 'v' && map.Kind == MapKind.Home) StartCoroutine(PotRoutine(nx, ny));
                 else if (c == 'D') StartCoroutine(DoorRoutine());
                 else if (c == 'o') StartCoroutine(HoleRoutine(nx, ny));
                 else if (c == 'M') StartCoroutine(ShopRoutine());

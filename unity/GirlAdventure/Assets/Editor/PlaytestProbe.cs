@@ -1735,7 +1735,7 @@ namespace GirlAdventure.EditorTools
                         break;
                     }
             }
-            yield return (Func<bool>)(() => G.MessageText.Contains("찾았다"));
+            yield return (Func<bool>)(() => G.MessageText.Contains("/3)"));
             Shot("quest_found");
             Expect("stepped on a sparkle: found 1/3", G.QuestFindCount > 0 && G.MessageText.Contains("1/3"), G.MessageText);
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
