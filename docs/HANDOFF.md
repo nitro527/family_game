@@ -25,7 +25,7 @@
 
 ## 다음에 할 일 (2026-10-05 밤, 사용자 "멈추라고 할 때까지 알아서 계속")
 1. ~~열린 성문·리본 편지 그림, 도서관 보물상자·구멍~~ (완료 Q-43). 구멍 그림은 땅 색에 맞춘 코드 그림이 충분해서 그대로
-2. ~~챕터 7 숲~~ (완료 C7, 커밋 848290d) · ~~가족 두 번째 스킬~~ (완료 Q-44, 6b956c8: 튼튼 함성·힘내라 응원·엄마의 빛 지속 회복·엄마의 포옹). 새 스킬 라이트 장면 `python tools/cutins_video.py rally cheer hug` → `prepare_cutins.py`. 보스 6 은 엄마 회복이 세져 HP 5800·공 70, 보스 7 HP 7200·공 82 로 재조정
+2. ~~챕터 7 숲~~ (완료 C7, 커밋 848290d) · ~~가족 두 번째 스킬~~ (완료 Q-44, 6b956c8: 튼튼 함성·힘내라 응원·엄마의 빛 지속 회복·엄마의 포옹). 새 스킬 라이트 장면 완료(92ef91e, 응원 B 는 하늘 배경으로 다시) + 전투 HUD 버프 남은 차례(서진 MP 줄 끝). 보스 6 은 엄마 회복이 세져 HP 5800·공 70, 보스 7 HP 7200·공 82 로 재조정
 3. 다음 후보: 챕터 8 (설정집 적의 성·군인 젤리·이단 킹 젤리 — 🙋 또는 ✏️), 상태 창/전투 HUD 에 버프 남은 차례 표시, 숲 장비 밸런스 확인, 소리 평가는 사용자
 4. 웹판(Q-42)은 사용자 "나중에" — 한글 글꼴(나눔고딕 OFL) 다운로드 승인 필요
 5. 🙋 따님과 정할 이름: 궁극기·협동 공격·도서관 악마·두 번째 스킬·숲 이야기 (docs/lore/open_questions.md)
@@ -68,7 +68,7 @@ U="/c/Program Files/Unity/Hub/Editor/6000.5.3f1/Editor/Unity.exe"; P="C:\\code_w
 | `battle_bg_gen.py` | 전투 배경을 게임 화풍으로 (`--seed` 로 다시) |
 | `wan_gen.py` | 로컬 Wan 2.2 영상 (`--big` = 14B GGUF, 사용자 선호) |
 | `cutins_video.py` | 기술 장면 A(얼굴)·B(쏟아짐) 영상 → 30장씩 (기본 = 라이트, `--ult` = 궁극) |
-| `prepare_cutins.py` · `cutin_preview.py` | 장면 → `Resources/Cutin` (높이 752, crunch) · 미리보기 MP4 (ComfyUI 파이썬으로) |
+| `prepare_cutins.py` · `cutin_preview.py` | 장면 → `Resources/Cutin` (높이 752, crunch) · 미리보기 MP4 (ComfyUI 파이썬으로). ⚠ 돌린 뒤 Unity 가져오기에서 `.meta` 가 첫 줄만 남은 채로 잘린 적 있음 (10-05, 30개) → 커밋 전 `grep -L "^guid:" Resources/Cutin/*.meta` 로 확인, 있으면 `git checkout HEAD -- <meta>` |
 
 ## 지켜 온 규칙
 - 한국어로, 폴더 깔끔하게(임시 파일은 끝나면 삭제), `사진/`·원본 에셋 삭제 금지, git push 금지(원격 없음)
