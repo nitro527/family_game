@@ -492,7 +492,9 @@ namespace GirlAdventure.View
                         else { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#5A5662")); }
                     }
             // 화산: 시트 (6,4)~(7,5) 의 96×96 용암이 넘치는 화산을 2배 → 4×4 칸
-            if (t != null) R.Stamp(t.Sheet, 6 * T, 4 * T, 2 * T, 2 * T, WorldMap.Volcano.x * T, WorldMap.Volcano.y * T, 2);
+            // 소품 그림이 있으면 그것 (동굴 입구가 VolcanoDoor 바로 위에 오게: 왼쪽에서 1.5칸)
+            if (!Prop(R, "volcano", WorldMap.Volcano.x * T + 1.5f * T, WorldMap.Volcano.y * T + 4 * T + 4) && t != null)
+                R.Stamp(t.Sheet, 6 * T, 4 * T, 2 * T, 2 * T, WorldMap.Volcano.x * T, WorldMap.Volcano.y * T, 2);
             HotSpring(R, WorldMap.LavaSpring.x * T, WorldMap.LavaSpring.y * T);
             Sign(R, WorldMap.LavaSign.x * T, WorldMap.LavaSign.y * T);
             TownArch(R, WorldMap.LavaGate.x * T, WorldMap.LavaGate.y * T);       // 온천 마을 문
@@ -689,6 +691,7 @@ namespace GirlAdventure.View
         static void SnowPeakArt(Raster R, float X, float Y)
         {
             float w = 4 * T, h = 4 * T;
+            if (Prop(R, "snowpeak", X + 1.5f * T, Y + h + 4)) return;     // 소품 그림: 동굴 입구가 SnowBossDoor 바로 위
             R.Ellipse(X + w / 2 + 8, Y + h - 6, w / 2 + 6, 14, new Color32(60, 80, 130, 70));
             R.Polygon(new[] { new Vector2(X - 8, Y + h), new Vector2(X + w * .2f, Y + h * .45f), new Vector2(X + w * .32f, Y + h) }, H("#8C9CB4"), Ink, 3);   // 작은 봉우리
             R.Polygon(new[] { new Vector2(X + w * .02f, Y + h), new Vector2(X + w * .48f, Y - 14), new Vector2(X + w + 8, Y + h) }, H("#7F8FA8"), Ink, 3);

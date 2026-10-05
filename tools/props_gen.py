@@ -48,6 +48,8 @@ PROPS = [
     ("cactus1", "One cute saguaro cactus with one arm, round and chubby.", 40, 4),
     ("ghostlamp", "One old golden magic oil lamp (genie lamp shape) on the ground with spooky purple smoke curling out of its spout.", 48, 2),
     ("coffin", "One spooky but cute wooden coffin standing upright, golden trim, the lid slightly open with darkness inside.", 44, 2),
+    ("snowpeak", "One snowy mountain peak: blue-gray rocky mountain with a thick white snow cap, a dark spooky cave entrance at the bottom center, a few icicles around the cave mouth.", 200, 2),
+    ("volcano", "One small volcano: dark brown rocky cone with glowing orange lava bubbling out of the crater and dripping down the sides, a dark cave opening at the bottom center. Dark ash and black rocks around the base, no grass, no plants.", 200, 3),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 
