@@ -1344,6 +1344,15 @@ namespace GirlAdventure.EditorTools
                 }
             }
             pots &= kinds.Count >= 3 && GameData.HasTalk("pot_candy") && GameData.HasTalk("pot_empty");
+            string moreBad = "";                                       // 돌아가며 하는 말: 대사가 있고, 차례대로 돈다
+            foreach (var npc in Npcs.All)
+            {
+                if (npc.More == null) continue;
+                foreach (var t in npc.More) if (!GameData.HasTalk(t)) moreBad += t + " ";
+                var np = PlayerState.NewGame("n");
+                if (Npcs.TalkId(npc, np) == npc.Talk && (Npcs.TalkIdTurn(npc, np, 0) != npc.Talk || Npcs.TalkIdTurn(npc, np, 1) != npc.More[0] || Npcs.TalkIdTurn(npc, np, npc.More.Length + 1) != npc.Talk)) moreBad += npc.Id + " ";
+            }
+            Check("NPC talk variety: rotating extra lines exist and cycle", moreBad == "", moreBad);
             Check("G-3 pots: two per house, reachable, gift only the first look, varied", pots, string.Join(",", kinds));
             Check("G-4 quests: 7 find quests + 7 secrets, spots reachable, accept→find→reward flow, hidden objects exist", Quests.All.Count >= 7 && Quests.AllSecrets.Count >= 7 && bad == "", bad);
         }

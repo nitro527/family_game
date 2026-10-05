@@ -59,6 +59,8 @@ namespace GirlAdventure.View
             }
         }
 
+        readonly System.Collections.Generic.Dictionary<string, int> npcTurns = new System.Collections.Generic.Dictionary<string, int>();
+
         IEnumerator NpcRoutine(NpcDef n)
         {
             if (busy) yield break;
@@ -70,7 +72,12 @@ namespace GirlAdventure.View
             if (n.Inn) { yield return InnTalk(); faceOverride = null; talkingNpc = null; HideMessage(); busy = false; yield break; }
             bool questTalk = false;                     // 찾기 부탁 (G-4)
             yield return QuestNpcTalk(n, h => questTalk = h);
-            if (!questTalk) yield return Talk(Npcs.TalkId(n, P), ("name", P.Name));
+            if (!questTalk)
+            {
+                npcTurns.TryGetValue(n.Id, out int turn);
+                npcTurns[n.Id] = turn + 1;
+                yield return Talk(Npcs.TalkIdTurn(n, P, turn), ("name", P.Name));     // 말 걸 때마다 다른 이야기 (More)
+            }
             faceOverride = null;
             talkingNpc = null;
             HideMessage();

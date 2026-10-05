@@ -26,6 +26,7 @@ namespace GirlAdventure.Sim
         public string Color, Dark, Look;    // 겉모습 (EnemyDef.Looks 중 하나)
         public string Art;                  // 그림 (Resources/Monsters/npc_<Id>, tools/npc_art_gen.py — 없으면 코드로 그린 젤리)
         public string Talk, TalkAfter;
+        public string[] More;       // 평소 대사 말고 돌아가며 하는 말 (말 걸 때마다 다음 것, 2026-10-06 퀄리티)
         public NpcTalk[] Talks;             // 조건 붙은 대사 (위에서부터 먼저 맞는 것)
         public bool Inn;                    // 여관 주인: 말 걸면 묵을지 묻는다 (Sim.Inn)
         public int Room;                    // Map "home" 일 때 몇 번째 집 (WorldMap.Houses)
@@ -76,6 +77,15 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>지금 할 말 (진행에 따라 바뀜).</summary>
+        /// <summary>평소 대사 차례대로 (turn = 몇 번째 말 걸기): 조건 대사가 없을 때만 Talk → More[0] → More[1] → … 돌아간다.</summary>
+        public static string TalkIdTurn(NpcDef n, PlayerState p, int turn)
+        {
+            string id = TalkId(n, p);
+            if (id != n.Talk || n.More == null || n.More.Length == 0) return id;
+            int k = turn % (n.More.Length + 1);
+            return k == 0 ? n.Talk : n.More[k - 1];
+        }
+
         public static string TalkId(NpcDef n, PlayerState p)
         {
             if (n.Talks != null)
