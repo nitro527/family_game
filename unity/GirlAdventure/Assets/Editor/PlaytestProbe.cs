@@ -1457,7 +1457,7 @@ namespace GirlAdventure.EditorTools
             Shot("snowtown_enter");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             Expect("entered the snow town", G.MapKindNow == MapKind.SnowTown && G.P.InVillage && G.FollowerVisible("dad"));
-            ExpectBgm("village");
+            ExpectBgm("snowtown");
             NpcDef snowElder = null;
             foreach (var n in Npcs.All) if (n.Id == "snow_elder") snowElder = n;
             G.DebugTeleport(snowElder.X - 1, snowElder.Y, "right");
