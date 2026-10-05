@@ -208,6 +208,7 @@ namespace GirlAdventure.View
             var def = defs[0];
             battle = new BattleSystem(P, defs, rng);
             cutinSeen.Clear();
+            ultHinted.Clear();
             foreach (var d in defs) Bestiary.Meet(P, d);     // 도감: 만났다
             sfx.Play("encounter");
             yield return SwirlIn(def.Boss);
@@ -257,6 +258,7 @@ namespace GirlAdventure.View
             {
                 battleOver = false;
                 battle.NewRound();                  // 지키기는 한 차례만
+                yield return UltReadyHint();
                 if (!battle.SisterDown)
                 {
                     yield return SisterTurn();
@@ -267,6 +269,7 @@ namespace GirlAdventure.View
                 for (int a = 0; a < P.Companions.Count && !over; a++)
                 {
                     if (battle.AllyDown(a)) continue;
+                    yield return UltReadyHint();
                     yield return AllyTurn(a);
                     over = battleOver;
                 }
@@ -407,6 +410,23 @@ namespace GirlAdventure.View
         /// 협동 공격 (PLAN_NEXT 72 → Q-34 짝 셋): 동료 a 가 행동한 뒤 가끔 짝과 함께 한 번 더 — 누나+동생 / 누나+아빠 / 동생+아빠.
         /// 기술 장면 애니메이션(Q-33 "combo_짝") → 두 사람이 함께 뛰어들고 큰 별빛 폭발. DebugCombo = 1 이면 늘 (프로브).
         /// </summary>
+        readonly HashSet<int> ultHinted = new HashSet<int>();
+
+        /// <summary>궁극 게이지가 처음 가득 찼을 때 한 번 알려 준다 (Q-39, 5살이 놓치지 않게): "○○의 궁극 게이지가 가득! 주문에서 ○○를 쓸 수 있어요".</summary>
+        IEnumerator UltReadyHint()
+        {
+            if (battle == null || battleOver) yield break;
+            for (int w = -1; w < P.Companions.Count; w++)
+            {
+                if (ultHinted.Contains(w) || !Ultimates.Learned(P, w) || !battle.GaugeFull(w) || (w < 0 ? battle.SisterDown : battle.AllyDown(w))) continue;
+                ultHinted.Add(w);
+                sfx.Play("lvup");
+                RefreshHud();
+                var u = Ultimates.UltOf(P, w).Value;
+                yield return Talk("ult_ready", ("who", P.MemberName(w)), ("skill", GameData.Skill(u).Name), ("where", w < 0 ? "주문" : "명령창"));
+            }
+        }
+
         IEnumerator MaybeCombo(int a, int target)
         {
             if (DebugCombo == 0) yield break;
@@ -807,11 +827,10 @@ namespace GirlAdventure.View
                 else yield return Talk("dodge");
                 yield break;
             }
-            if (e.Blocked)                                       // 황금 사자 방패 (궁극기)
+            if (e.Blocked)                                       // 황금 사자 방패 (궁극기): 피해 반 — 알려 주고 아래에서 피해를 보여 준다
             {
                 sfx.Play("chest");
                 yield return Talk("ult_blocked");
-                yield break;
             }
             if (e.Ally >= 0)
             {
@@ -970,6 +989,11 @@ namespace GirlAdventure.View
         // ------------------------------------------------------------------ per-frame animation
         void TickBattle()
         {
+            if (Time.frameCount % 4 == 0)                 // 가득 찬 궁극 게이지는 계속 반짝
+            {
+                SetUltBar(hudUltBar, -1);
+                for (int i = 0; i < P.Companions.Count && i < allyHuds.Count; i++) SetUltBar(allyHuds[i].ultBar, i);
+            }
             float dt = Time.deltaTime;
             battleT += dt;
 

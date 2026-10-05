@@ -65,7 +65,7 @@ namespace GirlAdventure.Sim
         public bool OnBrother;  // 동생 지훈이 맞았다
         public int Ally;        // 맞은 동료 번호 (P.Companions, -1 = 서진)
         public bool Guarded;    // 지키는 동료가 대신 막았다 (피해 반)
-        public bool Blocked;    // 황금 사자 방패(궁극기)가 막았다 (피해 0)
+        public bool Blocked;    // 황금 사자 방패(궁극기)가 막아 피해가 반
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -414,7 +414,7 @@ namespace GirlAdventure.Sim
         public int GaugeOf(int who) => who + 1 >= 0 && who + 1 < Gauge.Length ? Gauge[who + 1] : 0;
         public bool GaugeFull(int who) => GaugeOf(who) >= Ultimates.GaugeMax;
         public void AddGauge(int who, int n) { if (who + 1 >= 0 && who + 1 < Gauge.Length) Gauge[who + 1] = Math.Min(Ultimates.GaugeMax, Gauge[who + 1] + n); }
-        /// <summary>황금 사자 방패(궁극기): 이번 차례 적 공격을 모두 막는다.</summary>
+        /// <summary>황금 사자 방패(궁극기): 이번 차례 가족 모두가 받는 피해 반.</summary>
         public bool Barrier { get; private set; }
         /// <summary>반 확률 (궁극 합동 공격).</summary>
         public bool RollHalf() => r.NextDouble() < .5;
@@ -435,14 +435,14 @@ namespace GirlAdventure.Sim
             var s = GameData.Skill(c);
             m.Mp -= s.Mp;
             if (c == Cmd.Guard) { Guarding = i; return o; }
-            if (c == Cmd.UltGuard) { Guarding = i; Barrier = true; return o; }      // 황금 사자 방패: 이번 차례 적 공격을 모두 막는다
+            if (c == Cmd.UltGuard) { Barrier = true; return o; }    // 황금 사자 방패: 이번 차례 가족 모두 피해 반 (아빠가 대신 맞지 않고 모두를 덮는다)
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
-            if (c == Cmd.UltCure)                   // 엄마의 큰 빛 (궁극기 ✏️): 모두 가득 회복, 쓰러진 가족도 HP 절반으로 일으킨다
+            if (c == Cmd.UltCure)                   // 엄마의 큰 빛 (궁극기 ✏️): 모두 HP 절반만큼 회복, 쓰러진 가족도 1/4 로 일으킨다
             {
                 o.Heals = new int[P.Companions.Count + 1];
                 foreach (int w in P.Members())
-                    o.Heals[w + 1] = P.Refill(w, P.MemberDown(w) ? P.MemberMaxHp(w) / 2 : P.MemberMaxHp(w), 0).hp;
+                    o.Heals[w + 1] = P.Refill(w, P.MemberDown(w) ? P.MemberMaxHp(w) / 4 : P.MemberMaxHp(w) / 2, 0).hp;
                 foreach (var h in o.Heals) o.Heal += h;
                 return o;
             }
@@ -494,17 +494,18 @@ namespace GirlAdventure.Sim
             }
             o.OnBrother = o.Ally >= 0 && P.Companions[o.Ally].Id == Sim.Party.Brother;
             if (r.NextDouble() < DodgeRate) { o.Dodged = true; return o; }
-            if (Barrier) { o.Blocked = true; o.Damage = 0; return o; }
             AddGauge(o.Ally, Ultimates.GaugeHit);                  // 맞으면 궁극 게이지가 찬다
+            o.Blocked = Barrier;                                    // 황금 사자 방패: 이번 차례 가족 모두 피해 반 (아래에서)
             if (o.Ally >= 0)
             {
                 var m = P.Companions[o.Ally];
                 o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.DefOf(m));
-                if (o.Guarded) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
+                if (o.Guarded || Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
                 m.Hp = Math.Max(0, m.Hp - o.Damage);
                 return o;
             }
             o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.Def);     // 방어력(장비)만큼 줄지만 최소 1
+            if (Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
             P.Hp = Math.Max(0, P.Hp - o.Damage);
             return o;
         }

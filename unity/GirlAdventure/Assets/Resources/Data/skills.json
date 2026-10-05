@@ -15,8 +15,8 @@
     { "Cmd": "Guard", "Name": "지키기",     "Mp": 0, "Grows": true },
     { "Cmd": "Light", "Name": "빛의 화살",   "Mp": 0, "AtkMul": 1, "Bonus": 3, "Rand": 4, "Miss": 0.05, "Grows": true },
     { "Cmd": "Cure",  "Name": "엄마의 빛",   "Mp": 8, "Heal": 18, "Rand": 6, "Grows": true },
-    { "Cmd": "UltStar",  "Name": "별빛 대폭풍",     "Mp": 0, "AtkMul": 4, "Bonus": 20, "Rand": 10, "Miss": 0 },
-    { "Cmd": "UltBolt",  "Name": "천둥 대번개",     "Mp": 0, "AtkMul": 3, "Bonus": 20, "Rand": 10, "Miss": 0 },
+    { "Cmd": "UltStar",  "Name": "별빛 대폭풍",     "Mp": 0, "AtkMul": 3, "Bonus": 14, "Rand": 8, "Miss": 0 },
+    { "Cmd": "UltBolt",  "Name": "천둥 대번개",     "Mp": 0, "AtkMul": 2, "Bonus": 16, "Rand": 8, "Miss": 0 },
     { "Cmd": "UltGuard", "Name": "황금 사자 방패", "Mp": 0 },
     { "Cmd": "UltCure",  "Name": "엄마의 큰 빛",   "Mp": 0 },
     { "Cmd": "Run",   "Name": "도망가기",    "Mp": 0, "Rate": 0.75 }

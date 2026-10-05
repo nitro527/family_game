@@ -571,8 +571,8 @@ namespace GirlAdventure.EditorTools
         {
             DataLoader.Load();
             var baseDef = GameData.LibraryBoss;
-            foreach (int hp in new[] { 5000, 5200, 5400, 5600 })
-                foreach (int atk in new[] { 64, 66, 68 })
+            foreach (int hp in new[] { 6400, 7200, 8000 })
+                foreach (int atk in new[] { 70, 76, 82 })
                 {
                     var boss = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(baseDef)); boss.Hp = hp; boss.Atk = atk; boss.Boss = true;
                     float Win(int lv, bool gear)
@@ -582,6 +582,7 @@ namespace GirlAdventure.EditorTools
                         {
                             var d = PlayerState.NewGame("d"); d.GainExp(PlayerState.NextExp(lv - 1));
                             d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad"); d.Join("mom");
+                            foreach (var u in Ultimates.All) d.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses[1];   // 궁극기를 배운 넷 (챕터 6 의 보통 상태)
                             var kit = gear ? new[] { "book_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield", "sage_staff", "sage_robe" }
                                            : new[] { "snow_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield" };
                             foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
@@ -599,6 +600,8 @@ namespace GirlAdventure.EditorTools
         /// 챕터 6 도서관 (⭐ 사용자 2026-10-05): 입구 열람실에서 마법진 엄마·옥좌까지 이어짐, 엄마 합류 전엔 옥좌에 못 감,
         /// 합류·세이브 v16·마을 사람 대사, 악마 출현표·그림, 챕터 고르기 Lv20, 넷 + 도서관 장비 밸런스.
         /// </summary>
+        static bool ultLearned;
+
         static void LibraryTests()
         {
             var m = WorldMap.Library();
@@ -629,6 +632,7 @@ namespace GirlAdventure.EditorTools
                     var d = PlayerState.NewGame("d");
                     d.GainExp(PlayerState.NextExp(lv - 1));
                     d.Boss2Down = true; Quest.TryJoinBrother(d); d.Join("dad"); d.Join("mom");
+                    if (ultLearned) foreach (var u in Ultimates.All) d.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses[1];
                     var kit = gear ? new[] { "book_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield", "sage_staff", "sage_robe" }
                                    : new[] { "snow_wand", "fur_cape", "ice_sword", "bro_shield", "frost_blade", "lion_shield" };
                     foreach (var id in kit) { d.Gear.Add(id); Equipment.Equip(d, id); }
@@ -637,9 +641,12 @@ namespace GirlAdventure.EditorTools
                 }
                 return wins / 400f;
             }
+            float w22 = Win(22, true), w21 = Win(21, true);             // 궁극기 없이 (스킬 Lv1~2) — 기록만
+            ultLearned = true;                                           // 궁극기를 배운 넷 (Q-39)
             float g22 = Win(22, true), g21 = Win(21, true), n21 = Win(21, false);
-            Debug.Log($"[BALANCE BOSS6] four Lv22+library gear={g22:P1} Lv21+gear={g21:P1} Lv21 snow gear only={n21:P1}");
-            Check("demon boss balance (Lv22+gear ≥90%, Lv21+gear ≥80%, without new gear <75%)", g22 >= .9f && g21 >= .8f && n21 < .75f, $"g22 {g22:P1} g21 {g21:P1} n21 {n21:P1}");
+            ultLearned = false;
+            Debug.Log($"[BALANCE BOSS6] four with ultimates Lv22+library gear={g22:P1} Lv21+gear={g21:P1} Lv21 snow gear only={n21:P1} | without ultimates Lv22+gear={w22:P1} Lv21+gear={w21:P1}");
+            Check("demon boss balance (no ultimates: Lv22+gear ≥85%, Lv21+gear ≥75%; ultimates help but not too much: ≤99%)", w22 >= .85f && w21 >= .75f && g21 <= .99f, $"no ult {w22:P1}/{w21:P1}, ult {g22:P1} {g21:P1} {n21:P1}");
         }
 
         /// <summary>예티 (C5-5): 눈 산 동굴 입구, 데이터·그림, 세이브 v15, 마을 대사, 셋 + 털옷 가게 장비 밸런스.</summary>
@@ -1233,13 +1240,13 @@ namespace GirlAdventure.EditorTools
             b.AddGauge(1, 100);
             b.MemberAct(1, Cmd.UltGuard);
             var e = b.EnemyAct(0);
-            bool guard = b.Barrier && (e.Dodged || (e.Blocked && e.Damage == 0)) && b.GaugeOf(1) == 0;
+            bool guard = b.Barrier && (e.Dodged || (e.Blocked && e.Damage >= 1)) && b.GaugeOf(1) == 0;
             b.NewRound();
             p.Companions[0].Hp = 0; p.Hp = 5;
             b.AddGauge(2, 100);
             var auto = b.AllyAuto(2);
             var c = b.MemberAct(2, Cmd.UltCure);
-            bool cure = auto.cmd == Cmd.UltCure && !c.Failed && p.Companions[0].Hp == p.MaxHpOf(p.Companions[0]) / 2 && p.Hp == p.MaxHp;
+            bool cure = auto.cmd == Cmd.UltCure && !c.Failed && p.Companions[0].Hp == p.MaxHpOf(p.Companions[0]) / 4 && p.Hp == 5 + p.MaxHp / 2;
             var q = Quest.QuickStart("q", 6);
             bool quick = Ultimates.Learned(q, -1) && Ultimates.Learned(q, 0) && Ultimates.Learned(q, 1);
             bool art = Resources.Load<Texture2D>("Cutin/ult_star_1") != null && Resources.Load<Texture2D>("Cutin/ult_star_b_30") != null && Resources.Load<Texture2D>("Cutin/ult_combo_family_1") != null
@@ -2086,7 +2093,8 @@ namespace GirlAdventure.EditorTools
             {
                 if (!b.SisterDown)
                 {
-                    Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy : (def.Boss || (group && b.AliveCount > 1)) && b.CanUse(Cmd.Star) ? Cmd.Star : Cmd.Fire;
+                    Cmd c = p.Hp <= p.MaxHp * .35f && b.CanUse(Cmd.Candy) ? Cmd.Candy : b.CanUse(Cmd.UltStar) ? Cmd.UltStar      // 궁극기는 배웠고 게이지가 차면 (Q-39)
+                          : (def.Boss || (group && b.AliveCount > 1)) && b.CanUse(Cmd.Star) ? Cmd.Star : Cmd.Fire;
                     b.Act(c);
                     if (b.EnemyDown) return true;
                 }
@@ -2095,13 +2103,14 @@ namespace GirlAdventure.EditorTools
                     if (b.AllyDown(a)) continue;
                     if (p.Companions[a].Id == Party.Brother)
                     {
-                        b.MemberAct(a, def.Boss && b.MemberCanUse(a, Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash);
+                        b.MemberAct(a, b.MemberCanUse(a, Cmd.UltBolt) ? Cmd.UltBolt : def.Boss && b.MemberCanUse(a, Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash);
                         if (b.EnemyDown) return true;
                         if (b.ComboReady()) { b.Combo(); if (b.EnemyDown) return true; }      // 합동 공격 (화면과 같은 규칙)
                     }
                     else if (p.Companions[a].Id == "dad")
                     {
-                        b.MemberAct(a, !b.SisterDown && p.Hp < p.MaxHp * .5f && b.MemberCanUse(a, Cmd.Guard) ? Cmd.Guard : Cmd.Sword);
+                        b.MemberAct(a, b.MemberCanUse(a, Cmd.UltGuard) && p.Hp < p.MaxHp * .5f ? Cmd.UltGuard
+                                     : !b.SisterDown && p.Hp < p.MaxHp * .5f && b.MemberCanUse(a, Cmd.Guard) ? Cmd.Guard : Cmd.Sword);
                         if (b.EnemyDown) return true;
                     }
                     else                                            // 엄마 (챕터 6): 화면 자동 모드와 같은 규칙

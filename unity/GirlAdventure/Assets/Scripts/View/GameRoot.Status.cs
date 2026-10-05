@@ -121,7 +121,7 @@ namespace GirlAdventure.View
                 var parts = new System.Collections.Generic.List<string>();
                 foreach (var k in c.Def.Skills ?? new string[0])
                     if (System.Enum.TryParse<Cmd>(k, out var cmd) && SkillLevels.Grows(cmd))
-                        parts.Add($"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color></size>");
+                        parts.Add($"{GameData.Skill(cmd).Name} <size=15><color=#F2C443>Lv{SkillLevels.Level(P, cmd)}</color>{UltTag(cmd)}</size>");
                     else if (System.Enum.TryParse<Cmd>(k, out var cmd2)) parts.Add(GameData.Skill(cmd2).Name);
                 mid.Append($"  <color=#9AA3C7>{c.Def.Name}</color> {string.Join(" <color=#9AA3C7>·</color> ", parts)}" + "\n");
             }
@@ -140,6 +140,15 @@ namespace GirlAdventure.View
         }
 
         /// <summary>상태 창 주문 한 줄: "리본 파이어 Lv2 ▰▰▱▱▱ 7번" (서진 주문).</summary>
+        /// <summary>기술 줄 끝의 궁극기 표시 (Q-39): 배웠으면 ★궁극기 이름, 아직이면 "Lv3 궁극기".</summary>
+        string UltTag(Cmd c)
+        {
+            foreach (var u in Ultimates.All)
+                if (u.basic == c)
+                    return Ultimates.Knows(P, u.ult) ? $" <color=#FFE27A>★{GameData.Skill(u.ult).Name}</color>" : " <color=#7A80A0>Lv3 궁극기</color>";
+            return "";
+        }
+
         string SkillLine(Cmd c)
         {
             var s = GameData.Skill(c);
@@ -147,7 +156,7 @@ namespace GirlAdventure.View
             int filled = Mathf.RoundToInt(SkillLevels.Progress(P, c) * 5);
             string bar = lv >= SkillLevels.MaxLevel ? "<color=#F2C443>MAX</color>"
                        : $"<color=#7CE08A>{new string('▰', filled)}</color><color=#5A6080>{new string('▱', 5 - filled)}</color> {SkillLevels.UsesToNext(P, c)}번";
-            return $"  {s.Name} <size=15><color=#F2C443>Lv{lv}</color> {bar}</size>\n";
+            return $"  {s.Name} <size=15><color=#F2C443>Lv{lv}</color> {bar}{UltTag(c)}</size>\n";
         }
 
         Text[] stRows;

@@ -1661,6 +1661,20 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Shot("boss6_battle");
             Expect("demon boss battle", G.BattleEnemy == GameData.LibraryBoss && G.BattleBackdropName == "library_boss", G.BattleBackdropName);
+            // 궁극기 (Q-39): 게이지를 채우면 "가득 찼어요" 안내 → 주문 목록 세 번째 별빛 대폭풍 → 화려한 장면
+            G.DebugLearnUltimates();
+            G.DebugFillGauges();
+            foreach (var x in Choose(1)) yield return x;                 // 주문
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Keys.Press(KeyCode.DownArrow); yield return .12f; Keys.Press(KeyCode.DownArrow); yield return .12f;
+            Shot("ult_spell_list");
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.CutinShowing != null);
+            yield return 1.2f;
+            Shot("ult_star_cutin");
+            yield return (Func<bool>)(() => G.CutinShowing == null);
+            Expect("ultimate star storm played (ult_ cut-in)", G.CutinsPlayed.Contains("ult_star"), string.Join(",", G.CutinsPlayed));
             G.DebugSetEnemyHp(60);
             foreach (var x in FightUntilOver(true)) yield return x;
             foreach (var x in SkipTalk(() => G.MessageText.Contains("제자리로") || G.Current == GameRoot.Mode.Ending)) yield return x;
