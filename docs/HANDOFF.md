@@ -25,7 +25,8 @@
 
 ## 다음에 할 일 (2026-10-05 밤, 사용자 "멈추라고 할 때까지 알아서 계속")
 1. ~~열린 성문·리본 편지 그림, 도서관 보물상자·구멍~~ (완료 Q-43). 구멍 그림은 땅 색에 맞춘 코드 그림이 충분해서 그대로
-2. 다음 후보: 챕터 7 (설정집에 숲·적의 성·이단 킹 젤리 후보 — 🙋 또는 ✏️), 사서 가게 장비 밸런스 확인, 소리 평가는 사용자
+2. **진행할 다음 큰 일: 챕터 7 숲 ✏️** (PLAN 63·64, 서진이 도감 그림 나무 젤리 forest_tree·벌레 젤리 forest_bug — 아직 게임에 없음). 챕터 6 만든 순서를 그대로: MapKind.Forest·WorldMap.Forest() → GameData Forest/ForestBoss·enemies.json·encounters → Quest.StartChapter7·QuickLevels(Lv23 근처) → View(SurfaceMap·MapSong·Chapter7Routine·ShowEnding·Battle 배경 Qwen) → MapPainter.Forest(PIPOYA 숲 타일 + 소품) → 곡 forest → 세이브 v17 Boss7Down + v16 예시 → SmokeTest·프로브·카드(Qwen 가족 넷). 이야기는 ✏️ (도서관에서 찾은 책에 숲 이야기 등), 사용자에게 🙋 로 남기기. 진행 상황 사용량 확인 (73% 시점 2026-10-05 밤)
+3. 그 밖 후보: 챕터 7 (설정집에 숲·적의 성·이단 킹 젤리 후보 — 🙋 또는 ✏️), 사서 가게 장비 밸런스 확인, 소리 평가는 사용자
 4. 웹판(Q-42)은 사용자 "나중에" — 한글 글꼴(나눔고딕 OFL) 다운로드 승인 필요
 5. 🙋 따님과 정할 이름: 궁극기·협동 공격·도서관 악마 (docs/lore/open_questions.md)
 6. 백업(PLAN 78): 이 PC 에 드라이브가 C: 하나뿐 → 외장 디스크나 비공개 원격 저장소는 사용자 결정
