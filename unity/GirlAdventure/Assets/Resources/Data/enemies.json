@@ -4,7 +4,9 @@
     { "Name": "초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 12, "Atk": 3, "Exp": 6,  "Gold": 4,  "Move": "hop",    "Attack": "통통 점프", "Art": "jelly_green", "Skill": "merge", "SkillRate": 0.3, "MergeTo": "큰 초록 젤리", "Desc": "장난꾸러기 젤리. 통통 뛰어올라 부딪혀요." },
     { "Name": "분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 18, "Atk": 6, "Exp": 10, "Gold": 7, "Move": "spin",   "Attack": "빙글빙글 회전", "Art": "jelly_pink", "Skill": "merge", "SkillRate": 0.25, "MergeTo": "큰 분홍 젤리", "Desc": "화가 잔뜩 난 젤리. 셋 중에 제일 세요!" },
     { "Name": "큰 초록 젤리", "Color": "#5FD07A", "Dark": "#2F9048", "Hp": 19, "Atk": 6, "Exp": 11, "Gold": 9,  "Move": "hop",    "Attack": "쿵쿵 점프", "Tier": 2, "Art": "jelly_green", "Desc": "초록 젤리가 크게 자란 2단 젤리. 쿵쿵 점프가 아파요." },
-    { "Name": "큰 분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 27, "Atk": 8, "Exp": 17, "Gold": 13, "Move": "spin",   "Attack": "왕 빙글빙글 회전", "Tier": 2, "Art": "jelly_pink", "Desc": "분홍 젤리가 크게 자란 2단 젤리. 성에서 먼 곳에 살아요." }
+    { "Name": "큰 분홍 젤리", "Color": "#FF86BE", "Dark": "#C24D86", "Hp": 27, "Atk": 8, "Exp": 17, "Gold": 13, "Move": "spin",   "Attack": "왕 빙글빙글 회전", "Tier": 2, "Art": "jelly_pink", "Desc": "분홍 젤리가 크게 자란 2단 젤리. 성에서 먼 곳에 살아요." },
+    {"Name": "뿔토끼", "Art": "field_rabbit", "Color": "#F4F0E8", "Dark": "#A09888", "Hp": 15, "Atk": 5, "Exp": 6, "Gold": 5, "Move": "hop", "Attack": "뿔 박치기", "Skill": "charge", "SkillRate": 0.2, "Desc": "이마에 작은 뿔이 난 뾰로통 토끼. 힘을 모아 콩!"},
+    {"Name": "파랑새", "Art": "field_bird", "Color": "#6AB0E8", "Dark": "#2A6AA0", "Hp": 11, "Atk": 4, "Exp": 5, "Gold": 5, "Move": "hop", "Attack": "부리 콕콕", "Evade": 0.15, "Desc": "날쌘 파랑새. 휙휙 잘 피해요."}
   ],
   "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 10, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss", "Art": "jelly_king", "Desc": "왕관을 쓴 3단 젤리. 젤리 나라의 왕이에요." },
   "Cave": [
@@ -12,12 +14,16 @@
     { "Name": "광물 젤리",   "Color": "#9C88C8", "Dark": "#5E4C8A", "Hp": 29, "Atk": 10, "Exp": 19, "Gold": 18, "Move": "spin",  "Attack": "반짝반짝 회전", "Look": "ore", "Art": "cave_ore", "Desc": "반짝이는 금·보라 광물이 콕콕 박힌 젤리." },
     { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22, "Gold": 13, "Move": "shard", "Attack": "수정 조각 날리기", "Look": "crystal", "Art": "cave_crystal", "Desc": "뾰족한 수정이 자라는 차가운 젤리." },
     { "Name": "호박 젤리", "Color": "#FFC23A", "Dark": "#C88A10", "Hp": 22, "Atk": 8, "Exp": 26, "Gold": 45, "Move": "hop", "Attack": "끈적끈적 꿀 던지기", "Art": "cave_amber", "Skill": "heal", "SkillRate": 0.35, "Desc": "꿀처럼 노란 덤 젤리. 가끔만 나타나는데 금화를 잔뜩 가지고 있어요." },
-    { "Name": "큰 돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 38, "Atk": 11, "Exp": 24, "Gold": 16, "Move": "slam",  "Attack": "쿵쾅쿵쾅 누르기", "Look": "rock", "Tier": 2, "Art": "cave_rock", "Skill": "charge", "SkillRate": 0.25, "Desc": "돌멩이 젤리가 크게 자란 2단 젤리. 동굴 깊은 곳에 살아요." }
+    { "Name": "큰 돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 38, "Atk": 11, "Exp": 24, "Gold": 16, "Move": "slam",  "Attack": "쿵쾅쿵쾅 누르기", "Look": "rock", "Tier": 2, "Art": "cave_rock", "Skill": "charge", "SkillRate": 0.25, "Desc": "돌멩이 젤리가 크게 자란 2단 젤리. 동굴 깊은 곳에 살아요." },
+    {"Name": "동굴 거미", "Art": "cave_spider", "Color": "#9A70C8", "Dark": "#5A3A88", "Hp": 27, "Atk": 9, "Exp": 14, "Gold": 12, "Move": "hop", "Attack": "독 이빨 앙", "Skill": "poison", "SkillRate": 0.3, "Desc": "다리 여덟 개 보라 거미. 독을 조심!"},
+    {"Name": "두더지", "Art": "cave_mole", "Color": "#8A6040", "Dark": "#4A3020", "Hp": 34, "Atk": 11, "Exp": 16, "Gold": 14, "Move": "slam", "Attack": "땅파기 박치기", "Skill": "charge", "SkillRate": 0.25, "Desc": "선글라스를 쓴 두더지. 땅을 파며 힘을 모아요."}
   ],
   "Desert": [
     { "Name": "카우보이 젤리", "Color": "#E8A860", "Dark": "#B06A30", "Hp": 80, "Atk": 17, "Exp": 22, "Gold": 25, "Move": "spin", "Attack": "올가미 빙빙 던지기", "Art": "desert_cowboy", "Desc": "올가미 밧줄을 빙빙 돌리는 사막의 젤리. 윙크!" },
     { "Name": "선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 95, "Atk": 18, "Exp": 25, "Gold": 20, "Move": "shard", "Attack": "가시 따끔 발사", "Art": "desert_cactus", "Skill": "poison", "SkillRate": 0.25, "Desc": "가시가 따끔따끔. 머리에 분홍 꽃이 피었어요." },
-    { "Name": "큰 선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 150, "Atk": 21, "Exp": 40, "Gold": 38, "Move": "shard", "Attack": "왕가시 따끔따끔 발사", "Tier": 2, "Art": "desert_cactus", "Desc": "선인장 젤리가 크게 자란 2단 젤리. 가시가 더 길어요." }
+    { "Name": "큰 선인장 젤리", "Color": "#5FA860", "Dark": "#2F7038", "Hp": 150, "Atk": 21, "Exp": 40, "Gold": 38, "Move": "shard", "Attack": "왕가시 따끔따끔 발사", "Tier": 2, "Art": "desert_cactus", "Desc": "선인장 젤리가 크게 자란 2단 젤리. 가시가 더 길어요." },
+    {"Name": "전갈", "Art": "desert_scorpion", "Color": "#E09040", "Dark": "#905020", "Hp": 85, "Atk": 18, "Exp": 24, "Gold": 22, "Move": "charge", "Attack": "꼬리 독침", "Skill": "poison", "SkillRate": 0.3, "Desc": "꼬리에 보라 독침이 있는 꼬마 전갈."},
+    {"Name": "사막 독수리", "Art": "desert_eagle", "Color": "#8A6040", "Dark": "#4A3020", "Hp": 78, "Atk": 19, "Exp": 23, "Gold": 22, "Move": "tackle", "Attack": "하늘에서 내리꽂기", "Evade": 0.15, "Desc": "반다나를 두른 독수리. 휙 잘 피해요."}
   ],
   "Under": [
     {"Name": "박쥐", "Color": "#5A4A7A", "Dark": "#2E2448", "Hp": 32, "Atk": 11, "Exp": 18, "Gold": 14, "Move": "hop", "Attack": "파닥파닥 날개 치기", "Shape": "bat", "Art": "under_bat", "Desc": "지하세계 천장에 거꾸로 매달려 있다가 파닥파닥 날아와요. (서진이 메모)"},
@@ -29,13 +35,17 @@
   "Lava": [
     { "Name": "숯 젤리", "Art": "lava_ember", "Color": "#3A3436", "Dark": "#1E1A1C", "Hp": 175, "Atk": 29, "Exp": 28, "Gold": 30, "Move": "slam", "Attack": "뜨끈뜨끈 몸통 누르기", "Look": "ember", "Skill": "charge", "SkillRate": 0.25, "Desc": "용암 땅 임시 젤리. 까만 몸에 주황빛 금이 갔어요. 서진이가 새 모습을 그려 줄 거예요!" },
     { "Name": "용암 젤리", "Art": "lava_magma", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 200, "Atk": 31, "Exp": 32, "Gold": 35, "Move": "charge", "Attack": "부글부글 용암 돌진", "Look": "magma", "Skill": "burn", "SkillRate": 0.3, "Desc": "용암 땅 임시 젤리. 머리 위에 작은 불꽃이 일렁여요." },
-    { "Name": "큰 용암 젤리", "Art": "lava_magma", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 310, "Atk": 35, "Exp": 50, "Gold": 54, "Move": "charge", "Attack": "펄펄 끓는 용암 돌진", "Look": "magma", "Tier": 2, "Skill": "burn", "SkillRate": 0.3, "Desc": "용암 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." }
+    { "Name": "큰 용암 젤리", "Art": "lava_magma", "Color": "#FF6A1A", "Dark": "#C0300A", "Hp": 310, "Atk": 35, "Exp": 50, "Gold": 54, "Move": "charge", "Attack": "펄펄 끓는 용암 돌진", "Look": "magma", "Tier": 2, "Skill": "burn", "SkillRate": 0.3, "Desc": "용암 젤리가 크게 자란 2단 젤리. 서진이 디자인을 기다려요." },
+    {"Name": "불도마뱀", "Art": "lava_salamander", "Color": "#E05030", "Dark": "#902010", "Hp": 190, "Atk": 30, "Exp": 30, "Gold": 28, "Move": "charge", "Attack": "불꽃 꼬리 휘두르기", "Skill": "burn", "SkillRate": 0.3, "Desc": "등에 불꽃이 활활. 닿으면 화상!"},
+    {"Name": "불새", "Art": "lava_firebird", "Color": "#FFA030", "Dark": "#C04010", "Hp": 170, "Atk": 32, "Exp": 29, "Gold": 28, "Move": "spin", "Attack": "불꽃 날갯짓", "Evade": 0.15, "Desc": "불꽃으로 된 작은 새. 잘 피해요."}
   ],
   "Snow": [
     {"Name": "눈송이 젤리", "Art": "snow_flake", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 240, "Atk": 36, "Exp": 40, "Gold": 40, "Move": "hop", "Attack": "펑펑 눈송이 몸통 박치기", "Look": "frost", "Skill": "freeze", "SkillRate": 0.3, "Desc": "눈 덮인 땅 임시 젤리. 머리에 눈이 소복이 쌓였어요. 서진이가 새 모습을 그려 줄 거예요!"},
     {"Name": "고드름 젤리", "Art": "snow_icicle", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Hp": 260, "Atk": 39, "Exp": 44, "Gold": 45, "Move": "charge", "Attack": "뾰족뾰족 고드름 돌진", "Look": "icicle", "Skill": "freeze", "SkillRate": 0.25, "Desc": "눈 덮인 땅 임시 젤리. 머리에 고드름 왕관을 썼어요."},
     {"Name": "큰 눈송이 젤리", "Art": "snow_flake", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Hp": 420, "Atk": 44, "Exp": 72, "Gold": 70, "Move": "slam", "Attack": "데굴데굴 큰 눈덩이 굴리기", "Look": "frost", "Tier": 2, "Desc": "눈송이 젤리가 눈을 굴려 크게 자란 2단 젤리. 서진이 디자인을 기다려요."},
-    {"Name": "얼음 골렘", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Hp": 470, "Atk": 46, "Exp": 90, "Gold": 85, "Move": "slam", "Attack": "쿵쾅 얼음 주먹", "Look": "icicle", "Art": "ice_golem", "Skill": "freeze", "SkillRate": 0.3, "Desc": "얼음덩어리로 만들어진 커다란 골렘. 눈 덮인 땅 깊은 곳을 쿵쾅쿵쾅 걸어 다녀요."}
+    {"Name": "얼음 골렘", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Hp": 470, "Atk": 46, "Exp": 90, "Gold": 85, "Move": "slam", "Attack": "쿵쾅 얼음 주먹", "Look": "icicle", "Art": "ice_golem", "Skill": "freeze", "SkillRate": 0.3, "Desc": "얼음덩어리로 만들어진 커다란 골렘. 눈 덮인 땅 깊은 곳을 쿵쾅쿵쾅 걸어 다녀요."},
+    {"Name": "펭귄", "Art": "snow_penguin", "Color": "#3A4A60", "Dark": "#1A2030", "Hp": 250, "Atk": 37, "Exp": 42, "Gold": 38, "Move": "slam", "Attack": "고드름 지팡이 콩", "Skill": "freeze", "SkillRate": 0.3, "Desc": "고드름 지팡이를 든 펭귄. 꽁꽁 얼려요."},
+    {"Name": "눈토끼", "Art": "snow_rabbit", "Color": "#F8F8FF", "Dark": "#A0A8C0", "Hp": 220, "Atk": 38, "Exp": 38, "Gold": 36, "Move": "hop", "Attack": "폴짝 눈덩이", "Evade": 0.15, "Desc": "귀가 긴 하얀 눈토끼. 폴짝 잘 피해요."}
   ],
   "Library": [
     {"Name": "꼬마 악마", "Art": "lib_imp", "Color": "#9A6AD8", "Dark": "#5A3A8A", "Hp": 290, "Atk": 43, "Exp": 50, "Gold": 50, "Move": "hop", "Attack": "깔깔 꼬리 찌르기", "Skill": "merge", "SkillRate": 0.25, "MergeTo": "큰 꼬마 악마", "Desc": "도서관을 점령한 장난꾸러기 꼬마 악마. 책을 마구 뒤섞어 놓아요."},
@@ -49,7 +59,9 @@
     {"Name": "버섯 젤리", "Art": "forest_mushroom", "Color": "#F0E0C0", "Dark": "#B03030", "Hp": 430, "Atk": 56, "Exp": 76, "Gold": 70, "Move": "slam", "Attack": "퐁퐁 포자 뿌리기", "Skill": "poison", "SkillRate": 0.35, "Desc": "빨간 점박이 버섯 모자를 쓴 졸린 젤리. 포자를 퐁퐁."},
     {"Name": "나무 젤리", "Art": "forest_tree", "Color": "#8A9A50", "Dark": "#4A5A20", "Hp": 480, "Atk": 58, "Exp": 80, "Gold": 74, "Move": "charge", "Attack": "나뭇가지 휘두르기", "Desc": "나뭇가지가 자라는 느긋한 젤리. 머리에 새 둥지! (서진이 도감)"},
     {"Name": "꿀벌 젤리", "Art": "forest_bee", "Color": "#F8D030", "Dark": "#806010", "Hp": 420, "Atk": 61, "Exp": 84, "Gold": 78, "Move": "spin", "Attack": "톡 침 쏘기", "Evade": 0.14, "Skill": "poison", "SkillRate": 0.3, "Desc": "줄무늬 꿀벌 젤리. 붕붕 날다가 톡 쏘아요. 가끔 휙 피해요."},
-    {"Name": "큰 나무 젤리", "Art": "forest_tree", "Color": "#8A9A50", "Dark": "#4A5A20", "Hp": 760, "Atk": 64, "Exp": 130, "Gold": 120, "Move": "slam", "Attack": "쿵쿵 뿌리 밟기", "Tier": 2, "Skill": "heal", "SkillRate": 0.3, "Desc": "나무 젤리가 크게 자란 2단 젤리. 숲 깊은 곳에 있어요."}
+    {"Name": "큰 나무 젤리", "Art": "forest_tree", "Color": "#8A9A50", "Dark": "#4A5A20", "Hp": 760, "Atk": 64, "Exp": 130, "Gold": 120, "Move": "slam", "Attack": "쿵쿵 뿌리 밟기", "Tier": 2, "Skill": "heal", "SkillRate": 0.3, "Desc": "나무 젤리가 크게 자란 2단 젤리. 숲 깊은 곳에 있어요."},
+    {"Name": "다람쥐", "Art": "forest_squirrel", "Color": "#A87040", "Dark": "#604020", "Hp": 400, "Atk": 55, "Exp": 74, "Gold": 70, "Move": "hop", "Attack": "도토리 던지기", "Skill": "heal", "SkillRate": 0.35, "Desc": "빛나는 도토리를 꼭 안은 다람쥐. 친구를 회복시켜요."},
+    {"Name": "부엉이", "Art": "forest_owl", "Color": "#8A6A48", "Dark": "#4A3A28", "Hp": 440, "Atk": 58, "Exp": 82, "Gold": 76, "Move": "tackle", "Attack": "부엉부엉 날개 치기", "Skill": "charge", "SkillRate": 0.25, "Desc": "졸린 눈의 부엉이. 힘을 모았다가 쿵!"}
   ],
   "ForestBoss": {"Name": "장수풍뎅이 대장", "Art": "forest_beetle", "Color": "#3A6A3A", "Dark": "#1A3A1A", "Hp": 7200, "Atk": 82, "Exp": 1200, "Gold": 1300, "Boss": true, "Move": "charge", "Attack": "커다란 뿔 들이받기", "Backdrop": "forest_boss", "Skill": "charge", "SkillRate": 0.3, "Desc": "큰 고목을 차지하고 숲의 빛나는 도토리를 혼자 다 가져간 심술쟁이 대장."},
   "LibraryBoss": {"Name": "악마 대장", "Art": "lib_king", "Color": "#5A3A8A", "Dark": "#2A1A4A", "Hp": 5800, "Atk": 70, "Exp": 900, "Gold": 1000, "Boss": true, "Move": "charge", "Attack": "저주의 책 번개", "Backdrop": "library_boss", "Skill": "charge", "SkillRate": 0.25, "Desc": "도서관을 점령한 악마들의 대장. 저주받은 마법책으로 도서관을 이상하게 바꿔 버렸어요."},

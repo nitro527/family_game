@@ -138,11 +138,11 @@ namespace GirlAdventure.EditorTools
             }
             Check("skills.json has every command", skillsOk);
             string P(MapKind k, int x, int y) => string.Join(",", GameData.EncounterPool(k, x, y));
-            Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2,3,4"
-                  && P(MapKind.Cave, 5, 20) == "0,0,0,1,1,2,2,3" && P(MapKind.Cave, 12, 5) == "0,0,1,1,2,2,2,2,4,4,3",   // 3 = 호박 젤리(가끔)
+            Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2,6,5" && P(MapKind.Field, 20, 15) == "1,2,2,3,4,5,6"
+                  && P(MapKind.Cave, 5, 20) == "0,0,1,1,2,2,3,5,5,6" && P(MapKind.Cave, 12, 5) == "0,1,1,2,2,2,4,4,3,5,6,6",   // 3 = 호박 젤리(가끔), 5·6 = 거미·두더지 (G-2)
                   $"field={P(MapKind.Field, 3, 4)}|{P(MapKind.Field, 10, 11)}|{P(MapKind.Field, 20, 15)} cave={P(MapKind.Cave, 5, 20)}|{P(MapKind.Cave, 12, 5)}");
             // 딸의 노트: 젤리 색 = 난이도 (파랑 쉬움 < 초록 중간 < 분홍 어려움), 시작 근처엔 분홍이 안 나옴
-            var nm = Array.FindAll(GameData.Normal, d => d.Tier < 2);
+            var nm = Array.FindAll(GameData.Normal, d => d.Tier < 2 && d.Name.EndsWith("젤리"));   // 젤리만 (뿔토끼·파랑새는 G-2)
             Check("jelly color = difficulty", nm.Length == 3 && nm[0].Name == "파랑 젤리" && nm[1].Name == "초록 젤리" && nm[2].Name == "분홍 젤리"
                   && nm[0].Hp < nm[1].Hp && nm[1].Hp < nm[2].Hp && nm[0].Atk < nm[1].Atk && nm[1].Atk < nm[2].Atk
                   && !P(MapKind.Field, 3, 4).Contains("2"),
@@ -357,7 +357,7 @@ namespace GirlAdventure.EditorTools
             // 사막 젤리 (백로그 51): 도감 그림, 큰 선인장 젤리 = 같은 색·그림의 더 센 2단, 먼 곳에만
             var desert = GameData.Desert;
             EnemyDef cactusS = Array.Find(desert, d => d.Name == "선인장 젤리"), cactusB = Array.Find(desert, d => d.Name == "큰 선인장 젤리");
-            Check("desert jellies: cowboy·cactus·big cactus with art", desert.Length == 3 && Array.Exists(desert, d => d.Name == "카우보이 젤리" && d.Art == "desert_cowboy")
+            Check("desert jellies: cowboy·cactus·big cactus with art", desert.Length >= 3 && Array.Exists(desert, d => d.Name == "카우보이 젤리" && d.Art == "desert_cowboy")
                   && cactusS != null && cactusB != null && cactusS.Art == "desert_cactus" && cactusB.Art == cactusS.Art && cactusB.Color == cactusS.Color
                   && cactusB.Tier == 2 && cactusB.Hp > cactusS.Hp && cactusB.Atk >= cactusS.Atk && cactusB.Exp > cactusS.Exp);
             bool nearNoBig = true;
@@ -664,7 +664,7 @@ namespace GirlAdventure.EditorTools
             bool saved = SaveData.CurrentVersion >= 17 && q.Boss7Down && q.Companions.Count == 3
                          && Npcs.TalkId(npcs.Find(n => n.Id == "spirit"), q) == "npc_spirit_end" && Npcs.TalkId(npcs.Find(n => n.Id == "spirit"), PlayerState.NewGame("x")) == "npc_spirit";
             var boss = GameData.ForestBoss;
-            bool data = GameData.Forest.Length == 5 && boss != null && boss.Boss && boss.Backdrop == "forest_boss" && GameData.RegionOf(boss) == "숲"
+            bool data = GameData.Forest.Length >= 5 && boss != null && boss.Boss && boss.Backdrop == "forest_boss" && GameData.RegionOf(boss) == "숲"
                         && Resources.Load<Texture2D>("Monsters/forest_beetle") != null && Resources.Load<Texture2D>("Monsters/forest_tree") != null
                         && Resources.Load<Texture2D>("Monsters/spirit_nature") != null && Resources.Load<Texture2D>("Battle/forest") != null
                         && Resources.Load<Texture2D>("Battle/forest_boss") != null && Resources.Load<Texture2D>("Cards/ch7_clear") != null
@@ -833,9 +833,9 @@ namespace GirlAdventure.EditorTools
         static void SnowJellyTests()
         {
             var snow = GameData.Snow;
-            Check("snow monsters: 3 jellies (placeholder, incl. tier 2) + ice golem, frost/icicle looks, in the bestiary", snow.Length == 4 && Array.Exists(snow, d => d.Name == "얼음 골렘") && Array.Exists(snow, d => d.Tier == 2)
+            Check("snow monsters: 3 jellies (placeholder, incl. tier 2) + ice golem, frost/icicle looks, in the bestiary", snow.Length >= 4 && Array.Exists(snow, d => d.Name == "얼음 골렘") && Array.Exists(snow, d => d.Tier == 2)
                   && Array.Exists(snow, d => d.Look == "frost") && Array.Exists(snow, d => d.Look == "icicle") && GameData.ListFor(MapKind.Snow) == snow
-                  && Array.TrueForAll(snow, d => Array.IndexOf(EnemyDef.Looks, d.Look) >= 0));
+                  && Array.TrueForAll(snow, d => string.IsNullOrEmpty(d.Look) || Array.IndexOf(EnemyDef.Looks, d.Look) >= 0));
             var m = WorldMap.Snow();
             bool onlySnow = true;
             for (int y = 0; y < WorldMap.H; y++)
@@ -1070,7 +1070,7 @@ namespace GirlAdventure.EditorTools
         static void LavaJellyTests()
         {
             var lava = GameData.Lava;
-            Check("lava jellies (placeholder): 3 incl. tier 2, magma/ember looks", lava.Length == 3 && Array.Exists(lava, d => d.Tier == 2)
+            Check("lava jellies (placeholder): 3 incl. tier 2, magma/ember looks", lava.Length >= 3 && Array.Exists(lava, d => d.Tier == 2)
                   && Array.Exists(lava, d => d.Look == "magma") && Array.Exists(lava, d => d.Look == "ember") && GameData.ListFor(MapKind.Lava) == lava);
             var m = WorldMap.Lava();
             bool onlyAsh = true;

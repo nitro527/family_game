@@ -62,6 +62,24 @@
   ],
   "forest_beetle_king.png": [
    1
+  ],
+  "lava_salamander_firebird.png": [
+   2
+  ],
+  "desert_scorpion_eagle.png": [
+   2
+  ],
+  "snow_penguin_rabbit.png": [
+   2
+  ],
+  "forest_squirrel_owl.png": [
+   2
+  ],
+  "field_rabbit_bird.png": [
+   2
+  ],
+  "cave_spider_mole.png": [
+   2
   ]
  },
  "monsters": [
@@ -600,6 +618,150 @@
    "sketch": null,
    "ingame": "장수풍뎅이 대장",
    "desc": "커다란 뿔과 단단한 등껍질, 도토리 왕관을 쓴 숲의 심술쟁이 대장. ✏️ (챕터 7 숲 테스트 버전, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "field_rabbit",
+   "name": "뿔토끼",
+   "region": "초원",
+   "tier": "쉬움",
+   "sheet": "field_rabbit_bird.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "뿔토끼",
+   "desc": "이마에 작은 뿔이 난 뾰로통 토끼. 힘을 모아 콩! ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "field_bird",
+   "name": "파랑새",
+   "region": "초원",
+   "tier": "쉬움",
+   "sheet": "field_rabbit_bird.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "파랑새",
+   "desc": "날쌘 파랑새. 휙휙 잘 피해요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "cave_spider",
+   "name": "동굴 거미",
+   "region": "동굴",
+   "tier": "중간",
+   "sheet": "cave_spider_mole.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "동굴 거미",
+   "desc": "다리 여덟 개 보라 거미. 독 침을 조심! ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "cave_mole",
+   "name": "두더지",
+   "region": "동굴",
+   "tier": "중간",
+   "sheet": "cave_spider_mole.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "두더지",
+   "desc": "선글라스를 쓴 두더지. 땅을 파며 힘을 모아요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "desert_scorpion",
+   "name": "전갈",
+   "region": "사막",
+   "tier": "중간",
+   "sheet": "desert_scorpion_eagle.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "전갈",
+   "desc": "꼬리에 보라 독침이 있는 꼬마 전갈. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "desert_eagle",
+   "name": "사막 독수리",
+   "region": "사막",
+   "tier": "어려움",
+   "sheet": "desert_scorpion_eagle.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "사막 독수리",
+   "desc": "반다나를 두른 독수리. 하늘에서 휙 피해요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "lava_salamander",
+   "name": "불도마뱀",
+   "region": "용암 땅",
+   "tier": "중간",
+   "sheet": "lava_salamander_firebird.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "불도마뱀",
+   "desc": "등에 불꽃이 활활. 닿으면 화상! ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "lava_firebird",
+   "name": "불새",
+   "region": "용암 땅",
+   "tier": "어려움",
+   "sheet": "lava_salamander_firebird.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "불새",
+   "desc": "불꽃으로 된 작은 새. 잘 피해요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "snow_penguin",
+   "name": "펭귄",
+   "region": "눈 덮인 곳",
+   "tier": "중간",
+   "sheet": "snow_penguin_rabbit.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "펭귄",
+   "desc": "고드름 지팡이를 든 펭귄. 꽁꽁 얼려요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "snow_rabbit",
+   "name": "눈토끼",
+   "region": "눈 덮인 곳",
+   "tier": "쉬움",
+   "sheet": "snow_penguin_rabbit.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "눈토끼",
+   "desc": "귀가 긴 하얀 눈토끼. 폴짝 잘 피해요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "forest_squirrel",
+   "name": "다람쥐",
+   "region": "숲",
+   "tier": "중간",
+   "sheet": "forest_squirrel_owl.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "다람쥐",
+   "desc": "빛나는 도토리를 꼭 안은 다람쥐. 친구를 회복시켜요. ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
+  },
+  {
+   "id": "forest_owl",
+   "name": "부엉이",
+   "region": "숲",
+   "tier": "어려움",
+   "sheet": "forest_squirrel_owl.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "부엉이",
+   "desc": "졸린 눈의 부엉이. 힘을 모았다가 쿵! ✏️ (2026-10-06 사용자 \"젤리 위주로만 하지 말고 맵에 따라 다양하게\", Qwen)"
   }
  ]
 }
