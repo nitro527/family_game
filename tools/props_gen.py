@@ -83,6 +83,16 @@ PROPS = [
     ("fairyspring", "One small round forest pond lined with mossy stones and ferns, glowing bright green-blue magical healing water with tiny fairy sparkles rising.", 64, 2),
     ("log", "One fallen mossy log lying sideways with a few small mushrooms and ferns growing on it.", 90, 2),
     ("pot", "One round clay pot with a small lid, warm terracotta color with a simple painted pattern, cute storybook style.", 36, 2),
+    # 바닥 장식 (2026-10-06 맵 퀄리티: 넓은 바닥이 텅 비어 보이던 것 — 걸어 지나가는 작은 그림, MapPainter.Scatter)
+    ("dec_shrub", "One small dry desert tumbleweed shrub, round tangle of light brown twigs.", 30, 2),
+    ("dec_sandrocks", "A tiny cluster of three smooth sandy orange pebbles half buried in sand.", 30, 2),
+    ("dec_sandflower", "One tiny desert plant with a single small pink flower and two green leaves.", 24, 3),
+    ("dec_vent", "One small volcanic steam vent: a little dark rock crack with white steam puffing up and a faint orange glow inside.", 34, 2),
+    ("dec_obsidian", "A small cluster of shiny black obsidian crystals with tiny orange glowing cracks.", 28, 2),
+    ("dec_snowbush", "One small round bush covered with fluffy white snow, a few red berries peeking out.", 32, 2),
+    ("dec_iceshard", "A tiny cluster of light blue ice crystals sticking out of the snow, sparkling.", 26, 2),
+    ("dec_glowshroom", "A tiny cluster of three glowing blue cave mushrooms with soft light.", 26, 2),
+    ("dec_cavepebbles", "A tiny cluster of grey cave pebbles and a small purple crystal shard.", 28, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 

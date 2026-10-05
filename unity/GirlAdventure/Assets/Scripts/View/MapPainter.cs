@@ -261,6 +261,23 @@ namespace GirlAdventure.View
         /// 사막: 풀밭 바탕 → 모래 오토타일(오아시스 둘레는 풀 경계가 생긴다) → 오아시스 물 → 바위 언덕 오토타일
         /// → 동굴 출구·샘물·표지판 → 선인장·야자(위 줄부터). 타일이 없으면 모래·바위를 단색 + 노이즈로.
         /// </summary>
+        /// <summary>
+        /// 바닥 장식 (2026-10-06 맵 퀄리티): floor 글자 칸마다 해시로 density 확률만큼 작은 소품 하나 (걸어 지나가는 그림일 뿐).
+        /// 칸 안에서 위치를 조금씩 흔들고, 위아래 칸 순서로 그려 아래 것이 위를 덮는다. 소품이 없으면 아무것도 안 한다.
+        /// </summary>
+        static void Scatter(Raster R, WorldMap m, string floor, string[] names, float density, int seed)
+        {
+            if (density <= 0 || Props == null) return;
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    if (floor.IndexOf(m.At(x, y)) < 0 || m.Safe(x, y) || Hash(x, y, seed) >= density) continue;
+                    string name = names[(int)(Hash(x, y, seed + 1) * names.Length) % names.Length];
+                    float cx = x * T + 12 + Hash(x, y, seed + 2) * (T - 24), by = y * T + 28 + Hash(x, y, seed + 3) * 16;
+                    Prop(R, name, cx, by);
+                }
+        }
+
         static Raster Desert(WorldMap m, FieldTiles t)
         {
             var R = new Raster(WorldMap.W * T, WorldMap.H * T);
@@ -294,6 +311,7 @@ namespace GirlAdventure.View
                         R.Line(ox + 12, oy - 2, ox + 22, oy + 1, 1.6f, H("#C9A66A", 120));
                         if (Hash(x, y, 74) < .3f) R.Circle(ox + 4, oy + 10, 2.2f, H("#A88A5A"));     // 조약돌
                     }
+            Scatter(R, m, ".", new[] { "dec_shrub", "dec_sandrocks", "dec_sandflower" }, .09f, 201);     // 바닥 장식 (넓은 모래밭이 텅 비어 보이던 것)
             // 바위 언덕: 위 칸부터 (아래 줄이 위 줄을 덮게)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -471,6 +489,7 @@ namespace GirlAdventure.View
                     }
                     R.Blend(px, py, c);
                 }
+            Scatter(R, m, ".", new[] { "dec_vent", "dec_obsidian" }, .07f, 202);                          // 바닥 장식: 증기 구멍·흑요석
             // 돌다리
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -727,6 +746,7 @@ namespace GirlAdventure.View
                     }
                     R.Blend(px, py, c);
                 }
+            Scatter(R, m, ".", new[] { "dec_snowbush", "dec_iceshard" }, .06f, 203);                    // 바닥 장식: 눈 덤불·얼음 결정
             for (int y = 0; y < WorldMap.H; y++)                                       // 눈길 발자국 (동글동글 두 줄)
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == '=')
@@ -1608,6 +1628,7 @@ namespace GirlAdventure.View
                     R.Blend(px, py, c);
                 }
 
+            Scatter(R, m, "_", new[] { "dec_glowshroom", "dec_cavepebbles" }, m.Kind == MapKind.Cave ? .07f : 0, 204);   // 바닥 장식: 빛나는 버섯·자갈
             // 바닥 디테일: 자갈, 금
             var rnd = new System.Random(13);
             float Rn() => (float)rnd.NextDouble();
