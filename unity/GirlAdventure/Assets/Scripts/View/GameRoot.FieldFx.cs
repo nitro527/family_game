@@ -239,6 +239,28 @@ namespace GirlAdventure.View
                     sr.sortingOrder = 7;
                     fieldFx[fieldFx.Count - 1].fadeInOut = true;
                 }
+                else if (map.Kind == MapKind.Forest)
+                {
+                    bool green = P.Boss7Down;           // 숲: 대장을 달래기 전엔 시든 갈색·노란 잎, 뒤엔 초록 잎이 팔랑팔랑
+                    ambientTimer = .3f;
+                    var p = new Vector3(camPos.x - halfW + Random.Range(0, halfW * 2), camPos.y + halfH + .5f, 0);
+                    var col = green ? (Random.value < .5f ? new Color(.45f, .8f, .35f, .95f) : new Color(.65f, .9f, .4f, .95f))
+                                    : (Random.value < .5f ? new Color(.75f, .55f, .25f, .95f) : new Color(.95f, .8f, .3f, .95f));
+                    var sr = SpawnField(petalSprite, p, new Vector3(Random.Range(-.4f, .6f), Random.Range(-1.0f, -.6f)), 9f, Random.Range(.16f, .24f), col, Random.Range(-200, 200));
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
+                else if (map.Kind == MapKind.Library)
+                {
+                    bool calm = P.Boss6Down;            // 도서관: 악마가 있을 땐 보랏빛 마법 먼지, 이긴 뒤엔 금빛 반짝이가 둥실
+                    ambientTimer = .15f;
+                    var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
+                    var sr = SpawnField(calm ? sparkSprite : puffSprite, p, new Vector3(Random.Range(-.12f, .12f), Random.Range(.1f, .35f)), Random.Range(2.5f, 4f),
+                                        calm ? Random.Range(.1f, .16f) : Random.Range(.08f, .14f),
+                                        calm ? new Color(1f, .9f, .5f, .9f) : (Random.value < .5f ? new Color(.7f, .4f, 1f, .85f) : new Color(1f, .5f, .9f, .8f)), calm ? Random.Range(-90, 90) : 0);
+                    sr.sortingOrder = 7;
+                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                }
                 else if (map.Kind == MapKind.Desert || map.Kind == MapKind.Oasis)
                 {
                     ambientTimer = .1f;
