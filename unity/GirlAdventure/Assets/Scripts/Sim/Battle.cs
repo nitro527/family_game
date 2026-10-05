@@ -23,6 +23,12 @@ namespace GirlAdventure.Sim
         public string Shape;                // 젤리가 아닌 모양 (Shapes 중 하나, 서진이 노트 4 지하세계 괴물) — 비면 젤리
         public double Evade;                // 잘 피함: 한 마리를 노리는 공격이 이 확률로 더 빗나간다 (이단 유령 "잘 피함")
         public bool Twice;                  // 빠름: 적 차례에 두 번 공격한다 (이단 유령 "빠름")
+        // 기믹 (사용자 2026-10-06 "그냥 때리기만 하면 단순 — 얼리거나 독, 합체, 변신", 드래곤 퀘스트·포켓몬 참고)
+        public string Skill;                // poison(독) · burn(화상, 독과 같은 규칙) · freeze(얼음: 맞은 사람 다음 차례 쉼) · charge(힘 모으기 → 다음 공격 1.5배)
+                                            // heal(다친 적 회복) · merge(같은 젤리 둘 이상이면 합체 → MergeTo) — 없으면 그냥 공격
+        public double SkillRate;            // 적 차례마다 기믹을 쓸 확률
+        public string MergeTo;              // 합체하면 되는 적 이름 (예: "큰 초록 젤리")
+        public string TransformTo;          // HP 가 절반 이하가 되면 변신하는 적 이름 (enemies.json Forms, 예: 예티 → 무서운 예티)
 
         /// <summary>View 가 그릴 줄 아는 젤리가 아닌 모양: 유령(램프에서 나옴)·이단 유령(토끼 귀)·해골·박쥐·지렁이.</summary>
         public static readonly string[] Shapes = { "", "ghost", "ghost2", "skeleton", "bat", "worm" };
@@ -52,6 +58,8 @@ namespace GirlAdventure.Sim
         public int Heal;
         public int MpHeal;
         public int Ally;        // 회복 주문·도구를 받은 사람 (-1 = 서진, 0.. = 동료 번호, Q-31)
+        public bool Frozen;     // 얼어서 이번 차례를 쉬었다 (적 기믹 freeze)
+        public bool Cured;      // 회복 기술이 독·화상·얼음을 풀었다
         public int[] Heals;     // 엄마의 빛 (모두 회복): 사람마다 회복량, [who + 1] (서진 = 0)
         public string Item;     // 쓴 도구 id (Candy/Item)
         public int SkillUp;     // 이번에 쓴 주문·기술의 스킬 레벨이 올랐으면 새 레벨 (아니면 0)
@@ -67,14 +75,22 @@ namespace GirlAdventure.Sim
         public bool Guarded;    // 지키는 동료가 대신 막았다 (피해 반)
         public bool Blocked;    // 황금 사자 방패(궁극기)가 막아 피해가 반
         public bool Shielded;   // 튼튼 함성(아빠)으로 가족 방어력이 올라 피해가 줄었다
+        public string Special;  // 기믹: poison·burn·freeze (공격 + 상태) · charge(힘 모으기, 공격 없음) · charged(모은 힘으로 2배) · heal(적 회복) · transform(변신, 공격 없음)
+        public bool Status;     // 맞은 사람에게 독·화상·얼음이 걸렸다
+        public int HealFoe;     // heal: 회복한 적 번호 (-1 없음)
+        public int HealAmt;
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
     public class Foe
     {
-        public readonly EnemyDef Def;
+        public EnemyDef Def { get; private set; }
         public int Hp;
+        public bool Charging;   // 힘을 모았다 (다음 공격 2배)
+        public bool Changed;    // 변신·합체를 했다 (한 번만)
         public Foe(EnemyDef def) { Def = def; Hp = def.Hp; }
+        /// <summary>변신·합체: 다른 적이 된다 (HP 는 부르는 쪽이 정한다).</summary>
+        public void Become(EnemyDef def) { Def = def; Changed = true; Charging = false; }
         public bool Down => Hp <= 0;
     }
 
@@ -178,6 +194,7 @@ namespace GirlAdventure.Sim
         /// </summary>
         public PlayerOutcome Act(Cmd c, string item = null, int target = -1, int ally = -1)
         {
+            if (c != Cmd.Run && Thaw(-1)) return new PlayerOutcome { Cmd = c, Target = -1, Ally = -1, Frozen = true };
             var o = ActCore(c, item, target, ally);
             if (!o.Failed && c != Cmd.Run) { if (Ultimates.IsUlt(c)) Gauge[0] = 0; else AddGauge(-1, Ultimates.GaugeAct); }
             return o;
@@ -211,6 +228,7 @@ namespace GirlAdventure.Sim
                     break;
                 case Cmd.Heal:
                     o.Ally = HealWho(ally);
+                    o.Cured = CureStatus(o.Ally);
                     o.Heal = P.Refill(o.Ally, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
                     break;
                 case Cmd.Candy:
@@ -242,9 +260,54 @@ namespace GirlAdventure.Sim
         public int[] LastRegen { get; private set; }
         int Up(int d) => AtkUp > 0 ? Math.Max(1, (d * 13 + 5) / 10) : d;
 
+        // ---- 상태 이상 (적 기믹): [who + 1] (서진 = 0). 독·화상은 차례 끝마다 HP 가 줄고(1 은 남김) 3차례 뒤 풀린다,
+        //      얼음은 그 사람의 다음 차례를 한 번 쉰다. 반짝 힐·엄마의 빛·포옹·큰 빛이 풀어 준다.
+        public const int PoisonRounds = 3;
+        /// <summary>프로브·테스트용: true 면 기믹 확률을 무시하고 늘 쓴다.</summary>
+        public static bool ForceSkills;
+        bool Roll(double rate) => ForceSkills || r.NextDouble() < rate;
+        int[] poison;
+        string[] poisonKind;
+        bool[] frozen;
+        void EnsureStatus()
+        {
+            int n = P.Companions.Count + 1;
+            if (poison == null || poison.Length != n) { poison = new int[n]; poisonKind = new string[n]; frozen = new bool[n]; }
+        }
+        public int PoisonOf(int who) { EnsureStatus(); return who + 1 >= 0 && who + 1 < poison.Length ? poison[who + 1] : 0; }
+        /// <summary>독인지 화상인지 (보여 줄 이름).</summary>
+        public string PoisonName(int who) { EnsureStatus(); return who + 1 >= 0 && who + 1 < poison.Length && poisonKind[who + 1] == "burn" ? "화상" : "독"; }
+        public bool FrozenOf(int who) { EnsureStatus(); return who + 1 >= 0 && who + 1 < frozen.Length && frozen[who + 1]; }
+        /// <summary>차례가 왔을 때: 얼어 있으면 풀고 true (이번 차례는 쉰다).</summary>
+        public bool Thaw(int who) { if (!FrozenOf(who)) return false; frozen[who + 1] = false; return true; }
+        /// <summary>한 사람의 상태 이상을 모두 푼다 (회복 기술). 풀린 게 있으면 true.</summary>
+        public bool CureStatus(int who)
+        {
+            EnsureStatus();
+            if (who + 1 < 0 || who + 1 >= poison.Length) return false;
+            bool had = poison[who + 1] > 0 || frozen[who + 1];
+            poison[who + 1] = 0; frozen[who + 1] = false;
+            return had;
+        }
+        /// <summary>방금 RoundEnd 에서 독·화상으로 줄어든 HP, [who + 1] (없으면 null).</summary>
+        public int[] LastPoison { get; private set; }
+
         /// <summary>한 차례가 끝날 때 (적 차례 뒤): 지속 회복 한 번, 버프 차례를 하나씩 줄인다.</summary>
         public void RoundEnd()
         {
+            EnsureStatus();
+            LastPoison = null;
+            foreach (int w in P.Members())
+                if (poison[w + 1] > 0)
+                {
+                    poison[w + 1]--;
+                    if (P.MemberDown(w)) continue;
+                    int hp = P.MemberHp(w), d = Math.Min(Math.Max(1, P.MemberMaxHp(w) / 12), hp - 1);    // 독으로는 쓰러지지 않는다 (1 은 남김)
+                    if (d <= 0) continue;
+                    if (LastPoison == null) LastPoison = new int[P.Companions.Count + 1];
+                    LastPoison[w + 1] = d;
+                    if (w < 0) P.Hp -= d; else P.Companions[w].Hp -= d;
+                }
             LastRegen = null;
             if (Regen > 0)
             {
@@ -463,6 +526,7 @@ namespace GirlAdventure.Sim
         /// <summary>동료 i 의 공격 기술 (한 마리, 기술의 빗나감·위력·스킬 레벨은 서진 주문과 같은 규칙).</summary>
         public PlayerOutcome MemberAct(int i, Cmd c, int target = -1)
         {
+            if (Thaw(i)) return new PlayerOutcome { Cmd = c, Target = -1, Ally = i, Frozen = true };
             var o = MemberActCore(i, c, target);
             if (!o.Failed) { if (Ultimates.IsUlt(c)) Gauge[i + 1] = 0; else AddGauge(i, Ultimates.GaugeAct); }
             return o;
@@ -484,6 +548,7 @@ namespace GirlAdventure.Sim
             if (c == Cmd.UltCure)                   // 엄마의 큰 빛 (궁극기 ✏️): 모두 HP 절반만큼 회복, 쓰러진 가족도 1/4 로 일으킨다
             {
                 o.Heals = new int[P.Companions.Count + 1];
+                foreach (int w in P.Members()) o.Cured |= CureStatus(w);
                 foreach (int w in P.Members())
                     o.Heals[w + 1] = P.Refill(w, P.MemberDown(w) ? P.MemberMaxHp(w) / 4 : P.MemberMaxHp(w) / 2, 0).hp;
                 foreach (var h in o.Heals) o.Heal += h;
@@ -495,6 +560,7 @@ namespace GirlAdventure.Sim
                 foreach (int w in P.Members())
                     if (!P.MemberDown(w)) o.Heals[w + 1] = P.Refill(w, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
                 foreach (var h in o.Heals) o.Heal += h;
+                foreach (int w in P.Members()) o.Cured |= CureStatus(w);
                 Regen = BuffRounds;
                 RegenAmount = SkillLevels.Scale(s.Heal, power);
                 return o;
@@ -502,6 +568,7 @@ namespace GirlAdventure.Sim
             if (c == Cmd.Hug)                       // 엄마의 포옹 (두 번째 스킬 "한 명만 큰 힐"): 한 사람 크게 회복 (target = 받을 사람, -1 서진)
             {
                 o.Ally = HealWho(target);
+                o.Cured = CureStatus(o.Ally);
                 o.Heal = P.Refill(o.Ally, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
                 return o;
             }
@@ -533,6 +600,36 @@ namespace GirlAdventure.Sim
             if (foe < 0) foe = FirstAlive();
             var o = new EnemyOutcome { Foe = foe, Ally = -1 };
             if (foe < 0 || Foes[foe].Down) { o.Dodged = true; return o; }
+            var f = Foes[foe];
+            o.HealFoe = -1;
+            EnsureStatus();
+            if (!f.Changed && !string.IsNullOrEmpty(f.Def.TransformTo) && f.Hp * 2 <= f.Def.Hp)      // 변신 (HP 절반 이하, 한 번): 이번 차례는 변신만
+            {
+                var nd = GameData.EnemyByName(f.Def.TransformTo);
+                if (nd != null) { f.Become(nd); o.Special = "transform"; o.Dodged = true; return o; }
+            }
+            double mul = 1;
+            if (f.Charging) { f.Charging = false; o.Special = "charged"; mul = 1.5; }   // 쉬고 모은 만큼 1.5배 (2배는 보스전에서 한 방이 너무 큼)
+            else if (!string.IsNullOrEmpty(f.Def.Skill) && f.Def.Skill != "merge" && Roll(f.Def.SkillRate))
+            {
+                switch (f.Def.Skill)
+                {
+                    case "charge": f.Charging = true; o.Special = "charge"; o.Dodged = true; return o;      // 힘을 모은다 (공격 없음)
+                    case "heal":
+                        int pick = -1; float least = .6f;
+                        for (int k = 0; k < Foes.Count; k++)
+                            if (!Foes[k].Down && (float)Foes[k].Hp / Foes[k].Def.Hp < least) { least = (float)Foes[k].Hp / Foes[k].Def.Hp; pick = k; }
+                        if (pick >= 0)
+                        {
+                            int amt = Math.Min(Foes[pick].Def.Hp / 4, Foes[pick].Def.Hp - Foes[pick].Hp);
+                            Foes[pick].Hp += amt;
+                            o.Special = "heal"; o.HealFoe = pick; o.HealAmt = amt; o.Dodged = true;
+                            return o;
+                        }
+                        break;
+                    default: o.Special = f.Def.Skill; break;                                            // poison · burn · freeze: 공격하면서
+                }
+            }
             // 서 있는 사람 중 무작위로 노린다. 혼자면 주사위를 굴리지 않고, 둘이면 예전처럼 반반 (NextDouble 한 번 — 같은 씨앗이면 같은 결과)
             var standing = new List<int>();
             for (int i = 0; i < P.Companions.Count; i++) if (!P.Companions[i].Down) standing.Add(i);
@@ -550,23 +647,60 @@ namespace GirlAdventure.Sim
             if (o.Ally >= 0)
             {
                 var m = P.Companions[o.Ally];
-                o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.DefOf(m));
+                o.Damage = Math.Max(1, (int)((Foes[foe].Def.Atk + r.Next(0, 3) - P.DefOf(m)) * mul));
+                if (o.Special == "freeze") o.Damage = Math.Max(1, o.Damage * 3 / 5);
                 if (o.Guarded || Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
                 if (DefUp > 0) { o.Damage = Math.Max(1, o.Damage * 7 / 10); o.Shielded = true; }
                 m.Hp = Math.Max(0, m.Hp - o.Damage);
+                if (!m.Down) o.Status = AddStatus(o.Ally, o.Special);
                 return o;
             }
-            o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.Def);     // 방어력(장비)만큼 줄지만 최소 1
+            o.Damage = Math.Max(1, (int)((Foes[foe].Def.Atk + r.Next(0, 3) - P.Def) * mul));     // 방어력(장비)만큼 줄지만 최소 1
+            if (o.Special == "freeze") o.Damage = Math.Max(1, o.Damage * 3 / 5);
             if (Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
             if (DefUp > 0) { o.Damage = Math.Max(1, o.Damage * 7 / 10); o.Shielded = true; }
             P.Hp = Math.Max(0, P.Hp - o.Damage);
+            if (P.Hp > 0) o.Status = AddStatus(-1, o.Special);
             return o;
+        }
+
+        bool AddStatus(int who, string kind)
+        {
+            if (kind == "poison" || kind == "burn") { poison[who + 1] = PoisonRounds; poisonKind[who + 1] = kind; return true; }
+            if (kind == "freeze") { frozen[who + 1] = true; return true; }
+            return false;
+        }
+
+        /// <summary>
+        /// 합체 (적 차례 시작, 드래곤 퀘스트 킹 슬라임처럼): Skill "merge" 인 같은 적이 둘 이상 살아 있으면 SkillRate 확률로
+        /// 첫 마리가 MergeTo 로 커지고 (HP 가득) 나머지는 그 안으로 들어가 사라진다. 합친 적 번호와 사라진 적들 (없으면 -1).
+        /// </summary>
+        public (int into, List<int> gone) TryMerge()
+        {
+            var gone = new List<int>();
+            for (int i = 0; i < Foes.Count; i++)
+            {
+                var f = Foes[i];
+                if (f.Down || f.Changed || f.Def.Skill != "merge" || string.IsNullOrEmpty(f.Def.MergeTo)) continue;
+                var same = new List<int>();
+                for (int j = i + 1; j < Foes.Count; j++) if (!Foes[j].Down && Foes[j].Def == f.Def) same.Add(j);
+                if (same.Count == 0) continue;
+                if (!Roll(f.Def.SkillRate)) return (-1, gone);
+                var nd = GameData.EnemyByName(f.Def.MergeTo);
+                if (nd == null) return (-1, gone);
+                f.Become(nd);
+                f.Hp = nd.Hp;
+                foreach (int j in same) { Foes[j].Hp = 0; gone.Add(j); }
+                return (i, gone);
+            }
+            return (-1, gone);
         }
 
         /// <summary>적 차례: 살아 있는 적이 차례대로 공격 (주인공이 쓰러지면 멈춤).</summary>
         public List<EnemyOutcome> EnemyTurn()
         {
             var list = new List<EnemyOutcome>();
+            TryMerge();
             for (int i = 0; i < Foes.Count && !PlayerDown; i++)
                 if (!Foes[i].Down)
                 {

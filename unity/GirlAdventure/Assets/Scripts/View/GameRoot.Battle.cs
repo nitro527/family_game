@@ -279,6 +279,7 @@ namespace GirlAdventure.View
                 if (battle.PlayerDown) { yield return Defeat(); yield break; }
                 battle.RoundEnd();                  // 지속 회복 한 번 + 버프 차례 줄이기
                 RefreshHud();
+                yield return PoisonShow();
                 yield return RegenShow();
             }
         }
@@ -289,6 +290,7 @@ namespace GirlAdventure.View
         IEnumerator SisterTurn()
         {
             turnRetry = false;
+            if (battle.Thaw(-1)) { yield return FrozenTurn(-1); yield break; }
             while (true)
             {
                 yield return AskCommand();
@@ -339,6 +341,7 @@ namespace GirlAdventure.View
         /// </summary>
         IEnumerator AllyTurn(int a)
         {
+            if (battle.Thaw(a)) { yield return FrozenTurn(a); yield break; }
             bool bro = P.Companions[a].Id == Party.Brother;
             bool autoNow = Settings.AllyAuto(P.Companions[a].Id);
             if (bro && !autoNow && Settings.BroOneButton)   // 지훈 한 버튼 모드 (PLAN 70): 아무 버튼이나 누르면 알아서 공격
@@ -594,6 +597,7 @@ namespace GirlAdventure.View
                 Pop("+" + o.Heal, o.Ally >= 0 ? AllyX(o.Ally) : HeroX, 200, new Color32(125, 255, 154, 255));
                 RefreshHud();
                 yield return Talk("skill_hug", ("who", P.MemberName(o.Ally)), ("heal", o.Heal));
+                if (o.Cured) { RefreshHud(); yield return Talk("status_cured"); }
                 v.pose = "ready";
                 yield break;
             }
@@ -611,6 +615,7 @@ namespace GirlAdventure.View
                     if (o.Heals != null && o.Heals[w + 1] > 0) Pop("+" + o.Heals[w + 1], w >= 0 ? AllyX(w) : HeroX, 200, new Color32(125, 255, 154, 255));
                 RefreshHud();
                 yield return TalkAlly(a, "cure_done");
+                if (o.Cured) { RefreshHud(); yield return Talk("status_cured"); }
                 if (o.Cmd == Cmd.Cure) yield return Talk("cure_regen");
                 v.pose = "ready";
                 yield break;
@@ -695,6 +700,7 @@ namespace GirlAdventure.View
                     RefreshHud();
                     if (o.Ally >= 0) yield return Talk("heal_done_ally", ("who", P.MemberName(o.Ally)), ("heal", o.Heal));
                     else yield return Talk("heal_done", ("heal", o.Heal));
+                    if (o.Cured) { RefreshHud(); yield return Talk("status_cured"); }
                     break;
                 case Cmd.Candy:
                 case Cmd.Item:
@@ -878,6 +884,85 @@ namespace GirlAdventure.View
         public int AtkUpLeft => battle != null ? battle.AtkUp : 0;
         public int DefUpLeft => battle != null ? battle.DefUp : 0;
 
+        /// <summary>프로브용: 기믹이 나온 횟수.</summary>
+        public int ChargeCount { get; private set; }
+        public int MergeCount { get; private set; }
+        public int TransformCount { get; private set; }
+        public int StatusCount { get; private set; }
+
+        /// <summary>얼어서 쉬는 차례: 몸에 얼음빛 → "꽁꽁 얼어서 움직일 수 없다… 녹았다!"</summary>
+        IEnumerator FrozenTurn(int who)
+        {
+            sfx.Play("miss");
+            var at = Px(who >= 0 ? AllyX(who) + 20 : HeroX + 20, (who >= 0 ? AllyY(who) : HeroY) - 110);
+            Spawn(glowSprite, at, Vector3.zero, 1f, 2.6f, new Color(.6f, .9f, 1f, .6f));
+            RefreshHud();
+            yield return Talk("status_frozen_turn", ("who", P.MemberName(who)));
+        }
+
+        /// <summary>적 공격으로 독·화상·얼음이 걸렸을 때: 색 빛 + 한 줄.</summary>
+        IEnumerator StatusShow(EnemyOutcome e)
+        {
+            StatusCount++;
+            int who = e.Ally;
+            bool ice = e.Special == "freeze";
+            var col = ice ? new Color(.6f, .9f, 1f, .6f) : e.Special == "burn" ? new Color(1f, .5f, .2f, .6f) : new Color(.7f, .35f, 1f, .6f);
+            var at = Px(who >= 0 ? AllyX(who) + 20 : HeroX + 20, (who >= 0 ? AllyY(who) : HeroY) - 110);
+            Spawn(glowSprite, at, Vector3.zero, 1f, 2.4f, col);
+            for (int k = 0; k < 6; k++) Spawn(starSprite, at + new Vector3(UnityEngine.Random.Range(-.6f, .6f), UnityEngine.Random.Range(-.4f, .4f)), new Vector3(0, .8f), .9f, .22f, col, 200);
+            RefreshHud();
+            if (ice) yield return Talk("status_freeze", ("who", P.MemberName(who)));
+            else yield return Talk("status_poison", ("who", P.MemberName(who)), ("kind", battle.PoisonName(who)));
+        }
+
+        /// <summary>차례 끝 독·화상: 줄어든 HP 를 보라 숫자로.</summary>
+        IEnumerator PoisonShow()
+        {
+            var h = battle.LastPoison;
+            if (h == null) yield break;
+            sfx.Play("hurt");
+            for (int w = -1; w < P.Companions.Count; w++)
+                if (h[w + 1] > 0) Pop("-" + h[w + 1], w >= 0 ? AllyX(w) : HeroX, 230, new Color32(190, 120, 255, 255));
+            RefreshHud();
+            yield return Talk("status_poison_tick");
+        }
+
+        /// <summary>합체 (드래곤 퀘스트 킹 슬라임처럼): 나머지 젤리가 가운데로 빨려 들어가 사라지고 첫 마리가 커진다.</summary>
+        IEnumerator MergeShow(int into, List<int> gone)
+        {
+            MergeCount++;
+            sfx.Play("mv_slam");
+            foreach (int j in gone) { foeFading[j] = true; groupTags[j].text = ""; }
+            for (float t = 0; t < .5f; t += Time.deltaTime) { foeShake[into] = .25f; yield return null; }
+            yield return Flash(.25f);
+            var d = battle.Foes[into].Def;
+            foeSR[into].sprite = JellySprite(d);
+            foeSR[into].transform.localScale = Vector3.one * FoeScale(into);
+            groupTags[into].text = GroupBattle ? FoeName(into) : "";
+            if (!GroupBattle) enemyLabel.text = d.Name;
+            camShake = Mathf.Max(camShake, .35f);
+            sfx.Play("thud");
+            RefreshHud();
+            yield return Talk("foe_merge", ("enemy", d.Name));
+        }
+
+        /// <summary>변신 (HP 절반, 한 번): 번쩍 → 새 모습·이름 → 땅울림.</summary>
+        IEnumerator TransformShow(int i, string before)
+        {
+            TransformCount++;
+            sfx.Play("mv_charge");
+            for (float t = 0; t < .7f; t += Time.deltaTime) { foeShake[i] = .35f; yield return null; }
+            yield return Flash(.35f);
+            var d = battle.Foes[i].Def;
+            foeSR[i].sprite = JellySprite(d);
+            foeSR[i].transform.localScale = Vector3.one * FoeScale(i);
+            if (GroupBattle) groupTags[i].text = FoeName(i); else enemyLabel.text = d.Name;
+            camShake = Mathf.Max(camShake, .5f);
+            sfx.Play("thud");
+            RefreshHud();
+            yield return Talk("foe_transform", ("enemy", before), ("next", d.Name));
+        }
+
         /// <summary>차례 끝 지속 회복 (엄마의 빛): 회복한 사람마다 작은 빛기둥 + 숫자, 한 줄 대사.</summary>
         IEnumerator RegenShow()
         {
@@ -896,6 +981,8 @@ namespace GirlAdventure.View
 
         IEnumerator EnemyTurn()
         {
+            var (into, gone) = battle.TryMerge();
+            if (into >= 0) yield return MergeShow(into, gone);
             for (int i = 0; i < battle.Foes.Count; i++)
             {
                 if (battle.Foes[i].Down || battle.PlayerDown) continue;
@@ -910,15 +997,43 @@ namespace GirlAdventure.View
 
         IEnumerator FoeAttack(int i)
         {
-            var d = battle.Foes[i].Def;
             while (moveP < 1) yield return null;       // 앞 적의 모션이 끝난 뒤
             yield return new WaitForSeconds(.25f);
+            string before = FoeName(i);
+            var e = battle.EnemyAct(i);
+            var d = battle.Foes[i].Def;
+            if (e.Special == "transform") { yield return TransformShow(i, before); yield break; }
+            if (e.Special == "charge")                  // 힘 모으기: 붉은 빛이 몸에 모인다
+            {
+                sfx.Play("mv_charge");
+                foeShake[i] = .3f;
+                var at = Px(FoeX(i), FoeHeadY(i) + 70);
+                Spawn(glowSprite, at, Vector3.zero, 1.1f, 3f, new Color(1f, .35f, .2f, .6f));
+                for (int k = 0; k < 10; k++)
+                {
+                    float ang = k / 10f * Mathf.PI * 2;
+                    Spawn(starSprite, at + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 1.6f, -new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 1.4f, .8f, .3f, new Color(1f, .55f, .3f), 200);
+                }
+                ChargeCount++;
+                yield return Talk("foe_charge", ("enemy", FoeName(i)));
+                yield break;
+            }
+            if (e.Special == "heal")                    // 적 회복: 고친 적 위에 초록 반짝
+            {
+                sfx.Play("heal");
+                var at = Px(FoeX(e.HealFoe), FoeHeadY(e.HealFoe) + 60);
+                Spawn(glowSprite, at, Vector3.zero, 1f, 2.6f, new Color(.5f, 1f, .6f, .55f));
+                Pop("+" + e.HealAmt, FoeX(e.HealFoe), FoeHeadY(e.HealFoe) + 40, new Color32(125, 255, 154, 255));
+                RefreshHud();
+                yield return Talk("foe_heal", ("enemy", FoeName(i)), ("target", FoeName(e.HealFoe)), ("heal", e.HealAmt));
+                yield break;
+            }
             movingFoe = i;
             StartMove(d.Move);
             sfx.Play(d.Shape == "skeleton" ? "creak" : "mv_" + moveName);    // 모션마다 다른 소리 (해골은 삐거덕)
             if (moveName == "shard") StartCoroutine(ShardVolley(d));
-            yield return Talk("enemy_attack", ("enemy", FoeName(i)), ("attack", d.Attack ?? "공격"));
-            var e = battle.EnemyAct(i);
+            if (e.Special == "charged") yield return Talk("foe_charged", ("enemy", FoeName(i)));
+            else yield return Talk("enemy_attack", ("enemy", FoeName(i)), ("attack", d.Attack ?? "공격"));
             if (e.Dodged)
             {
                 if (e.Ally >= 0) yield return TalkAlly(e.Ally, "dodge");
@@ -943,6 +1058,7 @@ namespace GirlAdventure.View
                 else yield return TalkAlly(e.Ally, "hurt", ("dmg", e.Damage));
                 if (battle.AllyDown(e.Ally) && !battle.PlayerDown) yield return TalkAlly(e.Ally, "down");
                 else v.pose = battle.Guarding == e.Ally ? "guard" : "ready";
+                if (e.Status) yield return StatusShow(e);
                 yield break;
             }
             sfx.Play("hurt");
@@ -954,6 +1070,7 @@ namespace GirlAdventure.View
             yield return Talk("hurt", ("dmg", e.Damage));
             if (battle.Party && battle.SisterDown && !battle.PlayerDown) { yield return Talk("sis_down"); yield break; }
             pose = "ready";
+            if (e.Status) yield return StatusShow(e);
         }
 
         IEnumerator Victory()

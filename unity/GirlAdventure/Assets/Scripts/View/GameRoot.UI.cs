@@ -159,6 +159,16 @@ namespace GirlAdventure.View
             bar.color = k >= 1 ? Color.Lerp(new Color32(255, 226, 122, 255), Color.white, Mathf.PingPong(Time.time * 2, 1)) : new Color32(242, 196, 67, 255);
         }
 
+        /// <summary>HP 줄 끝 상태 이상 표시 (전투 중): 독(보라)·화상(주황)·얼음(하늘).</summary>
+        string StatusTag(int who)
+        {
+            if (battle == null || Current != Mode.Battle) return "";
+            string t = "";
+            if (battle.PoisonOf(who) > 0) t += battle.PoisonName(who) == "화상" ? " <color=#FF9A50>화상</color>" : " <color=#C890FF>독</color>";
+            if (battle.FrozenOf(who)) t += " <color=#9AE0FF>얼음</color>";
+            return t == "" ? "" : $"<size=15>{t}</size>";
+        }
+
         void RefreshHud()
         {
             hudName.text = $"{P.Name} · 마법사 Lv {P.Lv}";
@@ -176,6 +186,7 @@ namespace GirlAdventure.View
                 if (tags != "") hudMp.text += $"  <size=15>{tags.Trim()}</size>";
             }
             if (P.Hp <= 0) hudHp.text = "<color=#FF6060>HP 0 (쓰러짐)</color>";
+            else hudHp.text += StatusTag(-1);
             SetUltBar(hudUltBar, -1);
             for (int i = 0; i < P.Companions.Count && i < allyHuds.Count; i++)
             {
@@ -183,7 +194,7 @@ namespace GirlAdventure.View
                 var h = allyHuds[i];
                 int maxHp = P.MaxHpOf(c), maxMp = P.MaxMpOf(c);
                 h.name.text = $"{c.Def.Name} · {c.Def.Class} Lv {P.Lv}";
-                h.hp.text = c.Hp <= 0 ? "<color=#FF6060>HP 0 (쓰러짐)</color>" : $"HP {c.Hp}/{maxHp}";
+                h.hp.text = c.Hp <= 0 ? "<color=#FF6060>HP 0 (쓰러짐)</color>" : $"HP {c.Hp}/{maxHp}" + StatusTag(i);
                 h.mp.text = $"MP {c.Mp}/{maxMp}";
                 h.hpBar.fillAmount = c.Hp / (float)maxHp;
                 h.mpBar.fillAmount = c.Mp / (float)Mathf.Max(1, maxMp);

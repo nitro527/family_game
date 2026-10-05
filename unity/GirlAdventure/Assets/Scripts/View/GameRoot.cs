@@ -496,6 +496,14 @@ namespace GirlAdventure.View
         }
 
         /// <summary>플레이테스트용: 초원 젤리 무리와 싸운다 (Normal[idx] 를 n 마리).</summary>
+        /// <summary>프로브용: 이 적들과 바로 전투.</summary>
+        public void DebugBattleDefs(params EnemyDef[] defs)
+        {
+            StopAllCoroutines();
+            HideMessage();
+            StartCoroutine(BattleRoutine(new List<EnemyDef>(defs)));
+        }
+
         public void DebugGroupBattle(int n, int idx = 0)
         {
             StopAllCoroutines();

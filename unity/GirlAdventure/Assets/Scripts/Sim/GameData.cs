@@ -22,6 +22,7 @@ namespace GirlAdventure.Sim
         public EnemyDef SnowBoss;       // 예티 (챕터 5 보스, 서진이 도감 그림)
         public EnemyDef[] Library;      // 도서관 악마 (챕터 6 ⭐, 모습·이름 ✏️ Qwen)
         public EnemyDef LibraryBoss;    // 악마 대장 (챕터 6 보스 ✏️)
+        public EnemyDef[] Forms;        // 변신한 모습 (TransformTo 로만 나온다, 예: 무서운 예티)
         public EnemyDef[] Forest;       // 숲 젤리 (챕터 7, 나무·벌레 젤리 = 서진이 도감 ⭐, 나머지 ✏️ Qwen)
         public EnemyDef ForestBoss;     // 장수풍뎅이 대장 (챕터 7 보스 ✏️)
     }
@@ -115,6 +116,14 @@ namespace GirlAdventure.Sim
         public static EnemyDef[] Snow { get; private set; }
         public static EnemyDef[] Library { get; private set; }
         public static EnemyDef[] Forest { get; private set; }
+        public static EnemyDef[] Forms { get; private set; }
+
+        /// <summary>이름으로 적 찾기 (합체 MergeTo·변신 TransformTo). 없으면 null.</summary>
+        public static EnemyDef EnemyByName(string name)
+        {
+            foreach (var d in AllEnemies()) if (d != null && d.Name == name) return d;
+            return null;
+        }
 
         /// <summary>그 맵의 일반 적 목록 (출현표 인덱스가 가리키는 곳): 동굴 Cave, 사막 Desert, 나머지(초원·마을) Normal.</summary>
         public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : kind == MapKind.Lava ? Lava : kind == MapKind.Snow ? Snow : kind == MapKind.Library ? Library : kind == MapKind.Forest ? Forest : Normal;
@@ -160,6 +169,8 @@ namespace GirlAdventure.Sim
             Snow = enemies.Snow ?? new EnemyDef[0];
             Library = enemies.Library ?? new EnemyDef[0];
             Forest = enemies.Forest ?? new EnemyDef[0];
+            Forms = enemies.Forms ?? new EnemyDef[0];
+            foreach (var d in Forms) d.Boss = d.Boss || d.Hp >= 1000;
             Guard = enemies.Guard;
             Guard.Boss = true;
             General = enemies.General;
@@ -215,6 +226,7 @@ namespace GirlAdventure.Sim
             if (LibraryBoss != null) yield return LibraryBoss;
             foreach (var d in Forest) yield return d;
             if (ForestBoss != null) yield return ForestBoss;
+            foreach (var d in Forms) yield return d;
         }
 
         /// <summary>도감에 쓰는 사는 곳 (Q-12): 어느 목록에 들어 있나로 정한다.</summary>
@@ -230,6 +242,7 @@ namespace GirlAdventure.Sim
             if (d == SnowBoss || Array.IndexOf(Snow, d) >= 0) return "눈 덮인 땅";
             if (d == LibraryBoss || Array.IndexOf(Library, d) >= 0) return "도서관";
             if (d == ForestBoss || Array.IndexOf(Forest, d) >= 0) return "숲";
+            if (Array.IndexOf(Forms, d) >= 0) foreach (var o in AllEnemies()) if (o != null && o.TransformTo == d.Name) return RegionOf(o);
             return "";
         }
 

@@ -254,7 +254,7 @@
    "slot": 1,
    "idea": "daughter_note_02",
    "sketch": "yeti.png",
-   "ingame": null,
+   "ingame": "예티",
    "desc": "복슬복슬 눈 괴물. 서진이가 처음 그린 예티 (게임에는 무서운 예티로)."
   },
   {
@@ -490,7 +490,7 @@
    "slot": 1,
    "idea": "daughter_note_02",
    "sketch": "yeti.png",
-   "ingame": "예티",
+   "ingame": "무서운 예티",
    "desc": "새빨간 눈으로 크와앙! 눈 산 동굴의 왕 (사용자 결정 2026-10-04: 무서운 예티)"
   },
   {

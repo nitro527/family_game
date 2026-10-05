@@ -485,6 +485,7 @@ namespace GirlAdventure.EditorTools
             LibraryTests();
             ForestTests();
             SupportSkillTests();
+            GimmickTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -742,7 +743,7 @@ namespace GirlAdventure.EditorTools
             var reach = Reach(m, WorldMap.SnowStart);
             var boss = GameData.SnowBoss;
             Check("yeti: door below the snow peak, reachable, data + art", m.At(b.x, b.y) == 'B' && reach[b.x, b.y] && m.At(b.x, b.y - 1) == 'K'
-                  && boss != null && boss.Boss && boss.Art == "yeti_scary" && boss.Backdrop == "snow_boss" && Resources.Load<Texture2D>("Monsters/yeti_scary") != null
+                  && boss != null && boss.Boss && boss.Art == "yeti" && boss.TransformTo == "무서운 예티" && GameData.EnemyByName("무서운 예티")?.Art == "yeti_scary" && boss.Backdrop == "snow_boss" && Resources.Load<Texture2D>("Monsters/yeti_scary") != null
                   && Resources.Load<Texture2D>("Battle/snow_boss") != null,
                   $"tile {m.At(b.x, b.y)} reach {reach[b.x, b.y]} above {m.At(b.x, b.y - 1)} boss {boss?.Name} art {boss?.Art} bg {boss?.Backdrop} tex {Resources.Load<Texture2D>("Monsters/yeti_scary") != null}/{Resources.Load<Texture2D>("Battle/snow_boss") != null}");
             var p = PlayerState.NewGame("t"); p.Boss5Down = true; p.Chapter = 5;
@@ -1271,6 +1272,66 @@ namespace GirlAdventure.EditorTools
             bool bro = b.AllyAuto(0) == b.BroAuto();
             Check("Q-32 dad auto: guard when someone is low, else sword the weakest",
                   calm == (Cmd.Sword, 1) && worried.cmd == Cmd.Guard && self.cmd == Cmd.Sword && bro, $"calm={calm} worried={worried} self={self} bro={bro}");
+        }
+
+        /// <summary>
+        /// 전투 기믹 (사용자 2026-10-06 "얼리거나 독, 합체, 변신"): 독(차례 끝 HP↓, 1 남김, 3차례 뒤 풀림), 얼음(다음 행동 쉼),
+        /// 반짝 힐이 상태를 풂, 힘 모으기(다음 공격 2배), 적 회복, 합체(초록 젤리 둘 → 큰 초록 젤리), 예티 HP 절반 → 무서운 예티.
+        /// </summary>
+        static void GimmickTests()
+        {
+            EnemyDef With(EnemyDef d, string skill, double rate = 1)
+            {
+                var e = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(d)); e.Skill = skill; e.SkillRate = rate; e.Twice = false; return e;
+            }
+            var p = PlayerState.NewGame("g"); p.GainExp(PlayerState.NextExp(9)); p.Hp = p.MaxHp;
+            var b = new BattleSystem(p, new[] { With(GameData.Snow[0], "poison") }, new System.Random(1));
+            EnemyOutcome e1 = default;
+            for (int k = 0; k < 10 && !e1.Status; k++) { p.Hp = p.MaxHp; e1 = b.EnemyAct(0); }
+            int before = p.Hp; b.RoundEnd();
+            bool poison = e1.Status && b.PoisonOf(-1) == BattleSystem.PoisonRounds - 1 && p.Hp < before && b.LastPoison != null;
+            p.Hp = 1; b.RoundEnd(); poison &= p.Hp == 1;                            // 독으로는 쓰러지지 않는다
+            b.RoundEnd(); poison &= b.PoisonOf(-1) == 0;
+            // 얼음 → 다음 행동 쉼, 반짝 힐이 풂
+            var p2 = PlayerState.NewGame("g2"); p2.GainExp(PlayerState.NextExp(9)); p2.Hp = p2.MaxHp;
+            var b2 = new BattleSystem(p2, new[] { With(GameData.Snow[0], "freeze") }, new System.Random(2));
+            EnemyOutcome e2 = default;
+            for (int k = 0; k < 10 && !e2.Status; k++) { p2.Hp = p2.MaxHp; e2 = b2.EnemyAct(0); }
+            var skip = b2.Act(Cmd.Fire);
+            bool freeze = e2.Status && skip.Frozen && !b2.FrozenOf(-1);
+            var b2p = new BattleSystem(p2, new[] { With(GameData.Snow[0], "poison") }, new System.Random(7));     // 독은 반짝 힐로 풀린다
+            for (int k = 0; k < 10 && b2p.PoisonOf(-1) == 0; k++) { p2.Hp = p2.MaxHp; b2p.EnemyAct(0); }
+            p2.Hp = p2.MaxHp / 2; p2.Mp = p2.MaxMp;
+            var heal = b2p.Act(Cmd.Heal);
+            freeze &= heal.Cured && b2p.PoisonOf(-1) == 0;
+            // 힘 모으기 → 다음 공격 2배쯤
+            var p3 = PlayerState.NewGame("g3"); p3.GainExp(PlayerState.NextExp(9)); p3.Hp = p3.MaxHp;
+            var b3 = new BattleSystem(p3, new[] { With(GameData.Lava[0], "charge") }, new System.Random(3));
+            var c1 = b3.EnemyAct(0); var c2 = b3.EnemyAct(0);
+            bool charge = c1.Special == "charge" && c1.Damage == 0 && (c2.Special == "charged" && (c2.Dodged || c2.Damage > 0));
+            // 적 회복
+            var hd = With(GameData.Forest[4], "heal");
+            var b4 = new BattleSystem(p3, new[] { hd, GameData.Forest[0] }, new System.Random(4));
+            b4.Foes[1].Hp = 10;
+            var h1 = b4.EnemyAct(0);
+            bool fheal = h1.Special == "heal" && h1.HealFoe == 1 && b4.Foes[1].Hp == 10 + h1.HealAmt && h1.HealAmt > 0;
+            // 합체
+            var green = GameData.Normal[1];
+            var gm = With(green, "merge");
+            var b5 = new BattleSystem(p3, new[] { gm, gm }, new System.Random(5));
+            var (into, gone) = b5.TryMerge();
+            bool merge = green.Skill == "merge" && into == 0 && gone.Count == 1 && b5.Foes[1].Down && b5.Foes[0].Def.Name == green.MergeTo && b5.Foes[0].Hp == b5.Foes[0].Def.Hp;
+            // 변신
+            var yeti = GameData.SnowBoss;
+            var b6 = new BattleSystem(p3, new[] { yeti }, new System.Random(6));
+            b6.Foes[0].Hp = yeti.Hp / 2;
+            var t1 = b6.EnemyAct(0);
+            bool morph = t1.Special == "transform" && b6.Foes[0].Def.Name == "무서운 예티" && b6.Foes[0].Hp == yeti.Hp / 2 && b6.EnemyAct(0).Special != "transform";
+            int skilled = 0; foreach (var d in GameData.AllEnemies()) if (d != null && !string.IsNullOrEmpty(d.Skill)) skilled++;
+            bool data = skilled >= 20 && GameData.HasTalk("foe_merge") && GameData.HasTalk("foe_transform") && GameData.HasTalk("status_poison");
+            Check("battle gimmicks: poison ticks (never kills), freeze skips a turn, heal cures, charge→double, foe heal, merge, yeti transforms",
+                  poison && freeze && charge && fheal && merge && morph && data,
+                  $"poison={poison} freeze={freeze} charge={charge}({c1.Special}/{c2.Special}) heal={fheal} merge={merge}({into}) morph={morph}({t1.Special}) data={data}({skilled})");
         }
 
         /// <summary>

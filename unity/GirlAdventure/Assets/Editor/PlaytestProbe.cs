@@ -1717,6 +1717,36 @@ namespace GirlAdventure.EditorTools
             Expect("chapter 7 starts in the forest camp with four", G.P.Chapter == 7 && G.MapKindNow == MapKind.Forest && G.FollowerVisible("mom") && G.FollowerVisible("dad")
                    && (G.P.X, G.P.Y) == WorldMap.ForStart && G.P.Companions.Count == 3);
             ExpectBgm("forest");
+            // 전투 기믹 (사용자 2026-10-06): 꼬마 악마 둘 → 합체, 버섯 젤리 → 독 (확률 무시)
+            BattleSystem.ForceSkills = true;
+            G.DebugBattleDefs(GameData.Library[0], GameData.Library[0]);
+            yield return 1.5f;
+            for (float t = 0; t < 60 && G.MergeCount == 0 && G.Current == GameRoot.Mode.Battle; t += .2f)
+            {
+                if (G.MessageText.Contains("합체")) break;
+                if (G.CommandOpen || G.ChoiceOpen) Keys.Press(KeyCode.Return); else Keys.Press(KeyCode.Z);
+                yield return .2f;
+            }
+            yield return (Func<bool>)(() => G.MessageText.Contains("합체"));
+            Shot("gimmick_merge");
+            Expect("two imps merged into a big imp", G.MergeCount > 0, $"merges {G.MergeCount}");
+            G.DebugSetAllFoesHp(1);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            G.DebugBattleDefs(GameData.Forest[1]);
+            yield return 1.5f;
+            for (float t = 0; t < 60 && G.StatusCount == 0 && G.Current == GameRoot.Mode.Battle; t += .2f)
+            {
+                if (G.CommandOpen || G.ChoiceOpen) Keys.Press(KeyCode.Return); else Keys.Press(KeyCode.Z);
+                yield return .2f;
+            }
+            yield return .3f;
+            Shot("gimmick_poison");
+            Expect("mushroom jelly poisoned someone (HUD tag)", G.StatusCount > 0, $"status {G.StatusCount}");
+            BattleSystem.ForceSkills = false;
+            G.DebugSetAllFoesHp(1);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             G.DebugGroupBattle(2, 0);
             yield return 1.5f;
             Shot("ch7_battle");
