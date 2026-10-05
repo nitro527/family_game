@@ -103,6 +103,28 @@ namespace GirlAdventure.Sim
 
         void FillCompanions() { foreach (var c in Companions) { c.Hp = MaxHpOf(c); c.Mp = MaxMpOf(c); } }
 
+        // ---- 파티 한 사람 (Q-31 회복·도구를 동료에게): who = -1 서진, 0.. = Companions 번호
+        /// <summary>회복·도구를 받을 수 있는 사람 번호 (서진 -1, 그다음 동료 순서).</summary>
+        public IEnumerable<int> Members() { yield return -1; for (int i = 0; i < Companions.Count; i++) yield return i; }
+        public bool ValidMember(int who) => who >= -1 && who < Companions.Count;
+        public string MemberName(int who) => who < 0 ? Name : Companions[who].Def.Name;
+        public int MemberHp(int who) => who < 0 ? Hp : Companions[who].Hp;
+        public int MemberMaxHp(int who) => who < 0 ? MaxHp : MaxHpOf(Companions[who]);
+        public int MemberMp(int who) => who < 0 ? Mp : Companions[who].Mp;
+        public int MemberMaxMp(int who) => who < 0 ? MaxMp : MaxMpOf(Companions[who]);
+        /// <summary>쓰러졌나 (✏️ 쓰러진 동료는 회복 주문·도구로 깨울 수 없다 — 전투가 끝나면 일어난다).</summary>
+        public bool MemberDown(int who) => MemberHp(who) <= 0;
+
+        /// <summary>HP·MP 를 채운다 (최대를 넘지 않게). 실제로 찬 양을 돌려준다.</summary>
+        public (int hp, int mp) Refill(int who, int hp, int mp)
+        {
+            hp = Math.Max(0, Math.Min(hp, MemberMaxHp(who) - MemberHp(who)));
+            mp = Math.Max(0, Math.Min(mp, MemberMaxMp(who) - MemberMp(who)));
+            if (who < 0) { Hp += hp; Mp += mp; }
+            else { Companions[who].Hp += hp; Companions[who].Mp += mp; }
+            return (hp, mp);
+        }
+
         // ---- 지훈 (예전 이름 그대로 — 화면·테스트가 쓰는 통로. 속은 동료 목록의 "jihun")
         Companion Bro => Member(Sim.Party.Brother);
         public bool BrotherJoined => Bro != null;

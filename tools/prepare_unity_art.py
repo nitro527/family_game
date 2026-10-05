@@ -159,6 +159,8 @@ COMPANIONS = {
     'boy': ('boy', 'Boy', BOY_SCALE, {'ready': 'ready', 'attack': 'attack', 'damage': 'damage', 'victory': 'victory'}),
     # 아빠: 설정집 5.5등신 (누나 4등신보다 크게), 전투 대기 = 사자 방패를 든 guard 포즈
     'dad': ('dad', 'Dad', 1.25, {'ready': 'guard', 'attack': 'attack', 'damage': 'damage', 'victory': 'victory', 'guard': 'guard'}),
+    # 엄마 (현자, 챕터 6 도서관 ⭐ 2026-10-05): 아빠와 비슷한 5.5등신, 공격 = 주문 외우는 cast 포즈
+    'mom': ('mom', 'Mom', 1.2, {'ready': 'ready', 'attack': 'cast', 'damage': 'damage', 'victory': 'victory', 'cast': 'cast'}),
 }
 
 

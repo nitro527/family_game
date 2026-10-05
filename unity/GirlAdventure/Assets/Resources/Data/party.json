@@ -2,6 +2,7 @@
   "_comment": "동료 정의 (PLAN_NEXT 66). 엄마·아빠는 여기에 한 줄씩. 능력치 = Start + PerLevel × (레벨-1), 레벨은 서진과 같이",
   "Companions": [
     {"Id": "jihun", "Name": "지훈", "Class": "용사", "Art": "Boy", "Face": "bro_", "StartHp": 30, "HpPerLevel": 7, "StartMp": 4, "MpPerLevel": 1, "StartAtk": 7, "AtkPerLevel": 3, "BaseDef": 1, "Skills": ["Slash", "Bolt", "BigBolt"], "GearSlots": ["bro_weapon", "bro_shield"], "GearNames": ["칼", "방패"], "BraveFace": "determined", "BattleHeight": 218, "FieldScale": 0.84},
-    {"Id": "dad", "Name": "아빠", "Class": "기사", "Art": "Dad", "Face": "dad_", "BraveFace": "serious", "StartHp": 40, "HpPerLevel": 8, "StartMp": 6, "MpPerLevel": 1, "StartAtk": 6, "AtkPerLevel": 2, "BaseDef": 4, "Skills": ["Sword", "Guard"], "GearSlots": ["dad_weapon", "dad_shield"], "GearNames": ["검", "방패"], "BattleHeight": 330, "FieldScale": 1.15}
+    {"Id": "dad", "Name": "아빠", "Class": "기사", "Art": "Dad", "Face": "dad_", "BraveFace": "serious", "StartHp": 40, "HpPerLevel": 8, "StartMp": 6, "MpPerLevel": 1, "StartAtk": 6, "AtkPerLevel": 2, "BaseDef": 4, "Skills": ["Sword", "Guard"], "GearSlots": ["dad_weapon", "dad_shield"], "GearNames": ["검", "방패"], "BattleHeight": 330, "FieldScale": 1.15},
+    {"Id": "mom", "Name": "엄마", "Class": "현자", "Art": "Mom", "Face": "mom_", "BraveFace": "cast", "StartHp": 34, "HpPerLevel": 7, "StartMp": 12, "MpPerLevel": 2, "StartAtk": 5, "AtkPerLevel": 2, "BaseDef": 2, "Skills": ["Light", "Cure"], "GearSlots": ["mom_weapon", "mom_robe"], "GearNames": ["지팡이", "옷"], "BattleHeight": 320, "FieldScale": 1.12}
   ]
 }

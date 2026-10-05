@@ -15,11 +15,12 @@ namespace GirlAdventure.View
         static readonly Vector3 Stage = new Vector3(1000, 0, 0);
         const float HeroHeightPx = 275, HeroY = 428, EnemyX = 560, EnemyY = 345;
         // 동료 (합류 순서): 둘이면 지훈이 서진 오른쪽 앞, 셋이면 아빠가 왼쪽 뒤·서진 가운데·지훈 오른쪽 앞 (파티 일반화, 챕터 4)
+        // 넷이면 (챕터 6 엄마): 아빠 맨 왼쪽 · 엄마 그 오른쪽 조금 뒤 · 서진 · 지훈 오른쪽 앞
         int NAllies => battle != null ? P.Companions.Count : 0;
         /// <summary>서진의 무대 x: 혼자면 가운데 왼쪽, 동료가 있으면 비켜 선다.</summary>
-        float HeroX => NAllies >= 2 ? 195 : NAllies == 1 ? 140 : 215;
-        float AllyX(int i) => NAllies >= 2 ? (i == 0 ? 312 : 82) : 278;
-        float AllyY(int i) => NAllies >= 2 && i == 1 ? 440 : 434;
+        float HeroX => NAllies >= 3 ? 262 : NAllies >= 2 ? 195 : NAllies == 1 ? 140 : 215;
+        float AllyX(int i) => NAllies >= 3 ? (i == 0 ? 372 : i == 1 ? 78 : 172) : NAllies >= 2 ? (i == 0 ? 312 : 82) : 278;
+        float AllyY(int i) => NAllies >= 3 ? (i == 1 ? 440 : i == 2 ? 420 : 434) : NAllies >= 2 && i == 1 ? 440 : 434;
         float BroX => AllyX(BroIndex);
         int BroIndex => P.Companions.FindIndex(c => c.Id == Party.Brother);
 
@@ -64,6 +65,7 @@ namespace GirlAdventure.View
         bool pickingTarget;
         List<int> targetOrder = new List<int>();
         int pickedTarget = -1;
+        int pickedAlly = -2;      // 회복·도구 받을 사람 (-1 서진, 동료 번호, -2 그만두기)
         Sprite bgNormal, bgBoss, bgCave, bgCaveBoss, glowSprite, starSprite;
         readonly Dictionary<EnemyDef, Sprite> jellySprites = new Dictionary<EnemyDef, Sprite>();
         readonly Dictionary<string, Sprite> backdrops = new Dictionary<string, Sprite>();
@@ -203,6 +205,7 @@ namespace GirlAdventure.View
             Current = Mode.Battle;
             var def = defs[0];
             battle = new BattleSystem(P, defs, rng);
+            cutinSeen.Clear();
             foreach (var d in defs) Bestiary.Meet(P, d);     // 도감: 만났다
             sfx.Play("encounter");
             yield return SwirlIn(def.Boss);
@@ -299,7 +302,19 @@ namespace GirlAdventure.View
                     if (pickedTarget < 0) continue;         // 그만두기 → 다시 명령 고르기
                     target = pickedTarget;
                 }
-                var o = battle.Act(chosenCmd.Value, item, target);
+                int ally = -1;                              // Q-31: 반짝 힐·도구는 받을 사람이 둘 이상이면 "누구에게?"
+                if (chosenCmd == Cmd.Heal || chosenCmd == Cmd.Item)
+                {
+                    var who = chosenCmd == Cmd.Heal ? battle.HealReceivers() : Items.Receivers(P, item);
+                    if (who.Count > 1)
+                    {
+                        yield return PickAlly(who, chosenCmd == Cmd.Item && GameData.Item(item).Hp == 0);
+                        if (pickedAlly == -2) continue;     // 그만두기 → 다시 명령 고르기
+                        ally = pickedAlly;
+                    }
+                    else if (who.Count == 1) ally = who[0];
+                }
+                var o = battle.Act(chosenCmd.Value, item, target, ally);
                 yield return PlayerTurn(o);
                 if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, -1);
                 yield return AfterAct(o);
@@ -315,14 +330,14 @@ namespace GirlAdventure.View
         IEnumerator AllyTurn(int a)
         {
             bool bro = P.Companions[a].Id == Party.Brother;
-            if (bro && Settings.BroAuto)            // 지훈 자동 공격: 명령창 없이 바로
+            if (Settings.AllyAuto(P.Companions[a].Id))      // 자동 공격 (지훈, Q-32 아빠·엄마도): 명령창 없이 바로
             {
-                var (ac, at) = battle.BroAuto();
+                var (ac, at) = battle.AllyAuto(a);
                 var ao = battle.MemberAct(a, ac, at);
                 yield return AllyAct(a, ao);
                 if (ao.SkillUp > 0) yield return SkillUpRoutine(ao.Cmd, ao.SkillUp, a);
                 yield return AfterAct(ao);
-                if (!battleOver) yield return MaybeCombo(ao.Target);
+                if (!battleOver) yield return MaybeCombo(a, ao.Target);
                 yield break;
             }
             while (true)
@@ -349,7 +364,7 @@ namespace GirlAdventure.View
                     if (o.SkillUp > 0) yield return SkillUpRoutine(o.Cmd, o.SkillUp, a);
                 }
                 yield return AfterAct(o);
-                if (bro && !battleOver && c != Cmd.Run) yield return MaybeCombo(o.Target);
+                if (!battleOver && c != Cmd.Run) yield return MaybeCombo(a, o.Target);
                 yield break;
             }
         }
@@ -386,32 +401,41 @@ namespace GirlAdventure.View
         public int ComboCount { get; private set; }
 
         /// <summary>
-        /// 합동 공격 (PLAN_NEXT 72): 지훈 차례 뒤 가끔 — 둘이 함께 뛰어들고, 금빛·분홍 별이 겹쳐 터지며 큰 피해.
+        /// 협동 공격 (PLAN_NEXT 72 → Q-34 짝 셋): 동료 a 가 행동한 뒤 가끔 짝과 함께 한 번 더 — 누나+동생 / 누나+아빠 / 동생+아빠.
+        /// 기술 장면 애니메이션(Q-33 "combo_짝") → 두 사람이 함께 뛰어들고 큰 별빛 폭발. DebugCombo = 1 이면 늘 (프로브).
         /// </summary>
-        IEnumerator MaybeCombo(int target)
+        IEnumerator MaybeCombo(int a, int target)
         {
-            bool go = DebugCombo >= 0 ? DebugCombo > 0 && battle.Party && !battle.SisterDown && !battle.BrotherDown && !battle.EnemyDown : battle.ComboReady();
-            if (!go) yield break;
+            if (DebugCombo == 0) yield break;
+            string key = battle.ComboAfter(a, DebugCombo > 0);
+            if (key == null) yield break;
             ComboCount++;
+            var (m1, m2) = battle.ComboPair(key);
+            void Pose(int m, string ps) { if (m < 0) { pose = ps == "attack" ? "cast" : ps; heroLunge = ps == "attack" ? 1 : heroLunge; } else { AV(m).pose = ps; if (ps == "attack") AV(m).lunge = 1; } }
             sfx.Play("star");
-            pose = "cast"; broPose = "attack";
-            heroLunge = 1; broLunge = 1;
-            yield return Talk("combo");
-            var o = battle.Combo(target);
-            if (o.Failed) { pose = "ready"; broPose = "ready"; yield break; }
-            var at = Px(FoeX(o.Target), EnemyY - 60);
-            Spawn(glowSprite, at, Vector3.zero, .5f, 3.4f, new Color(1f, .9f, .6f, .85f));
-            for (int i = 0; i < 20; i++)
+            Pose(m1, "attack"); Pose(m2, "attack");
+            yield return Talk(key == BattleSystem.ComboSisBro ? "combo" : "combo_" + key);
+            yield return SkillCutin("combo_" + key, BattleSystem.ComboName(key) + "!!");
+            var o = battle.ComboAct(key, target);
+            if (o.Failed) { Pose(m1, "ready"); Pose(m2, "ready"); yield break; }
+            for (int f = 0; f < battle.Foes.Count; f++)
             {
-                float a = i / 20f * Mathf.PI * 2;
-                Spawn(starSprite, at, new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3f, 5f), .6f, .35f,
-                      i % 2 == 0 ? new Color(1f, .85f, .3f) : new Color(1f, .55f, .85f), 420);
+                if (o.Damages == null || o.Damages[f] <= 0) continue;
+                var at = Px(FoeX(f), EnemyY - 60);
+                Spawn(glowSprite, at, Vector3.zero, .5f, 3.4f, new Color(1f, .9f, .6f, .85f));
+                for (int i = 0; i < 20; i++)
+                {
+                    float ang = i / 20f * Mathf.PI * 2;
+                    Spawn(starSprite, at, new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * Random.Range(3f, 5f), .6f, .35f,
+                          i % 2 == 0 ? new Color(1f, .85f, .3f) : key == BattleSystem.ComboBroDad ? new Color(1f, 1f, .45f) : new Color(1f, .55f, .85f), 420);
+                }
+                HitFoe(f, o.Damages[f], true);
             }
             camShake = Mathf.Max(camShake, .3f);
-            HitFoe(o.Target, o.Damage, true);
             RefreshHud();
-            yield return Talk("combo_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
-            pose = "ready"; broPose = "ready";
+            if (key == BattleSystem.ComboSisDad && GroupBattle) yield return Talk("combo_hit_all");
+            else yield return Talk("combo_hit", ("enemy", FoeName(o.Target)), ("dmg", o.Damage));
+            Pose(m1, "ready"); Pose(m2, "ready");
             yield return AfterAct(o);
         }
 
@@ -452,6 +476,7 @@ namespace GirlAdventure.View
             if (o.Cmd == Cmd.Guard)
             {
                 GuardCount++;
+                yield return SkillCutin("guard", GameData.Skill(Cmd.Guard).Name + "!!", "chest", true);   // Q-33 아빠 대표 기술 ✏️ (한 전투에 한 번)
                 v.pose = "guard";
                 sfx.Play("chest");
                 var at = Px(AllyX(a) + 30, AllyY(a) - 120);
@@ -464,11 +489,29 @@ namespace GirlAdventure.View
                 yield return TalkAlly(a, "guard");
                 yield break;
             }
+            if (o.Cmd == Cmd.Cure)                 // 엄마의 빛 (챕터 6 ✏️): 장면 애니메이션 → 서 있는 사람마다 빛기둥 → 모두 회복
+            {
+                v.pose = "attack";
+                RefreshHud();
+                yield return TalkAlly(a, "cast", ("skill", GameData.Skill(Cmd.Cure).Name));
+                yield return SkillCutin("cure", GameData.Skill(Cmd.Cure).Name + "!!", "heal");
+                sfx.Play("heal");
+                for (int w = -1; w < P.Companions.Count; w++)
+                    if (o.Heals != null && o.Heals[w + 1] > 0) StartCoroutine(HealPillar(w));
+                yield return new WaitForSeconds(1.15f);
+                for (int w = -1; w < P.Companions.Count; w++)
+                    if (o.Heals != null && o.Heals[w + 1] > 0) Pop("+" + o.Heals[w + 1], w >= 0 ? AllyX(w) : HeroX, 200, new Color32(125, 255, 154, 255));
+                RefreshHud();
+                yield return TalkAlly(a, "cure_done");
+                v.pose = "ready";
+                yield break;
+            }
             if (o.Cmd == Cmd.BigBolt)
             {
                 v.pose = "attack"; v.lunge = 1;
                 RefreshHud();
                 yield return TalkAlly(a, "bigbolt", ("skill", GameData.Skill(o.Cmd).Name));
+                yield return SkillCutin("bigbolt", GameData.Skill(o.Cmd).Name + "!!");                      // Q-33 지훈 대표 기술
                 for (int k = 0; k < battle.Foes.Count; k++)
                     if (o.Damages != null && o.Damages[k] > 0) yield return Lightning(k);
                 for (int k = 0; k < battle.Foes.Count; k++)
@@ -485,6 +528,7 @@ namespace GirlAdventure.View
             if (bolt) yield return TalkAlly(a, "bolt", ("skill", GameData.Skill(o.Cmd).Name));
             else yield return TalkAlly(a, "cast", ("skill", GameData.Skill(o.Cmd).Name));
             if (bolt) yield return Lightning(o.Target);
+            else if (o.Cmd == Cmd.Light) { sfx.Play("fire"); yield return LightArrow(a, o.Target); }
             else { sfx.Play("mv_spin"); yield return SlashArc(o.Target); }
             if (o.Missed)
             {
@@ -522,7 +566,7 @@ namespace GirlAdventure.View
                     pose = "cast";
                     RefreshHud();
                     yield return Talk("star_cast");
-                    yield return CutinRoutine();
+                    yield return SkillCutin("star", GameData.Skill(Cmd.Star).Name + "!!");
                     sfx.Play("star");
                     yield return StarStorm();
                     for (int i = 0; i < battle.Foes.Count; i++)
@@ -535,21 +579,24 @@ namespace GirlAdventure.View
                     RefreshHud();
                     yield return Talk("fire_cast", ("skill", GameData.Skill(Cmd.Heal).Name));
                     sfx.Play("heal");
-                    pose = "victory";                           // 두 팔 벌려 빛을 받는다 (불꽃 지팡이 자세 말고)
-                    yield return HealPillar();
-                    Pop("+" + o.Heal, HeroX, 200, new Color32(125, 255, 154, 255));
-                    yield return Talk("heal_done", ("heal", o.Heal));
+                    if (o.Ally < 0) pose = "victory";           // 두 팔 벌려 빛을 받는다 (불꽃 지팡이 자세 말고)
+                    yield return HealPillar(o.Ally);
+                    Pop("+" + o.Heal, o.Ally >= 0 ? AllyX(o.Ally) : HeroX, 200, new Color32(125, 255, 154, 255));
+                    RefreshHud();
+                    if (o.Ally >= 0) yield return Talk("heal_done_ally", ("who", P.MemberName(o.Ally)), ("heal", o.Heal));
+                    else yield return Talk("heal_done", ("heal", o.Heal));
                     break;
                 case Cmd.Candy:
                 case Cmd.Item:
                     RefreshHud();
                     sfx.Play("heal");
                     bool mp = o.MpHeal > 0 && o.Heal == 0;
+                    float ix = o.Ally >= 0 ? AllyX(o.Ally) : HeroX, iy = o.Ally >= 0 ? AllyY(o.Ally) : HeroY;     // 받은 사람 자리에서 반짝
                     for (int i = 0; i < 14; i++)
-                        Spawn(starSprite, Px(HeroX + Random.Range(-70, 70), HeroY - 10), new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)),
+                        Spawn(starSprite, Px(ix + Random.Range(-70, 70), iy - 10), new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)),
                               1.2f, .35f, mp ? new Color(.45f, .75f, 1f) : new Color(1, .55f, .8f));
-                    Pop("+" + (mp ? o.MpHeal : o.Heal), HeroX, 200, mp ? new Color32(120, 190, 255, 255) : new Color32(125, 255, 154, 255));
-                    yield return ItemTalk(o.Item, o.Heal, o.MpHeal);
+                    Pop("+" + (mp ? o.MpHeal : o.Heal), ix, 200, mp ? new Color32(120, 190, 255, 255) : new Color32(125, 255, 154, 255));
+                    yield return ItemTalk(o.Item, o.Heal, o.MpHeal, o.Ally);
                     break;
                 case Cmd.Run:
                     if (o.Escaped)
@@ -689,6 +736,29 @@ namespace GirlAdventure.View
             pickingTarget = false;
             targetMark = -1;
             if (choicePicked < targetOrder.Count) { sfx.Play("select"); pickedTarget = targetOrder[choicePicked]; }
+        }
+
+        /// <summary>
+        /// 반짝 힐·도구를 받을 사람 고르기 (Q-31, 전투와 상태 창 공용): who 목록 (-1 서진, 동료 번호) + 그만두기.
+        /// mp = MP 만 채우는 도구면 MP 를 보여 준다. 그만두기면 pickedAlly = -2.
+        /// </summary>
+        IEnumerator PickAlly(List<int> who, bool mp)
+        {
+            pickedAlly = -2;
+            var labels = new string[who.Count + 1];
+            for (int k = 0; k < who.Count; k++)
+            {
+                int w = who[k];
+                string stat = mp ? $"MP {P.MemberMp(w)}/{P.MemberMaxMp(w)}" : $"HP {P.MemberHp(w)}/{P.MemberMaxHp(w)}";
+                labels[k] = $"{P.MemberName(w)} <size=15><color=#9AA3C7>{stat}</color></size>";
+            }
+            labels[who.Count] = "그만두기";
+            ShowMessageWindow(true);
+            SetFace("smile");
+            msgText.text = "누구에게 쓸까?";
+            choiceIndex = 0;
+            yield return Choose(labels);
+            if (choicePicked < who.Count) { sfx.Play("select"); pickedAlly = who[choicePicked]; }
         }
 
         /// <summary>적 차례: 살아 있는 적이 차례대로 한 번씩 (주인공이 쓰러지면 멈춤).</summary>
@@ -1125,12 +1195,14 @@ namespace GirlAdventure.View
             SpellFx = null;
         }
 
-        /// <summary>반짝 힐: 하늘에서 빛기둥이 내려와 주인공을 감싸고, 빛 알갱이가 머리 위에서 내려앉는다 (대화창에 안 가림).</summary>
-        IEnumerator HealPillar()
+        /// <summary>반짝 힐: 하늘에서 빛기둥이 내려와 받는 사람(서진 또는 동료)을 감싸고, 빛 알갱이가 머리 위에서 내려앉는다 (대화창에 안 가림).</summary>
+        IEnumerator HealPillar(int who = -1)
         {
+            float hx = who >= 0 ? AllyX(who) : HeroX, hy = who >= 0 ? AllyY(who) : HeroY;      // Q-31: 동료에게 쓰면 그 동료 자리
+            float hh = who >= 0 ? P.Companions[who].Def.BattleHeight : HeroHeightPx;
             SpellFx = "heal";
-            var top = Px(HeroX, 150);                              // HUD 창 아래에서부터 내려앉게
-            var mid = Px(HeroX, HeroY - HeroHeightPx * .5f);          // 가장 밝은 곳이 몸 가운데
+            var top = Px(hx, 150);                              // HUD 창 아래에서부터 내려앉게
+            var mid = Px(hx, hy - hh * .5f);          // 가장 밝은 곳이 몸 가운데
             var pillar = Spawn(glowSprite, mid, Vector3.zero, 1.5f, 1, new Color(1f, .97f, .7f, .55f));
             var core = Spawn(glowSprite, mid, Vector3.zero, 1.5f, 1, new Color(1f, 1f, 1f, .45f));
             for (float t = 0; t < .9f; t += Time.deltaTime)
@@ -1150,6 +1222,29 @@ namespace GirlAdventure.View
                 Spawn(starSprite, chest, new Vector3(Mathf.Cos(a), Mathf.Sin(a) * .7f) * 2.4f, .6f, .3f, new Color(.75f, 1f, .8f), 300);
             }
             yield return new WaitForSeconds(.25f);
+            SpellFx = null;
+        }
+
+        /// <summary>빛의 화살 (엄마, 챕터 6 ✏️): 엄마 지팡이 끝에서 금빛 빛덩이가 반짝이 꼬리를 끌며 적에게 날아가 터진다.</summary>
+        IEnumerator LightArrow(int a, int target)
+        {
+            SpellFx = "light";
+            var from = Px(AllyX(a) + 40, AllyY(a) - 170);
+            var to = Px(FoeX(Mathf.Max(0, target)), EnemyY - 70);
+            var core = Spawn(glowSprite, from, Vector3.zero, .6f, 1.3f, new Color(1f, .96f, .65f, .95f));
+            for (float t = 0; t < .35f; t += Time.deltaTime)
+            {
+                core.transform.position = Vector3.Lerp(from, to, t / .35f);
+                if (Random.value < .8f) Spawn(starSprite, core.transform.position, Vector3.zero, .45f, .22f, new Color(1f, .95f, .6f), 300);
+                yield return null;
+            }
+            core.transform.position = to;
+            Spawn(glowSprite, to, Vector3.zero, .45f, 2.6f, new Color(1f, .95f, .7f, .8f));
+            for (int i = 0; i < 10; i++)
+            {
+                float ang = i / 10f * Mathf.PI * 2;
+                Spawn(starSprite, to, new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 3f, .5f, .28f, new Color(1f, .92f, .55f), 300);
+            }
             SpellFx = null;
         }
 

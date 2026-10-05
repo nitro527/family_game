@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections;
 using GirlAdventure.Sim;
 using UnityEngine;
@@ -178,28 +179,46 @@ namespace GirlAdventure.View
                 ShowMessageWindow(true);
                 SetFace("smile");
                 msgText.text = "고를 때마다 바뀌어요. (Esc 닫기)";
-                yield return Choose(
+                // 동료마다 자동 공격 줄 (Q-32): 합류한 동료 순서, 아직 아무도 없으면 지훈 줄 하나 (예전처럼)
+                var autoIds = new List<string>();
+                foreach (var c in P.Companions) autoIds.Add(c.Id);
+                if (autoIds.Count == 0) autoIds.Add(Party.Brother);
+                var lines = new List<string>
+                {
                     $"음악 소리  <color=#F2C443>{bgm.LevelPercent}%</color>",
                     $"효과음  <color=#F2C443>{Settings.SfxPercent}%</color>",
                     $"글자 속도  <color=#F2C443>{Settings.TextSpeedName}</color>",
                     $"화면 번쩍임  <color=#F2C443>{(Settings.Flash ? "켬" : "끔")}</color>",
                     $"글자 크기  <color=#F2C443>{(Settings.BigText ? "크게" : "보통")}</color>",
-                    $"지훈 자동 공격  <color=#F2C443>{(Settings.BroAuto ? "켬" : "끔")}</color>",
-                    "닫기");
+                };
+                foreach (var id in autoIds) lines.Add($"{Party.Def(id)?.Name ?? id} 자동 공격  <color=#F2C443>{(Settings.AllyAuto(id) ? "켬" : "끔")}</color>");
+                lines.Add("닫기");
+                yield return Choose(lines.ToArray());
                 int picked = choicePicked;
-                if (picked >= 6) break;
+                if (picked >= 5 + autoIds.Count) break;
                 if (picked == 0) bgm.CycleVolume();
                 else if (picked == 1) Settings.CycleSfx();
                 else if (picked == 2) Settings.CycleTextSpeed();
                 else if (picked == 3) Settings.ToggleFlash();
                 else if (picked == 4) Settings.ToggleBigText();
-                else Settings.ToggleBroAuto();
+                else Settings.ToggleAllyAuto(autoIds[picked - 5]);
                 PlayerPrefs.Save();
                 sfx.Play("select");
                 if (picked == 2) yield return Say($"이 빠르기로 말할게요! ({Settings.TextSpeedName})", "laugh", .6f);
                 if (picked == 4) yield return Say($"글씨를 이 크기로 보여 줄게요! ({(Settings.BigText ? "크게" : "보통")})", "laugh", .6f);
-                if (picked == 5) yield return Say(Settings.BroAuto ? "지훈이가 알아서 씩씩하게 싸워요! (명령을 안 골라도 돼요)" : "지훈이 차례에 명령을 직접 골라요.",
-                                                  Settings.BroAuto ? "bro_laugh" : "bro_smile", .6f);
+                if (picked >= 5)
+                {
+                    string id = autoIds[picked - 5];
+                    bool on = Settings.AllyAuto(id);
+                    if (id == Party.Brother)
+                        yield return Say(on ? "지훈이가 알아서 씩씩하게 싸워요! (명령을 안 골라도 돼요)" : "지훈이 차례에 명령을 직접 골라요.", on ? "bro_laugh" : "bro_smile", .6f);
+                    else
+                    {
+                        var d = Party.Def(id);
+                        yield return Say(on ? $"{Josa.With(d.Name, "이/가")} 알아서 싸워요! 누가 다치면 지켜 줘요. (명령을 안 골라도 돼요)" : $"{d.Name} 차례에 명령을 직접 골라요.",
+                                         d.Face + (on ? "laugh" : "smile"), .6f);
+                    }
+                }
                 choiceIndex = picked;
             }
         }
@@ -277,13 +296,25 @@ namespace GirlAdventure.View
                 {
                     statusUse = false;
                     yield return PickItem();
+                    int to = -1;
+                    if (pickedItem != null)                 // Q-31: 받을 사람이 둘 이상이면 "누구에게?"
+                    {
+                        var who = Items.Receivers(P, pickedItem);
+                        if (who.Count > 1)
+                        {
+                            yield return PickAlly(who, GameData.Item(pickedItem).Hp == 0);
+                            if (pickedAlly == -2) pickedItem = null;
+                            else to = pickedAlly;
+                        }
+                        else if (who.Count == 1) to = who[0];
+                    }
                     if (pickedItem != null)
                     {
-                        var (hp, mp) = Items.Use(P, pickedItem);
+                        var (hp, mp) = Items.UseOn(P, pickedItem, to, out int used);
                         sfx.Play("heal");
                         RefreshHud();
                         RenderStatus();
-                        yield return ItemTalk(pickedItem, hp, mp);
+                        yield return ItemTalk(pickedItem, hp, mp, used);
                     }
                     HideMessage();
                     RenderStatus();

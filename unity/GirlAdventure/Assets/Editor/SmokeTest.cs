@@ -474,6 +474,10 @@ namespace GirlAdventure.EditorTools
             SaveSafetyTests();
             BroAutoTests();
             BigBoltTests();
+            AllyCareTests();
+            AllyAutoTests();
+            ComboPairTests();
+            MomTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -1052,6 +1056,102 @@ namespace GirlAdventure.EditorTools
 
         /// <summary>지훈 자동 공격 (PLAN_NEXT 71): 보스엔 번개(MP 있으면), 보통 적엔 검, 가장 약한 적부터.</summary>
         /// <summary>큰 번개 (PLAN 62, ✏️ 이름): 지훈 Lv14 부터, 적 모두에게, MP 7, 자동 공격은 무리일 때 큰 번개.</summary>
+        /// <summary>Q-31 회복 주문·도구를 동료에게: 받을 사람 고르기, 쓰러진 동료는 못 받음 ✏️, 아무도 필요 없으면 못 씀.</summary>
+        static void AllyCareTests()
+        {
+            var p = PlayerState.NewGame("c");
+            p.GainExp(PlayerState.NextExp(5));                 // Lv6: 반짝 힐 앎
+            p.Join("jihun"); p.Join("dad");
+            p.Hp = p.MaxHp; p.Mp = p.MaxMp;
+            var b = new BattleSystem(p, GameData.Normal[0], new System.Random(3));
+            var bro = p.Companions[0]; var dad = p.Companions[1];
+            bool noneNeeded = !b.CanUse(Cmd.Heal) && b.HealReceivers().Count == 0;
+            bro.Hp = 3; dad.Hp = 0;                            // 지훈 다침, 아빠 쓰러짐
+            var who = b.HealReceivers();
+            int mp0 = p.Mp;
+            var o = b.Act(Cmd.Heal, null, -1, 0);
+            bool healBro = !o.Failed && o.Ally == 0 && o.Heal > 0 && bro.Hp == 3 + o.Heal && p.Hp == p.MaxHp && p.Mp == mp0 - GameData.Skill(Cmd.Heal).Mp;
+            bool downSkipped = who.Count == 1 && who[0] == 0 && dad.Hp == 0 && !b.CanHeal(1);
+            p.AddItem("candy", 2);
+            bro.Hp = 1; p.Hp = p.MaxHp - 1;
+            var rec = Items.Receivers(p, "candy");
+            var oi = b.Act(Cmd.Item, "candy", -1, 0);
+            bool candyBro = rec.Count == 2 && rec[0] == -1 && rec[1] == 0 && !oi.Failed && oi.Ally == 0 && bro.Hp == 1 + oi.Heal && oi.Heal == GameData.Item("candy").Hp;
+            var fb = Items.UseOn(p, "candy", 1, out int used);   // 쓰러진 아빠를 골라도 → 쓸 수 있는 사람(서진)에게
+            bool fallback = used == -1 && fb.hp == 1 && p.Hp == p.MaxHp;
+            Check("Q-31 heal/items on companions (pick who, not the fallen)", noneNeeded && healBro && downSkipped && candyBro && fallback && GameData.HasTalk("heal_done_ally") && GameData.HasTalk("item_hp_ally"),
+                  $"none={noneNeeded} bro={healBro} down={downSkipped} candy={candyBro} fb={fallback}({used})");
+        }
+
+        /// <summary>Q-32 동료 자동 공격: 아빠는 누가 위험하면(40% 이하) 지키기, 아니면 검으로 가장 약한 적. 지훈은 예전 BroAuto.</summary>
+        static void AllyAutoTests()
+        {
+            var p = PlayerState.NewGame("a");
+            p.GainExp(PlayerState.NextExp(9));
+            p.Hp = p.MaxHp;
+            p.Join("jihun"); p.Join("dad");
+            var b = new BattleSystem(p, new[] { GameData.Normal[0], GameData.Normal[1] }, new System.Random(5));
+            b.Foes[0].Hp = 30; b.Foes[1].Hp = 2;
+            var calm = b.AllyAuto(1);
+            p.Hp = p.MaxHp * 3 / 10;
+            var worried = b.AllyAuto(1);
+            p.Hp = p.MaxHp; p.Companions[1].Hp = 1;            // 아빠 자신만 위험하면 지키기 말고 공격
+            var self = b.AllyAuto(1);
+            bool bro = b.AllyAuto(0) == b.BroAuto();
+            Check("Q-32 dad auto: guard when someone is low, else sword the weakest",
+                  calm == (Cmd.Sword, 1) && worried.cmd == Cmd.Guard && self.cmd == Cmd.Sword && bro, $"calm={calm} worried={worried} self={self} bro={bro}");
+        }
+
+        /// <summary>Q-34 협동 공격 3종 + Q-33 기술 장면 그림: 지훈 뒤 누나+동생, 아빠 뒤 누나+아빠(모두에게)·동생+아빠(한 마리), 쓰러진 사람은 빠짐.</summary>
+        static void ComboPairTests()
+        {
+            var p = PlayerState.NewGame("t");
+            p.GainExp(PlayerState.NextExp(11));
+            p.Join("jihun"); p.Join("dad");
+            var foes = new[] { GameData.Lava[0], GameData.Lava[1], GameData.Lava[0] };
+            var b = new BattleSystem(p, foes, new System.Random(8));
+            bool afterBro = b.ComboAfter(0, true) == BattleSystem.ComboSisBro;
+            var dadKey = b.ComboAfter(1, true);
+            bool afterDad = dadKey == BattleSystem.ComboSisDad || dadKey == BattleSystem.ComboBroDad;
+            var o = b.ComboAct(BattleSystem.ComboSisDad);
+            int hit = 0; foreach (var d in o.Damages) if (d > 0) hit++;
+            var b2 = new BattleSystem(p, foes, new System.Random(8));
+            var o2 = b2.ComboAct(BattleSystem.ComboBroDad, 2);
+            int hit2 = 0; foreach (var d in o2.Damages) if (d > 0) hit2++;
+            p.Hp = 0;                                           // 서진이 쓰러지면 아빠 뒤엔 동생+아빠만
+            bool sisDown = b2.ComboAfter(1, true) == BattleSystem.ComboBroDad && b2.ComboAfter(0, true) == null;
+            p.Hp = p.MaxHp;
+            bool art = true;
+            foreach (var k in new[] { "star", "bigbolt", "guard", "combo_sisbro", "combo_sisdad", "combo_brodad" })
+                for (int i = 1; i <= 3; i++) art &= Resources.Load<Texture2D>($"Cutin/{k}_{i}") != null;
+            Check("Q-34 combo pairs (sister+brother / sister+dad all foes / brother+dad one) + Q-33 cut-in frames",
+                  afterBro && afterDad && hit == 3 && hit2 == 1 && o2.Target == 2 && sisDown && art && GameData.HasTalk("combo_sisdad") && GameData.HasTalk("combo_brodad") && GameData.HasTalk("combo_hit_all"),
+                  $"bro={afterBro} dad={dadKey} hit={hit} hit2={hit2} sisDown={sisDown} art={art}");
+        }
+
+        /// <summary>챕터 6 엄마 (현자 ✏️ 기술): 빛의 화살(MP 0, 한 마리)·엄마의 빛(MP 8, 서 있는 사람 모두 회복), 자동은 누가 절반 이하면 엄마의 빛.</summary>
+        static void MomTests()
+        {
+            var p = PlayerState.NewGame("m");
+            p.GainExp(PlayerState.NextExp(15));
+            p.Join("jihun"); p.Join("dad"); var mom = p.Join("mom");
+            var b = new BattleSystem(p, new[] { GameData.Lava[0], GameData.Lava[1] }, new System.Random(4));
+            bool def = mom != null && mom.Def.Name == "엄마" && mom.Def.Art == "Mom" && Resources.Load<Texture2D>("Mom/battle_cast") != null && Resources.Load<Texture2D>("Mom/face_cry") != null;
+            p.Hp = p.MaxHp;
+            bool noCure = !b.MemberCanUse(2, Cmd.Cure) && b.AllyAuto(2).cmd == Cmd.Light;
+            int foeHp = b.Foes[0].Hp;
+            var lo = b.MemberAct(2, Cmd.Light, 0);
+            bool light = !lo.Failed && (lo.Missed || b.Foes[0].Hp == foeHp - lo.Damage) && GameData.Skill(Cmd.Light).Mp == 0;
+            p.Hp = p.MaxHp / 3; p.Companions[0].Hp = 4; p.Companions[1].Hp = 0;   // 서진·지훈 다침, 아빠 쓰러짐
+            var auto = b.AllyAuto(2);
+            int mp0 = mom.Mp;
+            var co = b.MemberAct(2, Cmd.Cure);
+            bool cure = auto.cmd == Cmd.Cure && !co.Failed && co.Heals[0] > 0 && co.Heals[1] > 0 && co.Heals[2] == 0 && p.Companions[1].Hp == 0
+                        && mom.Mp == mp0 - GameData.Skill(Cmd.Cure).Mp && Resources.Load<Texture2D>("Cutin/cure_1") != null && GameData.HasTalk("ally_cure_done");
+            Check("chapter 6 mom: light arrow, mother's light heals everyone standing, auto cures when someone is at half",
+                  def && noCure && light && cure, $"def={def} noCure={noCure} light={light} cure={cure} auto={auto}");
+        }
+
         static void BigBoltTests()
         {
             var p = PlayerState.NewGame("b");

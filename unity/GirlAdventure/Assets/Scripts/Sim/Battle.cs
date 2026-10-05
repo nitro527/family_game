@@ -38,7 +38,7 @@ namespace GirlAdventure.Sim
     /// Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).
     /// Spell 은 "주문" 목록을 여는 명령 (실제로 쓰는 것은 Star·Heal).
     /// </summary>
-    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt }   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기)
+    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt, Light, Cure }   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기), Light·Cure = 엄마 (빛의 화살·엄마의 빛, 챕터 6 ✏️)
 
     public struct PlayerOutcome
     {
@@ -51,6 +51,8 @@ namespace GirlAdventure.Sim
         public int[] Damages;   // 적마다 받은 피해 (전체 공격이면 여럿, 없으면 null)
         public int Heal;
         public int MpHeal;
+        public int Ally;        // 회복 주문·도구를 받은 사람 (-1 = 서진, 0.. = 동료 번호, Q-31)
+        public int[] Heals;     // 엄마의 빛 (모두 회복): 사람마다 회복량, [who + 1] (서진 = 0)
         public string Item;     // 쓴 도구 id (Candy/Item)
         public int SkillUp;     // 이번에 쓴 주문·기술의 스킬 레벨이 올랐으면 새 레벨 (아니면 0)
     }
@@ -135,7 +137,7 @@ namespace GirlAdventure.Sim
             {
                 case Cmd.Star: return P.Mp >= StarCost;
                 case Cmd.Fire: return P.Mp >= GameData.Skill(c).Mp;
-                case Cmd.Heal: return Knows(P, c) && P.Mp >= GameData.Skill(c).Mp && P.Hp < P.MaxHp;
+                case Cmd.Heal: return Knows(P, c) && P.Mp >= GameData.Skill(c).Mp && HealWho() != -2;
                 case Cmd.Spell:
                     foreach (var s in Spells) if (CanUse(s)) return true;
                     return false;
@@ -146,13 +148,33 @@ namespace GirlAdventure.Sim
             }
         }
 
+        /// <summary>반짝 힐을 받을 수 있나: 서 있고 HP 가 모자란 사람 (✏️ 쓰러진 동료는 못 깨운다).</summary>
+        public bool CanHeal(int who) => P.ValidMember(who) && !P.MemberDown(who) && P.MemberHp(who) < P.MemberMaxHp(who);
+
+        /// <summary>반짝 힐 받을 사람: prefer 가 받을 수 있으면 그 사람, 아니면 서진 → 동료 순서로 처음. 없으면 -2.</summary>
+        public int HealWho(int prefer = -1)
+        {
+            if (CanHeal(prefer)) return prefer;
+            foreach (int w in P.Members()) if (CanHeal(w)) return w;
+            return -2;
+        }
+
+        /// <summary>반짝 힐을 받을 수 있는 사람 목록 (대상 고르기 창).</summary>
+        public List<int> HealReceivers()
+        {
+            var list = new List<int>();
+            foreach (int w in P.Members()) if (CanHeal(w)) list.Add(w);
+            return list;
+        }
+
         /// <summary>
         /// 명령 실행. Item 은 item(도구 id)이 필요하다 (Candy 는 사탕).
         /// target: 리본 파이어로 칠 적 번호 (없거나 쓰러진 적이면 살아 있는 첫 적).
+        /// ally: 반짝 힐·도구를 줄 사람 (-1 서진, 동료 번호). 그 사람에게 못 쓰면 쓸 수 있는 다른 사람.
         /// </summary>
-        public PlayerOutcome Act(Cmd c, string item = null, int target = -1)
+        public PlayerOutcome Act(Cmd c, string item = null, int target = -1, int ally = -1)
         {
-            var o = new PlayerOutcome { Cmd = c, Target = -1 };
+            var o = new PlayerOutcome { Cmd = c, Target = -1, Ally = -1 };
             if (c == Cmd.Candy) item = Shop.CandyId;
             if (c == Cmd.Spell || !CanUse(c) || ((c == Cmd.Candy || c == Cmd.Item) && !Items.CanUse(P, item))) { o.Failed = true; return o; }
             var s = GameData.Skill(c);
@@ -176,13 +198,12 @@ namespace GirlAdventure.Sim
                     o.Damage = o.Damages[o.Target];
                     break;
                 case Cmd.Heal:
-                    int before = P.Hp;
-                    P.Hp = Math.Min(P.MaxHp, P.Hp + SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power));
-                    o.Heal = P.Hp - before;
+                    o.Ally = HealWho(ally);
+                    o.Heal = P.Refill(o.Ally, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
                     break;
                 case Cmd.Candy:
                 case Cmd.Item:
-                    (o.Heal, o.MpHeal) = Items.Use(P, item);
+                    (o.Heal, o.MpHeal) = Items.UseOn(P, item, ally, out o.Ally);
                     o.Item = item;
                     break;
                 case Cmd.Run:
@@ -202,6 +223,27 @@ namespace GirlAdventure.Sim
         /// </summary>
         public (Cmd cmd, int target) BroAuto() => (AliveCount > 1 && BroCanUse(Cmd.BigBolt) ? Cmd.BigBolt : Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());   // 무리면 큰 번개
 
+        /// <summary>
+        /// 동료 자동 (Q-32, 설정 "○○ 자동 공격"): 지훈은 BroAuto. 다른 동료(아빠, 나중에 엄마)는 공용 규칙 ✏️ —
+        /// 지키기를 알고, 다른 사람(서진·다른 동료)이 서 있는데 HP 가 40% 이하이면 지키기.
+        /// 아니면 쓸 수 있는 공격 기술 중 party.json 순서로 마지막(뒤에 둔 것 = 센 것), 대상은 HP 가 가장 적게 남은 적.
+        /// </summary>
+        public (Cmd cmd, int target) AllyAuto(int a)
+        {
+            var m = P.Companions[a];
+            if (m.Id == Sim.Party.Brother) return BroAuto();
+            if (MemberCanUse(a, Cmd.Cure))          // 엄마: 누가 HP 절반 이하면 엄마의 빛 (모두 회복)
+                foreach (int w in P.Members())
+                    if (!P.MemberDown(w) && P.MemberHp(w) * 2 <= P.MemberMaxHp(w)) return (Cmd.Cure, -1);
+            if (MemberCanUse(a, Cmd.Guard))
+                foreach (int w in P.Members())
+                    if (w != a && !P.MemberDown(w) && P.MemberHp(w) * 10 <= P.MemberMaxHp(w) * 4) return (Cmd.Guard, -1);
+            Cmd? pick = null;
+            foreach (var name in m.Def.Skills ?? new string[0])
+                if (Enum.TryParse(name, out Cmd c) && c != Cmd.Guard && c != Cmd.Cure && MemberCanUse(a, c)) pick = c;
+            return (pick ?? Cmd.Guard, WeakestAlive());
+        }
+
         /// <summary>합동 공격이 나오나 (둘 다 서 있고 적이 남았을 때 ComboRate 확률). 혼자일 때는 주사위를 굴리지 않는다.</summary>
         public bool ComboReady() => Party && !SisterDown && !BrotherDown && !EnemyDown && r.NextDouble() < ComboRate;
 
@@ -213,6 +255,60 @@ namespace GirlAdventure.Sim
             o.Damages = new int[Foes.Count];
             o.Damage = o.Damages[o.Target] = P.Atk + P.BroAtk + r.Next(0, 6);
             Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
+            return o;
+        }
+
+        // ---- 협동 공격 (Q-34, 사용자 2026-10-05): 누나+동생(합동 공격), 누나+아빠, 동생+아빠. 이름·피해는 ✏️
+        public const string ComboSisBro = "sisbro", ComboSisDad = "sisdad", ComboBroDad = "brodad";
+        const string DadId = "dad";
+        int DadIndex => P.Companions.FindIndex(c => c.Id == DadId);
+
+        /// <summary>협동 공격 이름 (✏️ 누나+아빠 · 동생+아빠는 임시 이름).</summary>
+        public static string ComboName(string key) => key == ComboSisDad ? "별빛 소나기" : key == ComboBroDad ? "번개 십자 베기" : "합동 공격";
+
+        /// <summary>협동 공격에 나오는 두 사람 (-1 = 서진, 동료 번호).</summary>
+        public (int a, int b) ComboPair(string key) => key == ComboSisDad ? (-1, DadIndex) : key == ComboBroDad ? (BroIndex, DadIndex) : (-1, BroIndex);
+
+        /// <summary>
+        /// 동료 a 가 행동한 뒤 나올 협동 공격 (없으면 null). 짝의 뒤 사람이 행동했을 때만: 지훈 뒤 → 누나+동생, 아빠 뒤 → 누나+아빠 / 동생+아빠.
+        /// 둘 다 서 있고 적이 남았을 때 ComboRate (짝이 둘이면 하나를 고른다). force = 프로브용 (확률 없이).
+        /// 누나+동생만 있을 때는 ComboReady 와 같은 주사위 (예전 전투 결과 그대로).
+        /// </summary>
+        public string ComboAfter(int a, bool force = false)
+        {
+            if (EnemyDown || AllyDown(a)) return null;
+            var id = P.Companions[a].Id;
+            var cand = new List<string>();
+            if (id == Sim.Party.Brother && !SisterDown) cand.Add(ComboSisBro);
+            if (id == DadId)
+            {
+                if (!SisterDown) cand.Add(ComboSisDad);
+                if (!BrotherDown) cand.Add(ComboBroDad);
+            }
+            if (cand.Count == 0 || (!force && r.NextDouble() >= ComboRate)) return null;
+            return cand.Count == 1 ? cand[0] : cand[r.Next(cand.Count)];
+        }
+
+        /// <summary>
+        /// 협동 공격 실행. 누나+동생 = Combo (한 마리). 누나+아빠 "별빛 소나기" = 살아 있는 적 모두에게 (서진+아빠 공격력)×2/3 + 0~5.
+        /// 동생+아빠 "번개 십자 베기" = 한 마리에게 지훈+아빠 공격력 + 0~5. 빗나가지 않는다.
+        /// </summary>
+        public PlayerOutcome ComboAct(string key, int target = -1)
+        {
+            if (key == ComboSisBro) return Combo(target);
+            var o = new PlayerOutcome { Cmd = Cmd.Slash, Ally = -1, Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : WeakestAlive() };
+            int dad = DadIndex;
+            if (o.Target < 0 || dad < 0) { o.Failed = true; return o; }
+            int dadAtk = P.AtkOf(P.Companions[dad]);
+            o.Damages = new int[Foes.Count];
+            if (key == ComboSisDad)
+            {
+                for (int k = 0; k < Foes.Count; k++)
+                    if (!Foes[k].Down) o.Damages[k] = (P.Atk + dadAtk) * 2 / 3 + r.Next(0, 6);
+            }
+            else o.Damages[o.Target] = P.BroAtk + dadAtk + r.Next(0, 6);
+            o.Damage = o.Damages[o.Target];
+            for (int k = 0; k < Foes.Count; k++) Foes[k].Hp = Math.Max(0, Foes[k].Hp - o.Damages[k]);
             return o;
         }
 
@@ -239,6 +335,7 @@ namespace GirlAdventure.Sim
         {
             if (AllyDown(i)) return false;
             var m = P.Companions[i];
+            if (c == Cmd.Cure && HealReceivers().Count == 0) return false;     // 엄마의 빛: 다친 사람이 없으면 안 쓴다
             return Sim.Party.Knows(m.Def, c) && P.Lv >= GameData.Skill(c).Lv && m.Mp >= GameData.Skill(c).Mp;   // Lv = 배우는 레벨 (큰 번개 Lv14)
         }
 
@@ -262,6 +359,14 @@ namespace GirlAdventure.Sim
             if (c == Cmd.Guard) { Guarding = i; return o; }
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
+            if (c == Cmd.Cure)                      // 엄마의 빛 (챕터 6 ✏️): 서 있는 사람 모두 HP 회복 (쓰러진 사람은 못 깨운다)
+            {
+                o.Heals = new int[P.Companions.Count + 1];
+                foreach (int w in P.Members())
+                    if (!P.MemberDown(w)) o.Heals[w + 1] = P.Refill(w, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
+                foreach (var h in o.Heals) o.Heal += h;
+                return o;
+            }
             if (c == Cmd.BigBolt)                   // 큰 번개 (PLAN 62): 살아 있는 적 모두에게 (적마다 따로 굴림, 잘 피하는 적은 피할 수 있다)
             {
                 o.Target = FirstAlive();

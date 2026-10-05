@@ -293,9 +293,16 @@ namespace GirlAdventure.View
         }
 
         /// <summary>도구를 쓴 뒤 대사 (HP·MP 회복량).</summary>
-        IEnumerator ItemTalk(string id, int hp, int mp)
+        IEnumerator ItemTalk(string id, int hp, int mp, int who = -1)
         {
             string name = GameData.ItemName(id);
+            if (who >= 0)       // 동료에게 줬다 (Q-31)
+            {
+                string w = P.MemberName(who);
+                if (hp > 0) yield return Talk("item_hp_ally", ("who", w), ("item", name), ("heal", hp));
+                if (mp > 0) yield return Talk("item_mp_ally", ("who", w), ("item", name), ("mp", mp));
+                yield break;
+            }
             if (hp > 0) yield return Talk("item_hp", ("item", name), ("heal", hp));
             if (mp > 0) yield return Talk("item_mp", ("item", name), ("mp", mp));
         }

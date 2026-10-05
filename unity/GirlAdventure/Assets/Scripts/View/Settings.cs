@@ -48,15 +48,17 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지훈 자동 공격: 켜면 지훈 차례에 명령창 없이 알아서 싸운다 (Sim BattleSystem.BroAuto).</summary>
-        public static bool BroAuto
-        {
-            get => PlayerPrefs.GetInt("broAuto", 0) != 0;
-            private set => PlayerPrefs.SetInt("broAuto", value ? 1 : 0);
-        }
+        public static bool BroAuto => AllyAuto(Sim.Party.Brother);
 
-        public static void ToggleBroAuto() => BroAuto = !BroAuto;
+        public static void ToggleBroAuto() => ToggleAllyAuto(Sim.Party.Brother);
         /// <summary>프로브용.</summary>
-        public static void SetBroAuto(bool on) => BroAuto = on;
+        public static void SetBroAuto(bool on) => SetAllyAuto(Sim.Party.Brother, on);
+
+        /// <summary>동료마다 자동 공격 (Q-32): 켜면 그 동료 차례에 명령창 없이 BattleSystem.AllyAuto. 지훈은 예전 키 "broAuto" 그대로.</summary>
+        public static bool AllyAuto(string id) => PlayerPrefs.GetInt(AutoKey(id), 0) != 0;
+        public static void ToggleAllyAuto(string id) => SetAllyAuto(id, !AllyAuto(id));
+        public static void SetAllyAuto(string id, bool on) => PlayerPrefs.SetInt(AutoKey(id), on ? 1 : 0);
+        static string AutoKey(string id) => id == Sim.Party.Brother ? "broAuto" : "auto_" + id;
 
         public static int MessageFontSize => BigText ? 26 : 23;
         public static int ChoiceFontSize => BigText ? 25 : 22;
@@ -75,6 +77,8 @@ namespace GirlAdventure.View
             PlayerPrefs.DeleteKey("flashOn");
             PlayerPrefs.DeleteKey("bigText");
             PlayerPrefs.DeleteKey("broAuto");
+            PlayerPrefs.DeleteKey("auto_dad");
+            PlayerPrefs.DeleteKey("auto_mom");
         }
     }
 }

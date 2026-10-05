@@ -1509,6 +1509,49 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             G.DebugSetBroAuto(false);
             Expect("brother used big bolt on a group", bigBoltShot);
+            Expect("Q-33 skill cut-in animations (star, big bolt)", G.CutinsPlayed.Contains("star") && G.CutinsPlayed.Contains("bigbolt"), string.Join(",", G.CutinsPlayed));
+            // Q-31 반짝 힐을 동료에게: 서진·지훈이 다쳤으면 "누구에게 쓸까?" → 지훈
+            G.DebugGroupBattle(1, 0);
+            yield return (Func<bool>)(() => G.CommandOpen);
+            G.DebugSetHp(G.P.MaxHp / 2);
+            G.P.BroHp = 5;
+            foreach (var x in Choose(1)) yield return x;                 // 주문
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            Keys.Press(KeyCode.DownArrow); yield return .15f;           // 반짝 힐
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen && G.MessageText.Contains("누구에게"));
+            yield return .2f;
+            Shot("ally_heal_pick");
+            Expect("heal asks who (sister, brother, …)", G.ChoiceCount >= 3);   // 서진·지훈 (+ 다친 아빠) + 그만두기
+            Keys.Press(KeyCode.DownArrow); yield return .15f;           // 지훈
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.SpellFx == "heal");
+            yield return .45f;
+            Shot("ally_heal");
+            yield return (Func<bool>)(() => G.SpellFx == null);
+            Expect("heal went to the brother", G.P.BroHp > 5 && G.P.Hp == G.P.MaxHp / 2);
+            G.DebugSetAllFoesHp(1);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            // Q-34 아빠와 협동 공격 (누나+아빠 또는 동생+아빠, 기술 장면 애니메이션)
+            G.DebugCombo = 1;
+            G.DebugGroupBattle(3, 1);
+            yield return 1.5f;
+            G.DebugSetAllFoesHp(600);
+            for (float t = 0; t < 120 && !(G.CutinsPlayed.Contains("combo_sisdad") || G.CutinsPlayed.Contains("combo_brodad")) && G.Current == GameRoot.Mode.Battle; t += .1f)
+            {
+                if (G.CutinShowing != null && G.CutinShowing.Contains("!!") && !comboCutinShot) { comboCutinShot = true; yield return .5f; Shot("combo_dad_cutin"); }
+                if (G.CommandOpen) Keys.Press(KeyCode.Return);
+                else if (G.ChoiceOpen) Keys.Press(KeyCode.Return);
+                else if (G.Busy) Keys.Press(KeyCode.Z);
+                yield return .1f;
+            }
+            G.DebugCombo = -1;
+            Expect("Q-34 dad combo played", G.CutinsPlayed.Contains("combo_sisdad") || G.CutinsPlayed.Contains("combo_brodad"), string.Join(",", G.CutinsPlayed));
+            G.DebugSetAllFoesHp(1);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             G.DebugBackToField();
             yield return .5f;
             // 예티 (C5-5): 눈 산 동굴 입구 → 예티 → 눈보라가 그침 → 챕터 5 완료
@@ -1555,7 +1598,7 @@ namespace GirlAdventure.EditorTools
             Expect("quick start chapter 4 on lava with dad", G.Current == GameRoot.Mode.Field && G.MapKindNow == MapKind.Lava && G.P.Lv == Quest.QuickLevels[4] && G.FollowerVisible("dad"));
         }
 
-        static bool skillUpSeen, broCmdSeen, comboShot, bigBoltShot;
+        static bool skillUpSeen, broCmdSeen, comboShot, bigBoltShot, comboCutinShot;
 
         /// <summary>전투가 끝날 때까지: HP 35% 이하면 사탕, 보스면 별빛 폭풍 우선, 아니면 리본 파이어 (SmokeTest 밸런스 AI 와 같은 규칙).</summary>
         static IEnumerable FightUntilOver(bool boss)
