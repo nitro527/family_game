@@ -82,6 +82,7 @@ PROPS = [
     ("stumpshop", "One tiny forest shop stall built on a big tree stump counter, a leaf canopy roof on two branch poles, baskets of acorns, berries and little potion bottles on the counter.", 70, 2),
     ("fairyspring", "One small round forest pond lined with mossy stones and ferns, glowing bright green-blue magical healing water with tiny fairy sparkles rising.", 64, 2),
     ("log", "One fallen mossy log lying sideways with a few small mushrooms and ferns growing on it.", 90, 2),
+    ("pot", "One round clay pot with a small lid, warm terracotta color with a simple painted pattern, cute storybook style.", 36, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 
