@@ -371,6 +371,10 @@ namespace GirlAdventure.View
                     foreach (var id in Items.Owned(P)) n += P.Count(id);
                     return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>×{n}</color></size>";
                 case Cmd.Guard: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>가족 대신 막기</color></size>";
+                case Cmd.Rally: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>모두 방어↑ · MP {GameData.Skill(c).Mp}</color></size>";
+                case Cmd.Cheer: return $"{GameData.Skill(c).Name} <size=15><color=#9AA3C7>모두 공격↑ · MP {GameData.Skill(c).Mp}</color></size>";
+                case Cmd.Hug: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>한 명 크게 · MP {GameData.Skill(c).Mp}</color></size>";
+                case Cmd.Cure: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>모두 · 계속 · MP {GameData.Skill(c).Mp}</color></size>";
                 case Cmd.UltStar: case Cmd.UltBolt: case Cmd.UltGuard: case Cmd.UltCure:
                     int g = battle != null ? battle.GaugeOf(allyTurn) : 0;
                     return $"<color=#F2C443>{GameData.Skill(c).Name}</color> <size=15><color={(g >= Ultimates.GaugeMax ? "#FFE27A" : "#9AA3C7")}>궁극 {g}%</color></size>";

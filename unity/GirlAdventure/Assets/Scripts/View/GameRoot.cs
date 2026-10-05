@@ -635,6 +635,8 @@ namespace GirlAdventure.View
         public void DebugFillGauges(int amount = 100) { if (battle == null) return; for (int w = -1; w < P.Companions.Count; w++) battle.AddGauge(w, amount); RefreshHud(); }
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
+        /// <summary>프로브용: 레벨을 lv 까지 올리고 (이미 높으면 그대로) 모두 회복.</summary>
+        public void DebugReachLevel(int lv) { if (P.Lv < lv) P.GainExp(Mathf.Max(0, PlayerState.NextExp(lv - 1) - P.Exp)); P.RestoreAll(); RefreshHud(); }
         public void DebugNearForestBoss() => DebugTeleport(WorldMap.ForBoss.x - 1, WorldMap.ForBoss.y, "right");
         public void DebugNearLibraryBoss() => DebugTeleport(WorldMap.LibBoss.x - 1, WorldMap.LibBoss.y, "right");
         public void DebugNearMom() => DebugTeleport(WorldMap.MomCircle.x, WorldMap.MomCircle.y + 1, "up");

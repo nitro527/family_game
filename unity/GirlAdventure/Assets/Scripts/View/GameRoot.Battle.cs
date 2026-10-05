@@ -277,6 +277,8 @@ namespace GirlAdventure.View
                 if (over) yield break;
                 yield return EnemyTurn();
                 if (battle.PlayerDown) { yield return Defeat(); yield break; }
+                battle.RoundEnd();                  // 지속 회복 한 번 + 버프 차례 줄이기
+                yield return RegenShow();
             }
         }
 
@@ -366,7 +368,18 @@ namespace GirlAdventure.View
                 else
                 {
                     int target = -1;
-                    if (c != Cmd.Guard && c != Cmd.BigBolt && battle.AliveCount > 1)   // 큰 번개는 모두에게라 대상을 안 고른다
+                    if (c == Cmd.Hug)                       // 엄마의 포옹: 안아 줄 사람 고르기 (둘 이상 다쳤으면)
+                    {
+                        var who = battle.HealReceivers();
+                        if (who.Count > 1)
+                        {
+                            yield return PickAlly(who, false);
+                            if (pickedAlly == -2) continue;
+                            target = pickedAlly;
+                        }
+                        else if (who.Count == 1) target = who[0];
+                    }
+                    else if (!BattleSystem.Support(c) && c != Cmd.BigBolt && battle.AliveCount > 1)   // 큰 번개는 모두에게, 지키기·회복·응원은 적을 안 고른다
                     {
                         yield return PickTarget();
                         if (pickedTarget < 0) continue;     // 그만두기 → 다시 명령 고르기
@@ -544,6 +557,45 @@ namespace GirlAdventure.View
                 yield return TalkAlly(a, o.Cmd == Cmd.UltGuard ? "ultguard" : "guard");
                 yield break;
             }
+            if (o.Cmd == Cmd.Rally || o.Cmd == Cmd.Cheer)   // 튼튼 함성 (아빠) · 힘내라 응원 (지훈): 가족 모두 빛 → 3차례 버프
+            {
+                bool rally = o.Cmd == Cmd.Rally;
+                v.pose = rally ? "guard" : "attack";
+                RefreshHud();
+                yield return SkillCutin(rally ? "rally" : "cheer", GameData.Skill(o.Cmd).Name + "!!", rally ? "chest" : "lvup", true);   // 한 전투에 한 번
+                sfx.Play(rally ? "chest" : "lvup");
+                var tint = rally ? new Color(.45f, .75f, 1f, .55f) : new Color(1f, .45f, .3f, .55f);
+                for (int w = -1; w < P.Companions.Count; w++)
+                {
+                    if (w >= 0 ? battle.AllyDown(w) : battle.SisterDown) continue;
+                    var at = Px((w >= 0 ? AllyX(w) : HeroX) + 30, (w >= 0 ? AllyY(w) : HeroY) - 120);
+                    Spawn(glowSprite, at, Vector3.zero, 1f, 2.6f, tint);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float ang = i / 8f * Mathf.PI * 2;
+                        Spawn(starSprite, at + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * 1f, new Vector3(0, 1.2f), .8f, .28f, Color.Lerp(tint, Color.white, .4f), 200);
+                    }
+                }
+                yield return new WaitForSeconds(.6f);
+                BuffCount++;
+                yield return Talk(rally ? "skill_rally" : "skill_cheer");
+                v.pose = rally && battle.Guarding == a ? "guard" : "ready";
+                yield break;
+            }
+            if (o.Cmd == Cmd.Hug)                       // 엄마의 포옹: 한 사람 크게 회복
+            {
+                v.pose = "attack";
+                RefreshHud();
+                yield return SkillCutin("hug", GameData.Skill(o.Cmd).Name + "!!", "heal", true);
+                sfx.Play("heal");
+                StartCoroutine(HealPillar(o.Ally));
+                yield return new WaitForSeconds(1.0f);
+                Pop("+" + o.Heal, o.Ally >= 0 ? AllyX(o.Ally) : HeroX, 200, new Color32(125, 255, 154, 255));
+                RefreshHud();
+                yield return Talk("skill_hug", ("who", P.MemberName(o.Ally)), ("heal", o.Heal));
+                v.pose = "ready";
+                yield break;
+            }
             if (o.Cmd == Cmd.Cure || o.Cmd == Cmd.UltCure)   // 엄마의 빛 · 엄마의 큰 빛 (궁극기: 쓰러진 가족도 일으킨다)
             {
                 v.pose = "attack";
@@ -558,6 +610,7 @@ namespace GirlAdventure.View
                     if (o.Heals != null && o.Heals[w + 1] > 0) Pop("+" + o.Heals[w + 1], w >= 0 ? AllyX(w) : HeroX, 200, new Color32(125, 255, 154, 255));
                 RefreshHud();
                 yield return TalkAlly(a, "cure_done");
+                if (o.Cmd == Cmd.Cure) yield return Talk("cure_regen");
                 v.pose = "ready";
                 yield break;
             }
@@ -818,6 +871,28 @@ namespace GirlAdventure.View
         }
 
         /// <summary>적 차례: 살아 있는 적이 차례대로 한 번씩 (주인공이 쓰러지면 멈춤).</summary>
+        /// <summary>프로브용: 튼튼 함성·힘내라 응원을 쓴 횟수, 지속 회복이 나온 횟수.</summary>
+        public int BuffCount { get; private set; }
+        public int RegenCount { get; private set; }
+        public int AtkUpLeft => battle != null ? battle.AtkUp : 0;
+        public int DefUpLeft => battle != null ? battle.DefUp : 0;
+
+        /// <summary>차례 끝 지속 회복 (엄마의 빛): 회복한 사람마다 작은 빛기둥 + 숫자, 한 줄 대사.</summary>
+        IEnumerator RegenShow()
+        {
+            var h = battle.LastRegen;
+            if (h == null) yield break;
+            int sum = 0;
+            foreach (var x in h) sum += x;
+            if (sum <= 0) yield break;
+            RegenCount++;
+            sfx.Play("heal");
+            for (int w = -1; w < P.Companions.Count; w++)
+                if (h[w + 1] > 0) { StartCoroutine(HealPillar(w)); Pop("+" + h[w + 1], w >= 0 ? AllyX(w) : HeroX, 200, new Color32(125, 255, 154, 255)); }
+            RefreshHud();
+            yield return Talk("regen_tick");
+        }
+
         IEnumerator EnemyTurn()
         {
             for (int i = 0; i < battle.Foes.Count; i++)

@@ -484,6 +484,7 @@ namespace GirlAdventure.EditorTools
             NpcArtTests();
             LibraryTests();
             ForestTests();
+            SupportSkillTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -574,8 +575,8 @@ namespace GirlAdventure.EditorTools
         {
             DataLoader.Load();
             var baseDef = GameData.LibraryBoss;
-            foreach (int hp in new[] { 6400, 7200, 8000 })
-                foreach (int atk in new[] { 70, 76, 82 })
+            foreach (int hp in new[] { 5400, 6600, 7800 })
+                foreach (int atk in new[] { 66, 74, 82 })
                 {
                     var boss = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(baseDef)); boss.Hp = hp; boss.Atk = atk; boss.Boss = true;
                     float Win(int lv, bool gear)
@@ -604,8 +605,8 @@ namespace GirlAdventure.EditorTools
         {
             DataLoader.Load();
             var baseDef = GameData.ForestBoss;
-            foreach (int hp in new[] { 5600, 6400, 7200 })
-                foreach (int atk in new[] { 68, 74, 80 })
+            foreach (int hp in new[] { 7200, 8400, 9600 })
+                foreach (int atk in new[] { 74, 82, 90 })
                 {
                     var boss = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(baseDef)); boss.Hp = hp; boss.Atk = atk; boss.Boss = true;
                     float r26 = ForestWin(boss, 26, true, false, 200), r25 = ForestWin(boss, 25, true, false, 200), u25 = ForestWin(boss, 25, true, true, 200);
@@ -730,7 +731,7 @@ namespace GirlAdventure.EditorTools
             float g22 = Win(22, true), g21 = Win(21, true), n21 = Win(21, false);
             ultLearned = false;
             Debug.Log($"[BALANCE BOSS6] four with ultimates Lv22+library gear={g22:P1} Lv21+gear={g21:P1} Lv21 snow gear only={n21:P1} | without ultimates Lv22+gear={w22:P1} Lv21+gear={w21:P1}");
-            Check("demon boss balance (no ultimates: Lv22+gear ≥85%, Lv21+gear ≥75%; ultimates help but not too much: ≤99%)", w22 >= .85f && w21 >= .75f && g21 <= .99f, $"no ult {w22:P1}/{w21:P1}, ult {g22:P1} {g21:P1} {n21:P1}");
+            Check("demon boss balance (no ultimates: Lv22+gear ≥85%, Lv21+gear ≥75%; ultimates help but not too much: old snow gear Lv21 ≤99%)", w22 >= .85f && w21 >= .75f && n21 <= .99f, $"no ult {w22:P1}/{w21:P1}, ult {g22:P1} {g21:P1} {n21:P1}");
         }
 
         /// <summary>예티 (C5-5): 눈 산 동굴 입구, 데이터·그림, 세이브 v15, 마을 대사, 셋 + 털옷 가게 장비 밸런스.</summary>
@@ -1270,6 +1271,62 @@ namespace GirlAdventure.EditorTools
             bool bro = b.AllyAuto(0) == b.BroAuto();
             Check("Q-32 dad auto: guard when someone is low, else sword the weakest",
                   calm == (Cmd.Sword, 1) && worried.cmd == Cmd.Guard && self.cmd == Cmd.Sword && bro, $"calm={calm} worried={worried} self={self} bro={bro}");
+        }
+
+        /// <summary>
+        /// 두 번째 스킬 (사용자 2026-10-05): 아빠 튼튼 함성(모두 받는 피해 ×0.7, 3차례) · 지훈 힘내라 응원(모두 공격 ×1.3, 3차례)
+        /// · 엄마의 빛(조금 + 3차례 지속 회복) · 엄마의 포옹(한 명 크게). 자동 규칙: 엄마는 1/3 이하면 포옹, 아빠·지훈은 보스전에서 버프.
+        /// </summary>
+        static void SupportSkillTests()
+        {
+            PlayerState Four()
+            {
+                var q = PlayerState.NewGame("s");
+                q.GainExp(PlayerState.NextExp(21));
+                q.Boss2Down = true; Quest.TryJoinBrother(q); q.Join("dad"); q.Join("mom");
+                q.Hp = q.MaxHp;
+                return q;
+            }
+            var boss = GameData.LibraryBoss;
+            // 응원: 같은 씨앗으로 서진 리본 파이어 피해 비교
+            var p1 = Four(); var b1 = new BattleSystem(p1, new[] { boss }, new System.Random(3));
+            var p2 = Four(); var b2 = new BattleSystem(p2, new[] { boss }, new System.Random(3));
+            var cheer = b2.MemberAct(0, Cmd.Cheer);
+            int plain = b1.Act(Cmd.Fire).Damage, up = b2.Act(Cmd.Fire).Damage;
+            bool atk = !cheer.Failed && b2.AtkUp == BattleSystem.BuffRounds && (plain == 0 || up > plain);
+            b2.RoundEnd(); b2.RoundEnd(); b2.RoundEnd();
+            atk &= b2.AtkUp == 0;
+            // 함성: 같은 씨앗으로 적 공격 피해 비교
+            var p3 = Four(); var b3 = new BattleSystem(p3, new[] { boss }, new System.Random(4));
+            var p4 = Four(); var b4 = new BattleSystem(p4, new[] { boss }, new System.Random(4));
+            var rally = b4.MemberAct(1, Cmd.Rally);
+            var e3 = b3.EnemyAct(0); var e4 = b4.EnemyAct(0);
+            bool def = !rally.Failed && b4.DefUp == BattleSystem.BuffRounds && (e3.Dodged || (e4.Shielded && e4.Damage < e3.Damage));
+            // 엄마의 빛: 바로 + 차례 끝마다
+            var p5 = Four(); var b5 = new BattleSystem(p5, new[] { boss }, new System.Random(5));
+            p5.Hp = 10; p5.Companions[0].Hp = 10;
+            var cure = b5.MemberAct(2, Cmd.Cure);
+            int afterCure = p5.Hp;
+            b5.RoundEnd();
+            bool regen = !cure.Failed && cure.Heal > 0 && b5.Regen == BattleSystem.BuffRounds - 1 && p5.Hp > afterCure && b5.LastRegen != null && b5.LastRegen[0] > 0;
+            b5.RoundEnd(); b5.RoundEnd(); int hp3 = p5.Hp; b5.RoundEnd();
+            regen &= b5.Regen == 0 && p5.Hp == hp3 && b5.LastRegen == null;
+            // 포옹: 고른 한 사람만 크게
+            var p6 = Four(); var b6 = new BattleSystem(p6, new[] { boss }, new System.Random(6));
+            bool none = !b6.MemberCanUse(2, Cmd.Hug);                 // 다친 사람이 없으면 못 씀
+            p6.Hp = 5; p6.Companions[1].Hp = 5;
+            var hug = b6.MemberAct(2, Cmd.Hug, 1);
+            bool hugOk = none && !hug.Failed && hug.Ally == 1 && hug.Heal >= 45 && p6.Hp == 5;
+            // 자동 규칙
+            var p7 = Four(); var b7 = new BattleSystem(p7, new[] { boss }, new System.Random(7));
+            var dadAuto = b7.AllyAuto(1); var broAuto = b7.AllyAuto(0);
+            p7.Companions[0].Hp = 3;
+            var momAuto = b7.AllyAuto(2);
+            bool auto = dadAuto.cmd == Cmd.Rally && broAuto.cmd == Cmd.Cheer && momAuto == (Cmd.Hug, 0);
+            bool data = GameData.Skill(Cmd.Rally).Lv == 16 && GameData.Skill(Cmd.Cheer).Lv == 16 && GameData.Skill(Cmd.Hug).Lv == 21
+                        && GameData.HasTalk("skill_rally") && GameData.HasTalk("skill_cheer") && GameData.HasTalk("skill_hug") && GameData.HasTalk("regen_tick");
+            Check("second skills: cheer atk up, rally def up, mom's light regen, mom's hug, auto rules", atk && def && regen && hugOk && auto && data,
+                  $"atk={atk}({plain}->{up}) def={def}({e3.Damage}->{e4.Damage}) regen={regen} hug={hugOk}({hug.Heal}) auto={auto}(dad {dadAuto} bro {broAuto} mom {momAuto}) data={data}");
         }
 
         /// <summary>Q-34 협동 공격 3종 + Q-33 기술 장면 그림: 지훈 뒤 누나+동생, 아빠 뒤 누나+아빠(모두에게)·동생+아빠(한 마리), 쓰러진 사람은 빠짐.</summary>

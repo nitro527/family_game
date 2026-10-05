@@ -1727,6 +1727,7 @@ namespace GirlAdventure.EditorTools
             G.DebugBackToField();
             yield return .5f;
             G.DebugMobs(true, true);
+            G.DebugReachLevel(Quest.QuickLevels[7]);                    // 챕터 7 레벨 (두 번째 스킬 Lv16·21 을 배운 상태)
             G.DebugNearForestBoss();
             yield return .4f;
             Shot("ch7_old_oak");
@@ -1735,6 +1736,19 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Shot("boss7_battle");
             Expect("beetle boss battle", G.BattleEnemy == GameData.ForestBoss && G.BattleBackdropName == "forest_boss", G.BattleBackdropName);
+            // 두 번째 스킬 (사용자 2026-10-05): 아빠 자동 → 보스전에서 튼튼 함성 (가족 모두 방어↑)
+            G.DebugSetAllyAuto("dad", true);
+            int buffs0 = G.BuffCount;
+            for (float t = 0; t < 60 && G.BuffCount == buffs0 && G.Current == GameRoot.Mode.Battle; t += .2f)
+            {
+                if (G.CommandOpen || G.ChoiceOpen) Keys.Press(KeyCode.Return);
+                else Keys.Press(KeyCode.Z);
+                yield return .2f;
+            }
+            yield return .3f;
+            Shot("dad_rally");
+            Expect("dad auto used rally in the boss fight (defense up for the family)", G.BuffCount > buffs0 && G.DefUpLeft > 0, $"buffs {G.BuffCount} def {G.DefUpLeft}");
+            G.DebugSetAllyAuto("dad", false);
             G.DebugSetEnemyHp(60);
             foreach (var x in FightUntilOver(true)) yield return x;
             foreach (var x in SkipTalk(() => G.MessageText.Contains("초록 잎") || G.Current == GameRoot.Mode.Ending)) yield return x;

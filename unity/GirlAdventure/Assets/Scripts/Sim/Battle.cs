@@ -38,7 +38,7 @@ namespace GirlAdventure.Sim
     /// Candy 는 "사탕 바로 먹기" (밸런스 시뮬레이션용), 화면의 명령은 Item(도구 → 목록에서 고름).
     /// Spell 은 "주문" 목록을 여는 명령 (실제로 쓰는 것은 Star·Heal).
     /// </summary>
-    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt, Light, Cure, UltStar, UltBolt, UltGuard, UltCure }   // Ult* = 궁극기 (Q-39, 스킬 Lv3 에 배우고 궁극 게이지로)   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기), Light·Cure = 엄마 (빛의 화살·엄마의 빛, 챕터 6 ✏️)
+    public enum Cmd { Fire, Star, Candy, Run, Item, Heal, Spell, Slash, Bolt, Sword, Guard, BigBolt, Light, Cure, UltStar, UltBolt, UltGuard, UltCure, Rally, Cheer, Hug }   // Ult* = 궁극기 (Q-39, 스킬 Lv3 에 배우고 궁극 게이지로)   // Slash·Bolt·BigBolt = 동생 지훈 (검·번개·큰 번개), Sword·Guard = 아빠 (검·지키기), Light·Cure = 엄마 (빛의 화살·엄마의 빛, 챕터 6 ✏️)
 
     public struct PlayerOutcome
     {
@@ -66,6 +66,7 @@ namespace GirlAdventure.Sim
         public int Ally;        // 맞은 동료 번호 (P.Companions, -1 = 서진)
         public bool Guarded;    // 지키는 동료가 대신 막았다 (피해 반)
         public bool Blocked;    // 황금 사자 방패(궁극기)가 막아 피해가 반
+        public bool Shielded;   // 튼튼 함성(아빠)으로 가족 방어력이 올라 피해가 줄었다
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -226,13 +227,41 @@ namespace GirlAdventure.Sim
             return o;
         }
 
-        int Roll(SkillDef s, double power) => SkillLevels.Scale(P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
+        int Roll(SkillDef s, double power) => Up(SkillLevels.Scale(P.Atk * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power));
+
+        // ---- 가족 버프 (사용자 2026-10-05 "두 번째 스킬"): 쓴 차례를 포함해 3차례. 차례가 끝날 때(RoundEnd) 하나씩 준다
+        public const int BuffRounds = 3;
+        /// <summary>힘내라 응원 (지훈): 남은 차례. 그동안 가족 모두의 공격 피해 ×1.3.</summary>
+        public int AtkUp { get; private set; }
+        /// <summary>튼튼 함성 (아빠): 남은 차례. 그동안 가족 모두가 받는 피해 ×0.7.</summary>
+        public int DefUp { get; private set; }
+        /// <summary>엄마의 빛 (지속 회복): 남은 차례, 차례가 끝날 때마다 서 있는 가족 모두 RegenAmount 씩.</summary>
+        public int Regen { get; private set; }
+        public int RegenAmount { get; private set; }
+        /// <summary>방금 RoundEnd 에서 회복한 양, [who + 1] (없으면 null) — View 가 보여 준다.</summary>
+        public int[] LastRegen { get; private set; }
+        int Up(int d) => AtkUp > 0 ? Math.Max(1, (d * 13 + 5) / 10) : d;
+
+        /// <summary>한 차례가 끝날 때 (적 차례 뒤): 지속 회복 한 번, 버프 차례를 하나씩 줄인다.</summary>
+        public void RoundEnd()
+        {
+            LastRegen = null;
+            if (Regen > 0)
+            {
+                Regen--;
+                LastRegen = new int[P.Companions.Count + 1];
+                foreach (int w in P.Members())
+                    if (!P.MemberDown(w)) LastRegen[w + 1] = P.Refill(w, RegenAmount, 0).hp;
+            }
+            if (AtkUp > 0) AtkUp--;
+            if (DefUp > 0) DefUp--;
+        }
 
         /// <summary>
         /// 지훈 자동 공격 (설정 "지훈 자동 공격", PLAN_NEXT 71 — 3살 지훈이가 명령을 고르지 않아도 되게):
         /// 보스에게는 MP 가 있으면 번개, 아니면 검. 대상은 HP 가 가장 적게 남은 적 (하나씩 쓰러뜨리게).
         /// </summary>
-        public (Cmd cmd, int target) BroAuto() => (AliveCount > 1 && BroCanUse(Cmd.BigBolt) ? Cmd.BigBolt : Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());   // 무리면 큰 번개
+        public (Cmd cmd, int target) BroAuto() => (Boss && AtkUp == 0 && BroCanUse(Cmd.Cheer) ? Cmd.Cheer : AliveCount > 1 && BroCanUse(Cmd.BigBolt) ? Cmd.BigBolt : Boss && BroCanUse(Cmd.Bolt) ? Cmd.Bolt : Cmd.Slash, WeakestAlive());   // 무리면 큰 번개
 
         /// <summary>
         /// 동료 자동 (Q-32, 설정 "○○ 자동 공격"): 지훈은 BroAuto. 다른 동료(아빠, 나중에 엄마)는 공용 규칙 ✏️ —
@@ -252,17 +281,28 @@ namespace GirlAdventure.Sim
                     return (u, WeakestAlive());
             }
             if (m.Id == Sim.Party.Brother) return BroAuto();
-            if (MemberCanUse(a, Cmd.Cure))          // 엄마: 누가 HP 절반 이하면 엄마의 빛 (모두 회복)
+            if (MemberCanUse(a, Cmd.Hug))           // 엄마: 누가 HP 1/3 이하면 그 사람을 포옹 (가장 위험한 사람)
+            {
+                int worst = -2; float least = 1f / 3;
+                foreach (int w in P.Members())
+                    if (!P.MemberDown(w) && (float)P.MemberHp(w) / P.MemberMaxHp(w) <= least) { least = (float)P.MemberHp(w) / P.MemberMaxHp(w); worst = w; }
+                if (worst != -2) return (Cmd.Hug, worst);
+            }
+            if (MemberCanUse(a, Cmd.Cure) && Regen == 0)    // 누가 HP 절반 이하이고 지속 회복이 없으면 엄마의 빛 (모두 + 계속)
                 foreach (int w in P.Members())
                     if (!P.MemberDown(w) && P.MemberHp(w) * 2 <= P.MemberMaxHp(w)) return (Cmd.Cure, -1);
+            if (Boss && DefUp == 0 && MemberCanUse(a, Cmd.Rally)) return (Cmd.Rally, -1);   // 아빠: 보스전에서 튼튼 함성이 꺼져 있으면
             if (MemberCanUse(a, Cmd.Guard))
                 foreach (int w in P.Members())
                     if (w != a && !P.MemberDown(w) && P.MemberHp(w) * 10 <= P.MemberMaxHp(w) * 4) return (Cmd.Guard, -1);
             Cmd? pick = null;
             foreach (var name in m.Def.Skills ?? new string[0])
-                if (Enum.TryParse(name, out Cmd c) && c != Cmd.Guard && c != Cmd.Cure && MemberCanUse(a, c)) pick = c;
+                if (Enum.TryParse(name, out Cmd c) && !Support(c) && MemberCanUse(a, c)) pick = c;
             return (pick ?? Cmd.Guard, WeakestAlive());
         }
+
+        /// <summary>적을 치지 않는 기술 (지키기·회복·버프): 대상 적을 고르지 않고, 자동 공격의 "센 공격" 고르기에서 뺀다.</summary>
+        public static bool Support(Cmd c) => c == Cmd.Guard || c == Cmd.Cure || c == Cmd.Rally || c == Cmd.Cheer || c == Cmd.Hug;
 
         /// <summary>합동 공격이 나오나 (둘 다 서 있고 적이 남았을 때 ComboRate 확률). 혼자일 때는 주사위를 굴리지 않는다.</summary>
         public bool ComboReady() => Party && !SisterDown && !BrotherDown && !EnemyDown && r.NextDouble() < ComboRate;
@@ -273,7 +313,7 @@ namespace GirlAdventure.Sim
             var o = new PlayerOutcome { Cmd = Cmd.Slash, Target = target >= 0 && target < Foes.Count && !Foes[target].Down ? target : WeakestAlive() };
             if (o.Target < 0) { o.Failed = true; return o; }
             o.Damages = new int[Foes.Count];
-            o.Damage = o.Damages[o.Target] = P.Atk + P.BroAtk + r.Next(0, 6);
+            o.Damage = o.Damages[o.Target] = Up(P.Atk + P.BroAtk + r.Next(0, 6));
             Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
             return o;
         }
@@ -367,6 +407,7 @@ namespace GirlAdventure.Sim
             }
             else o.Damages[o.Target] = atk + r.Next(0, 6);
             if (ult) for (int k = 0; k < Foes.Count; k++) o.Damages[k] = o.Damages[k] * 8 / 5;
+            for (int k = 0; k < Foes.Count; k++) if (o.Damages[k] > 0) o.Damages[k] = Up(o.Damages[k]);
             o.Damage = o.Damages[o.Target];
             for (int k = 0; k < Foes.Count; k++) Foes[k].Hp = Math.Max(0, Foes[k].Hp - o.Damages[k]);
             return o;
@@ -396,7 +437,7 @@ namespace GirlAdventure.Sim
             if (AllyDown(i)) return false;
             if (Ultimates.IsUlt(c)) return Ultimates.UltOf(P, i) == c && Ultimates.Knows(P, c) && GaugeFull(i);
             var m = P.Companions[i];
-            if (c == Cmd.Cure && HealReceivers().Count == 0) return false;     // 엄마의 빛: 다친 사람이 없으면 안 쓴다
+            if ((c == Cmd.Cure || c == Cmd.Hug) && HealReceivers().Count == 0) return false;     // 엄마의 빛·포옹: 다친 사람이 없으면 안 쓴다
             return Sim.Party.Knows(m.Def, c) && P.Lv >= GameData.Skill(c).Lv && m.Mp >= GameData.Skill(c).Mp;   // Lv = 배우는 레벨 (큰 번개 Lv14)
         }
 
@@ -435,7 +476,9 @@ namespace GirlAdventure.Sim
             var s = GameData.Skill(c);
             m.Mp -= s.Mp;
             if (c == Cmd.Guard) { Guarding = i; return o; }
-            if (c == Cmd.UltGuard) { Barrier = true; return o; }    // 황금 사자 방패: 이번 차례 가족 모두 피해 반 (아빠가 대신 맞지 않고 모두를 덮는다)
+            if (c == Cmd.UltGuard) { Barrier = true; return o; }
+            if (c == Cmd.Rally) { DefUp = BuffRounds; return o; }   // 튼튼 함성 (아빠): 3차례 동안 가족 모두 받는 피해 ×0.7
+            if (c == Cmd.Cheer) { AtkUp = BuffRounds; return o; }   // 힘내라 응원 (지훈): 3차례 동안 가족 모두 공격 ×1.3    // 황금 사자 방패: 이번 차례 가족 모두 피해 반 (아빠가 대신 맞지 않고 모두를 덮는다)
             double power = SkillLevels.Power(P, c);
             o.SkillUp = SkillLevels.Use(P, c);
             if (c == Cmd.UltCure)                   // 엄마의 큰 빛 (궁극기 ✏️): 모두 HP 절반만큼 회복, 쓰러진 가족도 1/4 로 일으킨다
@@ -446,12 +489,20 @@ namespace GirlAdventure.Sim
                 foreach (var h in o.Heals) o.Heal += h;
                 return o;
             }
-            if (c == Cmd.Cure)                      // 엄마의 빛 (챕터 6 ✏️): 서 있는 사람 모두 HP 회복 (쓰러진 사람은 못 깨운다)
+            if (c == Cmd.Cure)                      // 엄마의 빛 (사용자 2026-10-05 "기본 스킬은 전체 도트힐"): 서 있는 사람 모두 조금 회복 + 3차례 동안 차례가 끝날 때마다 또 회복
             {
                 o.Heals = new int[P.Companions.Count + 1];
                 foreach (int w in P.Members())
                     if (!P.MemberDown(w)) o.Heals[w + 1] = P.Refill(w, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
                 foreach (var h in o.Heals) o.Heal += h;
+                Regen = BuffRounds;
+                RegenAmount = SkillLevels.Scale(s.Heal, power);
+                return o;
+            }
+            if (c == Cmd.Hug)                       // 엄마의 포옹 (두 번째 스킬 "한 명만 큰 힐"): 한 사람 크게 회복 (target = 받을 사람, -1 서진)
+            {
+                o.Ally = HealWho(target);
+                o.Heal = P.Refill(o.Ally, SkillLevels.Scale(s.Heal + r.Next(0, Math.Max(1, s.Rand)), power), 0).hp;
                 return o;
             }
             if (c == Cmd.BigBolt || c == Cmd.UltBolt)  // 큰 번개 (PLAN 62) · 천둥 대번개 (궁극기 ✏️): 살아 있는 적 모두에게 (적마다 따로 굴림, 잘 피하는 적은 피할 수 있다)
@@ -461,7 +512,7 @@ namespace GirlAdventure.Sim
                 for (int k = 0; k < Foes.Count; k++)
                     if (!Foes[k].Down && !Evades(k))
                     {
-                        o.Damages[k] = SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
+                        o.Damages[k] = Up(SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power));
                         Foes[k].Hp = Math.Max(0, Foes[k].Hp - o.Damages[k]);
                     }
                 o.Damage = o.Target >= 0 ? o.Damages[o.Target] : 0;
@@ -471,7 +522,7 @@ namespace GirlAdventure.Sim
             if (s.Miss > 0 && r.NextDouble() < s.Miss) { o.Missed = true; return o; }
             if (Evades(o.Target)) { o.Missed = true; return o; }            // 잘 피하는 적
             o.Damages = new int[Foes.Count];
-            o.Damage = o.Damages[o.Target] = SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power);
+            o.Damage = o.Damages[o.Target] = Up(SkillLevels.Scale(P.AtkOf(m) * s.AtkMul + s.Bonus + r.Next(0, Math.Max(1, s.Rand)), power));
             Foes[o.Target].Hp = Math.Max(0, Foes[o.Target].Hp - o.Damage);
             return o;
         }
@@ -501,11 +552,13 @@ namespace GirlAdventure.Sim
                 var m = P.Companions[o.Ally];
                 o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.DefOf(m));
                 if (o.Guarded || Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
+                if (DefUp > 0) { o.Damage = Math.Max(1, o.Damage * 7 / 10); o.Shielded = true; }
                 m.Hp = Math.Max(0, m.Hp - o.Damage);
                 return o;
             }
             o.Damage = Math.Max(1, Foes[foe].Def.Atk + r.Next(0, 3) - P.Def);     // 방어력(장비)만큼 줄지만 최소 1
             if (Barrier) o.Damage = Math.Max(1, (o.Damage + 1) / 2);
+            if (DefUp > 0) { o.Damage = Math.Max(1, o.Damage * 7 / 10); o.Shielded = true; }
             P.Hp = Math.Max(0, P.Hp - o.Damage);
             return o;
         }
@@ -520,6 +573,7 @@ namespace GirlAdventure.Sim
                     list.Add(EnemyAct(i));
                     if (Foes[i].Def.Twice && !PlayerDown) list.Add(EnemyAct(i));   // 빠른 적은 한 번 더
                 }
+            RoundEnd();
             NewRound();
             return list;
         }
