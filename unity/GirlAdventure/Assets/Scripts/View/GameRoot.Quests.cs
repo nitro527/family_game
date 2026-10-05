@@ -89,6 +89,21 @@ namespace GirlAdventure.View
             busy = false;
         }
 
+        /// <summary>맵 이벤트: 처음 지나가는 곳의 짧은 장면 (느낌표 → 대사).</summary>
+        IEnumerator MapEventRoutine(EventDef e)
+        {
+            busy = true;
+            EventCount++;
+            sfx.Play("peek");
+            FieldBurst(P.X, P.Y - 1.2f, DotSprite(), new Color(1f, .95f, .5f), Color.white, 5, 1.8f);
+            yield return Talk(e.Talk, ("name", P.Name));
+            HideMessage();
+            AutoSave();
+            busy = false;
+        }
+
+        public int EventCount { get; private set; }
+
         /// <summary>숨겨진 이벤트: 물건을 살펴봤더니 특별 아이템!</summary>
         IEnumerator SecretRoutine(SecretDef s)
         {

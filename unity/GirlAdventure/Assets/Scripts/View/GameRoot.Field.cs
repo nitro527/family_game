@@ -840,6 +840,8 @@ namespace GirlAdventure.View
             StepFx(here);
             var found = Quests.FindAt(P, map, P.X, P.Y);                       // 찾기 부탁 (G-4): 반짝이는 칸을 밟으면
             if (found != null) { StartCoroutine(QuestFoundRoutine(found)); return; }
+            var ev = Quests.EventAt(P, map, P.X, P.Y);                         // 맵 이벤트 (G-3): 처음 지나가는 곳의 짧은 장면
+            if (ev != null) { StartCoroutine(MapEventRoutine(ev)); return; }
             if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
             if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
             if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }

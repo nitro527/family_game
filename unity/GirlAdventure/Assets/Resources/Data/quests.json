@@ -17,5 +17,16 @@
     {"Id": "carrot", "Map": "snow", "Tile": "n", "Wish": "20,6", "Reward": "carrot_charm", "Talk": "secret_carrot"},
     {"Id": "diary", "Map": "library", "Tile": "q", "Wish": "33,11", "Reward": "old_diary", "Talk": "secret_diary"},
     {"Id": "goldacorn", "Map": "forest", "Tile": "K", "Wish": "31,5", "Reward": "golden_acorn", "Talk": "secret_goldacorn", "Need": "boss7"}
+  ],
+  "Events": [
+    {"Id": "castle_view", "Chapter": 1, "Map": "field", "Wish": "28,12", "Talk": "ev_castle_view", "Need": "!boss"},
+    {"Id": "pond_stars", "Chapter": 1, "Map": "field", "Wish": "14,16", "Talk": "ev_pond_stars", "Need": ""},
+    {"Id": "base_sign", "Chapter": 2, "Map": "cave", "Wish": "16,12", "Talk": "ev_base_sign", "Need": "!boss2"},
+    {"Id": "footprints", "Chapter": 3, "Map": "desert", "Wish": "16,14", "Talk": "ev_footprints", "Need": "!boss3"},
+    {"Id": "mirage", "Chapter": 3, "Map": "desert", "Wish": "26,6", "Talk": "ev_mirage", "Need": ""},
+    {"Id": "snore", "Chapter": 4, "Map": "lava", "Wish": "22,8", "Talk": "ev_snore", "Need": "!boss4"},
+    {"Id": "crying", "Chapter": 5, "Map": "snow", "Wish": "20,6", "Talk": "ev_crying", "Need": "!boss5"},
+    {"Id": "flying_book", "Chapter": 6, "Map": "library", "Wish": "17,9", "Talk": "ev_flying_book", "Need": "!mom"},
+    {"Id": "wilted", "Chapter": 7, "Map": "forest", "Wish": "20,14", "Talk": "ev_wilted", "Need": "!boss7"}
   ]
 }

@@ -29,17 +29,32 @@ namespace GirlAdventure.Sim
         public string Need;         // 조건 (Npcs.Holds — 예: "boss7"), 없으면 늘
     }
 
+    /// <summary>맵 이벤트 (G-3 "단순 맵이 아니라 이벤트"): 그 챕터에 처음 그 근처를 지나가면 짧은 장면 한 번.</summary>
+    [Serializable]
+    public class EventDef
+    {
+        public string Id;
+        public int Chapter;
+        public string Map;
+        public string Wish;         // "x,y" — 근처 바닥 칸을 중심으로 사방 한 칸 안
+        public string Talk;
+        public string Need;         // 조건 (Npcs.Holds, "!" 로 시작하면 아닐 때), 없으면 늘
+    }
+
     [Serializable]
     public class QuestTable
     {
         public QuestDef[] Quests;
         public SecretDef[] Secrets;
+        public EventDef[] Events;
     }
 
     public static class Quests
     {
         static QuestDef[] quests = new QuestDef[0];
         static SecretDef[] secrets = new SecretDef[0];
+        static EventDef[] events = new EventDef[0];
+        public static IReadOnlyList<EventDef> AllEvents => events;
         public static IReadOnlyList<QuestDef> All => quests;
         public static IReadOnlyList<SecretDef> AllSecrets => secrets;
 
@@ -47,6 +62,7 @@ namespace GirlAdventure.Sim
         {
             quests = t?.Quests ?? new QuestDef[0];
             secrets = t?.Secrets ?? new SecretDef[0];
+            events = t?.Events ?? new EventDef[0];
             spotCache.Clear();
         }
 
@@ -147,6 +163,25 @@ namespace GirlAdventure.Sim
             if (!string.IsNullOrEmpty(q.Reward) && !p.Gear.Contains(q.Reward)) p.Gear.Add(q.Reward);
             reward = q.Reward;
             return $"q_{q.Id}_done";
+        }
+
+        // ---- 맵 이벤트
+        /// <summary>이벤트 중심 칸 (바람 근처 바닥, Spots 와 같은 규칙).</summary>
+        public static (int x, int y) EventSpot(EventDef e, WorldMap m) => Spots(new QuestDef { Id = "ev_" + e.Id, Wish = e.Wish }, m)[0];
+
+        /// <summary>도착했을 때: 이 근처(사방 한 칸)의 아직 안 본 이벤트면 본 것으로 하고 돌려준다.</summary>
+        public static EventDef EventAt(PlayerState p, WorldMap m, int x, int y)
+        {
+            foreach (var e in events)
+            {
+                if (e.Chapter != p.Chapter || KindOf(e.Map) != m.Kind || p.Opened.Contains("ev_" + e.Id)) continue;
+                if (!string.IsNullOrEmpty(e.Need) && (e.Need[0] == '!' ? Npcs.Holds(e.Need.Substring(1), p) : !Npcs.Holds(e.Need, p))) continue;
+                var c = EventSpot(e, m);
+                if (c.x < 0 || Math.Abs(c.x - x) > 1 || Math.Abs(c.y - y) > 1) continue;
+                p.Opened.Add("ev_" + e.Id);
+                return e;
+            }
+            return null;
         }
 
         // ---- 숨겨진 이벤트

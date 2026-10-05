@@ -1317,6 +1317,16 @@ namespace GirlAdventure.EditorTools
                           && Quests.TrySecret(p, m, at.x, at.y) == null;
                 if (!ok) bad += $"secret {sc.Id}(at {at} near {near}) ";
             }
+            foreach (var ev in Quests.AllEvents)                     // 맵 이벤트: 칸이 있고 닿고, 한 번만, 조건
+            {
+                var m = MapOf(Quests.KindOf(ev.Map));
+                var reach = Reach(m, m.SpawnPoint);
+                var c = Quests.EventSpot(ev, m);
+                var p = PlayerState.NewGame("e"); p.Chapter = ev.Chapter;
+                bool ok = c.x >= 0 && reach[c.x, c.y] && GameData.HasTalk(ev.Talk)
+                          && Quests.EventAt(p, m, c.x, c.y) == ev && Quests.EventAt(p, m, c.x, c.y) == null;
+                if (!ok) bad += $"event {ev.Id}(at {c}) ";
+            }
             // 항아리 (G-3): 집마다 두 개, 옆 칸에서 닿고, 처음만 선물
             var kinds = new HashSet<string>();
             bool pots = true;
