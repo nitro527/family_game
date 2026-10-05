@@ -53,8 +53,14 @@ U="/c/Program Files/Unity/Hub/Editor/6000.5.3f1/Editor/Unity.exe"; P="C:\\code_w
 | `build_character_set.py` | 캐릭터 4명: 투명 메인·icons·poses·걷기 gif·요약 페이지 한 번에 |
 | `card_mockup.py` | 카드 목업 (4명 × 2장, 숫자는 임시) |
 | `monster_catalog.py` | 도감: 몬스터 잘라내기 + dogam.jpg |
-| `prepare_unity_art.py` | 에셋 → Unity Resources (`girl`, `boy`, `monsters`) |
+| `prepare_unity_art.py` | 에셋 → Unity Resources (`girl`, `boy`, `dad`, `mom`, `monsters`) |
 | `balance.py` | 전투 밸런스 빠른 탐색 |
+| `qwen_gen.py` | 로컬 Qwen-Image 2.1 그림 (ComfyUI, `--ref` 로 화풍 맞추기) |
+| `props_gen.py` · `make_prop.py` | 맵 소품 그림 목록 → 배경 지우기·크기 → `Resources/Tiles/Props` (`MapPainter.Prop`) |
+| `battle_bg_gen.py` | 전투 배경을 게임 화풍으로 (`--seed` 로 다시) |
+| `wan_gen.py` | 로컬 Wan 2.2 영상 (`--big` = 14B GGUF, 사용자 선호) |
+| `cutins_video.py` | 기술 장면 A(얼굴)·B(쏟아짐) 영상 → 30장씩 (기본 = 라이트, `--ult` = 궁극) |
+| `prepare_cutins.py` · `cutin_preview.py` | 장면 → `Resources/Cutin` (높이 752, crunch) · 미리보기 MP4 (ComfyUI 파이썬으로) |
 
 ## 지켜 온 규칙
 - 한국어로, 폴더 깔끔하게(임시 파일은 끝나면 삭제), `사진/`·원본 에셋 삭제 금지, git push 금지(원격 없음)
