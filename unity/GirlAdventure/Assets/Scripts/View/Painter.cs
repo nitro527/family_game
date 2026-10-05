@@ -54,6 +54,7 @@ namespace GirlAdventure.View
         public static Texture2D LetterTexture()
         {
             var R = new Raster(Tile, Tile);
+            if (MapPainter.Prop(R, "letter", 24, 44)) return R.ToTexture(readable: ReadableForTests);     // 소품 그림 (Qwen)
             R.Ellipse(25, 40, 17, 4, new Color32(0, 0, 0, 60));
             R.Rect(9, 22, 30, 14, Ink);
             R.Rect(11, 24, 26, 10, Raster.Hex("#FFF4D8"));

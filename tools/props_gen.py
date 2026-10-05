@@ -73,6 +73,7 @@ PROPS = [
     ("chest", "One closed wooden treasure chest with golden metal bands, a golden lock and a rounded lid.", 44, 4),
     ("chest_open", "One OPEN wooden treasure chest with golden metal bands: the rounded lid is lifted wide open and tilted back, shiny golden coins and sparkles inside.", 42, 9),
     ("cavespring", "One small round rock pool in a cave with glowing light blue magical healing water and tiny sparkles rising.", 60, 2),
+    ("letter", "One rolled-up cream paper letter scroll tied with a red ribbon bow, with a few tiny sparkles, lying on the ground.", 40, 2),
     ("campfire", "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it.", 50, 2),
 ]
 
