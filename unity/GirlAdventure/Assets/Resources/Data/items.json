@@ -48,6 +48,7 @@
     {"Id": "old_diary", "Name": "옛 마법 일기", "Kind": "acc", "Atk": 5, "Def": 6, "Price": 300, "Shops": "treasure", "Desc": "오래된 책장 뒤에 숨어 있던 낡은 일기장 (특별 아이템, 가게에는 없어요)"},
     {"Id": "golden_acorn", "Name": "황금 도토리", "Kind": "acc", "Atk": 6, "Def": 7, "Price": 300, "Perk": "gold", "Shops": "treasure", "Desc": "큰 고목이 고맙다며 떨어뜨린 황금 도토리 — 끼고 있으면 전투에서 골드를 더 받아요 (특별 아이템, 가게에는 없어요)"},
     {"Id": "fairy_ring", "Name": "요정 버섯 반지", "Kind": "acc", "Atk": 4, "Def": 6, "Price": 300, "Resist": "poison", "Shops": "treasure", "Desc": "숲 속 숨은 빈터 요정 버섯 고리에서 찾은 반지 — 끼고 있으면 가족 모두 독에 안 걸려요 (특별 아이템, 가게에는 없어요)"},
+    {"Id": "ice_earring", "Name": "얼음 꽃 귀걸이", "Kind": "acc", "Atk": 3, "Def": 5, "Price": 300, "Resist": "freeze", "Shops": "treasure", "Desc": "전나무 사이 숨은 빈터의 얼음 꽃에서 찾은 귀걸이 — 끼고 있으면 가족 모두 얼지 않아요 (특별 아이템, 가게에는 없어요)"},
     {"Id": "frost_blade", "Name": "서리 장검", "Kind": "dad_weapon", "Atk": 10, "Price": 360, "Shops": "snowtown", "Desc": "서리가 반짝이는 아빠의 장검"}
   ]
 }

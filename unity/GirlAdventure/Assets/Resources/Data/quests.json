@@ -17,6 +17,7 @@
     {"Id": "carrot", "Map": "snow", "Tile": "n", "Wish": "20,6", "Reward": "carrot_charm", "Talk": "secret_carrot"},
     {"Id": "diary", "Map": "library", "Tile": "q", "Wish": "33,11", "Reward": "old_diary", "Talk": "secret_diary"},
     {"Id": "fairyring", "Map": "forest", "Tile": "m", "Wish": "7,5", "Reward": "fairy_ring", "Talk": "secret_fairyring"},
+    {"Id": "iceflower", "Map": "snow", "Tile": "m", "Wish": "9,13", "Reward": "ice_earring", "Talk": "secret_iceflower"},
     {"Id": "goldacorn", "Map": "forest", "Tile": "K", "Wish": "31,5", "Reward": "golden_acorn", "Talk": "secret_goldacorn", "Need": "boss7"}
   ],
   "Events": [

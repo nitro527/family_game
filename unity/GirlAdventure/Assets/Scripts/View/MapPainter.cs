@@ -783,7 +783,15 @@ namespace GirlAdventure.View
                 }
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 67));
+                {
+                    char pc = m.At(x, y);
+                    if (pc == 'P' || pc == '?') SnowPine(R, x * T, y * T, Hash(x, y, 67));       // '?' = 지나갈 수 있는 전나무 (똑같이)
+                    else if (pc == 'm')                                                          // 얼음 꽃: 얼음 결정 둘 + 은은한 빛
+                    {
+                        R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 24, 11, H("#BFE8FF", 150)); R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 14, 6, H("#FFFFFF", 170));
+                        Prop(R, "dec_iceshard", x * T + 16, y * T + T - 8); Prop(R, "dec_iceshard", x * T + 32, y * T + T - 4);
+                    }
+                }
             SnowPeakArt(R, WorldMap.SnowPeak.x * T, WorldMap.SnowPeak.y * T);
             TownArch(R, WorldMap.SnowGate.x * T, WorldMap.SnowGate.y * T);       // 눈꽃 마을 문
             Campfire(R, WorldMap.SnowFire.x * T, WorldMap.SnowFire.y * T);
