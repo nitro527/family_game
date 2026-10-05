@@ -50,6 +50,12 @@
   ],
   "snow_yeti_scary_golem.png": [
    2
+  ],
+  "library_imp_book_ink_candle.png": [
+   4
+  ],
+  "library_demon_king.png": [
+   1
   ]
  },
  "monsters": [
@@ -492,6 +498,66 @@
    "sketch": null,
    "ingame": "얼음 골렘",
    "desc": "얼음덩어리 골렘 (사용자 요청 2026-10-04)"
+  },
+  {
+   "id": "lib_imp",
+   "name": "꼬마 악마",
+   "region": "도서관 (악마가 점령)",
+   "tier": "쉬움",
+   "sheet": "library_imp_book_ink_candle.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "꼬마 악마",
+   "desc": "보라색 꼬마 악마. 작은 뿔과 박쥐 날개, 장난꾸러기 웃음. ✏️ (챕터 6 도서관 ⭐ 사용자 2026-10-05, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "lib_book",
+   "name": "책 악마",
+   "region": "도서관 (악마가 점령)",
+   "tier": "중간",
+   "sheet": "library_imp_book_ink_candle.png",
+   "slot": 2,
+   "idea": null,
+   "sketch": null,
+   "ingame": "책 악마",
+   "desc": "눈 하나 달린 마법책. 책장을 펄럭이며 이빨로 앙! ✏️ (챕터 6 도서관 ⭐ 사용자 2026-10-05, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "lib_ink",
+   "name": "잉크 악마",
+   "region": "도서관 (악마가 점령)",
+   "tier": "중간",
+   "sheet": "library_imp_book_ink_candle.png",
+   "slot": 3,
+   "idea": null,
+   "sketch": null,
+   "ingame": "잉크 악마",
+   "desc": "뿔 달린 까만 잉크 덩어리. 뚝뚝 떨어지는 잉크. ✏️ (챕터 6 도서관 ⭐ 사용자 2026-10-05, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "lib_candle",
+   "name": "촛불 악마",
+   "region": "도서관 (악마가 점령)",
+   "tier": "어려움",
+   "sheet": "library_imp_book_ink_candle.png",
+   "slot": 4,
+   "idea": null,
+   "sketch": null,
+   "ingame": "촛불 악마",
+   "desc": "푸른 불꽃 얼굴의 떠다니는 촛불. ✏️ (챕터 6 도서관 ⭐ 사용자 2026-10-05, 모습·이름은 임시, Qwen)"
+  },
+  {
+   "id": "lib_king",
+   "name": "악마 대장",
+   "region": "도서관 (악마가 점령)",
+   "tier": "보스",
+   "sheet": "library_demon_king.png",
+   "slot": 1,
+   "idea": null,
+   "sketch": null,
+   "ingame": "악마 대장",
+   "desc": "도서관을 점령한 악마들의 대장. 저주받은 마법책을 들고 있다. ✏️ (챕터 6 도서관 ⭐ 사용자 2026-10-05, 모습·이름은 임시, Qwen)"
   }
  ]
 }
