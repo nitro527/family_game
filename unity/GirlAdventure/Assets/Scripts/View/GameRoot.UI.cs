@@ -606,6 +606,36 @@ namespace GirlAdventure.View
         /// <summary>한 전투에 한 번만 보여 주는 컷인 (아빠 지키기 — 자주 쓰니까). 전투가 시작될 때 비운다.</summary>
         readonly HashSet<string> cutinSeen = new HashSet<string>();
 
+        /// <summary>
+        /// 전투가 시작되면 파티가 쓸 기술 장면(기본·배운 궁극기, A·B)을 한 장씩 비동기로 미리 불러 둔다 —
+        /// 기술을 처음 쓸 때 60장을 한꺼번에 읽느라 멈칫하지 않게. 이미 읽은 것은 건너뛴다.
+        /// </summary>
+        IEnumerator PreloadCutins()
+        {
+            var keys = new List<string>();
+            foreach (var u in Ultimates.All)
+            {
+                int who = u.owner == Ultimates.Sister ? -1 : P.Companions.FindIndex(c => c.Id == u.owner);
+                if (who < -1 || (who >= 0 && P.Lv < GameData.Skill(u.basic).Lv)) continue;
+                keys.Add(Ultimates.CutinKey(u.basic));
+                if (Ultimates.Knows(P, u.ult)) keys.Add(Ultimates.CutinKey(u.ult));
+            }
+            foreach (var key in keys)
+                foreach (var k in new[] { key, key + "_b" })
+                {
+                    if (cutinFrames.ContainsKey(k)) continue;
+                    var list = new List<Sprite>();
+                    for (int i = 1; i <= 48; i++)
+                    {
+                        var req = Resources.LoadAsync<Texture2D>($"Cutin/{k}_{i}");
+                        yield return req;
+                        if (!(req.asset is Texture2D t)) break;
+                        list.Add(Art.FromTexture(t, new Vector2(.5f, .5f), 100));
+                    }
+                    if (!cutinFrames.ContainsKey(k)) cutinFrames[k] = list.ToArray();
+                }
+        }
+
         /// <summary>기술 장면 그림 Resources/Cutin/{key}_1, _2, … (tools/prepare_cutins.py). 없으면 빈 배열. B 장면은 key + "_b".</summary>
         Sprite[] CutinFrames(string key)
         {

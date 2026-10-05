@@ -209,6 +209,7 @@ namespace GirlAdventure.View
             battle = new BattleSystem(P, defs, rng);
             cutinSeen.Clear();
             ultHinted.Clear();
+            StartCoroutine(PreloadCutins());
             foreach (var d in defs) Bestiary.Meet(P, d);     // 도감: 만났다
             sfx.Play("encounter");
             yield return SwirlIn(def.Boss);
