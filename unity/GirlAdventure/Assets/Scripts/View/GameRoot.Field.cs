@@ -78,9 +78,11 @@ namespace GirlAdventure.View
             fieldTiles = FieldTiles.Load();
             foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap, libraryMap })   // 집 안 18채는 미리 그리지 않고 처음 들어갈 때 그린다 (한 장 8MB, Q-16)
             {
+#if !(UNITY_WEBGL && !UNITY_EDITOR)
                 var mm = m;
                 mapJobs[mm] = System.Threading.Tasks.Task.Run(() => MapPainter.RenderRaster(mm, fieldTiles));
-            }
+#endif
+            }   // 웹(WebGL, 태블릿 브라우저용)은 스레드가 없어 미리 그리지 않고 처음 들어갈 때 그린다
 
             mapSR = new GameObject("Map").AddComponent<SpriteRenderer>();
             mapSR.transform.SetParent(fieldRoot, false);
