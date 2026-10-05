@@ -686,12 +686,17 @@ namespace GirlAdventure.View
                 {
                     char c = m.At(x, y);
                     float X = x * T, Y = y * T;
-                    if (c == 'T')
+                    if (c == 'T' || c == '?')                                   // '?' = 지나갈 수 있는 나무 (숨은 길) — 똑같이 그린다
                     {
                         bool border = x < 2 || y < 2 || x >= WorldMap.W - 2 || y >= WorldMap.H - 2;
                         float jx = (Hash(x, y, 91) - .5f) * 10, jy = Hash(x, y, 92) * 6;
                         R.Ellipse(X + T / 2f + 6 + jx, Y + T - 3 + jy, 22, 7, new Color32(0, 0, 0, 70));
                         if (!Prop(R, Hash(x, y, 93) > .5f ? "oak0" : "oak1", X + T / 2f + jx, Y + T + 4 + jy)) Tree(R, x, y, border);
+                    }
+                    else if (c == 'm')                                          // 요정 버섯 고리: 버섯 셋을 둥글게 + 은은한 빛
+                    {
+                        R.Ellipse(X + T / 2f, Y + T / 2f + 6, 20, 9, H("#B8F0C8", 70));
+                        Prop(R, "mushrooms", X + 10, Y + T - 6); Prop(R, "mushrooms", X + T - 10, Y + T - 6); Prop(R, "mushrooms", X + T / 2f, Y + T / 2f + 2);
                     }
                     else if (c == 'L' && m.At(x - 1, y) != 'L')
                     {

@@ -220,6 +220,8 @@
     {"Id": "npc_home_sledder_more1", "Lines": [{"Text": "썰매꾼 젤리: \"썰매 타다가 펭귄이랑 부딪혔는데, 펭귄이 고드름 지팡이로 콩! 했어.\"", "Face": "smile"}]},
     {"Id": "npc_home_snowman_kid_more1", "Lines": [{"Text": "꼬마 눈사람 젤리: \"눈밭 눈사람 단추가 없어졌대. 꼬마 눈송이 젤리가 찾고 있어!\"", "Face": "smile"}]},
     {"Id": "npc_home_cocoa_more1", "Lines": [{"Text": "코코아 젤리: \"예티는 원래 순한데 화가 나면 무섭게 변한대… 진짜일까?\"", "Face": "smile"}]},
+    {"Id": "secret_fairyring", "Lines": [{"Text": "나무 사이 숨은 빈터에 버섯이 동그랗게 자라 있다… 요정 버섯 고리다!", "Face": "surprised", "Hold": 1.0}, {"Text": "버섯 가운데서 작은 반지가 반짝! 숨겨진 특별 아이템 {item:을/를} 찾았다!", "Face": "laugh"}]},
+    {"Id": "npc_spirit_more1", "Lines": [{"Text": "\"쉿, 비밀 하나 알려 줄게. 왼쪽 위 나무 무리 아래쪽에, 지나갈 수 있는 나무가 하나 있단다.\"", "Face": "smile"}]},
     { "Id": "pot_candy", "Lines": [ { "Text": "항아리 안을 들여다봤다… 사탕이 들어 있었다! (사탕 +1)", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_gold", "Lines": [ { "Text": "항아리 안을 들여다봤다… 반짝이는 동전! ({gold}G)", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_potion", "Lines": [ { "Text": "항아리 안을 들여다봤다… 마법 물약을 찾았다!", "Face": "laugh", "Hold": 0.6 } ] },
