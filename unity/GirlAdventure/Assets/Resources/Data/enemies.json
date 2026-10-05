@@ -11,6 +11,7 @@
     { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16, "Gold": 10, "Move": "slam",  "Attack": "쿵쿵 누르기", "Look": "rock", "Art": "cave_rock", "Desc": "돌 껍데기를 쓴 졸린 젤리. 단단해요." },
     { "Name": "광물 젤리",   "Color": "#9C88C8", "Dark": "#5E4C8A", "Hp": 29, "Atk": 10, "Exp": 19, "Gold": 18, "Move": "spin",  "Attack": "반짝반짝 회전", "Look": "ore", "Art": "cave_ore", "Desc": "반짝이는 금·보라 광물이 콕콕 박힌 젤리." },
     { "Name": "수정 젤리",   "Color": "#7FE8FF", "Dark": "#3A9CC8", "Hp": 32, "Atk": 11, "Exp": 22, "Gold": 13, "Move": "shard", "Attack": "수정 조각 날리기", "Look": "crystal", "Art": "cave_crystal", "Desc": "뾰족한 수정이 자라는 차가운 젤리." },
+    { "Name": "호박 젤리", "Color": "#FFC23A", "Dark": "#C88A10", "Hp": 22, "Atk": 8, "Exp": 26, "Gold": 45, "Move": "hop", "Attack": "끈적끈적 꿀 던지기", "Art": "cave_amber", "Desc": "꿀처럼 노란 덤 젤리. 가끔만 나타나는데 금화를 잔뜩 가지고 있어요." },
     { "Name": "큰 돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 38, "Atk": 11, "Exp": 24, "Gold": 16, "Move": "slam",  "Attack": "쿵쾅쿵쾅 누르기", "Look": "rock", "Tier": 2, "Art": "cave_rock", "Desc": "돌멩이 젤리가 크게 자란 2단 젤리. 동굴 깊은 곳에 살아요." }
   ],
   "Desert": [

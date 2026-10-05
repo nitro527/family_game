@@ -99,7 +99,7 @@ namespace GirlAdventure.EditorTools
                 foreach (var d in GameData.AllEnemies())
                     if (Array.IndexOf(EnemyDef.Moves, d.Move) < 0 || string.IsNullOrEmpty(d.Attack) || Array.IndexOf(EnemyDef.Looks, d.Look ?? "") < 0) badMove += d.Name + " ";
             foreach (var d in GameData.Cave)
-                if (string.IsNullOrEmpty(d.Look)) badMove += d.Name + "(동굴 모양 없음) ";
+                if (string.IsNullOrEmpty(d.Look) && string.IsNullOrEmpty(d.Art)) badMove += d.Name + "(동굴 모양 없음) ";
             Check("every enemy has move+attack+look", enemiesOk && badMove == "", badMove);
             // 도감 그림(B-5): Art 가 있으면 Resources/Monsters 에 그림이 있고 원래 크기(높이 512) 그대로 들어와야 함
             string badArt = "";
@@ -139,7 +139,7 @@ namespace GirlAdventure.EditorTools
             Check("skills.json has every command", skillsOk);
             string P(MapKind k, int x, int y) => string.Join(",", GameData.EncounterPool(k, x, y));
             Check("encounters.json zones", P(MapKind.Field, 3, 4) == "0,0,1" && P(MapKind.Field, 10, 11) == "0,1,1,2" && P(MapKind.Field, 20, 15) == "1,2,2,3,4"
-                  && P(MapKind.Cave, 5, 20) == "0,0,1,2" && P(MapKind.Cave, 12, 5) == "0,1,2,2,3",
+                  && P(MapKind.Cave, 5, 20) == "0,0,0,1,1,2,2,3" && P(MapKind.Cave, 12, 5) == "0,0,1,1,2,2,2,2,4,4,3",   // 3 = 호박 젤리(가끔)
                   $"field={P(MapKind.Field, 3, 4)}|{P(MapKind.Field, 10, 11)}|{P(MapKind.Field, 20, 15)} cave={P(MapKind.Cave, 5, 20)}|{P(MapKind.Cave, 12, 5)}");
             // 딸의 노트: 젤리 색 = 난이도 (파랑 쉬움 < 초록 중간 < 분홍 어려움), 시작 근처엔 분홍이 안 나옴
             var nm = Array.FindAll(GameData.Normal, d => d.Tier < 2);
@@ -148,7 +148,7 @@ namespace GirlAdventure.EditorTools
                   && !P(MapKind.Field, 3, 4).Contains("2"),
                   $"{nm[0].Name}/{nm[1].Name}/{nm[2].Name}");
             // 딸의 노트: 동굴은 돌 < 광물(세모 결정) < 수정 순서로 세다
-            var cv = Array.FindAll(GameData.Cave, d => d.Tier < 2);
+            var cv = Array.FindAll(GameData.Cave, d => d.Tier < 2 && !string.IsNullOrEmpty(d.Look));   // 호박 젤리(덤, 그림만)는 빼고
             Check("cave rock < ore < crystal", cv.Length == 3 && cv[0].Look == "rock" && cv[1].Look == "ore" && cv[2].Look == "crystal"
                   && cv[0].Hp < cv[1].Hp && cv[1].Hp < cv[2].Hp && cv[0].Atk < cv[1].Atk && cv[1].Atk < cv[2].Atk,
                   string.Join("/", Array.ConvertAll(cv, d => d.Name)));
