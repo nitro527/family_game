@@ -1390,6 +1390,15 @@ namespace GirlAdventure.EditorTools
             b6.Foes[0].Hp = yeti.Hp / 2;
             var t1 = b6.EnemyAct(0);
             bool morph = t1.Special == "transform" && b6.Foes[0].Def.Name == "무서운 예티" && b6.Foes[0].Hp == yeti.Hp / 2 && b6.EnemyAct(0).Special != "transform";
+            // 부하 부르기 (킹 젤리 → 파랑 젤리, 셋까지, 불려 온 적은 그 차례엔 쉰다)
+            var king = GameData.King;
+            BattleSystem.ForceSkills = true;
+            var b7 = new BattleSystem(p3, new[] { king }, new System.Random(8));
+            var k1 = b7.EnemyAct(0); var w1 = b7.EnemyAct(1); var k2 = b7.EnemyAct(0); var k3 = b7.EnemyAct(0);
+            BattleSystem.ForceSkills = false;
+            bool call = king.Skill == "call" && k1.Special == "call" && k1.Called == 1 && b7.Foes[1].Def.Name == king.CallName && w1.Special == "wait"
+                        && k2.Special == "call" && b7.Foes.Count == 3 && k3.Special != "call";
+            morph &= call;
             int skilled = 0; foreach (var d in GameData.AllEnemies()) if (d != null && !string.IsNullOrEmpty(d.Skill)) skilled++;
             bool data = skilled >= 20 && GameData.HasTalk("foe_merge") && GameData.HasTalk("foe_transform") && GameData.HasTalk("status_poison");
             Check("battle gimmicks: poison ticks (never kills), freeze skips a turn, heal cures, charge→double, foe heal, merge, yeti transforms",

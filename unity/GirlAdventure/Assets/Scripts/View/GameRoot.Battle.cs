@@ -946,6 +946,29 @@ namespace GirlAdventure.View
             yield return Talk("foe_merge", ("enemy", d.Name));
         }
 
+        /// <summary>부하 부르기: 소용돌이 빛 → 새 적이 퐁 나타나고 모두 자리를 다시 잡는다.</summary>
+        IEnumerator CallShow(int caller, int k)
+        {
+            CallCount++;
+            sfx.Play("encounter");
+            foeShake[caller] = .3f;
+            yield return Talk("foe_call", ("enemy", FoeName(caller)), ("other", battle.Foes[k].Def.Name));
+            var d = battle.Foes[k].Def;
+            foeSR[k].gameObject.SetActive(true);
+            foeSR[k].sprite = JellySprite(d);
+            foeAlpha[k] = 1; foeFading[k] = false; foeShake[k] = .4f; foeBlink[k] = 0;
+            for (int j = 0; j < battle.Foes.Count; j++) foeSR[j].transform.localScale = Vector3.one * FoeScale(j);
+            var at = Px(FoeX(k), FoeHeadY(k) + 60);
+            Spawn(glowSprite, at, Vector3.zero, .9f, 3f, new Color(.6f, .8f, 1f, .6f));
+            for (int j = 0; j < groupTags.Length; j++) { groupTags[j].text = j < battle.Foes.Count && !battle.Foes[j].Down ? FoeName(j) : ""; groupShown[j] = 1; }
+            if (!battle.Foes[caller].Def.Boss) enemyLabel.text = "";
+            sfx.Play("mv_hop");
+            RefreshHud();
+            yield return Talk("foe_called", ("other", FoeName(k)));
+        }
+
+        public int CallCount { get; private set; }
+
         /// <summary>변신 (HP 절반, 한 번): 번쩍 → 새 모습·이름 → 땅울림.</summary>
         IEnumerator TransformShow(int i, string before)
         {
@@ -1003,6 +1026,8 @@ namespace GirlAdventure.View
             var e = battle.EnemyAct(i);
             var d = battle.Foes[i].Def;
             if (e.Special == "transform") { yield return TransformShow(i, before); yield break; }
+            if (e.Special == "wait") yield break;
+            if (e.Special == "call") { yield return CallShow(i, e.Called); yield break; }
             if (e.Special == "charge")                  // 힘 모으기: 붉은 빛이 몸에 모인다
             {
                 sfx.Play("mv_charge");

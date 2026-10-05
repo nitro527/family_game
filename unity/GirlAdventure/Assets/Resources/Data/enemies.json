@@ -8,7 +8,7 @@
     {"Name": "뿔토끼", "Art": "field_rabbit", "Color": "#F4F0E8", "Dark": "#A09888", "Hp": 15, "Atk": 5, "Exp": 6, "Gold": 5, "Move": "hop", "Attack": "뿔 박치기", "Skill": "charge", "SkillRate": 0.2, "Desc": "이마에 작은 뿔이 난 뾰로통 토끼. 힘을 모아 콩!"},
     {"Name": "파랑새", "Art": "field_bird", "Color": "#6AB0E8", "Dark": "#2A6AA0", "Hp": 11, "Atk": 4, "Exp": 5, "Gold": 5, "Move": "hop", "Attack": "부리 콕콕", "Evade": 0.15, "Desc": "날쌘 파랑새. 휙휙 잘 피해요."}
   ],
-  "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 10, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss", "Art": "jelly_king", "Desc": "왕관을 쓴 3단 젤리. 젤리 나라의 왕이에요." },
+  "Boss": { "Name": "킹 젤리", "Color": "#A57CFF", "Dark": "#6A44C8", "Hp": 135, "Atk": 11, "Exp": 50, "Gold": 60, "Boss": true, "Move": "slam", "Attack": "왕 엉덩방아", "Backdrop": "meadow_boss", "Art": "jelly_king", "Skill": "call", "SkillRate": 0.3, "CallName": "파랑 젤리", "Desc": "왕관을 쓴 3단 젤리. 젤리 나라의 왕이에요." },
   "Cave": [
     { "Name": "돌멩이 젤리", "Color": "#A89A8C", "Dark": "#6E6258", "Hp": 26, "Atk": 9,  "Exp": 16, "Gold": 10, "Move": "slam",  "Attack": "쿵쿵 누르기", "Look": "rock", "Art": "cave_rock", "Desc": "돌 껍데기를 쓴 졸린 젤리. 단단해요." },
     { "Name": "광물 젤리",   "Color": "#9C88C8", "Dark": "#5E4C8A", "Hp": 29, "Atk": 10, "Exp": 19, "Gold": 18, "Move": "spin",  "Attack": "반짝반짝 회전", "Look": "ore", "Art": "cave_ore", "Desc": "반짝이는 금·보라 광물이 콕콕 박힌 젤리." },

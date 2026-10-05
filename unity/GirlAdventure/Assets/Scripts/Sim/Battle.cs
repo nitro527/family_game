@@ -28,6 +28,7 @@ namespace GirlAdventure.Sim
                                             // heal(다친 적 회복) · merge(같은 젤리 둘 이상이면 합체 → MergeTo) — 없으면 그냥 공격
         public double SkillRate;            // 적 차례마다 기믹을 쓸 확률
         public string MergeTo;              // 합체하면 되는 적 이름 (예: "큰 초록 젤리")
+        public string CallName;             // call(부하 부르기, 킹 슬라임처럼): 자리가 있으면 이 적을 하나 불러온다
         public string TransformTo;          // HP 가 절반 이하가 되면 변신하는 적 이름 (enemies.json Forms, 예: 예티 → 무서운 예티)
 
         /// <summary>View 가 그릴 줄 아는 젤리가 아닌 모양: 유령(램프에서 나옴)·이단 유령(토끼 귀)·해골·박쥐·지렁이.</summary>
@@ -79,6 +80,7 @@ namespace GirlAdventure.Sim
         public bool Status;     // 맞은 사람에게 독·화상·얼음이 걸렸다
         public int HealFoe;     // heal: 회복한 적 번호 (-1 없음)
         public int HealAmt;
+        public int Called;      // call: 불려 온 적 번호 (-1 없음)
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -88,6 +90,7 @@ namespace GirlAdventure.Sim
         public int Hp;
         public bool Charging;   // 힘을 모았다 (다음 공격 2배)
         public bool Changed;    // 변신·합체를 했다 (한 번만)
+        public bool JustCalled; // 이번 차례에 불려 왔다 (다음 차례부터 움직인다)
         public Foe(EnemyDef def) { Def = def; Hp = def.Hp; }
         /// <summary>변신·합체: 다른 적이 된다 (HP 는 부르는 쪽이 정한다).</summary>
         public void Become(EnemyDef def) { Def = def; Changed = true; Charging = false; }
@@ -601,8 +604,9 @@ namespace GirlAdventure.Sim
             var o = new EnemyOutcome { Foe = foe, Ally = -1 };
             if (foe < 0 || Foes[foe].Down) { o.Dodged = true; return o; }
             var f = Foes[foe];
-            o.HealFoe = -1;
+            o.HealFoe = -1; o.Called = -1;
             EnsureStatus();
+            if (f.JustCalled) { f.JustCalled = false; o.Special = "wait"; o.Dodged = true; return o; }   // 막 불려 온 적은 이번엔 쉰다
             if (!f.Changed && !string.IsNullOrEmpty(f.Def.TransformTo) && f.Hp * 2 <= f.Def.Hp)      // 변신 (HP 절반 이하, 한 번): 이번 차례는 변신만
             {
                 var nd = GameData.EnemyByName(f.Def.TransformTo);
@@ -624,6 +628,15 @@ namespace GirlAdventure.Sim
                             int amt = Math.Min(Foes[pick].Def.Hp / 4, Foes[pick].Def.Hp - Foes[pick].Hp);
                             Foes[pick].Hp += amt;
                             o.Special = "heal"; o.HealFoe = pick; o.HealAmt = amt; o.Dodged = true;
+                            return o;
+                        }
+                        break;
+                    case "call":                                                                         // 부하 부르기 (자리가 있을 때만)
+                        var cd = Foes.Count < MaxFoes ? GameData.EnemyByName(f.Def.CallName) : null;
+                        if (cd != null)
+                        {
+                            Foes.Add(new Foe(cd) { JustCalled = true });
+                            o.Special = "call"; o.Called = Foes.Count - 1; o.Dodged = true;
                             return o;
                         }
                         break;

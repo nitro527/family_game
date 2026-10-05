@@ -1774,6 +1774,20 @@ namespace GirlAdventure.EditorTools
             yield return .3f;
             Shot("gimmick_poison");
             Expect("mushroom jelly poisoned someone (HUD tag)", G.StatusCount > 0, $"status {G.StatusCount}");
+            G.DebugSetAllFoesHp(1);
+            foreach (var x in FightUntilOver(false)) yield return x;
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            // 부하 부르기 (킹 젤리 → 파랑 젤리)
+            G.DebugBattleDefs(GameData.King);
+            yield return 1.5f;
+            for (float t = 0; t < 60 && G.CallCount == 0 && G.Current == GameRoot.Mode.Battle; t += .2f)
+            {
+                if (G.CommandOpen || G.ChoiceOpen) Keys.Press(KeyCode.Return); else Keys.Press(KeyCode.Z);
+                yield return .2f;
+            }
+            yield return .5f;
+            Shot("gimmick_call");
+            Expect("king jelly called a blue jelly", G.CallCount > 0, $"calls {G.CallCount}");
             BattleSystem.ForceSkills = false;
             G.DebugSetAllFoesHp(1);
             foreach (var x in FightUntilOver(false)) yield return x;
