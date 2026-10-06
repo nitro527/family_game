@@ -1,7 +1,7 @@
 {
   "Npcs": [
     {"Id": "guide", "Map": "field", "X": 7, "Y": 2, "Name": "밀짚모자 젤리", "Color": "#9FE08A", "Dark": "#5FA84E", "Look": "hat", "Talk": "npc_guide", "TalkAfter": "npc_guide_after", "Talks": [{"If": "lv5,!boss", "Talk": "npc_guide_ready"}], "Art": "npc_guide"},
-    {"Id": "tips", "Map": "field", "X": 2, "Y": 6, "Name": "리본 젤리", "Color": "#FFC3DA", "Dark": "#D98AAE", "Look": "bow", "Talk": "npc_tips", "TalkAfter": "npc_tips_after", "Art": "npc_tips", "More": ["npc_tips_more1", "npc_tips_more2"]},
+    {"Id": "tips", "Map": "field", "X": 2, "Y": 6, "Name": "리본 젤리", "Color": "#FFC3DA", "Dark": "#D98AAE", "Look": "bow", "Talk": "npc_tips", "TalkAfter": "npc_tips_after", "Art": "npc_tips", "More": ["npc_tips_more1", "npc_tips_more2", "npc_tips_more3"]},
     {"Id": "chief", "Map": "village", "X": 16, "Y": 12, "Name": "촌장 젤리", "Color": "#C9B8FF", "Dark": "#8E78D0", "Look": "hat", "Talk": "npc_chief", "TalkAfter": "npc_chief_after", "Talks": [{"If": "lv5,!boss", "Talk": "npc_chief_ready"}], "Art": "npc_chief"},
     {"Id": "kid", "Map": "village", "X": 21, "Y": 13, "Name": "꼬마 젤리", "Color": "#9FD8FF", "Dark": "#5FA0D8", "Look": "bow", "Talk": "npc_kid", "TalkAfter": "npc_kid_after", "Art": "npc_kid", "More": ["npc_kid_more1", "npc_kid_more2"]},
     {"Id": "inn", "Map": "village", "X": 24, "Y": 8, "Name": "여관 주인 젤리", "Color": "#FFC98A", "Dark": "#D9924E", "Look": "bow", "Talk": "inn_hello", "Inn": true, "Art": "npc_inn"},

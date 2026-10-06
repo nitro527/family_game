@@ -11,6 +11,7 @@
   ],
   "Secrets": [
     {"Id": "clover", "Map": "field", "Tile": "T", "Wish": "28,4", "Reward": "clover", "Talk": "secret_clover"},
+    {"Id": "flowerring", "Map": "field", "Tile": "m", "Wish": "24,20", "Reward": "flower_bracelet", "Talk": "secret_flowerring"},
     {"Id": "pearl", "Map": "cave", "Tile": "w", "Wish": "20,12", "Reward": "cave_pearl", "Talk": "secret_pearl"},
     {"Id": "cactus", "Map": "desert", "Tile": "Y", "Wish": "20,10", "Reward": "cactus_flower", "Talk": "secret_cactus"},
     {"Id": "pebble", "Map": "lavatown", "Tile": "w", "Wish": "18,10", "Reward": "warm_pebble", "Talk": "secret_pebble"},

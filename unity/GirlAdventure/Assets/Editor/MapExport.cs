@@ -26,6 +26,9 @@ namespace GirlAdventure.EditorTools
             {
                 var tex = MapPainter.RenderRaster(m, tiles).ToTexture(FilterMode.Bilinear, true);
                 File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
+                var sb = new System.Text.StringBuilder();                   // 글자 지도도 (배치 고칠 때 칸 좌표 보기)
+                for (int y = 0; y < WorldMap.H; y++) { for (int x = 0; x < WorldMap.W; x++) sb.Append(m.At(x, y)); sb.Append('\n'); }
+                File.WriteAllText(Path.Combine(dir, name + ".txt"), sb.ToString());
                 Object.DestroyImmediate(tex);
             }
             {   // 동굴 기지 문이 열린 모습 (열린 성문 그림을 문 자리에 겹쳐서)

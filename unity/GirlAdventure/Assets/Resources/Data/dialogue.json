@@ -224,6 +224,8 @@
     {"Id": "npc_spirit_more1", "Lines": [{"Text": "\"쉿, 비밀 하나 알려 줄게. 왼쪽 위 나무 무리 아래쪽에, 지나갈 수 있는 나무가 하나 있단다.\"", "Face": "smile"}]},
     {"Id": "secret_iceflower", "Lines": [{"Text": "전나무 사이 숨은 빈터에 투명한 얼음 꽃이 피어 있다…!", "Face": "surprised", "Hold": 1.0}, {"Text": "꽃잎 사이에서 반짝! 숨겨진 특별 아이템 {item:을/를} 찾았다!", "Face": "laugh"}]},
     {"Id": "npc_skater_more2", "Lines": [{"Text": "\"눈밭 왼쪽 전나무 무리 말이야, 오른쪽 나무 하나는 쑥 들어갈 수 있어! 쉿!\"", "Face": "smile"}]},
+    {"Id": "secret_flowerring", "Lines": [{"Text": "나무 사이 숨은 빈터에 꽃이 동그랗게 피어 있다… 꽃 요정 고리다!", "Face": "surprised", "Hold": 1.0}, {"Text": "꽃 한가운데서 반짝! 숨겨진 특별 아이템 {item:을/를} 찾았다!", "Face": "laugh"}]},
+    {"Id": "npc_tips_more3", "Lines": [{"Text": "리본 젤리: \"성 옆 나무 울타리 알지? 위쪽 나무 하나는 쑥 지나갈 수 있대!\"", "Face": "smile"}]},
     { "Id": "pot_candy", "Lines": [ { "Text": "항아리 안을 들여다봤다… 사탕이 들어 있었다! (사탕 +1)", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_gold", "Lines": [ { "Text": "항아리 안을 들여다봤다… 반짝이는 동전! ({gold}G)", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_potion", "Lines": [ { "Text": "항아리 안을 들여다봤다… 마법 물약을 찾았다!", "Face": "laugh", "Hold": 0.6 } ] },

@@ -246,7 +246,12 @@ namespace GirlAdventure.View
             // 숲: 위 칸부터 (아래 줄 나무가 위 줄을 살짝 덮게)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if ("TC".IndexOf(m.At(x, y)) >= 0) AutoTile(R, t.Forest, m, "TC", x, y);
+                    if ("TC?".IndexOf(m.At(x, y)) >= 0) AutoTile(R, t.Forest, m, "TC?", x, y);   // '?' = 지나갈 수 있는 나무 (숨은 길)
+                    else if (m.At(x, y) == 'm')                                                  // 꽃 요정 고리: 들꽃 셋 + 은은한 빛
+                    {
+                        R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 22, 10, H("#FFF0A0", 120));
+                        Prop(R, "dec_wildflowers", x * T + 12, y * T + T - 6); Prop(R, "dec_wildflowers", x * T + T - 12, y * T + T - 6); Prop(R, "dec_wildflowers", x * T + T / 2f, y * T + T / 2f + 4);
+                    }
             // 성: 시트 (5,6)~(6,7) 의 96×96 파란 성을 2배 → 4×4 칸. 성문 칸 가운데 위에서부터 아래로
             int gx = WorldMap.Gate.x * T + T / 2, gy = WorldMap.Gate.y * T;
             R.Stamp(t.Sheet, 5 * T, 6 * T, 2 * T, 2 * T, gx - 2 * T, gy, 2);

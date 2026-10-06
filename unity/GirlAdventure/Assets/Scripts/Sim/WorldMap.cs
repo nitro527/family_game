@@ -258,6 +258,9 @@ namespace GirlAdventure.Sim
             // 마을 입구: 공터 오른쪽 위 (왼쪽 위는 HUD 창에 가려서). 공터에서 입구까지 작은 길
             for (int x = 8; x <= VillageGate.x; x++) Set(x, VillageGate.y + 1, '=');
             Set(VillageGate.x, VillageGate.y, 'V');
+            Fill(22, 19, 26, 22, 'T'); Fill(23, 20, 25, 21, '.');           // 성 옆 숨은 빈터 (2026-10-06 숨은 길): 나무 울타리 안
+            Set(24, 19, '?');                                               // 지나갈 수 있는 나무 (위쪽)
+            Set(24, 20, 'm');                                               // 꽃 요정 고리 (숨겨진 이벤트)
             Holes = Sim.Holes.Place(this, (x, y) => Set(x, y, 'o'));
             PlaceSecretHole(FieldSecretWish, ".,f");
         }
