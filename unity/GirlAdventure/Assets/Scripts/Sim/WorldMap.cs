@@ -538,6 +538,10 @@ namespace GirlAdventure.Sim
             m.Set(LavaSpring.x, LavaSpring.y, 'F');
             m.Set(LavaSign.x, LavaSign.y, 'S');
             m.Set(LavaGate.x, LavaGate.y, 'V');
+            m.Fill(21, 16, 25, 20, 'R'); m.Fill(22, 17, 24, 19, '.');       // 바위 무리 안 숨은 빈터 (2026-10-06 숨은 길)
+            foreach (var (cx, cy) in new[] { (21, 16), (25, 16), (21, 20), (25, 20) }) m.Set(cx, cy, '.');   // 모서리는 비워 둥글게 (대각선으로는 못 들어간다)
+            m.Set(25, 18, '?');                                             // 지나갈 수 있는 바위 (오른쪽)
+            m.Set(23, 18, 'm');                                             // 불꽃 결정 (숨겨진 이벤트)
             m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));  // 수상한 구멍 (Q-8, 숨겨진 구멍은 없음)
             m.Set(VolcanoDoor.x, VolcanoDoor.y, 'B');
             return m;
@@ -638,6 +642,10 @@ namespace GirlAdventure.Sim
                 m.Set(x, y, 'Y');
                 n++;
             }
+            m.Fill(13, 16, 17, 20, 'R'); m.Fill(14, 17, 16, 19, '.');       // 바위 무리 안 숨은 빈터 (2026-10-06 숨은 길)
+            foreach (var (cx, cy) in new[] { (13, 16), (17, 16), (13, 20), (17, 20) }) m.Set(cx, cy, '.');   // 모서리는 비워 둥글게
+            m.Set(15, 16, '?');                                             // 지나갈 수 있는 바위 (위쪽)
+            m.Set(15, 18, 'm');                                             // 모래 별 (숨겨진 이벤트)
             m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));
             m.PlaceSecretHole(DesertSecretWish, ".");
             return m;

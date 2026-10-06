@@ -50,6 +50,8 @@
     {"Id": "fairy_ring", "Name": "요정 버섯 반지", "Kind": "acc", "Atk": 4, "Def": 6, "Price": 300, "Resist": "poison", "Shops": "treasure", "Desc": "숲 속 숨은 빈터 요정 버섯 고리에서 찾은 반지 — 끼고 있으면 가족 모두 독에 안 걸려요 (특별 아이템, 가게에는 없어요)"},
     {"Id": "ice_earring", "Name": "얼음 꽃 귀걸이", "Kind": "acc", "Atk": 3, "Def": 5, "Price": 300, "Resist": "freeze", "Shops": "treasure", "Desc": "전나무 사이 숨은 빈터의 얼음 꽃에서 찾은 귀걸이 — 끼고 있으면 가족 모두 얼지 않아요 (특별 아이템, 가게에는 없어요)"},
     {"Id": "flower_bracelet", "Name": "꽃 요정 팔찌", "Kind": "acc", "Atk": 2, "Def": 2, "Price": 300, "Shops": "treasure", "Desc": "성 옆 숨은 빈터 꽃 요정 고리에서 찾은 팔찌 (특별 아이템, 가게에는 없어요)"},
+    {"Id": "sand_amulet", "Name": "모래 별 부적", "Kind": "acc", "Atk": 2, "Def": 4, "Price": 300, "Resist": "poison", "Shops": "treasure", "Desc": "바위 사이 숨은 빈터 모래 속에서 찾은 별 부적 — 끼고 있으면 가족 모두 독에 안 걸려요 (특별 아이템, 가게에는 없어요)"},
+    {"Id": "fire_necklace", "Name": "불꽃 결정 목걸이", "Kind": "acc", "Atk": 5, "Def": 3, "Price": 300, "Shops": "treasure", "Desc": "검은 바위 사이 숨은 빈터에서 찾은 따뜻한 결정 목걸이 (특별 아이템, 가게에는 없어요)"},
     {"Id": "frost_blade", "Name": "서리 장검", "Kind": "dad_weapon", "Atk": 10, "Price": 360, "Shops": "snowtown", "Desc": "서리가 반짝이는 아빠의 장검"}
   ]
 }

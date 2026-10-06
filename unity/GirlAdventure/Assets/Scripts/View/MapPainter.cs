@@ -261,7 +261,7 @@ namespace GirlAdventure.View
 
         // ------------------------------------------------------------------ 사막 (챕터 3)
         /// <summary>모래로 그리는 칸 (오아시스 풀밭·물·야자·샘물 말고 전부).</summary>
-        const string SandChars = ".:RYXSVBoQ";    // o = 수상한 구멍 (모래 위에 구멍 그림), Q = 리본 편지 (모래 위에 편지 그림)
+        const string SandChars = ".:RYXSVBoQ?m";    // o = 수상한 구멍 (모래 위에 구멍 그림), Q = 리본 편지 (모래 위에 편지 그림)
 
         /// <summary>
         /// 사막: 풀밭 바탕 → 모래 오토타일(오아시스 둘레는 풀 경계가 생긴다) → 오아시스 물 → 바위 언덕 오토타일
@@ -271,6 +271,18 @@ namespace GirlAdventure.View
         /// 바닥 장식 (2026-10-06 맵 퀄리티): floor 글자 칸마다 해시로 density 확률만큼 작은 소품 하나 (걸어 지나가는 그림일 뿐).
         /// 칸 안에서 위치를 조금씩 흔들고, 위아래 칸 순서로 그려 아래 것이 위를 덮는다. 소품이 없으면 아무것도 안 한다.
         /// </summary>
+        /// <summary>숨은 빈터의 반짝이는 물건 'm': 소품 둘 + 은은한 빛.</summary>
+        static void SecretGlints(Raster R, WorldMap m, string prop, string glow)
+        {
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    if (m.At(x, y) == 'm')
+                    {
+                        R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 24, 11, H(glow, 140)); R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 14, 6, H("#FFFFFF", 160));
+                        Prop(R, prop, x * T + 16, y * T + T - 8); Prop(R, prop, x * T + 32, y * T + T - 4);
+                    }
+        }
+
         static void Scatter(Raster R, WorldMap m, string floor, string[] names, float density, int seed)
         {
             if (density <= 0 || Props == null) return;
@@ -318,12 +330,13 @@ namespace GirlAdventure.View
                         if (Hash(x, y, 74) < .3f) R.Circle(ox + 4, oy + 10, 2.2f, H("#A88A5A"));     // 조약돌
                     }
             Scatter(R, m, ".", new[] { "dec_shrub", "dec_sandrocks", "dec_sandflower" }, .09f, 201);     // 바닥 장식 (넓은 모래밭이 텅 비어 보이던 것)
+            SecretGlints(R, m, "dec_sandflower", "#FFE9A0");                // 숨은 빈터의 모래 별
             // 바위 언덕: 위 칸부터 (아래 줄이 위 줄을 덮게)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if ("RX".IndexOf(m.At(x, y)) >= 0)
+                    if ("RX?".IndexOf(m.At(x, y)) >= 0)                       // '?' = 지나갈 수 있는 바위 (숨은 길)
                     {
-                        if (tiled) AutoTile(R, t.Rock, m, "RX", x, y);
+                        if (tiled) AutoTile(R, t.Rock, m, "RX?", x, y);
                         else { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#A8865A")); }
                     }
             var cave = WorldMap.DesertCave;
@@ -518,10 +531,11 @@ namespace GirlAdventure.View
                         R.Rect(x0, y * T + T - 10, x1 - x0, 4, H("#3E3A44"));
                         for (int k = 0; k < 3; k++) R.Rect(x * T + 4 + k * 16, y * T + 12, 1.5f, T - 24, H("#4E4A54"));
                     }
+            SecretGlints(R, m, "dec_obsidian", "#FFB060");                  // 숨은 빈터의 불꽃 결정
             // 검은 바위: 위 칸부터
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'R')
+                    if (m.At(x, y) == 'R' || m.At(x, y) == '?')                 // '?' = 지나갈 수 있는 바위 (숨은 길)
                     {
                         if (Prop(R, Hash(x, y, 77) < .5f ? "lavarock0" : "lavarock1", x * T + 24, y * T + T)) continue;   // 소품 그림: 화산 바위 (덤불처럼 보이던 회색 타일 대신)
                         if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "RK", x, y);

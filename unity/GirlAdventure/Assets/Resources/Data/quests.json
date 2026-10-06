@@ -14,6 +14,8 @@
     {"Id": "flowerring", "Map": "field", "Tile": "m", "Wish": "24,20", "Reward": "flower_bracelet", "Talk": "secret_flowerring"},
     {"Id": "pearl", "Map": "cave", "Tile": "w", "Wish": "20,12", "Reward": "cave_pearl", "Talk": "secret_pearl"},
     {"Id": "cactus", "Map": "desert", "Tile": "Y", "Wish": "20,10", "Reward": "cactus_flower", "Talk": "secret_cactus"},
+    {"Id": "sandstar", "Map": "desert", "Tile": "m", "Wish": "15,18", "Reward": "sand_amulet", "Talk": "secret_sandstar"},
+    {"Id": "firecrystal", "Map": "lava", "Tile": "m", "Wish": "23,18", "Reward": "fire_necklace", "Talk": "secret_firecrystal"},
     {"Id": "pebble", "Map": "lavatown", "Tile": "w", "Wish": "18,10", "Reward": "warm_pebble", "Talk": "secret_pebble"},
     {"Id": "carrot", "Map": "snow", "Tile": "n", "Wish": "20,6", "Reward": "carrot_charm", "Talk": "secret_carrot"},
     {"Id": "diary", "Map": "library", "Tile": "q", "Wish": "33,11", "Reward": "old_diary", "Talk": "secret_diary"},
