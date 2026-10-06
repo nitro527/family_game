@@ -63,7 +63,7 @@
     {"Name": "다람쥐", "Art": "forest_squirrel", "Color": "#A87040", "Dark": "#604020", "Hp": 400, "Atk": 55, "Exp": 74, "Gold": 70, "Move": "hop", "Attack": "도토리 던지기", "Skill": "heal", "SkillRate": 0.35, "Desc": "빛나는 도토리를 꼭 안은 다람쥐. 친구를 회복시켜요."},
     {"Name": "부엉이", "Art": "forest_owl", "Color": "#8A6A48", "Dark": "#4A3A28", "Hp": 440, "Atk": 58, "Exp": 82, "Gold": 76, "Move": "tackle", "Attack": "부엉부엉 날개 치기", "Skill": "charge", "SkillRate": 0.25, "Desc": "졸린 눈의 부엉이. 힘을 모았다가 쿵!"}
   ],
-  "ForestBoss": {"Name": "장수풍뎅이 대장", "Art": "forest_beetle", "Color": "#3A6A3A", "Dark": "#1A3A1A", "Hp": 7200, "Atk": 82, "Exp": 1200, "Gold": 1300, "Boss": true, "Move": "charge", "Attack": "커다란 뿔 들이받기", "Backdrop": "forest_boss", "Skill": "charge", "SkillRate": 0.3, "Desc": "큰 고목을 차지하고 숲의 빛나는 도토리를 혼자 다 가져간 심술쟁이 대장."},
+  "ForestBoss": {"Name": "장수풍뎅이 대장", "Art": "forest_beetle", "Color": "#3A6A3A", "Dark": "#1A3A1A", "Hp": 7200, "Atk": 78, "Exp": 1200, "Gold": 1300, "Boss": true, "Move": "charge", "Attack": "커다란 뿔 들이받기", "Backdrop": "forest_boss", "Skill": "charge", "SkillRate": 0.3, "Desc": "큰 고목을 차지하고 숲의 빛나는 도토리를 혼자 다 가져간 심술쟁이 대장."},
   "LibraryBoss": {"Name": "악마 대장", "Art": "lib_king", "Color": "#5A3A8A", "Dark": "#2A1A4A", "Hp": 5800, "Atk": 70, "Exp": 900, "Gold": 1000, "Boss": true, "Move": "charge", "Attack": "저주의 책 번개", "Backdrop": "library_boss", "Skill": "call", "SkillRate": 0.25, "CallName": "꼬마 악마", "Desc": "도서관을 점령한 악마들의 대장. 저주받은 마법책으로 도서관을 이상하게 바꿔 버렸어요."},
   "SnowBoss": {"Name": "예티", "Color": "#E8F0FF", "Dark": "#A8C0E0", "Hp": 2650, "Atk": 50, "Exp": 600, "Gold": 700, "Boss": true, "Move": "slam", "Attack": "쿵쿵 눈보라 발구르기", "Backdrop": "snow_boss", "Art": "yeti", "Desc": "눈 산 동굴의 왕. 화가 나면 무서운 예티로 변신해요!", "TransformTo": "무서운 예티"},
   "Forms": [

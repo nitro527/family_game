@@ -897,6 +897,7 @@ namespace GirlAdventure.View
 
         /// <summary>프로브용: 기믹이 나온 횟수.</summary>
         public int ChargeCount { get; private set; }
+        public int EnrageCount { get; private set; }
         public int MergeCount { get; private set; }
         public int TransformCount { get; private set; }
         public int StatusCount { get; private set; }
@@ -1036,6 +1037,14 @@ namespace GirlAdventure.View
             string before = FoeName(i);
             var e = battle.EnemyAct(i);
             var d = battle.Foes[i].Def;
+            if (e.Enraged)                              // 보스가 화가 났다: 붉게 번쩍 + 땅울림 + 한 줄
+            {
+                EnrageCount++;
+                sfx.Play("mv_slam");
+                foeShake[i] = .5f; camShake = Mathf.Max(camShake, .45f);
+                Spawn(glowSprite, Px(FoeX(i), FoeHeadY(i) + 80), Vector3.zero, 1f, 4f, new Color(1f, .2f, .15f, .55f));
+                yield return Talk("foe_enrage", ("enemy", FoeName(i)));
+            }
             if (e.Special == "transform") { yield return TransformShow(i, before); yield break; }
             if (e.Special == "wait") yield break;
             if (e.Special == "call") { yield return CallShow(i, e.Called); yield break; }

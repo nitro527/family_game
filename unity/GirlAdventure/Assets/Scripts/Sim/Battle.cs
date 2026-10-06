@@ -82,6 +82,7 @@ namespace GirlAdventure.Sim
         public int HealFoe;     // heal: 회복한 적 번호 (-1 없음)
         public int HealAmt;
         public int Called;      // call: 불려 온 적 번호 (-1 없음)
+        public bool Enraged;    // 이번 공격 전에 보스가 화가 났다 (한 번, 연출용)
     }
 
     /// <summary>전투 중인 적 한 마리 (같은 종류가 여럿일 수 있다).</summary>
@@ -92,6 +93,7 @@ namespace GirlAdventure.Sim
         public bool Charging;   // 힘을 모았다 (다음 공격 1.5배)
         public bool Changed;    // 변신·합체를 했다 (한 번만)
         public bool JustCalled; // 이번 차례에 불려 왔다 (다음 차례부터 움직인다)
+        public bool Enraged;    // 화가 났다 (보스 HP 절반 아래, 공격 ×1.1)
         public Foe(EnemyDef def) { Def = def; Hp = def.Hp; }
         /// <summary>변신·합체: 다른 적이 된다 (HP 는 부르는 쪽이 정한다).</summary>
         public void Become(EnemyDef def) { Def = def; Changed = true; Charging = false; }
@@ -652,7 +654,10 @@ namespace GirlAdventure.Sim
                 if (nd != null) { f.Become(nd); o.Special = "transform"; o.Dodged = true; return o; }
             }
             double mul = 1;
-            if (f.Charging) { f.Charging = false; o.Special = "charged"; mul = 1.5; }   // 쉬고 모은 만큼 1.5배 (2배는 보스전에서 한 방이 너무 큼)
+            if (!f.Enraged && !f.Changed && f.Def.Boss && f.Def.Hp >= 800 && string.IsNullOrEmpty(f.Def.TransformTo) && f.Hp * 2 <= f.Def.Hp)
+            { f.Enraged = true; o.Enraged = true; }                  // 보스가 화가 났다 (HP 절반, 한 번 — 드래곤 퀘스트처럼, 초반 보스·변신 보스는 빼고)
+            if (f.Enraged) mul *= 1.1;
+            if (f.Charging) { f.Charging = false; o.Special = "charged"; mul *= 1.5; }   // 쉬고 모은 만큼 1.5배 (2배는 보스전에서 한 방이 너무 큼)
             else if (!string.IsNullOrEmpty(f.Def.Skill) && f.Def.Skill != "merge" && Roll(f.Def.SkillRate))
             {
                 switch (f.Def.Skill)

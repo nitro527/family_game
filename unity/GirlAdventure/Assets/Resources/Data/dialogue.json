@@ -246,6 +246,7 @@
     {"Id": "q_found_all", "Lines": [{"Text": "{item} 세 개를 다 모았다! {giver}에게 가져다주자.", "Face": "laugh", "Hold": 0.8}]},
     { "Id": "foe_call", "Lines": [ { "Text": "{enemy:이/가} 크게 소리쳤다! \"얘들아, 도와줘~!\"", "Face": "surprised", "Hold": 0.8 } ] },
     { "Id": "foe_called", "Lines": [ { "Text": "{other:이/가} 퐁 하고 나타났다!", "Face": "surprised", "Hold": 0.6 } ] },
+    { "Id": "foe_enrage", "Lines": [ { "Text": "{enemy:이/가} 화가 나서 부들부들…! 공격이 더 세졌다! 힘내!", "Face": "surprised", "Hold": 0.9 } ] },
     { "Id": "foe_charge", "Lines": [ { "Text": "{enemy:은/는} 힘을 모으고 있다…! 다음 공격을 조심해!", "Face": "surprised", "Hold": 0.9 } ] },
     { "Id": "foe_charged", "Lines": [ { "Text": "{enemy}의 힘을 모은 일격!", "Face": "surprised", "Hold": 0.6 } ] },
     { "Id": "foe_heal", "Lines": [ { "Text": "{enemy:이/가} 반짝반짝… {target}의 HP가 {heal} 회복되었다!", "Face": "surprised", "Hold": 0.9 } ] },
