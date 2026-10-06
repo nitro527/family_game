@@ -641,6 +641,7 @@ namespace GirlAdventure.View
             RefreshHud();
             if (bolt) yield return TalkAlly(a, "bolt", ("skill", GameData.Skill(o.Cmd).Name));
             else yield return TalkAlly(a, "cast", ("skill", GameData.Skill(o.Cmd).Name));
+            if (bolt) yield return SkillCutin("bolt", GameData.Skill(o.Cmd).Name + "!!");      // 번개 장면 (사용자 "번개 쓸 때 애니메이션이 안 나온다")
             if (bolt) yield return Lightning(o.Target);
             else if (o.Cmd == Cmd.Light) { sfx.Play("fire"); yield return LightArrow(a, o.Target); }
             else { sfx.Play("mv_spin"); yield return SlashArc(o.Target); }

@@ -83,6 +83,10 @@ LIGHT = {
     'bigbolt': ("The little boy hero points his small sword forward with a short brave shout; a few little yellow sparks crackle on the blade.", 1,
                 "a single bright yellow lightning bolt striking down from a small dark cloud onto a rocky field.",
                 "A single yellow lightning bolt flashes down from the small cloud and sparks on the ground."),
+    # 번개 (지훈 한 마리 공격, 2026-10-06 사용자 "지훈 번개 쓸 때 애니메이션이 안 나온다") — 시작 그림은 bigbolt 것
+    'bolt': ("The little boy hero raises his small sword high to the sky with a determined face; a little crackle of yellow lightning gathers at the sword tip.", 1,
+             "a dark small storm cloud over a sunny grassy battlefield, one bright yellow lightning bolt zapping straight down to the ground with a flash.",
+             "One bright yellow lightning bolt zaps straight down from the small cloud and flashes on the ground with a few sparks."),
     'guard': ("The kind dad knight raises his lion crest shield in front of him with a calm smile; the lion emblem glows softly.", 1,
               "a softly glowing golden shield of light with a lion emblem standing on a grassy field.",
               "The golden shield of light glows a little brighter and a soft ring of light ripples outward once."),
