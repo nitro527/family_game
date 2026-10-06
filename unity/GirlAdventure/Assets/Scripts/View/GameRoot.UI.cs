@@ -13,6 +13,7 @@ namespace GirlAdventure.View
         Transform ui;
         GameObject titlePanel, endingPanel, cutinPanel, hudWin, hintLabel;
         InputField nameInput;
+        int nameEditEndFrame = -10;
         Button continueBtn;
         Text startLbl, continueLbl, optionsLbl;
         int titleIndex;                     // 0 모험 시작, 1 이어하기, 2 설정, 3 챕터 고르기
@@ -509,6 +510,8 @@ namespace GirlAdventure.View
             nameInput.textComponent = txt;
             nameInput.placeholder = ph;
             nameInput.characterLimit = 6;
+            nameInput.onEndEdit.AddListener(_ => nameEditEndFrame = Time.frameCount);    // 이름 입력을 Enter 로 끝낸 프레임 (바로 모험 시작되지 않게)
+            UIKit.Label(t, "NameTab", "Tab 키로 이름 바꾸기", 172, 276, 140, 22, 14, TextAnchor.UpperLeft, UIKit.Dim, false);
 
             var start = UIKit.Button(t, "Start", "모험 시작!", 60, 372, 240, 62, 26, new Color32(150, 110, 255, 255));
             start.onClick.AddListener(StartGame);

@@ -1751,7 +1751,8 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             // 전투 기믹 (사용자 2026-10-06): 꼬마 악마 둘 → 합체, 버섯 젤리 → 독 (확률 무시)
             BattleSystem.ForceSkills = true;
-            G.DebugBattleDefs(GameData.Library[0], GameData.Library[0]);
+            var imp = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(GameData.Library[0])); imp.Hp = 9999;   // 합체 전에 쓰러지지 않게 (같은 것 둘이어야 합체)
+            G.DebugBattleDefs(imp, imp);
             yield return 1.5f;
             for (float t = 0; t < 60 && G.MergeCount == 0 && G.Current == GameRoot.Mode.Battle; t += .2f)
             {

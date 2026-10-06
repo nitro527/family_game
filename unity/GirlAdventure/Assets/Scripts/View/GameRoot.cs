@@ -60,7 +60,14 @@ namespace GirlAdventure.View
             {
                 case Mode.Title:
                     if (busy) break;            // 세이브 칸 고르는 중
-                    bool up = Keys.Down(KeyCode.UpArrow), down = Keys.Down(KeyCode.DownArrow);
+                    bool typing = nameInput.isFocused || Time.frameCount - nameEditEndFrame <= 1;   // 이름 쓰는 중엔 방향키·Enter 를 메뉴가 먹지 않게
+                    if (Keys.Down(KeyCode.Tab))                 // 키보드만으로 이름 바꾸기 (2026-10-06 "모든 동작을 키보드로")
+                    {
+                        if (nameInput.isFocused) nameInput.DeactivateInputField();
+                        else { nameInput.ActivateInputField(); nameInput.Select(); }
+                        typing = true;
+                    }
+                    bool up = !typing && Keys.Down(KeyCode.UpArrow), down = !typing && Keys.Down(KeyCode.DownArrow);
                     if (up || down)
                     {
                         // 고를 수 있는 것 (화면 순서): 모험 시작(0), 챕터 고르기(3, 그 오른쪽), 이어하기(1, 세이브 있을 때), 설정(2)
@@ -70,7 +77,7 @@ namespace GirlAdventure.View
                         sfx.Play("select");
                         RenderTitle();
                     }
-                    if (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter))
+                    if (!typing && (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter)))
                     {
                         if (titleIndex == 1) ContinueGame();
                         else if (titleIndex == 2) OpenTitleOptions();
