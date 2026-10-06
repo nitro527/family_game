@@ -1428,6 +1428,11 @@ namespace GirlAdventure.EditorTools
             for (int k = 0; k < 10 && r1.Resisted == null; k++) { pr.Hp = pr.MaxHp; r1 = b8.EnemyAct(0); }
             bool resist = r1.Resisted == "cave_pearl" && !r1.Status && b8.PoisonOf(-1) == 0 && Equipment.BonusText("fairy_wings").Contains("독·화상·얼음 막기");
             morph &= resist;
+            var pd = PlayerState.NewGame("d"); pd.Candy = 0;                // 떨어뜨린 물건: 보스는 늘 달님 사탕, 보통 적은 가끔 사탕
+            var bd = new BattleSystem(pd, new[] { GameData.King }, new System.Random(3));
+            var dropBoss = bd.RollDrops();
+            int got = 0; for (int k = 0; k < 400; k++) got += new BattleSystem(pd, new[] { GameData.Normal[0] }, new System.Random(k)).RollDrops().Count;
+            morph &= dropBoss.Count == 1 && dropBoss[0].item == "moon" && pd.Count("moon") >= 1 && got > 15 && got < 80;
             var pg = PlayerState.NewGame("g"); var bg = new BattleSystem(pg, new[] { GameData.Normal[0] }, new System.Random(1)); int g0 = bg.TotalGold;
             pg.Gear.Add("golden_acorn"); Equipment.Equip(pg, "golden_acorn");
             morph &= bg.TotalGold == g0 * 5 / 4 && Equipment.HasPerk(pg, "gold") && Equipment.BonusText("clover").Contains("잘 피함");

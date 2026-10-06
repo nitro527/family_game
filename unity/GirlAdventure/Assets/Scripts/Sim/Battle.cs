@@ -149,6 +149,26 @@ namespace GirlAdventure.Sim
         public int AliveCount => Foes.FindAll(f => !f.Down).Count;
         /// <summary>이기면 받는 경험치·골드 (무리는 합계).</summary>
         public int TotalExp { get { int n = 0; foreach (var f in Foes) n += f.Def.Exp; return n; } }
+        /// <summary>
+        /// 이긴 뒤 떨어뜨린 물건 (드래곤 퀘스트처럼, 2026-10-06): 적마다 보통 10% · 큰(2단) 25% · 보스 100% 확률로
+        /// 보통은 사탕 (사탕 가방이 꽉 차면 마법 물약), 큰 적·보스는 달님 사탕. 가방에 넣고 (적 이름, 도구 id) 목록을 돌려준다.
+        /// </summary>
+        public List<(string foe, string item)> RollDrops()
+        {
+            var list = new List<(string, string)>();
+            foreach (var f in Foes)
+            {
+                var d = f.Def;
+                double rate = d.Boss ? 1 : d.Tier >= 2 ? .25 : .10;
+                if (r.NextDouble() >= rate) continue;
+                string item = d.Boss || d.Tier >= 2 ? "moon" : P.Candy < PlayerState.BagCandy ? Shop.CandyId : "potion";
+                if (P.Count(item) >= PlayerState.BagCandy) continue;
+                P.AddItem(item, 1);
+                list.Add((d.Name, item));
+            }
+            return list;
+        }
+
         public int TotalGold { get { int n = 0; foreach (var f in Foes) n += f.Def.Gold; return Equipment.HasPerk(P, "gold") ? n * 5 / 4 : n; } }   // 황금 도토리: +25%
 
         /// <summary>살아 있는 첫 적 번호 (모두 쓰러졌으면 -1).</summary>

@@ -230,6 +230,7 @@
     {"Id": "secret_firecrystal", "Lines": [{"Text": "검은 바위 사이 숨은 빈터에 따뜻한 결정이 빛나고 있다…!", "Face": "surprised", "Hold": 1.0}, {"Text": "숨겨진 특별 아이템 {item:을/를} 찾았다!", "Face": "laugh"}]},
     {"Id": "npc_tentlady_more2", "Lines": [{"Text": "\"모래 사막 가운데 아래 바위 무리, 위쪽 바위 하나는 모래가 쌓인 거라 지나갈 수 있대.\"", "Face": "smile"}]},
     {"Id": "npc_springkeeper_more3", "Lines": [{"Text": "\"잿빛 땅 오른쪽 아래 바위 무리 말이에요, 오른쪽 바위 하나는 쑥 지나갈 수 있대요!\"", "Face": "smile"}]},
+    { "Id": "drop", "Lines": [ { "Text": "{enemy:이/가} {item:을/를} 떨어뜨렸다! 가방에 쏙.", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_candy", "Lines": [ { "Text": "항아리 안을 들여다봤다… 사탕이 들어 있었다! (사탕 +1)", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_gold", "Lines": [ { "Text": "항아리 안을 들여다봤다… 반짝이는 동전! ({gold}G)", "Face": "laugh", "Hold": 0.6 } ] },
     { "Id": "pot_potion", "Lines": [ { "Text": "항아리 안을 들여다봤다… 마법 물약을 찾았다!", "Face": "laugh", "Hold": 0.6 } ] },

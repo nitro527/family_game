@@ -1138,6 +1138,12 @@ namespace GirlAdventure.View
                 RefreshHud();
                 yield return Talk("levelup", ("lv", P.Lv - ups + i + 1));
             }
+            foreach (var (foe, item) in battle.RollDrops())             // 떨어뜨린 물건
+            {
+                sfx.Play("chest");
+                RefreshHud();
+                yield return Talk("drop", ("enemy", foe), ("item", GameData.ItemName(item)));
+            }
             RefreshHud();
             if (!wasComplete && Bestiary.Complete(P))
             {
