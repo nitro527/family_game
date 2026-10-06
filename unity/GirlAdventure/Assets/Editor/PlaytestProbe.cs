@@ -1670,6 +1670,7 @@ namespace GirlAdventure.EditorTools
             yield return 1.5f;
             Shot("ch6_battle_four");
             Expect("library battle backdrop", G.BattleBackdropName == "library", G.BattleBackdropName);
+            G.DebugSetAllFoesHp(400);                                   // 엄마 차례가 오기 전에 끝나지 않게 (파랑 젤리라 너무 약함)
             G.DebugSetHp(G.P.MaxHp / 3);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;

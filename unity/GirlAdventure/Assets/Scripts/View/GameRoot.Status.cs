@@ -219,6 +219,16 @@ namespace GirlAdventure.View
         /// 설정: 고를 때마다 값이 한 단계씩 바뀐다 (음악 100→60→30→0, 효과음 같음, 글자 속도 느리게→보통→빠르게, 번쩍임 켬/끔, 글자 크기 보통/크게).
         /// 바꾼 뒤 바로 들어 보거나 볼 수 있게 소리·문장으로 알려 준다.
         /// </summary>
+        /// <summary>조작법 한 장: 키보드와 패드 (연결된 패드 이름도).</summary>
+        static string ControlsText()
+        {
+            string pad = Keys.PadName;
+            return "<color=#F2C443>키보드</color> 방향키 이동 · Enter/Z 확인 · X 취소 · Esc 메뉴 · M 음악\n"
+                 + "<color=#F2C443>닌텐도 패드</color> 십자키 이동 · A 확인 · B 취소 · X/+ 메뉴\n"
+                 + "<color=#F2C443>다른 패드</color> 아래 버튼 확인 · 오른쪽 취소 · 위/Start 메뉴"
+                 + (pad != "" ? $"\n<size=16><color=#9AA3C7>연결된 패드: {pad}</color></size>" : "");
+        }
+
         IEnumerator OptionsRoutine()
         {
             choiceIndex = 0;
@@ -242,6 +252,8 @@ namespace GirlAdventure.View
                 foreach (var id in autoIds) lines.Add($"{Party.Def(id)?.Name ?? id} 자동 공격  <color=#F2C443>{(Settings.AllyAuto(id) ? "켬" : "끔")}</color>");
                 int oneIdx = P.BrotherJoined ? lines.Count : -1;        // 지훈 한 버튼 모드 (PLAN 70)
                 if (oneIdx >= 0) lines.Add($"지훈 한 버튼 모드  <color=#F2C443>{(Settings.BroOneButton ? "켬" : "끔")}</color>");
+                int controlsIdx = lines.Count;                           // 조작법 (키보드·패드, 2026-10-06 패드 지원)
+                lines.Add("조작법 보기");
                 lines.Add("닫기");
                 yield return Choose(lines.ToArray());
                 int picked = choicePicked;
@@ -252,6 +264,13 @@ namespace GirlAdventure.View
                     sfx.Play("select");
                     yield return Say(Settings.BroOneButton ? "지훈이 차례에는 아무 버튼이나 누르면 지훈이가 씩씩하게 공격해요! (자동 공격이 켜져 있으면 자동이 먼저)" : "지훈이 차례에 명령을 골라요.",
                                      Settings.BroOneButton ? "bro_laugh" : "bro_smile", .6f);
+                    choiceIndex = picked;
+                    continue;
+                }
+                if (picked == controlsIdx)
+                {
+                    sfx.Play("select");
+                    yield return Say(ControlsText(), "smile", 2f);
                     choiceIndex = picked;
                     continue;
                 }

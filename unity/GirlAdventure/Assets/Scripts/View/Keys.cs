@@ -102,8 +102,10 @@ namespace GirlAdventure.View
 
         /// <summary>지금 연결된 패드 이름 (설정 화면 안내용, 없으면 "").</summary>
         public static string PadName => UnityEngine.InputSystem.Gamepad.current?.displayName ?? "";
+        public static bool PadIsNintendo => IsNintendo(UnityEngine.InputSystem.Gamepad.current);
 #else
         public static string PadName => "";
+        public static bool PadIsNintendo => false;
 #endif
 
         public static bool Held(KeyCode k) => Input.GetKey(k) || held.Contains(k) || devNow.Contains(k);

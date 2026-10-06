@@ -225,8 +225,20 @@ namespace GirlAdventure.View
                 hintBand.anchoredPosition = new Vector2(bx, crowded ? -(UIKit.RefH - 38) : -8);     // 붐비면 화면 아래 오른쪽 (상태창과 안 겹치게)
                 hintBand.sizeDelta = new Vector2(bw, hintBand.sizeDelta.y);
                 hintText.rectTransform.sizeDelta = new Vector2(bw - 20, hintText.rectTransform.sizeDelta.y);
-                hintText.text = crowded ? "방향키 이동 · Esc 상태 · M 음악" : "방향키 이동 · Esc 상태 · 가게 쇼핑 · M 음악";
             }
+            if (hintText != null)                                            // 패드가 있으면 패드 버튼 이름으로 (2026-10-06)
+            {
+                string want = HintLine(crowded);
+                if (hintText.text != want) hintText.text = want;
+            }
+        }
+
+        /// <summary>안내 띠 한 줄: 키보드면 방향키·Esc, 닌텐도 패드면 십자키·X, 다른 패드면 십자키·위 버튼.</summary>
+        static string HintLine(bool crowded)
+        {
+            string pad = Keys.PadName;
+            if (pad == "") return crowded ? "방향키 이동 · Esc 상태 · M 음악" : "방향키 이동 · Esc 상태 · 가게 쇼핑 · M 음악";
+            return Keys.PadIsNintendo ? "십자키 이동 · A 확인 · B 취소 · X 메뉴" : "십자키 이동 · 아래 확인 · 위 버튼 메뉴";
         }
 
         /// <summary>상태창 크기 (사용자 "상태창이 게임 화면·몬스터를 가린다"): 동료가 많을수록 작게 — 혼자·둘 1, 셋 0.9, 넷 0.8.</summary>
