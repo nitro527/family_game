@@ -151,12 +151,14 @@ namespace GirlAdventure.View
         void SetUltBar(Image bar, int who)
         {
             if (bar == null) return;
-            bool on = battle != null && Current == Mode.Battle && Ultimates.Learned(P, who);
+            bool anyLearned = false;                      // 공용 게이지 (사용자 2026-10-06): 서진 창에만 400 까지 차는 막대 하나
+            if (battle != null) for (int w = -1; w < P.Companions.Count; w++) anyLearned |= Ultimates.Learned(P, w);
+            bool on = battle != null && Current == Mode.Battle && who < 0 && anyLearned;
             bar.transform.parent.gameObject.SetActive(on);
             if (!on) return;
-            float k = battle.GaugeOf(who) / (float)Ultimates.GaugeMax;
+            float k = battle.Pool / (float)Ultimates.PoolMax;
             bar.fillAmount = k;
-            bar.color = k >= 1 ? Color.Lerp(new Color32(255, 226, 122, 255), Color.white, Mathf.PingPong(Time.time * 2, 1)) : new Color32(242, 196, 67, 255);
+            bar.color = battle.Pool >= Ultimates.Cost ? Color.Lerp(new Color32(255, 226, 122, 255), Color.white, Mathf.PingPong(Time.time * 2, 1)) : new Color32(242, 196, 67, 255);
         }
 
         /// <summary>HP 줄 끝 상태 이상 표시 (전투 중): 독(보라)·화상(주황)·얼음(하늘).</summary>
@@ -183,6 +185,7 @@ namespace GirlAdventure.View
                 if (battle.DefUp > 0) tags += $" <color=#7FC8FF>방어↑{battle.DefUp}</color>";
                 if (battle.AtkUp > 0) tags += $" <color=#FF9A7A>공격↑{battle.AtkUp}</color>";
                 if (battle.Regen > 0) tags += $" <color=#7DFF9A>회복{battle.Regen}</color>";
+                if (battle.PoolCharges > 0) tags += $" <color=#FFE27A>궁극 {battle.PoolCharges}칸</color>";
                 if (tags != "") hudMp.text += $"  <size=15>{tags.Trim()}</size>";
             }
             if (P.Hp <= 0) hudHp.text = "<color=#FF6060>HP 0 (쓰러짐)</color>";
@@ -395,8 +398,8 @@ namespace GirlAdventure.View
                 case Cmd.Hug: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>한 명 크게 · MP {GameData.Skill(c).Mp}</color></size>";
                 case Cmd.Cure: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>모두 · 계속 · MP {GameData.Skill(c).Mp}</color></size>";
                 case Cmd.UltStar: case Cmd.UltBolt: case Cmd.UltGuard: case Cmd.UltCure:
-                    int g = battle != null ? battle.GaugeOf(allyTurn) : 0;
-                    return $"<color=#F2C443>{GameData.Skill(c).Name}</color> <size=15><color={(g >= Ultimates.GaugeMax ? "#FFE27A" : "#9AA3C7")}>궁극 {g}%</color></size>";
+                    int g = battle != null ? battle.Pool : 0;
+                    return $"<color=#F2C443>{GameData.Skill(c).Name}</color> <size=15><color={(g >= Ultimates.Cost ? "#FFE27A" : "#9AA3C7")}>궁극 {g}/{Ultimates.PoolMax}</color></size>";
                 case Cmd.BigBolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>모두 · MP {GameData.Skill(c).Mp}</color></size>";
                 case Cmd.Bolt: return $"{GameData.Skill(c).Name}{LvTag(c)} <size=15><color=#9AA3C7>MP {GameData.Skill(c).Mp}</color></size>";
                 default: return GameData.Skill(c).Name + LvTag(c);

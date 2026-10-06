@@ -640,7 +640,7 @@ namespace GirlAdventure.View
         public void DebugSetBroOneButton(bool on) => Settings.SetBroOneButton(on);
         /// <summary>프로브용: 궁극기를 모두 배운 상태로 (스킬 Lv3) · 전투 중 궁극 게이지를 채운다.</summary>
         public void DebugLearnUltimates() { foreach (var u in Ultimates.All) P.SkillUses[u.basic.ToString()] = GameData.SkillLevelUses[1]; RefreshHud(); }
-        public void DebugFillGauges(int amount = 100) { if (battle == null) return; for (int w = -1; w < P.Companions.Count; w++) battle.AddGauge(w, amount); RefreshHud(); }
+        public void DebugFillGauges(int amount = 100) { if (battle == null) return; battle.AddGauge(-1, amount); RefreshHud(); }
         public bool WellWaterShown => wellWaterSR != null && wellWaterSR.enabled;
         public string EndingHead => endHead != null ? endHead.text : "";
         /// <summary>프로브용: 레벨을 lv 까지 올리고 (이미 높으면 그대로) 모두 회복.</summary>

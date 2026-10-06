@@ -1588,13 +1588,17 @@ namespace GirlAdventure.EditorTools
             b.Act(Cmd.Fire);
             bool fills = b.GaugeOf(-1) == g0 + Ultimates.GaugeAct;
             b.AddGauge(-1, 100);
+            int before = b.Pool;
             var o = b.Act(Cmd.UltStar);
             int hit = 0; foreach (var d in o.Damages) if (d > 0) hit++;
-            bool star = !o.Failed && hit >= 2 && b.GaugeOf(-1) == 0;
-            b.AddGauge(1, 100);
+            bool star = !o.Failed && hit >= 2 && b.Pool == before - Ultimates.Cost;      // 공용 게이지: 쓰면 한 칸(100)만 준다
+            b.AddGauge(-1, 1000);
+            star &= b.Pool == Ultimates.PoolMax && b.PoolCharges == 4 && b.GaugeOf(1) == b.Pool;   // 400 까지, 누구든 같은 게이지
+            int beforeG = b.Pool;
             b.MemberAct(1, Cmd.UltGuard);
+            bool guard = b.Barrier && b.Pool == beforeG - Ultimates.Cost;
             var e = b.EnemyAct(0);
-            bool guard = b.Barrier && (e.Dodged || (e.Blocked && e.Damage >= 1)) && b.GaugeOf(1) == 0;
+            guard &= e.Dodged || (e.Blocked && e.Damage >= 1);
             b.NewRound();
             p.Companions[0].Hp = 0; p.Hp = 5;
             b.AddGauge(2, 100);

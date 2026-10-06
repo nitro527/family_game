@@ -275,7 +275,7 @@ namespace GirlAdventure.View
                 for (int i = 0; i < known.Count; i++)
                 {
                     var s = GameData.Skill(known[i]);
-                    string mp = Ultimates.IsUlt(known[i]) ? $"<size=15><color=#F2C443>궁극 {battle.GaugeOf(-1)}%</color></size>" : $"<size=15><color=#9AA3C7>MP {s.Mp}</color></size>";
+                    string mp = Ultimates.IsUlt(known[i]) ? $"<size=15><color=#F2C443>궁극 {battle.Pool}/{Ultimates.PoolMax}</color></size>" : $"<size=15><color=#9AA3C7>MP {s.Mp}</color></size>";
                     labels[i] = battle.CanUse(known[i]) ? $"{s.Name}{LvTag(known[i])} {mp}" : $"<color=#80808C>{s.Name}</color>{LvTag(known[i])} {mp}";
                 }
                 labels[known.Count] = "그만두기";

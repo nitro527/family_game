@@ -4,13 +4,15 @@ namespace GirlAdventure.Sim
 {
     /// <summary>
     /// 궁극기 (Q-39, 사용자 2026-10-05): 기본 기술의 스킬 레벨이 3 이 되면 그 기술의 궁극기를 배우고,
-    /// 전투마다 0 에서 시작하는 궁극 게이지(사람마다)가 가득 차야 쓸 수 있다. 쓰면 0.
-    /// 게이지: 행동하면 +GaugeAct(10), 맞으면 +GaugeHit(6) (BattleSystem). 이름·효과 ✏️.
+    /// 궁극 게이지는 가족이 함께 쓰는 하나 (사용자 2026-10-06 "총합으로, 400 까지, 아무나 쓰면 100 소모, 더 빠르게"):
+    /// 전투마다 0 에서 시작, 누구든 행동하면 +GaugeAct, 맞으면 +GaugeHit (궁극기를 배우지 않아도 찬다), 최대 PoolMax.
+    /// 궁극기를 배운 사람은 게이지가 Cost 이상이면 쓸 수 있고 쓰면 Cost 만큼 준다. 이름·효과 ✏️.
     /// 합동 공격은 게이지와 상관없이 랜덤, 구성원이 모두 궁극기를 배웠으면 나올 때 반 확률로 궁극 합동 공격.
     /// </summary>
     public static class Ultimates
     {
-        public const int LearnLevel = 3, GaugeMax = 100, GaugeAct = 10, GaugeHit = 6;     // 열 번쯤 행동해야 찬다 (보스 6 밸런스 [BALANCE BOSS6 ULT])
+        public const int LearnLevel = 3, Cost = 100, PoolMax = 400, GaugeAct = 14, GaugeHit = 8;
+        public const int GaugeMax = Cost;     // (예전 이름) 한 번 쓰는 데 드는 양
         public const string Sister = "sis";
 
         /// <summary>기본 기술 → 궁극기, 주인 (sis = 서진, 동료 id).</summary>

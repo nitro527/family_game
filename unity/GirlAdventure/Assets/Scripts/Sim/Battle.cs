@@ -128,7 +128,6 @@ namespace GirlAdventure.Sim
             if (defs == null || defs.Count == 0 || defs.Count > MaxFoes) throw new ArgumentException("적은 1~3마리");
             P = p;
             foreach (var d in defs) Foes.Add(new Foe(d));
-            Gauge = new int[p.Companions.Count + 1];
             r = rng;
         }
 
@@ -220,7 +219,7 @@ namespace GirlAdventure.Sim
         {
             if (c != Cmd.Run && Thaw(-1)) return new PlayerOutcome { Cmd = c, Target = -1, Ally = -1, Frozen = true };
             var o = ActCore(c, item, target, ally);
-            if (!o.Failed && c != Cmd.Run) { if (Ultimates.IsUlt(c)) Gauge[0] = 0; else AddGauge(-1, Ultimates.GaugeAct); }
+            if (!o.Failed && c != Cmd.Run) { if (Ultimates.IsUlt(c)) Pool -= Ultimates.Cost; else AddGauge(-1, Ultimates.GaugeAct); }
             return o;
         }
 
@@ -551,10 +550,16 @@ namespace GirlAdventure.Sim
         public void NewRound() { Guarding = -1; Barrier = false; }
 
         // ---- 궁극 게이지 (Q-39): 사람마다 (-1 서진 → [0], 동료 i → [i+1]), 전투마다 0 에서
-        public readonly int[] Gauge;
-        public int GaugeOf(int who) => who + 1 >= 0 && who + 1 < Gauge.Length ? Gauge[who + 1] : 0;
-        public bool GaugeFull(int who) => GaugeOf(who) >= Ultimates.GaugeMax;
-        public void AddGauge(int who, int n) { if (who + 1 >= 0 && who + 1 < Gauge.Length) Gauge[who + 1] = Math.Min(Ultimates.GaugeMax, Gauge[who + 1] + n); }
+        /// <summary>공용 궁극 게이지 (0 ~ PoolMax).</summary>
+        public int Pool { get; private set; }
+        /// <summary>(예전 이름) 게이지 — 이제 가족 공용이라 누구든 같은 값.</summary>
+        public int GaugeOf(int who) => Pool;
+        /// <summary>궁극기를 한 번 쓸 만큼 모였나.</summary>
+        public bool GaugeFull(int who) => Pool >= Ultimates.Cost;
+        /// <summary>쓸 수 있는 횟수 (게이지 칸 수).</summary>
+        public int PoolCharges => Pool / Ultimates.Cost;
+        /// <summary>게이지가 찬다 (누가 행동하거나 맞았을 때, 배우지 않아도). who 는 기록용.</summary>
+        public void AddGauge(int who, int n) => Pool = Math.Max(0, Math.Min(Ultimates.PoolMax, Pool + n));
         /// <summary>황금 사자 방패(궁극기): 이번 차례 가족 모두가 받는 피해 반.</summary>
         public bool Barrier { get; private set; }
         /// <summary>반 확률 (궁극 합동 공격).</summary>
@@ -565,7 +570,7 @@ namespace GirlAdventure.Sim
         {
             if (Thaw(i)) return new PlayerOutcome { Cmd = c, Target = -1, Ally = i, Frozen = true };
             var o = MemberActCore(i, c, target);
-            if (!o.Failed) { if (Ultimates.IsUlt(c)) Gauge[i + 1] = 0; else AddGauge(i, Ultimates.GaugeAct); }
+            if (!o.Failed) { if (Ultimates.IsUlt(c)) Pool -= Ultimates.Cost; else AddGauge(i, Ultimates.GaugeAct); }
             return o;
         }
 

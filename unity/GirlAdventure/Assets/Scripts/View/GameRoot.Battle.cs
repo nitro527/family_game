@@ -455,15 +455,15 @@ namespace GirlAdventure.View
         IEnumerator UltReadyHint()
         {
             if (battle == null || battleOver) yield break;
+            if (ultHinted.Contains(0) || !battle.GaugeFull(-1)) yield break;     // 공용 게이지가 처음 100 모였을 때 한 번
+            var names = new List<string>();
             for (int w = -1; w < P.Companions.Count; w++)
-            {
-                if (ultHinted.Contains(w) || !Ultimates.Learned(P, w) || !battle.GaugeFull(w) || (w < 0 ? battle.SisterDown : battle.AllyDown(w))) continue;
-                ultHinted.Add(w);
-                sfx.Play("lvup");
-                RefreshHud();
-                var u = Ultimates.UltOf(P, w).Value;
-                yield return Talk("ult_ready", ("who", P.MemberName(w)), ("skill", GameData.Skill(u).Name), ("where", w < 0 ? "주문" : "명령창"));
-            }
+                if (Ultimates.Learned(P, w) && !(w < 0 ? battle.SisterDown : battle.AllyDown(w))) names.Add(P.MemberName(w));
+            if (names.Count == 0) yield break;
+            ultHinted.Add(0);
+            sfx.Play("lvup");
+            RefreshHud();
+            yield return Talk("ult_ready_pool", ("who", string.Join("·", names)));
         }
 
         IEnumerator MaybeCombo(int a, int target)
