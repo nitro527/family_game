@@ -39,6 +39,9 @@ namespace GirlAdventure.View
         /// </summary>
         static void ReadPad(HashSet<KeyCode> into)
         {
+#if ENABLE_INPUT_SYSTEM
+            if (ReadNewPad(into)) return;                // 새 입력 시스템이 패드를 알면 그쪽 (닌텐도 프로 컨트롤러 버튼 배치를 안다)
+#endif
             float h = 0, v = 0;
             try { h = Input.GetAxisRaw("Horizontal"); v = Input.GetAxisRaw("Vertical"); }
             catch (System.ArgumentException) { }
@@ -65,6 +68,43 @@ namespace GirlAdventure.View
             }
             if (Input.GetKey(KeyCode.JoystickButton3) || Input.GetKey(KeyCode.JoystickButton6)) into.Add(KeyCode.Escape);
         }
+
+#if ENABLE_INPUT_SYSTEM
+        /// <summary>
+        /// 게임패드 (새 입력 시스템, 사용자 2026-10-06 "닌텐도 패드로 되면 좋겠어"): 십자키·왼쪽 스틱 = 방향키.
+        /// 닌텐도(프로 컨트롤러): A(오른쪽) = 확인(Enter·Z), B(아래) = 취소(X), X(위)·+ = 메뉴(Esc).
+        /// 다른 패드(Xbox 등): 아래 = 확인, 오른쪽 = 취소, 위·Start = 메뉴. 패드가 없으면 false (예전 방식으로).
+        /// </summary>
+        static bool ReadNewPad(HashSet<KeyCode> into)
+        {
+            var g = UnityEngine.InputSystem.Gamepad.current;
+            if (g == null) return false;
+            Vector2 d = g.dpad.ReadValue(), s = g.leftStick.ReadValue();
+            Vector2 v = d.sqrMagnitude > .25f ? d : s;
+            if (Mathf.Abs(v.x) >= Mathf.Abs(v.y)) { if (v.x > Dead) into.Add(KeyCode.RightArrow); else if (v.x < -Dead) into.Add(KeyCode.LeftArrow); }
+            else { if (v.y > Dead) into.Add(KeyCode.UpArrow); else if (v.y < -Dead) into.Add(KeyCode.DownArrow); }
+            bool nintendo = IsNintendo(g);
+            var confirm = nintendo ? g.buttonEast : g.buttonSouth;
+            var cancel = nintendo ? g.buttonSouth : g.buttonEast;
+            if (confirm.isPressed) { into.Add(KeyCode.Return); into.Add(KeyCode.Z); }
+            if (cancel.isPressed) into.Add(KeyCode.X);
+            if (g.buttonNorth.isPressed || g.startButton.isPressed) into.Add(KeyCode.Escape);
+            return true;
+        }
+
+        /// <summary>닌텐도 패드인가 (프로 컨트롤러·닌텐도 제조사) — A/B 위치가 Xbox 와 반대.</summary>
+        public static bool IsNintendo(UnityEngine.InputSystem.Gamepad g)
+        {
+            if (g == null) return false;
+            string n = (g.GetType().Name + " " + g.displayName + " " + g.description.manufacturer + " " + g.description.product).ToLowerInvariant();
+            return n.Contains("switch") || n.Contains("nintendo") || n.Contains("pro controller") || n.Contains("joy-con");
+        }
+
+        /// <summary>지금 연결된 패드 이름 (설정 화면 안내용, 없으면 "").</summary>
+        public static string PadName => UnityEngine.InputSystem.Gamepad.current?.displayName ?? "";
+#else
+        public static string PadName => "";
+#endif
 
         public static bool Held(KeyCode k) => Input.GetKey(k) || held.Contains(k) || devNow.Contains(k);
         public static bool Down(KeyCode k) => Input.GetKeyDown(k) || downNow.Contains(k);

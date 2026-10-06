@@ -19,7 +19,8 @@ namespace GirlAdventure.View
         Text chapterLbl;
         Image heroTitleImg, flashImg, cutinArt;
         Text cutinText, endText;
-        Button nextChapterBtn;
+        Button nextChapterBtn, againBtn;
+        int endIndex;                       // 엔딩 화면에서 고른 버튼 (0 = 다음 챕터, 1 = 처음부터 다시) — 키보드·패드로 고른다
         Text endHead;
         float endingShownAt;                // 엔딩 직후 연타로 바로 넘어가지 않게
 
@@ -790,6 +791,7 @@ namespace GirlAdventure.View
             endText.supportRichText = true;
             var again = UIKit.Button(t, "Again", "처음부터 다시", 430, 390, 250, 60, 24, new Color32(150, 110, 255, 255));
             again.onClick.AddListener(ShowTitle);
+            againBtn = again;
             nextChapterBtn = UIKit.Button(t, "Chapter2", "▶ 챕터 2 시작!", 430, 462, 250, 56, 24, new Color32(110, 190, 255, 255));
             nextChapterBtn.onClick.AddListener(StartNextChapter);
             // 무료 에셋 출처 (docs/thirdparty_assets.md)
@@ -808,6 +810,29 @@ namespace GirlAdventure.View
             return tex != null ? Art.FromTexture(tex, new Vector2(.5f, .5f), 100) : endArtDefault;
         }
 
+        /// <summary>엔딩 화면 버튼 고름 표시: 고른 버튼에 ▶ 와 금빛 글자 (키보드·패드 위아래).</summary>
+        void RenderEndingChoice()
+        {
+            bool next = nextChapterBtn.gameObject.activeSelf;
+            var nt = nextChapterBtn.GetComponentInChildren<Text>(); var at = againBtn.GetComponentInChildren<Text>();
+            string nextName = $"챕터 {P.Chapter + 1} 시작!";
+            if (next) { nt.text = (endIndex == 0 ? "▶ " : "") + nextName; nt.color = endIndex == 0 ? (Color)UIKit.Gold : Color.white; }
+            at.text = (endIndex == 1 ? "▶ " : "") + "처음부터 다시"; at.color = endIndex == 1 ? (Color)UIKit.Gold : Color.white;
+        }
+
+        /// <summary>엔딩 화면 키보드·패드: 위아래로 고르고 확인(Enter·Z·Space·패드 A)으로 누른다.</summary>
+        void TickEnding()
+        {
+            bool next = nextChapterBtn.gameObject.activeSelf;
+            if (next && (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.DownArrow))) { endIndex = 1 - endIndex; sfx.Play("select"); RenderEndingChoice(); }
+            if (Time.time - endingShownAt <= 1.5f) return;                    // 엔딩 직후 연타로 바로 넘어가지 않게
+            if (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter) || Keys.Down(KeyCode.Z) || Keys.Down(KeyCode.Space))
+            {
+                if (endIndex == 0 && next) StartNextChapter();
+                else ShowTitle();
+            }
+        }
+
         void ShowEnding()
         {
             hudWin.SetActive(false);
@@ -819,8 +844,10 @@ namespace GirlAdventure.View
             endText.text = FillText(GameData.Talk(ch7 ? "ending_card7" : ch6 ? "ending_card6" : ch5 ? "ending_card5" : ch4 ? "ending_card4" : ch3 ? "ending_card3" : ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
             bool next = P.Chapter < WorldMap.LastChapter;
             nextChapterBtn.gameObject.SetActive(next);
-            if (next) nextChapterBtn.GetComponentInChildren<Text>().text = $"▶ 챕터 {P.Chapter + 1} 시작!";
+            if (next) nextChapterBtn.GetComponentInChildren<Text>().text = $"챕터 {P.Chapter + 1} 시작!";
             endingShownAt = Time.time;
+            endIndex = next ? 0 : 1;
+            RenderEndingChoice();
             endingPanel.SetActive(true);
         }
 

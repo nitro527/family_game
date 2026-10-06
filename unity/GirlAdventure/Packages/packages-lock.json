@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "com.unity.inputsystem": {
+      "version": "file:com.unity.inputsystem-1.19.0.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      }
+    },
     "com.unity.multiplayer.center": {
       "version": "1.0.1",
       "depth": 0,

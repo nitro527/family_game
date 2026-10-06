@@ -81,7 +81,7 @@ namespace GirlAdventure.View
                     break;
                 case Mode.Field: TickField(); break;
                 case Mode.Ending:
-                    if (P.Chapter < WorldMap.LastChapter && Time.time - endingShownAt > 1.5f && (Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter) || Keys.Down(KeyCode.Z))) StartNextChapter();
+                    TickEnding();
                     break;
                 case Mode.Battle: TickBattle(); break;
             }
