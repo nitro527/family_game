@@ -17,7 +17,7 @@ namespace GirlAdventure.View
         GameObject statusPanel;
         Text stHead, stLeftVals, stMid, stRight, stExpText;
         Image stExpBar, stHpBar, stMpBar, stFace;
-        bool statusOpen, statusClicked, statusUse, statusGear, statusOptions, statusBook;
+        bool statusOpen, statusClicked, statusUse, statusGear, statusOptions, statusBook, statusTreasure;
 
         // 대화창(y 398~)과 겹치지 않게 위쪽에 둔다 — 도구를 쓸 때 대화창이 떠도 능력치가 가려지지 않는다.
         // 세 칸: 왼쪽 능력치 / 가운데 장비·주문 / 오른쪽 가방·지금 할 일
@@ -62,15 +62,17 @@ namespace GirlAdventure.View
             stMid.supportRichText = true;
             stRight = UIKit.Label(win, "Right", "", RightX, 20, StW - RightX - 20, StH - 78, 19, TextAnchor.UpperLeft);
             stRight.supportRichText = true;
-            var use = UIKit.Button(win, "UseItem", "도구 쓰기", MidX, StH - 54, 118, 40, 19, new Color32(150, 200, 255, 255));
+            var use = UIKit.Button(win, "UseItem", "도구 쓰기", MidX, StH - 54, 104, 40, 17, new Color32(150, 200, 255, 255));
             use.onClick.AddListener(() => statusUse = true);
-            var gear = UIKit.Button(win, "Gear", "장비 바꾸기", MidX + 126, StH - 54, 130, 40, 19, new Color32(255, 214, 120, 255));
+            var gear = UIKit.Button(win, "Gear", "장비 바꾸기", MidX + 110, StH - 54, 116, 40, 17, new Color32(255, 214, 120, 255));
             gear.onClick.AddListener(() => statusGear = true);
-            var book = UIKit.Button(win, "Book", "도감", MidX + 264, StH - 54, 80, 40, 19, new Color32(150, 230, 160, 255));
+            var book = UIKit.Button(win, "Book", "도감", MidX + 232, StH - 54, 64, 40, 17, new Color32(150, 230, 160, 255));
             book.onClick.AddListener(() => statusBook = true);
-            var opt = UIKit.Button(win, "Options", "설정", MidX + 352, StH - 54, 76, 40, 19, new Color32(190, 190, 215, 255));
+            var treasure = UIKit.Button(win, "Treasure", "보물", MidX + 302, StH - 54, 64, 40, 17, new Color32(242, 196, 67, 255));   // 보물 모음 (마우스로도)
+            treasure.onClick.AddListener(() => statusTreasure = true);
+            var opt = UIKit.Button(win, "Options", "설정", MidX + 372, StH - 54, 60, 40, 17, new Color32(190, 190, 215, 255));
             opt.onClick.AddListener(() => statusOptions = true);
-            UIKit.Label(win, "Close", "Z 메뉴\nEsc 닫기", MidX + 436, StH - 56, StW - MidX - 452, 48, 14, TextAnchor.MiddleRight, UIKit.Dim);
+            UIKit.Label(win, "Close", "Z 메뉴\nEsc 닫기", MidX + 438, StH - 56, StW - MidX - 448, 48, 14, TextAnchor.MiddleRight, UIKit.Dim);
             statusPanel.SetActive(false);
         }
 
@@ -348,11 +350,11 @@ namespace GirlAdventure.View
             RenderStatus();
             statusPanel.SetActive(true);
             sfx.Play("select");
-            statusClicked = statusUse = statusGear = statusOptions = statusBook = false;
+            statusClicked = statusUse = statusGear = statusOptions = statusBook = statusTreasure = false;
             yield return null;                  // 여는 입력으로 바로 닫히지 않게
             while (true)
             {
-                if (!statusUse && !statusGear && !statusOptions && !statusBook && ConfirmDown())
+                if (!statusUse && !statusGear && !statusOptions && !statusBook && !statusTreasure && ConfirmDown())
                 {
                     // 키보드·패드: 작은 메뉴에서 고른다 (버튼은 바로)
                     ShowMessageWindow(true);
@@ -362,11 +364,20 @@ namespace GirlAdventure.View
                     yield return Choose("도구 쓰기", "장비 바꾸기", "도감", $"보물 모음  <color=#F2C443>{Treasures.Found(P)}/{Treasures.All().Count}</color>", "설정", "닫기");
                     HideMessage();
                     if (choicePicked == 5) break;
-                    if (choicePicked == 3) { yield return TreasureRoutine(); HideMessage(); statusClicked = false; yield return null; continue; }
+                    statusTreasure = choicePicked == 3;
                     statusUse = choicePicked == 0;
                     statusGear = choicePicked == 1;
                     statusBook = choicePicked == 2;
                     statusOptions = choicePicked == 4;
+                }
+                if (statusTreasure)
+                {
+                    statusTreasure = false;
+                    yield return TreasureRoutine();
+                    HideMessage();
+                    statusClicked = false;
+                    yield return null;
+                    continue;
                 }
                 if (statusBook)
                 {

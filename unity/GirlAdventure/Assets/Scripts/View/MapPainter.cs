@@ -377,6 +377,7 @@ namespace GirlAdventure.View
                         if (tiled) AutoTile(R, t.Rock, m, "R", x, y);
                         else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44"));
                     }
+            Scatter(R, m, ".", new[] { "dec_sandflower", "dec_sandrocks", "dec_shrub" }, .05f, 208);        // 바닥 장식 (마을 모래밭)
             TownArch(R, WorldMap.TownExit.x * T, WorldMap.TownExit.y * T);
             for (int i = 0; i < WorldMap.TownHouses.Length; i++)
             {
@@ -608,6 +609,7 @@ namespace GirlAdventure.View
                     }
                     R.Blend(px, py, col);
                 }
+            Scatter(R, m, ".", new[] { "dec_bookpile", "dec_scroll", "dec_candle", "dec_spellbook" }, .06f, 207);   // 바닥 장식: 흩어진 책·두루마리·촛대 (넓은 마루가 텅 비어 보이던 것)
             // 소품 (위에서 아래로 — 아래 줄 소품이 윗줄을 덮는다)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -846,6 +848,7 @@ namespace GirlAdventure.View
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 75));
+            Scatter(R, m, ".", new[] { "dec_snowbush", "dec_iceshard" }, .05f, 209);                       // 바닥 장식 (마을 눈밭)
             TownArch(R, WorldMap.SnowTownExit.x * T, WorldMap.SnowTownExit.y * T);
             for (int i = 0; i < WorldMap.SnowTownHouses.Length; i++)
             {
@@ -1016,6 +1019,7 @@ namespace GirlAdventure.View
                         if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "R", x, y);
                         else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640"));
                     }
+            Scatter(R, m, ".", new[] { "dec_obsidian", "dec_vent" }, .05f, 210);                           // 바닥 장식 (마을 화산재 땅)
             TownArch(R, WorldMap.LavaTownExit.x * T, WorldMap.LavaTownExit.y * T);
             for (int i = 0; i < WorldMap.LavaTownHouses.Length; i++)
             {
