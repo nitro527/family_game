@@ -364,6 +364,9 @@ namespace GirlAdventure.Sim
             m.Set(CaveSign.x, CaveSign.y, 'S');
             m.Set(CaveShop.x, CaveShop.y, 'M');
             m.Set(Chest.x, Chest.y, 'H');
+            m.Fill(22, 19, 24, 20, '_');                                     // 입구 통로 오른쪽 끝 바위벽 안 숨은 굴 (2026-10-09 숨은 길)
+            m.Set(21, 19, '?');                                             // 벽처럼 보이지만 지나갈 수 있는 칸
+            m.Set(23, 19, 'm');                                             // 빛나는 버섯 (숨겨진 이벤트)
             m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));
             m.PlaceSecretHole(CaveSecretWish, "_");
             return m;
@@ -433,6 +436,9 @@ namespace GirlAdventure.Sim
             m.Fill(29, 3, 34, 5, '.');
             m.Fill(32, 3, 34, 4, 'K');                                     // 책 더미 옥좌 (그림은 View)
             m.Set(LibBoss.x, LibBoss.y, 'B');
+            m.Fill(4, 12, 4, 15, 'q'); m.Fill(1, 16, 3, 16, 'q');            // 왼쪽 아래 구석 숨은 독서 공간 (2026-10-09 숨은 길): 책장으로 둘러싸기
+            m.Set(4, 14, '?');                                              // 지나갈 수 있는 책장 (바로 바깥 (5,13) 은 책상이라 한 칸 아래)
+            m.Set(2, 13, 'm');                                              // 빛나는 책 받침대 (숨겨진 이벤트)
             m.Holes = Sim.Holes.Place(m, (x, y) => m.Set(x, y, 'o'));  // 수상한 구멍 (서진이 소원, 책장 사이 바닥)
             // 입구 열람실 (안전) + 회복 받침대 + 표지판 + 사서 가게
             m.Fill(1, 17, 13, 22, ':');

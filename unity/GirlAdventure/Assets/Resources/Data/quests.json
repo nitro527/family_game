@@ -6,7 +6,7 @@
     {"Id": "bells", "Chapter": 3, "Giver": "cowkid", "Map": "desert", "Wish": "6,10;22,6;30,14", "Item": "낙타 방울", "Reward": "desert_rose"},
     {"Id": "lavastones", "Chapter": 4, "Giver": "smith", "Map": "lava", "Wish": "8,8;22,16;28,4", "Item": "식은 용암석", "Reward": "flame_bangle"},
     {"Id": "buttons", "Chapter": 5, "Giver": "snow_kid", "Map": "snow", "Wish": "6,6;14,16;30,10", "Item": "눈사람 단추", "Reward": "snow_mittens"},
-    {"Id": "books", "Chapter": 6, "Giver": "librarian", "Map": "library", "Wish": "4,13;14,9;30,13", "Item": "흩어진 그림책", "Reward": "magic_bookmark"},
+    {"Id": "books", "Chapter": 6, "Giver": "librarian", "Map": "library", "Wish": "6,14;14,9;30,13", "Item": "흩어진 그림책", "Reward": "magic_bookmark"},
     {"Id": "acorns", "Chapter": 7, "Giver": "acorn", "Map": "forest", "Wish": "6,9;24,9;30,14", "Item": "숨은 도토리", "Reward": "fairy_wings"}
   ],
   "Secrets": [
@@ -21,6 +21,8 @@
     {"Id": "diary", "Map": "library", "Tile": "q", "Wish": "33,11", "Reward": "old_diary", "Talk": "secret_diary"},
     {"Id": "fairyring", "Map": "forest", "Tile": "m", "Wish": "7,5", "Reward": "fairy_ring", "Talk": "secret_fairyring"},
     {"Id": "iceflower", "Map": "snow", "Tile": "m", "Wish": "9,13", "Reward": "ice_earring", "Talk": "secret_iceflower"},
+    {"Id": "glowshroom", "Map": "cave", "Tile": "m", "Wish": "23,19", "Reward": "glow_lantern", "Talk": "secret_glowshroom"},
+    {"Id": "readingnook", "Map": "library", "Tile": "m", "Wish": "2,13", "Reward": "magic_quill", "Talk": "secret_readingnook"},
     {"Id": "goldacorn", "Map": "forest", "Tile": "K", "Wish": "31,5", "Reward": "golden_acorn", "Talk": "secret_goldacorn", "Need": "boss7"}
   ],
   "Events": [

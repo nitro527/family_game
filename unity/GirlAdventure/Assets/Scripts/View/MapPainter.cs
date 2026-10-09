@@ -614,7 +614,8 @@ namespace GirlAdventure.View
                 {
                     char c = m.At(x, y);
                     float X = x * T, Y = y * T;
-                    if (c == 'q') { if (!Prop(R, "bookshelf", X + T / 2f, Y + T + 2)) { R.Rect(X + 2, Y - 20, T - 4, T + 20, H("#5A3A22")); R.Rect(X + 5, Y - 16, T - 10, T + 10, H("#8A2A2A")); } }
+                    if (c == 'm') { R.Ellipse(X + T / 2f, Y + T / 2f + 6, 24, 12, H("#FFE9A0", 130)); Prop(R, "lectern", X + T / 2f, Y + T - 2); }   // 숨은 독서 공간의 빛나는 책 받침대
+                    else if (c == 'q' || c == '?') { if (!Prop(R, "bookshelf", X + T / 2f, Y + T + 2)) { R.Rect(X + 2, Y - 20, T - 4, T + 20, H("#5A3A22")); R.Rect(X + 5, Y - 16, T - 10, T + 10, H("#8A2A2A")); } }
                     else if (c == 'a') { R.Ellipse(X + T / 2 + 3, Y + T - 4, T / 2, 7, new Color32(0, 0, 0, 60)); if (!Prop(R, "libtable", X + T / 2f, Y + T - 2)) R.Ellipse(X + T / 2, Y + 22, T / 2 - 2, 14, H("#9A6238")); }
                     else if (c == 'O') { if (!Prop(R, "magiccircle", X + T / 2f, Y + T / 2f + 54)) { R.Ellipse(X + T / 2, Y + T / 2, 50, 40, H("#E8C860", 120)); } }
                     else if (c == 'F') { R.Ellipse(X + 26, Y + 44, 18, 5, new Color32(0, 0, 0, 70)); if (!Prop(R, "lectern", X + T / 2f, Y + T - 2)) Fountain(R, X, Y, false); }
@@ -1608,7 +1609,7 @@ namespace GirlAdventure.View
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
-            var floor = Mask(m, "_:FSHDBrwCMolc");
+            var floor = Mask(m, "_:FSHDBrwCMolcm");                         // '?'(숨은 길)는 벽처럼 그린다
             var safe = Mask(m, ":FSM");
             var water = Mask(m, "w");
             var deep = Erode(water);
@@ -1703,6 +1704,7 @@ namespace GirlAdventure.View
 
             Fountain(R, m.Spring.x * T, m.Spring.y * T, true);
             Sign(R, m.SignPos.x * T, m.SignPos.y * T);
+            SecretGlints(R, m, "dec_glowshroom", "#9AF0FF");                  // 숨은 굴의 빛나는 버섯
             if (m.Kind != MapKind.Cave) return R;           // 아래는 챕터 2 동굴에만 있는 것
             CandyShop(R, WorldMap.CaveShop.x * T, WorldMap.CaveShop.y * T);
             Painter.Chest(R, WorldMap.Chest.x * T, WorldMap.Chest.y * T, false);
