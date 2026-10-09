@@ -96,6 +96,7 @@ PROPS = [
     ("dec_iceshard", "A tiny cluster of light blue ice crystals sticking out of the snow, sparkling.", 26, 2),
     ("dec_glowshroom", "A tiny cluster of three glowing blue cave mushrooms with soft light.", 26, 2),
     ("dec_cavepebbles", "A tiny cluster of grey cave pebbles and a small purple crystal shard.", 28, 2),
+    ("cage", "One small square iron jail cage with thick dark vertical bars and a little padlocked door in the front, a flat iron roof and an iron floor plate, completely empty inside, you can see through the bars.", 52, 2),
     ("dec_bookpile", "A small messy pile of four old hardcover books in red, blue and green, one lying open.", 30, 2),
     ("dec_scroll", "One rolled-up old parchment scroll tied with a red ribbon and a loose open paper page next to it.", 28, 2),
     ("dec_candle", "One short brass candle holder with a lit white candle and a little drip of wax, warm glow.", 22, 2),

@@ -10,7 +10,7 @@ namespace GirlAdventure.Sim
     /// 초원 — '.' 풀밭  ',' 수풀(인카운트↑)  'f' 꽃  '=' 길  'b' 다리  'w' 물  'T' 나무
     ///        'F' 회복 샘물  'S' 표지판  'C' 성벽  'G' 성문(킹 젤리)  'N' 마을 사람(Npcs.Place)
     /// 동굴 — '#' 바위벽  '_' 동굴 바닥(인카운트)  ':' 입구 바닥(안전)  'r' 바위기둥  'w' 지하 샘
-    ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'M' 사탕 가게
+    ///        'F' 동굴 샘물  'S' 표지판  'H' 보물상자  'C' 기지 성벽  'D' 기지 문  'B' 젤리 장군 자리  'J' 철창(지훈)  'M' 사탕 가게
     ///        (보물상자 바로 옆 GuardSpot 에는 바위 대장 젤리가 버티고 있다 — 타일이 아니라 Quest 규칙)
     ///        초원의 'V' = 별빛 마을 입구 (밟으면 마을로)
     ///        초원·동굴 'o' = 수상한 구멍 (부딪혀 들여다보면 사탕 또는 2단 괴물, Holes)
@@ -37,7 +37,7 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19);
         // 동굴 (챕터 2)
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
-                                                    Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3),
+                                                    Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3), BroCage = (30, 3),
                                                     CaveShop = (8, 17), GuardSpot = (2, 8);
         // 별빛 마을: 초원 시작 공터 위쪽 입구(VillageGate) ↔ 마을 아래쪽 출구(VillageExit)
         public static readonly (int x, int y) VillageGate = (10, 2), VillageStart = (18, 19), VillageExit = (18, 20),
@@ -113,7 +113,7 @@ namespace GirlAdventure.Sim
             int inn = town == MapKind.Village ? InnHouse : town == MapKind.Oasis ? TownInn : town == MapKind.LavaTown ? LavaTownInn : SnowTownInn;
             return room - first == inn;
         }
-        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQZOvm";
+        const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQZOvmJ";
         // 집 안 (P-5): 방 하나 (바닥 13..21 × 8..14), 아래 벽 가운데 문
         public static readonly (int x, int y) HomeDoor = (17, 15), HomeStart = (17, 14);
         /// <summary>그 마을의 집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호(AllHouses), 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
@@ -360,6 +360,7 @@ namespace GirlAdventure.Sim
             m.Set(BaseDoor.x, BaseDoor.y - 1, ':');   // 두 칸 높이 성문의 안쪽 칸
             foreach (var (x, y) in new[] { (25, 4), (31, 4) }) m.Set(x, y, 'r');
             m.Set(BossSpot.x, BossSpot.y, 'B');
+            m.Set(BroCage.x, BroCage.y, 'J');                               // 왕좌 옆 작은 철창 (지훈이 갇혀 있던 곳, 2026-10-09)
             m.Set(CaveSpring.x, CaveSpring.y, 'F');
             m.Set(CaveSign.x, CaveSign.y, 'S');
             m.Set(CaveShop.x, CaveShop.y, 'M');

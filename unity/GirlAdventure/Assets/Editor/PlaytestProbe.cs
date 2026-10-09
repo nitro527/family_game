@@ -1024,6 +1024,9 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.MessageText.Contains("철창 안에 있던") || G.Current == GameRoot.Mode.Ending)) yield return x;
             yield return .8f;
             Shot("bro_join_talk");
+            foreach (var x in SkipTalk(() => G.MessageText.Contains("뛰어나왔다") || G.CutinShowing != null || G.Current == GameRoot.Mode.Ending)) yield return x;
+            yield return .6f;
+            Shot("bro_cage_open");
             foreach (var x in SkipTalk(() => G.CutinShowing != null || G.Current == GameRoot.Mode.Ending)) yield return x;
             yield return .9f;
             Shot("bro_join_cutin");

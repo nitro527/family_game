@@ -320,6 +320,14 @@ namespace GirlAdventure.View
         {
             if (!Quest.TryJoinBrother(P)) yield break;
             yield return Talk(late ? "bro_join_late" : "bro_join");
+            if (!late)
+            {
+                sfx.Play("unlock");                     // 철컥! 문이 열리고 지훈이 나와 누나 옆에 선다
+                RefreshBroCage();
+                ResetBrother();
+                UpdatePlayerVisual();
+                yield return Talk("bro_join_out");
+            }
             yield return CutinRoutine(Art.UI("Boy/hero"), $"용사 {PlayerState.BrotherName} 합류!", "lvup");
             RefreshHud();
             yield return Talk("bro_joined");

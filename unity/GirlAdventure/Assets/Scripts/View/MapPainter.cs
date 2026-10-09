@@ -1613,7 +1613,7 @@ namespace GirlAdventure.View
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
-            var floor = Mask(m, "_:FSHDBrwCMolcm");                         // '?'(숨은 길)는 벽처럼 그린다
+            var floor = Mask(m, "_:FSHDBrwCMolcmJ");                         // '?'(숨은 길)는 벽처럼 그린다
             var safe = Mask(m, ":FSM");
             var water = Mask(m, "w");
             var deep = Erode(water);

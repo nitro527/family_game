@@ -547,8 +547,14 @@
     { "Id": "bro_join", "Lines": [
       { "Text": "철창 안에 있던 건… 동생 {bro:이었/였}다!", "Face": "surprised", "Hold": 1.4 },
       { "Text": "누나! 젤리들이 나 잡아갔어… 무서웠어.", "Face": "bro_cry", "Hold": 1.4 },
-      { "Text": "{name:은/는} 별 지팡이로 자물쇠를 톡 건드렸다. 철컥! 철창 문이 열렸다.", "Face": "smile", "Hold": 1.4 },
+      { "Text": "{name:은/는} 별 지팡이로 자물쇠를 톡 건드렸다. 철컥!", "Face": "smile", "Hold": 1.4 } ] },
+    { "Id": "bro_join_out", "Lines": [
+      { "Text": "철창 문이 활짝 열리고 {bro:이/가} 폴짝 뛰어나왔다!", "Face": "laugh", "Hold": 1.3 },
       { "Text": "이제 나도 같이 갈래! 나 용사야! 젤리 다 혼내 줄 거야!", "Face": "bro_determined", "Hold": 1.5 } ] },
+    { "Id": "bro_cage_locked", "Lines": [
+      { "Text": "작은 철창 안에서 누군가 웅크리고 훌쩍이고 있다… 자물쇠가 꽁꽁 잠겼다. 왕좌의 대장을 먼저 혼내 주자!", "Face": "surprised", "Hold": 1.4 } ] },
+    { "Id": "bro_cage_empty", "Lines": [
+      { "Text": "{bro:이/가} 갇혀 있던 철창. 이제 텅 비었다!", "Face": "smile", "Hold": 1.0 } ] },
     { "Id": "bro_join_late", "Lines": [
       { "Text": "동굴에서 구해 준 동생 {bro:이/가} 졸졸 따라왔다. 누나, 나도 같이 가!", "Face": "bro_laugh", "Hold": 1.5 } ] },
     { "Id": "bro_joined", "Lines": [
