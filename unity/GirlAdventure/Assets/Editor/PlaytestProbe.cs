@@ -413,11 +413,24 @@ namespace GirlAdventure.EditorTools
             yield return .3f;
             Shot("status_after_gear");
             Expect("status still open after gear", G.StatusOpen);
-            // 설정: 메뉴 → 설정 → 효과음·글자 속도·번쩍임을 한 단계씩 바꾸고, 끝나면 처음 값으로 되돌린다
+            // 보물 모음: 메뉴 → 보물 모음 (특별 아이템 목록, 못 찾은 건 ???)
             Keys.Press(KeyCode.Return);
             yield return (Func<bool>)(() => G.ChoiceOpen);
             yield return .2f;
             for (int k = 0; k < 3; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen && G.MessageText.Contains("보물 모음"));
+            yield return .3f;
+            Shot("status_treasures");
+            Expect("treasure collection list opens", G.MessageText.Contains("보물 모음"), G.MessageText);
+            Keys.Press(KeyCode.Escape);
+            yield return (Func<bool>)(() => G.MessageText == "");
+            yield return .3f;
+            // 설정: 메뉴 → 설정 → 효과음·글자 속도·번쩍임을 한 단계씩 바꾸고, 끝나면 처음 값으로 되돌린다
+            Keys.Press(KeyCode.Return);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            yield return .2f;
+            for (int k = 0; k < 4; k++) { Keys.Press(KeyCode.DownArrow); yield return .15f; }
             Keys.Press(KeyCode.Return);                // 설정
             yield return .3f;
             yield return (Func<bool>)(() => G.ChoiceOpen);

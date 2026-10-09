@@ -229,6 +229,25 @@ namespace GirlAdventure.View
                  + (pad != "" ? $"\n<size=16><color=#9AA3C7>연결된 패드: {pad}</color></size>" : "");
         }
 
+        /// <summary>보물 모음: 찾은 특별 아이템은 ★ 이름·효과, 못 찾은 건 ??? 와 챕터 힌트. 아무거나 고르면 닫힌다.</summary>
+        IEnumerator TreasureRoutine()
+        {
+            var all = Treasures.All();
+            var lines = new List<string>();
+            foreach (var d in all)
+            {
+                int ch = Treasures.ChapterOf(d.Id);
+                lines.Add(Treasures.Has(P, d.Id) ? $"<color=#FFE27A>★</color> {d.Name} <size=15><color=#9AA3C7>{Equipment.BonusText(d.Id)}</color></size>"
+                                                 : $"<color=#7A80A0>??? <size=15>챕터 {ch} 어딘가</size></color>");
+            }
+            lines.Add("닫기");
+            ShowMessageWindow(true);
+            SetFace("laugh");
+            msgText.text = $"보물 모음 {Treasures.Found(P)}/{all.Count} — 부탁·숨은 장소·보물상자에서 찾아요!";
+            choiceIndex = 0;
+            yield return Choose(lines.ToArray());
+        }
+
         IEnumerator OptionsRoutine()
         {
             choiceIndex = 0;
@@ -340,13 +359,14 @@ namespace GirlAdventure.View
                     SetFace("smile");
                     msgText.text = "무엇을 할까?";
                     choiceIndex = 0;
-                    yield return Choose("도구 쓰기", "장비 바꾸기", "도감", "설정", "닫기");
+                    yield return Choose("도구 쓰기", "장비 바꾸기", "도감", $"보물 모음  <color=#F2C443>{Treasures.Found(P)}/{Treasures.All().Count}</color>", "설정", "닫기");
                     HideMessage();
-                    if (choicePicked == 4) break;
+                    if (choicePicked == 5) break;
+                    if (choicePicked == 3) { yield return TreasureRoutine(); HideMessage(); statusClicked = false; yield return null; continue; }
                     statusUse = choicePicked == 0;
                     statusGear = choicePicked == 1;
                     statusBook = choicePicked == 2;
-                    statusOptions = choicePicked == 3;
+                    statusOptions = choicePicked == 4;
                 }
                 if (statusBook)
                 {

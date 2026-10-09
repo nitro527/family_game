@@ -287,6 +287,7 @@ namespace GirlAdventure.Sim
         public static string ItemName(string id) => items.TryGetValue(id, out var it) ? it.Name : id;
 
         public static bool HasItemDef(string id) => items.ContainsKey(id);
+        public static IEnumerable<ItemDef> AllItems => items.Values;
 
         public static ItemDef Item(string id) => id != null && items.TryGetValue(id, out var it) ? it : null;
 

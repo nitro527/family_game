@@ -1353,6 +1353,9 @@ namespace GirlAdventure.EditorTools
                 if (Npcs.TalkId(npc, np) == npc.Talk && (Npcs.TalkIdTurn(npc, np, 0) != npc.Talk || Npcs.TalkIdTurn(npc, np, 1) != npc.More[0] || Npcs.TalkIdTurn(npc, np, npc.More.Length + 1) != npc.Talk)) moreBad += npc.Id + " ";
             }
             Check("NPC talk variety: rotating extra lines exist and cycle", moreBad == "", moreBad);
+            var tr = Treasures.All(); string trBad = "";                 // 보물 모음: 모든 특별 아이템이 어느 챕터인지 안다
+            foreach (var d in tr) if (Treasures.ChapterOf(d.Id) < 1) trBad += d.Id + " ";
+            Check("treasure collection: every special item has a chapter", tr.Count >= 20 && trBad == "", trBad + " count " + tr.Count);
             Check("G-3 pots: two per house, reachable, gift only the first look, varied", pots, string.Join(",", kinds));
             Check("G-4 quests: 7 find quests + 7 secrets, spots reachable, accept→find→reward flow, hidden objects exist", Quests.All.Count >= 7 && Quests.AllSecrets.Count >= 7 && bad == "", bad);
         }
