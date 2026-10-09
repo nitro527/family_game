@@ -37,7 +37,7 @@ namespace GirlAdventure.Sim
         public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19);
         // 동굴 (챕터 2)
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
-                                                    Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3), BroCage = (30, 3),
+                                                    Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3), BroCage = (26, 3),
                                                     CaveShop = (8, 17), GuardSpot = (2, 8);
         // 별빛 마을: 초원 시작 공터 위쪽 입구(VillageGate) ↔ 마을 아래쪽 출구(VillageExit)
         public static readonly (int x, int y) VillageGate = (10, 2), VillageStart = (18, 19), VillageExit = (18, 20),
