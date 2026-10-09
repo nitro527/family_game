@@ -1169,6 +1169,7 @@ namespace GirlAdventure.View
             {
                 P.Boss7Down = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return Chapter7ClearRoutine();
                 yield break;
             }
@@ -1176,6 +1177,7 @@ namespace GirlAdventure.View
             {
                 P.Boss6Down = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return Chapter6ClearRoutine();
                 yield break;
             }
@@ -1183,6 +1185,7 @@ namespace GirlAdventure.View
             {
                 P.Boss5Down = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return Chapter5ClearRoutine();
                 yield break;
             }
@@ -1190,6 +1193,7 @@ namespace GirlAdventure.View
             {
                 P.Boss4Down = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return Chapter4ClearRoutine();
                 yield break;
             }
@@ -1197,6 +1201,7 @@ namespace GirlAdventure.View
             {
                 P.Boss3Down = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return Chapter3ClearRoutine();
                 yield break;
             }
@@ -1204,6 +1209,7 @@ namespace GirlAdventure.View
             {
                 P.Boss2Down = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return Chapter2ClearRoutine();
                 yield break;
             }
@@ -1211,6 +1217,7 @@ namespace GirlAdventure.View
             {
                 P.BossDown = true;
                 LeaveBattleStage();
+                ShowFieldBehindTalk();
                 yield return EndingRoutine();
                 yield break;
             }
@@ -1243,6 +1250,15 @@ namespace GirlAdventure.View
             HideMessage();
             if (guardRollPending) yield return GuardRollAway();
             busy = false;
+        }
+
+        /// <summary>보스를 이긴 뒤 끝 대사 동안 필드가 보이게 (카메라가 전투 무대에 남아 화면이 까맣던 것): 가족이 보스 자리에 서 있고, 바뀐 세상(물 찬 우물 등)이 보인다.</summary>
+        void ShowFieldBehindTalk()
+        {
+            ApplyMap();
+            RefreshQuestProps();
+            ResetBrother();
+            UpdatePlayerVisual();
         }
 
         void LeaveBattleStage()
