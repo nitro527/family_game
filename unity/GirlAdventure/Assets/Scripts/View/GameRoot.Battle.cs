@@ -1075,7 +1075,14 @@ namespace GirlAdventure.View
             }
             movingFoe = i;
             StartMove(d.Move);
-            sfx.Play(d.Shape == "skeleton" ? "creak" : "mv_" + moveName);    // 모션마다 다른 소리 (해골은 삐거덕)
+            // 걸음새에 맞는 공격 모습 (2026-10-10): 날짐승은 하늘에서 내리꽂기, 유령·책은 스르륵 사라졌다 나타나기, 벌레는 지그재그 돌진
+            if (d.Move == "hop" || d.Move == "tackle")
+            {
+                string g = MobGait(d);
+                string alt = g == "fly" ? "swoop" : g == "float" ? "phase" : g == "scuttle" ? "zigzag" : null;
+                if (alt != null) { moveName = alt; moveDur = alt == "phase" ? .8f : .7f; }
+            }
+            sfx.Play(d.Shape == "skeleton" ? "creak" : moveName == "swoop" ? "mv_charge" : moveName == "phase" ? "mv_shard" : moveName == "zigzag" ? "mv_spin" : "mv_" + moveName);    // 모션마다 다른 소리 (해골은 삐거덕)
             if (moveName == "shard") StartCoroutine(ShardVolley(d));
             if (e.Special == "charged") yield return Talk("foe_charged", ("enemy", FoeName(i)));
             else yield return Talk("enemy_attack", ("enemy", FoeName(i)), ("attack", d.Attack ?? "공격"));
@@ -1453,6 +1460,16 @@ namespace GirlAdventure.View
                     float u = (p - .35f) / .65f;
                     return new Vector4(.7f * (1 - u) - 3f * Mathf.Sin(u * Mathf.PI), 0, 0, -10 * Mathf.Sin(u * Mathf.PI));
                 }
+                case "swoop":      // 하늘 높이 솟았다가 비스듬히 내리꽂기
+                {
+                    float up = p < .4f ? Mathf.Sin(p / .4f * Mathf.PI * .5f) * 2.2f : 2.2f * (1 - (p - .4f) / .6f) - Mathf.Sin((p - .4f) / .6f * Mathf.PI) * .6f;
+                    float fwd = p < .4f ? .5f * (p / .4f) : .5f - 3.2f * Mathf.Sin((p - .4f) / .6f * Mathf.PI);
+                    return new Vector4(fwd, up, 0, p < .4f ? 15 * (p / .4f) : -35 * Mathf.Sin((p - .4f) / .6f * Mathf.PI));
+                }
+                case "phase":      // 스르륵 옆으로 미끄러져 다가와 휙 (작아졌다 커지며 흔들)
+                    return new Vector4(-s * 2.4f + Mathf.Sin(p * Mathf.PI * 6) * .15f, Mathf.Sin(p * Mathf.PI * 2) * .4f, -.25f * s, Mathf.Sin(p * Mathf.PI * 4) * 12);
+                case "zigzag":     // 바닥에 붙어 지그재그로 다다닥
+                    return new Vector4(-s * 2.2f, Mathf.Abs(Mathf.Sin(p * Mathf.PI * 5)) * .25f - .05f, .06f, Mathf.Sin(p * Mathf.PI * 10) * 10);
                 default:           // tackle: 몸통 박치기
                     return new Vector4(-s * 1.3f, 0, 0, 0);
             }
