@@ -39,6 +39,8 @@
 - **D. 테스트 정리 (2026-10-10 완료)**: SmokeTest 2,950줄 → 핵심(680) + Chapters·Battle·Data·Save partial 파일. 검사 305개 그대로.
 
 ## 다음에 하면 좋은 것
-- 전투 연출(GameRoot.Battle 1,700줄)을 "명령 고르기 / 연출 재생 / HUD" 부품으로
 - 퀘스트·이벤트 루틴(Quests·Holes·Npcs)의 공통 "대사 → 연출 → 보상" 흐름을 하나로
 - 챕터 표·맵 종류 표를 JSON 으로 (지금은 C# 표 — 좌표가 WorldMap 코드에 묶여 있어서)
+- **E. 전투 연출 정리 (2026-10-11 완료)**: GameRoot.Battle 1,640줄 → Battle(뼈대 540)·BattleTurns(우리 편 차례)·BattleEnemy(적 차례·기믹·상태 이상)·BattleHud(HP 막대·이름표)·BattleFx(이펙트).
+  순수 계산 부품: `MonsterMotion`(필드 걸음새·전투 등장/공격 모션·걸음새별 공격 모습·소리), `BattleLayout`(인원수별 자리·크기). 스모크 BattlePresentationTests 추가,
+  TownTests 안에서 이어 부르던 테스트 35개를 RunAll 로. 프로브·빌드 통과.

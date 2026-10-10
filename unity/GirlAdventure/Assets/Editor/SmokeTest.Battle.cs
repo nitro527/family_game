@@ -750,5 +750,28 @@ namespace GirlAdventure.EditorTools
             Check("timid mob keeps away", hit2 == null && far >= 4, $"maxDist={far}");
             Check("timid levels", FieldMonsters.TimidLevel(MapKind.Field) > 5 && FieldMonsters.TimidLevel(MapKind.Cave) > 8);
         }
+
+        /// <summary>전투 연출 계산 (BattleLayout·MonsterMotion — 화면 없이 확인): 자리가 겹치지 않고 명령창(x 630~)을 가리지 않는지, 걸음새·공격 모습·소리.</summary>
+        static void BattlePresentationTests()
+        {
+            bool layoutOk = true;
+            for (int allies = 0; allies <= 3; allies++)
+            {
+                var xs = new List<float> { BattleLayout.HeroX(allies) };
+                for (int a = 0; a < allies; a++) xs.Add(BattleLayout.AllyX(allies, a));
+                for (int i = 0; i < xs.Count; i++) for (int j = i + 1; j < xs.Count; j++) layoutOk &= System.Math.Abs(xs[i] - xs[j]) > 40;
+                for (int foes = 1; foes <= 3; foes++)
+                    for (int f = 0; f < foes; f++) layoutOk &= BattleLayout.FoeX(foes, f, allies) < 630 && (f == 0 || BattleLayout.FoeX(foes, f, allies) > BattleLayout.FoeX(foes, f - 1, allies));
+            }
+            Check("battle layout: party spread out, foes in order and left of the command window", layoutOk);
+            var bat = GameData.EnemyByName("박쥐");
+            var skel = GameData.EnemyByName("해골");
+            Check("monster motion: bat swoops, skeleton creaks, unknown move = tackle",
+                  bat != null && MonsterMotion.Gait(bat) == "fly" && MonsterMotion.AttackStyle(bat) == "swoop"
+                  && skel != null && MonsterMotion.Sound(skel, MonsterMotion.AttackStyle(skel)) == "creak"
+                  && MonsterMotion.AttackStyle(new EnemyDef { Name = "x", Move = "???" }) == "tackle");
+            Check("monster motion: finished motions rest at zero",
+                  MonsterMotion.Attack(1, "slam") == Vector4.zero && MonsterMotion.Appear(1, true) == new Vector2(1, 0) && MonsterMotion.Duration("phase") > 0);
+        }
     }
 }
