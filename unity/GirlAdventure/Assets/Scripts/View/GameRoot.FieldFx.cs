@@ -49,6 +49,7 @@ namespace GirlAdventure.View
             waves.Clear();
             foreach (var f in fieldFx) if (f.sr) Destroy(f.sr.gameObject);
             fieldFx.Clear();
+            RebuildButterflies();
             bool cave = map.IsCaveLike;
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -135,6 +136,7 @@ namespace GirlAdventure.View
         void TickFieldFx()
         {
             float t = Time.time, dt = Time.deltaTime;
+            TickButterflies();
             // 꽃 살랑: 느린 바람(맵을 가로질러 번지는 물결) + 칸마다 다른 박자
             foreach (var (sr, ph) in flowers)
             {
