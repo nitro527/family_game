@@ -93,6 +93,13 @@ namespace GirlAdventure.Sim
         /// <summary>챕터 n (1부터). 범위 밖이면 가장 가까운 챕터.</summary>
         public static ChapterDef Get(int n) => all[Math.Max(1, Math.Min(all.Length, n)) - 1];
 
+        /// <summary>이 맵(바깥 맵이나 마을)이 어느 챕터 것인지 (아니면 null — 지하세계·집 안).</summary>
+        public static ChapterDef OfMap(MapKind k)
+        {
+            foreach (var c in all) if (c.Field == k || c.Town == k) return c;
+            return null;
+        }
+
         /// <summary>이 적이 어느 챕터의 보스인지 (아니면 null).</summary>
         public static ChapterDef ByBoss(EnemyDef def)
         {

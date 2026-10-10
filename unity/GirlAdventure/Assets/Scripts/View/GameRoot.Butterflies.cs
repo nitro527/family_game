@@ -32,8 +32,8 @@ namespace GirlAdventure.View
         {
             foreach (var b in butterflies) if (b.sr) Destroy(b.sr.gameObject);
             butterflies.Clear();
-            bool here = map.Kind == MapKind.Field || map.Kind == MapKind.Village || map.Kind == MapKind.Oasis || (map.Kind == MapKind.Forest && P.Boss7Down);
-            if (!here) return;
+            int want = FieldAmbience.For(map.Kind, MapCleared).Butterflies;   // 맵마다 몇 마리 (분위기 표 — 초원·마을 7, 오아시스 3, 초록 숲 7)
+            if (want <= 0) return;
             butterflySprites ??= new[]
             {
                 Art.FromTexture(ButterflyTexture(Raster.Hex("#FFFFFF"), Raster.Hex("#FFC8DC")), new Vector2(.5f, .5f), 64),
@@ -42,7 +42,6 @@ namespace GirlAdventure.View
                 Art.FromTexture(ButterflyTexture(Raster.Hex("#9AD8FF"), Raster.Hex("#3A7AD8")), new Vector2(.5f, .5f), 64),
             };
             var rnd = new System.Random(map.Kind.GetHashCode() + 7);
-            int want = map.Kind == MapKind.Oasis ? 3 : 7;
             for (int tries = 0; tries < 400 && butterflies.Count < want; tries++)
             {
                 int x = rnd.Next(2, WorldMap.W - 2), y = rnd.Next(2, WorldMap.H - 2);
