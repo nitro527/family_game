@@ -926,6 +926,52 @@ namespace GirlAdventure.View
         }
 
         /// <summary>Sim 의 몬스터 목록과 화면의 젤리 스프라이트를 맞추고, 통통 튀며 걷게 한다.</summary>
+        /// <summary>
+        /// 필드 몬스터 걸음새 (2026-10-10 사용자 "몬스터가 단순 점프만 하는 게 아니라 다양하게"): 그림 이름으로 고른다.
+        /// hop 통통(젤리·토끼) · fly 날갯짓하며 떠 있음(새·박쥐·벌) · float 둥실둥실 흔들림(유령·책·촛불) · scuttle 바닥에 붙어 다다닥(거미·전갈·벌레)
+        /// · stomp 쿵쿵 무겁게(바위·골렘·예티) · waddle 뒤뚱뒤뚱(펭귄·해골·버섯) · roll 데굴데굴(돌·광석) · spin 빙글 반짝(수정·불씨)
+        /// </summary>
+        static string MobGait(EnemyDef def)
+        {
+            string a = def?.Art ?? "";
+            if (a.StartsWith("jelly") || a.Contains("rabbit") || a.Contains("squirrel") || a == "cave_amber") return "hop";
+            if (a.Contains("bat") || a.Contains("bee") || a.Contains("owl") || a.Contains("bird") || a.Contains("eagle") || a.Contains("firebird")) return "fly";
+            if (a.Contains("ghost") || a.Contains("book") || a.Contains("candle") || a.Contains("ink") || a.Contains("flake") || a.Contains("imp")) return "float";
+            if (a.Contains("spider") || a.Contains("scorpion") || a.Contains("bug") || a.Contains("salamander") || a.Contains("worm") || a.Contains("mole")) return "scuttle";
+            if (a.Contains("rock") || a.Contains("ore")) return "roll";
+            if (a.Contains("crystal") || a.Contains("ember") || a.Contains("icicle") || a.Contains("magma")) return "spin";
+            if (a.Contains("golem") || a.Contains("yeti") || a.Contains("tree") || a.Contains("guard") || a.Contains("general") || a.Contains("beetle") || a.Contains("boss") || a.Contains("king")) return "stomp";
+            if (a.Contains("penguin") || a.Contains("skeleton") || a.Contains("mushroom") || a.Contains("cactus") || a.Contains("cowboy")) return "waddle";
+            return "hop";
+        }
+
+        /// <summary>걸음새 → (위로 뜸, 옆 흔들림, 기울기°, 세로 늘어남, 투명도). k = 한 칸 이동 진행(1 이면 멈춤), t = 시간, dir = 가는 쪽(-1 왼쪽).</summary>
+        static (float hop, float sway, float rot, float squash, float alpha) MobMotion(string gait, float k, float t, int dir)
+        {
+            bool moving = k < 1;
+            float arc = moving ? Mathf.Sin(k * Mathf.PI) : 0;
+            float breathe = 1 + Mathf.Sin(t * 4) * .05f;
+            switch (gait)
+            {
+                case "fly":                                                      // 공중에서 파닥파닥, 갈 땐 앞으로 기울어 미끄러지듯
+                    return (.32f + Mathf.Sin(t * 5) * .07f + arc * .08f, 0, moving ? -10 * dir : Mathf.Sin(t * 2.3f) * 4, 1 + Mathf.Sin(t * 14) * .06f, 1);
+                case "float":                                                    // 둥실둥실 천천히, 살짝 옆으로 흔들리고 반투명하게 일렁
+                    return (.16f + Mathf.Sin(t * 1.7f) * .09f, Mathf.Sin(t * 1.1f) * .07f, Mathf.Sin(t * 1.3f) * 6, 1 + Mathf.Sin(t * 2.2f) * .04f, .82f + Mathf.Sin(t * 2.6f) * .12f);
+                case "scuttle":                                                  // 바닥에 붙어 다다닥 — 갈 땐 좌우로 바르르, 서 있을 땐 가끔 움찔
+                    return (moving ? Mathf.Abs(Mathf.Sin(k * Mathf.PI * 6)) * .03f : 0, 0, moving ? Mathf.Sin(k * Mathf.PI * 8) * 7 : (Mathf.Sin(t * 1.3f) > .9f ? Mathf.Sin(t * 30) * 4 : 0), moving ? .94f : breathe * .98f, 1);
+                case "stomp":                                                    // 쿵쿵: 낮게 들썩, 내려앉을 때 납작, 몸을 좌우로 기울며
+                    return (arc * .08f, 0, moving ? Mathf.Sin(k * Mathf.PI * 2) * 6 : Mathf.Sin(t * 1.5f) * 1.5f, moving && k > .8f ? .9f : 1 + Mathf.Sin(t * 2) * .03f, 1);
+                case "waddle":                                                   // 뒤뚱뒤뚱 좌우로 크게 기울며 조금씩 통통
+                    return (Mathf.Abs(Mathf.Sin(k * Mathf.PI * 2)) * (moving ? .07f : 0), 0, moving ? Mathf.Sin(k * Mathf.PI * 2) * 14 : Mathf.Sin(t * 2.4f) * 4, breathe, 1);
+                case "roll":                                                     // 데굴데굴 한 바퀴 굴러간다
+                    return (moving ? arc * .04f : 0, 0, moving ? -360 * k * dir : Mathf.Sin(t * 1.8f) * 2, 1, 1);
+                case "spin":                                                     // 제자리에서 빙글빙글 반짝, 갈 땐 살짝 뜬다
+                    return (.06f + Mathf.Sin(t * 2.5f) * .05f + arc * .12f, 0, Mathf.Sin(t * 1.6f) * 14, 1 + Mathf.Sin(t * 5) * .05f, 1);
+                default:                                                         // hop: 통통 튀고, 착지 직전 납작
+                    return (arc * .22f, 0, 0, moving ? (k < .15f || k > .85f ? .88f : 1.08f) : breathe, 1);
+            }
+        }
+
         void SyncMobViews()
         {
             var alive = new HashSet<int>();
@@ -955,13 +1001,13 @@ namespace GirlAdventure.View
                 float k = m.MoveT;
                 float x = Mathf.Lerp(m.FromX, m.X, k), y = Mathf.Lerp(m.FromY, m.Y, k);
                 var feet = FeetAt(x, y);
-                float hop = k < 1 ? Mathf.Sin(k * Mathf.PI) * .22f : 0;
-                float squash = 1 + Mathf.Sin(Time.time * 4 + m.Id) * .05f;
+                var (hop, sway, rot, squash, alpha) = MobMotion(MobGait(MobDef(m)), k, Time.time + m.Id * .73f, m.X < m.FromX ? -1 : 1);
                 v.body.transform.localScale = new Vector3(v.scale * (2 - squash), v.scale * squash, 1);
-                v.body.transform.localPosition = feet + new Vector3(0, hop, 0);
-                v.body.flipX = m.X < m.FromX;
-                v.shadow.transform.localPosition = feet + new Vector3(0, .02f, 0);
-                v.body.color = mobs.Grace > 0 ? new Color(1, 1, 1, .55f + .45f * Mathf.Abs(Mathf.Sin(Time.time * 10))) : Color.white;
+                v.body.transform.localPosition = feet + new Vector3(sway, hop, 0);
+                v.body.transform.localRotation = Quaternion.Euler(0, 0, rot);
+                if (m.X != m.FromX) v.body.flipX = m.X < m.FromX;
+                v.shadow.transform.localPosition = feet + new Vector3(sway, .02f, 0);
+                v.body.color = mobs.Grace > 0 ? new Color(1, 1, 1, .55f + .45f * Mathf.Abs(Mathf.Sin(Time.time * 10))) : new Color(1, 1, 1, alpha);
 
                 // 가까이 오면 "!" — 톡 튀어나왔다가 살짝 흔들린다
                 bool alert = Current == Mode.Field && mobs.Grace <= 0 && Mathf.Abs(m.X - P.X) + Mathf.Abs(m.Y - P.Y) <= AlertDist;

@@ -1332,9 +1332,14 @@ namespace GirlAdventure.View
                 float squash = Mathf.Sin(battleT * 5.5f + i * 1.7f) * .05f;
                 float baseScale = FoeScale(i);
                 var m = i == movingFoe ? MoveOffset(moveP, moveName) : Vector4.zero;
-                sr.transform.position = Px(FoeX(i), EnemyY) + new Vector3(esx + m.x, m.y + a.y, 0);
+                // 서 있을 때도 걸음새대로 (날짐승은 파닥파닥 떠 있고, 유령은 둥실, 펭귄은 뒤뚱 — 필드와 같은 MobMotion)
+                bool idle = !(i == movingFoe && moveP < 1) && battle != null && i < battle.Foes.Count && !battle.Foes[i].Down;
+                string gait = idle ? MobGait(battle.Foes[i].Def) : "hop";
+                (float hop, float sway, float rot, float squash, float alpha) im = idle && gait != "hop" ? MobMotion(gait, 1, battleT + i * 1.7f, -1) : (0f, 0f, 0f, 1f, 1f);
+                if (idle && gait != "hop") squash = (im.squash - 1) * .8f;
+                sr.transform.position = Px(FoeX(i), EnemyY) + new Vector3(esx + m.x + im.sway * 1.6f, m.y + a.y + im.hop * 1.4f, 0);
                 sr.transform.localScale = new Vector3(baseScale * (1 + squash + m.z) * a.x, baseScale * (1 - squash - m.z) * a.x, 1);
-                sr.transform.localRotation = Quaternion.Euler(0, 0, m.w);
+                sr.transform.localRotation = Quaternion.Euler(0, 0, m.w + (gait == "roll" ? 0 : im.rot * .6f));
                 sr.sortingOrder = i == movingFoe && moveP < 1 ? 4 : 2;     // 덤벼드는 적은 주인공 앞으로
                 foeShake[i] = Mathf.Max(0, foeShake[i] - dt);
                 if (foeFading[i]) foeAlpha[i] = Mathf.Max(0, foeAlpha[i] - dt * 2.5f);
