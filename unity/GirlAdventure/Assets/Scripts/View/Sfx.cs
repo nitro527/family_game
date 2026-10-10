@@ -19,7 +19,7 @@ namespace GirlAdventure.View
             Add("step_snow", Wave.Saw, .03f, .06f, 120, 95);
             Add("door", Wave.Triangle, .06f, .18f, 523, 0, 392, 349, 330);           // 집 문 (딸깍, 끼익)                      // 눈 밟는 소리 (뽀득)
             Add("slide", Wave.Triangle, .045f, .16f, 1568, 1397, 1245, 1175, 1046, 988, 880);   // 얼음 미끄럼 (슈르르륵)
-            Add("bump", Wave.Square, .05f, .18f, 110);
+            Add("bump", Wave.Triangle, .035f, .06f, 160, 120);                  // 톡 (나무·벽에 부딪힘 — 사용자 2026-10-10 "너무 시끄러" → 부드럽고 작게)
             Add("select", Wave.Square, .03f, .15f, 880);
             Add("encounter", Wave.Square, .06f, .22f, 523, 659, 784, 1046, 784, 1046);
             Add("fire", Wave.Saw, .05f, .18f, 300, 500, 800, 1100);

@@ -1122,7 +1122,7 @@ namespace GirlAdventure.View
 
         IEnumerator Victory()
         {
-            var def = battle.Def;
+            var def = battle.OriginDef;                // 변신한 보스도 원래 보스로 (2026-10-10 "눈마을 챕터가 끝나면 다음 챕터로 안 넘어간다")
             for (int i = 0; i < foeFading.Length; i++) foeFading[i] = true;
             bgm.Stop();                // DQ 처럼 승리 팡파르만 들리게
             sfx.Play("win");

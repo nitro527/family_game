@@ -1366,6 +1366,9 @@ namespace GirlAdventure.EditorTools
         /// </summary>
         static void GimmickTests()
         {
+            var yb = new BattleSystem(PlayerState.NewGame("y"), new[] { GameData.SnowBoss }, new System.Random(1));      // 변신해도 원래 보스로 (챕터 5 완료 버그 2026-10-10)
+            yb.Foes[0].Become(GameData.EnemyByName("무서운 예티"));
+            Check("transformed boss keeps origin", yb.OriginDef == GameData.SnowBoss && yb.Def != GameData.SnowBoss);
             EnemyDef With(EnemyDef d, string skill, double rate = 1)
             {
                 var e = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(d)); e.Skill = skill; e.SkillRate = rate; e.Twice = false; return e;

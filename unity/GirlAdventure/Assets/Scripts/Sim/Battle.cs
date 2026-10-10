@@ -94,7 +94,8 @@ namespace GirlAdventure.Sim
         public bool Changed;    // 변신·합체를 했다 (한 번만)
         public bool JustCalled; // 이번 차례에 불려 왔다 (다음 차례부터 움직인다)
         public bool Enraged;    // 화가 났다 (보스 HP 절반 아래, 공격 ×1.1)
-        public Foe(EnemyDef def) { Def = def; Hp = def.Hp; }
+        public EnemyDef Origin { get; private set; }   // 처음 나온 모습 (변신해도 그대로 — 예티가 무서운 예티로 변신한 뒤 이겨도 챕터 5 완료가 되게)
+        public Foe(EnemyDef def) { Def = Origin = def; Hp = def.Hp; }
         /// <summary>변신·합체: 다른 적이 된다 (HP 는 부르는 쪽이 정한다).</summary>
         public void Become(EnemyDef def) { Def = def; Changed = true; Charging = false; }
         public bool Down => Hp <= 0;
@@ -135,6 +136,8 @@ namespace GirlAdventure.Sim
 
         /// <summary>첫 번째 적 (한 마리 전투에서의 "그 적").</summary>
         public EnemyDef Def => Foes[0].Def;
+        /// <summary>처음 나온 적 (변신 전). 보스를 이겼는지 판단할 때 쓴다.</summary>
+        public EnemyDef OriginDef => Foes[0].Origin;
         public int EnemyHp { get => Foes[0].Hp; set => Foes[0].Hp = value; }
         public bool Boss => Foes.Exists(f => f.Def.Boss);
         public bool EnemyDown => Foes.TrueForAll(f => f.Down);

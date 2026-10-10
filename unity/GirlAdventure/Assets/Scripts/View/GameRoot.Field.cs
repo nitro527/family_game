@@ -637,6 +637,8 @@ namespace GirlAdventure.View
             TickLighting();
         }
 
+        float lastBump = -1;
+
         void TryMove(string dir)
         {
             facing = dir;
@@ -647,7 +649,7 @@ namespace GirlAdventure.View
             if (Quest.GuardAt(map, P, nx, ny)) { if (!busy) StartCoroutine(GuardRoutine()); return; }
             if (!Quest.Walkable(map, P, nx, ny))
             {
-                if (Keys.AnyDown) sfx.Play("bump");
+                if (Keys.AnyDown && Time.time - lastBump > .4f) { sfx.Play("bump"); lastBump = Time.time; }   // 연달아 부딪혀도 0.4초에 한 번만
                 char c = map.At(nx, ny);
                 var secret = busy ? null : Quests.TrySecret(P, map, nx, ny);      // 숨겨진 이벤트 (G-4): 표시 없는 물건을 살펴보면
                 if (secret != null) { StartCoroutine(SecretRoutine(secret)); return; }
