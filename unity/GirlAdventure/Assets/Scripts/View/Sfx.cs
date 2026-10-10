@@ -20,7 +20,7 @@ namespace GirlAdventure.View
             Add("door", Wave.Triangle, .06f, .18f, 523, 0, 392, 349, 330);           // 집 문 (딸깍, 끼익)                      // 눈 밟는 소리 (뽀득)
             Add("slide", Wave.Triangle, .045f, .16f, 1568, 1397, 1245, 1175, 1046, 988, 880);   // 얼음 미끄럼 (슈르르륵)
             Add("bump", Wave.Triangle, .035f, .06f, 160, 120);                  // 톡 (나무·벽에 부딪힘 — 사용자 2026-10-10 "너무 시끄러" → 부드럽고 작게)
-            Add("select", Wave.Square, .03f, .15f, 880);
+            Add("select", Wave.Square, .03f, .11f, 880);                         // 자주 나는 소리라 조금 작게
             Add("encounter", Wave.Square, .06f, .22f, 523, 659, 784, 1046, 784, 1046);
             Add("fire", Wave.Saw, .05f, .18f, 300, 500, 800, 1100);
             Add("hit", Wave.Square, .07f, .30f, 180, 90);
@@ -60,13 +60,17 @@ namespace GirlAdventure.View
                 for (int i = 0; i < per; i++)
                 {
                     float t = i / (float)rate, ph = t * f % 1f;
-                    float s = wave == Wave.Square ? (ph < .5f ? 1 : -1)
-                            : wave == Wave.Triangle ? 1 - 4 * Mathf.Abs(ph - .5f)
-                            : 2 * ph - 1;
-                    float env = Mathf.Pow(1 - i / (float)per, 1.6f);
+                    float tri = 1 - 4 * Mathf.Abs(ph - .5f);
+                    // 2026-10-10 소리 다듬기: 네모·톱니파는 세모파를 섞어 덜 따갑게, 시작은 아주 짧게 페이드인 (딸깍 잡음 없게)
+                    float s = wave == Wave.Square ? (ph < .5f ? 1 : -1) * .55f + tri * .45f
+                            : wave == Wave.Triangle ? tri
+                            : (2 * ph - 1) * .6f + tri * .4f;
+                    float env = Mathf.Pow(1 - i / (float)per, 1.6f) * Mathf.Min(1, i / 48f);
                     data[k * per + i] = s * env * vol;
                 }
             }
+            float lp = 0;                                                   // 부드럽게: 아주 가벼운 저역 통과 (높은 지지직을 깎는다)
+            for (int i = 0; i < n; i++) { lp += (data[i] - lp) * .45f; data[i] = lp; }
             var clip = AudioClip.Create(name, n, 1, rate, false);
             clip.SetData(data, 0);
             clips[name] = clip;
