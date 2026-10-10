@@ -105,8 +105,8 @@ namespace GirlAdventure.View
         {
             if (Time.frameCount == confirmFrame) return false;
             bool down = Keys.Down(KeyCode.Return) || Keys.Down(KeyCode.KeypadEnter)
-                     || Keys.Down(KeyCode.Space) || Keys.Down(KeyCode.Z) || msgClicked;
-            msgClicked = false;
+                     || Keys.Down(KeyCode.Space) || Keys.Down(KeyCode.Z) || messages.Clicked;
+            messages.Clicked = false;
             if (down) confirmFrame = Time.frameCount;
             return down;
         }
@@ -328,7 +328,7 @@ namespace GirlAdventure.View
         public bool CanContinue => continueBtn.gameObject.activeSelf;
         public int TitleIndex => titleIndex;
         public int BgmLevel => bgm.LevelPercent;
-        public string MessageText => msgWin != null && msgWin.gameObject.activeSelf ? msgText.text : "";
+        public string MessageText => messages != null && messages.Visible ? messages.Text.text : "";
 
         public string DebugState() =>
             $"mode={Current} ch={P.Chapter} map={map.Kind} mobs={mobs.List.Count} bgm={bgm.Current}@{bgm.LevelPercent}% busy={busy} tile=({P.X},{P.Y}) facing={facing} lv={P.Lv} hp={P.Hp}/{P.MaxHp} mp={P.Mp} gold={P.Gold} candy={P.Candy} " +

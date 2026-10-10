@@ -52,7 +52,7 @@ namespace GirlAdventure.View
 
         void TickTouchPad()
         {
-            bool show = (Input.touchSupported || ForceTouchPad) && Current == Mode.Field && !msgWin.gameObject.activeSelf && !statusOpen;
+            bool show = (Input.touchSupported || ForceTouchPad) && Current == Mode.Field && !messages.Visible && !statusOpen;
             if (touchPad.activeSelf == show) return;
             touchPad.SetActive(show);
             if (!show)

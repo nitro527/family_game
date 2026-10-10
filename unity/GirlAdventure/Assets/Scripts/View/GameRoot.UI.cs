@@ -38,14 +38,11 @@ namespace GirlAdventure.View
         const float AllyHudW = 176, AllyHudGap = 8;
 
         // message window
-        RectTransform msgWin;
-        Image msgFace;
-        Text msgText;
-        bool msgClicked;
-        const float MsgW = 928, MsgNarrowW = 612;
+        MessageWindow messages;                         // 대화창 (부품)
+        Text msgText => messages.Text;
+        RectTransform msgWin => messages.Root;
         // 대화창 자리: 보통은 아래(398). 필드에서 주인공이 화면 아래쪽에 있으면 가리지 않게 위(HUD 바로 아래)로 — DQ 처럼
-        const float MsgBottomY = 398, MsgTopY = 146, MsgH = 128;
-        bool msgTop;
+        const float MsgBottomY = MessageWindow.BottomY;
 
         // command window
         GameObject cmdWin;
@@ -272,20 +269,7 @@ namespace GirlAdventure.View
         }
 
         // ------------------------------------------------------------------ message
-        void BuildMessage()
-        {
-            var win = UIKit.Window(ui, "Message", 16, 398, MsgW, 128);
-            msgWin = win.rectTransform;
-            var btn = win.gameObject.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.onClick.AddListener(() => msgClicked = true);
-            var faceFrame = UIKit.Img(win.transform, "FaceFrame", UIKit.White, 14, 14, 100, 100, false);
-            faceFrame.color = Color.white;
-            msgFace = UIKit.Img(faceFrame.transform, "Face", null, 2, 2, 96, 96, false);
-            msgText = UIKit.Label(win.transform, "Text", "", 132, 12, MsgW - 150, 106, 23);
-            msgText.supportRichText = true;
-            msgWin.gameObject.SetActive(false);
-        }
+        void BuildMessage() => messages = new MessageWindow(ui);
 
         /// <summary>지금 말하는 동료 (동료 공용 대사 "ally_*" 의 얼굴을 고를 때).</summary>
         CompanionDef allyFaceDef;
@@ -298,8 +282,7 @@ namespace GirlAdventure.View
                 string n = face.Substring(5);
                 face = allyFaceDef.Face + (n == "brave" && !string.IsNullOrEmpty(allyFaceDef.BraveFace) ? allyFaceDef.BraveFace : n);
             }
-            msgFace.sprite = faceOverride != null ? faceOverride : Art.UI(FacePath(face));
-            msgFace.preserveAspect = faceOverride != null;
+            messages.SetFace(faceOverride != null ? faceOverride : Art.UI(FacePath(face)), faceOverride != null);
         }
 
         /// <summary>대사 얼굴 이름 → 그림 경로: "smile" → Girl/face_smile, "bro_smile" → Boy/face_smile, "dad_serious" → Dad/face_serious (party.json Face·Art).</summary>
@@ -310,18 +293,11 @@ namespace GirlAdventure.View
             return "face_" + face;
         }
 
-        void ShowMessageWindow(bool narrow)
-        {
-            msgTop = Current == Mode.Field && !statusOpen && PlayerFeetScreenY() > MsgBottomY - 6;
-            msgWin.anchoredPosition = new Vector2(16, -(msgTop ? MsgTopY : MsgBottomY));
-            msgWin.gameObject.SetActive(true);
-            msgText.fontSize = Settings.MessageFontSize;
-            float w = narrow ? MsgNarrowW : MsgW;
-            msgWin.sizeDelta = new Vector2(w, 128);
-            msgText.rectTransform.sizeDelta = new Vector2(w - 150, 106);
-        }
+        /// <summary>대화창을 띄운다: 필드에서 주인공이 아래쪽에 있으면 가리지 않게 위로.</summary>
+        void ShowMessageWindow(bool narrow) =>
+            messages.Show(narrow, Current == Mode.Field && !statusOpen && PlayerFeetScreenY() > MsgBottomY - 6, Settings.MessageFontSize);
 
-        void HideMessage() => msgWin.gameObject.SetActive(false);
+        void HideMessage() => messages.Hide();
 
         /// <summary>주인공 발밑의 화면 y (960×540 UI 좌표, 위가 0).</summary>
         float PlayerFeetScreenY()
@@ -332,11 +308,10 @@ namespace GirlAdventure.View
         }
 
         /// <summary>선택창의 위쪽 y: 대화창 바로 위 (대화창이 위에 있으면 그 아래, 화면을 넘치면 끌어올림).</summary>
-        float ChoiceTopY(float h) =>
-            msgTop && msgWin.gameObject.activeSelf ? Mathf.Min(MsgTopY + MsgH + 8, 532 - h) : MsgBottomY - 8 - h;
+        float ChoiceTopY(float h) => messages.ChoiceTopY(h);
 
         // ---- 프로브용
-        public bool MessageAtTop => msgWin != null && msgWin.gameObject.activeSelf && msgTop;
+        public bool MessageAtTop => messages != null && messages.Visible && messages.AtTop;
         public int MessageFontSize => msgText.fontSize;
         public void DebugShowMessage(string text) { ShowMessageWindow(false); SetFace("smile"); msgText.text = text; }
         public void DebugHideMessage() => HideMessage();
@@ -346,20 +321,7 @@ namespace GirlAdventure.View
         {
             ShowMessageWindow(false);
             SetFace(face);
-            msgClicked = false;
-            for (int i = 1; i <= text.Length; i++)
-            {
-                msgText.text = text.Substring(0, i);
-                if (ConfirmDown()) { msgText.text = text; break; }
-                yield return new WaitForSeconds(Settings.CharTime);     // 설정: 글자 속도
-            }
-            msgText.text = text + " <color=#F2C443>▼</color>";
-            float wait = (hold > 0 ? hold : Mathf.Min(2.6f, .9f + text.Length * .03f)) * Settings.HoldMul;
-            for (float t = 0; t < wait; t += Time.deltaTime)
-            {
-                if (ConfirmDown()) break;
-                yield return null;
-            }
+            yield return messages.Type(text, hold, Settings.CharTime, Settings.HoldMul, ConfirmDown);   // 설정: 글자 속도·기다림
         }
 
         /// <summary>dialogue.json 의 대사 묶음(id)을 차례로 말한다. {name} 은 자동으로 채운다.</summary>
