@@ -152,10 +152,12 @@ namespace GirlAdventure.View
             cageSR = Make("BroCage", cageClosed, .002f);
             cagedBroSR = Make("CagedBro", Art.Get("Boy/walk_front", FieldCharHeight * .62f), 0);
             cagedBroSR.transform.localPosition += new Vector3(0, .12f, 0);
+            cagedBroBase = cagedBroSR.transform.localPosition;
             cageBarsSR = Make("BroCageBars", Cage("cage_bars"), -.002f);
         }
 
         Sprite cageClosed, cageOpen;
+        Vector3 cagedBroBase;
         SpriteRenderer cageSR, cagedBroSR, cageBarsSR;
 
         /// <summary>철창: 동굴에서만. 지훈이 아직 합류 전이면 닫힌 철창 안에 지훈 (장군을 이기기 전엔 그림자), 합류하면 열린 철창.</summary>

@@ -45,6 +45,12 @@ namespace GirlAdventure.View
 
         void TickNpcs()
         {
+            if (cagedBroSR != null && cagedBroSR.enabled)        // 철창 안 지훈: 훌쩍훌쩍 어깨가 들썩 (장군을 이긴 뒤엔 손 흔들듯 통통)
+            {
+                float k = P.Boss2Down ? Mathf.Abs(Mathf.Sin(Time.time * 6)) * .08f : Mathf.Abs(Mathf.Sin(Time.time * 7)) * .025f;
+                cagedBroSR.transform.localPosition = cagedBroBase + new Vector3(0, k, 0);
+                cagedBroSR.transform.localRotation = Quaternion.Euler(0, 0, P.Boss2Down ? Mathf.Sin(Time.time * 6) * 6 : 0);
+            }
             npcHopT = Mathf.Max(0, npcHopT - Time.deltaTime);
             foreach (var (n, body, sh, s) in npcViews)
             {
@@ -52,9 +58,15 @@ namespace GirlAdventure.View
                 float squash = 1 + Mathf.Sin(Time.time * 3f + n.X) * .05f;
                 // 말을 걸면 한 번 통 튀어 반긴다
                 float hop = n == talkingNpc && npcHopT > 0 ? Mathf.Sin((1 - npcHopT / .4f) * Mathf.PI) * .25f : 0;
+                // 혼자 있을 때도 살아 있게 (2026-10-10): 5초쯤마다 콩 한 번 뛰고, 주인공이 멀면 두리번, 가까우면 주인공을 본다
+                float ph = Time.time + n.X * 1.37f + n.Y * .71f;
+                float beat = ph % 5.3f;
+                if (hop == 0 && beat < .36f) hop = Mathf.Sin(beat / .36f * Mathf.PI) * .1f;
+                bool near = Mathf.Abs(P.X - n.X) + Mathf.Abs(P.Y - n.Y) <= 4;
                 body.transform.localScale = new Vector3(s * (2 - squash), s * squash, 1);
                 body.transform.localPosition = feet + new Vector3(0, hop, 0);
-                body.flipX = P.X < n.X;                 // 주인공 쪽을 본다
+                body.transform.localRotation = Quaternion.Euler(0, 0, near ? (P.X < n.X ? 4 : P.X > n.X ? -4 : 0) : Mathf.Sin(ph * .9f) * 2.5f);
+                body.flipX = near ? P.X < n.X : Mathf.Sin(ph * .37f) > 0;   // 가까우면 주인공 쪽, 멀면 이쪽저쪽
                 sh.transform.localPosition = feet + new Vector3(0, .02f, 0);
             }
         }
