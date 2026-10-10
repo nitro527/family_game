@@ -859,6 +859,47 @@ namespace GirlAdventure.View
         /// <summary>
         /// 눈꽃 마을 (C5-4): 눈밭 + 발자국 눈길 + 스케이트 연못 → 전나무 → 통나무집(눈 지붕)·여관 간판 → 털옷 가게·모닥불·표지판·출구 문.
         /// </summary>
+        /// <summary>
+        /// 마을 길 그리기 (그림만 — 걷는 칸은 그대로, 2026-10-10): 집 문 앞 → 광장 줄 → 출입구까지 ㄱ자 길.
+        /// cobble 이면 돌 포장(돌마다 색·틈), 아니면 c0 로 밟힌 자국.
+        /// </summary>
+        static void TownPaths(Raster R, (int x, int y)[] houses, (int x, int y) exit, float plazaRow, bool cobble, Color32 c0, Color32 c1, Color32 gap)
+        {
+            var segs = new List<(Vector2 a, Vector2 b)>();
+            float ex = (exit.x + .5f) * T;
+            segs.Add((new Vector2(ex, (plazaRow + .5f) * T), new Vector2(ex, (exit.y + 1) * T)));
+            foreach (var (hx, hy) in houses)
+            {
+                float dx = (hx + 1.5f) * T, dy = (hy + 2.1f) * T, py = (plazaRow + .5f) * T;
+                segs.Add((new Vector2(dx, dy), new Vector2(dx, py)));
+                segs.Add((new Vector2(dx, py), new Vector2(ex, py)));
+            }
+            const float half = 17;
+            for (int py = 0; py < R.H; py++)
+                for (int px = 0; px < R.W; px++)
+                {
+                    float d = 1e9f;
+                    foreach (var (a, b) in segs)
+                    {
+                        var ab = b - a; float t = Mathf.Clamp01(Vector2.Dot(new Vector2(px, py) - a, ab) / Mathf.Max(1, ab.sqrMagnitude));
+                        d = Mathf.Min(d, (a + ab * t - new Vector2(px, py)).magnitude);
+                    }
+                    float wob = (Noise(px / 9f, py / 9f, 120) - .5f) * 6;
+                    if (d + wob > half) continue;
+                    float edge = Smooth(half, half - 4, d + wob);
+                    Color32 c;
+                    if (cobble)
+                    {
+                        int cx = (px + ((py / 11) % 2) * 6) / 12, cy = py / 11;
+                        int ix = (px + ((py / 11) % 2) * 6) % 12, iy = py % 11;
+                        c = (ix < 2 || iy < 2) ? gap : Mul(Lerp(c0, c1, Hash(cx, cy, 121)), .92f + Hash(px, py, 122) * .1f);
+                        if (ix >= 2 && iy == 2) c = Mul(c, 1.12f);                     // 돌 윗면 빛
+                    }
+                    else c = Mul(Lerp(c0, c1, Fbm(px, py, 123)), .97f + Hash(px, py, 124) * .05f);
+                    R.Blend(px, py, c, edge * (cobble ? 1f : .6f));
+                }
+        }
+
         static Raster SnowTown(WorldMap m)
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
@@ -884,6 +925,7 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 75));
             Scatter(R, m, ".", new[] { "dec_snowbush", "dec_iceshard" }, .05f, 209);                       // 바닥 장식 (마을 눈밭)
+            TownPaths(R, WorldMap.SnowTownHouses, WorldMap.SnowTownExit, 12, false, H("#C4D0E2"), H("#D6E0EE"), H("#A8B8D0"));   // 집마다 밟힌 눈길
             TownArch(R, WorldMap.SnowTownExit.x * T, WorldMap.SnowTownExit.y * T);
             for (int i = 0; i < WorldMap.SnowTownHouses.Length; i++)
             {
@@ -1055,6 +1097,7 @@ namespace GirlAdventure.View
                         else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640"));
                     }
             Scatter(R, m, ".", new[] { "dec_obsidian", "dec_vent" }, .05f, 210);                           // 바닥 장식 (마을 화산재 땅)
+            TownPaths(R, WorldMap.LavaTownHouses, WorldMap.LavaTownExit, 11, true, H("#7A6E6A"), H("#968880"), H("#3A302C"));   // 돌 포장 길
             TownArch(R, WorldMap.LavaTownExit.x * T, WorldMap.LavaTownExit.y * T);
             for (int i = 0; i < WorldMap.LavaTownHouses.Length; i++)
             {
