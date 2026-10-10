@@ -32,3 +32,13 @@
   MapPainter `painters` 사전. 정리한 사슬: SpawnPoint·Spring·SignPos·ShopPos·IsCaveLike·IsTown·맵 밖 칸(At)·MapSong·전투 배경·표지판 대사·TimidLevel·ZoneMap/ZoneKind·가게 이름·RenderBase.
   스모크 MapKindTableTests 추가. 맵 그림 픽셀 비교 같음, 프로브 통과.
   **새 맵 종류 넣는 법**: MapKind 에 이름 + MapKinds.cs 한 줄 + WorldMap 맵 함수(+Build) + MapPainter painters 한 줄 + (있으면) props.json 테마.
+- **C. GameRoot 쪼개기 (2026-10-10 완료)**: 다시 쓰는 부품 5개 —
+  `ParticleLayer`(필드·전투 공용 입자, 사라지는 모양 옵션), `FieldAmbience`(맵마다 떠다니는 것 표 + 보스 뒤 바뀌는 것 + 나비 수),
+  `MessageWindow`(대화창: 띄우기·얼굴·한 글자씩), `ChoiceMenu`(선택창: ↑↓·스크롤·클릭·취소), `GameRoot.Objects`(상태 오브젝트, 소품 데이터화 5단계).
+  GameRoot 는 "어디에·언제"만 정하고 그리는 일은 부품이. 프로브 통과.
+- **D. 테스트 정리 (2026-10-10 완료)**: SmokeTest 2,950줄 → 핵심(680) + Chapters·Battle·Data·Save partial 파일. 검사 305개 그대로.
+
+## 다음에 하면 좋은 것
+- 전투 연출(GameRoot.Battle 1,700줄)을 "명령 고르기 / 연출 재생 / HUD" 부품으로
+- 퀘스트·이벤트 루틴(Quests·Holes·Npcs)의 공통 "대사 → 연출 → 보상" 흐름을 하나로
+- 챕터 표·맵 종류 표를 JSON 으로 (지금은 C# 표 — 좌표가 WorldMap 코드에 묶여 있어서)

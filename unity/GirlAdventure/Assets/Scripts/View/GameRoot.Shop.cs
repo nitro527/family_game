@@ -9,75 +9,20 @@ namespace GirlAdventure.View
     /// <summary>도구 가게, 도구 고르기, 작은 선택창(↑↓ + 확인, 터치/클릭도 됨, Esc 는 마지막 항목 = 취소).</summary>
     public partial class GameRoot
     {
-        GameObject choiceWin;
-        readonly List<Text> choiceTexts = new List<Text>();
-        string[] choiceItems;
-        int choiceIndex, choicePicked = -1, choiceOffset;
-        const int MaxChoices = 7;                   // 한 번에 보이는 줄 (더 많으면 커서를 따라 스크롤, ▲▼ 표시 — 온천 대장간 9줄이 화면 위로 넘치던 것)
-        Text choiceUp, choiceDown;
-        const float ChoiceX = 628, ChoiceW = 320;       // 좁은 대화창(16~628)과 옆으로 겹치지 않게
+        ChoiceMenu choices;                             // 선택창 (부품)
+        int choiceIndex { get => choices.Index; set => choices.Index = value; }
+        int choicePicked => choices.Picked;
+        const float ChoiceX = 628;                      // 좁은 대화창(16~628)과 옆으로 겹치지 않게
         const float StatusChoiceX = 364;                // 상태 창 HP 막대 끝(362) ~ 가방 칸(684) 사이
 
-        void BuildChoice()
-        {
-            choiceWin = UIKit.Window(ui, "Choice", ChoiceX, 250, ChoiceW, 140).gameObject;
-            for (int i = 0; i < MaxChoices; i++)
-            {
-                int idx = i;
-                var t = UIKit.Label(choiceWin.transform, "Opt" + i, "", 12, 12 + i * 43, ChoiceW - 24, 42, 22, TextAnchor.MiddleLeft);
-                t.raycastTarget = true;
-                t.supportRichText = true;
-                var b = t.gameObject.AddComponent<Button>();
-                b.transition = Selectable.Transition.None;
-                b.onClick.AddListener(() => { if (choiceWin.activeSelf && choiceOffset + idx < choiceItems.Length) { choiceIndex = choiceOffset + idx; choicePicked = choiceIndex; } });
-                choiceTexts.Add(t);
-            }
-            choiceUp = UIKit.Label(choiceWin.transform, "More Up", "▲", ChoiceW - 34, 0, 24, 16, 14, TextAnchor.MiddleCenter, UIKit.Gold);
-            choiceDown = UIKit.Label(choiceWin.transform, "More Down", "▼", ChoiceW - 34, 0, 24, 16, 14, TextAnchor.MiddleCenter, UIKit.Gold);
-            choiceWin.SetActive(false);
-        }
+        void BuildChoice() => choices = new ChoiceMenu(ui);
 
-        void RenderChoice()
-        {
-            int n = choiceItems.Length, rows = Mathf.Min(n, MaxChoices);
-            if (choiceIndex < choiceOffset) choiceOffset = choiceIndex;
-            if (choiceIndex >= choiceOffset + rows) choiceOffset = choiceIndex - rows + 1;
-            choiceOffset = Mathf.Clamp(choiceOffset, 0, Mathf.Max(0, n - rows));
-            for (int i = 0; i < MaxChoices; i++)
-            {
-                int k = choiceOffset + i;
-                bool on = i < rows;
-                choiceTexts[i].gameObject.SetActive(on);
-                choiceTexts[i].fontSize = Settings.ChoiceFontSize;
-                if (on) choiceTexts[i].text = (k == choiceIndex ? "<color=#F2C443>▶</color> " : "    ") + choiceItems[k];
-            }
-            choiceUp.gameObject.SetActive(choiceOffset > 0);
-            choiceDown.gameObject.SetActive(choiceOffset + rows < n);
-        }
-
-        /// <summary>선택창을 띄우고 고를 때까지 기다린다. 결과는 choicePicked (Esc = 마지막 항목).</summary>
+        /// <summary>선택창을 띄우고 고를 때까지 기다린다. 결과는 choicePicked (Esc = 마지막 항목).
+        /// 대화창 바로 위(또는 아래)에 붙인다. 상태 창이 열려 있으면 가운데 칸 위로 (왼쪽 능력치·오른쪽 가방이 보이게).</summary>
         IEnumerator Choose(params string[] items)
         {
-            choiceItems = items;
-            choicePicked = -1;
-            choiceOffset = 0;
-            float h = 24 + Mathf.Min(items.Length, MaxChoices) * 43;
-            var rt = (RectTransform)choiceWin.transform;
-            rt.sizeDelta = new Vector2(ChoiceW, h);
-            ((RectTransform)choiceDown.transform).anchoredPosition = new Vector2(ChoiceW - 34, -(h - 16));
-            // 대화창 바로 위(또는 아래)에 붙인다. 상태 창이 열려 있으면 가운데 칸 위로 (왼쪽 능력치·오른쪽 가방이 보이게)
-            rt.anchoredPosition = new Vector2(statusOpen ? StatusChoiceX : ChoiceX, -ChoiceTopY(h));
-            choiceWin.SetActive(true);
-            RenderChoice();
-            while (choicePicked < 0)
-            {
-                yield return null;
-                if (Keys.Down(KeyCode.UpArrow) || Keys.Down(KeyCode.W)) { choiceIndex = (choiceIndex + items.Length - 1) % items.Length; sfx.Play("select"); RenderChoice(); }
-                if (Keys.Down(KeyCode.DownArrow) || Keys.Down(KeyCode.S)) { choiceIndex = (choiceIndex + 1) % items.Length; sfx.Play("select"); RenderChoice(); }
-                if (Keys.Down(KeyCode.Escape) || Keys.Down(KeyCode.X)) choicePicked = items.Length - 1;
-                else if (ConfirmDown()) choicePicked = choiceIndex;
-            }
-            choiceWin.SetActive(false);
+            choices.FontSize = Settings.ChoiceFontSize;
+            yield return choices.Run(items, statusOpen ? StatusChoiceX : ChoiceX, ChoiceTopY(ChoiceMenu.Height(items.Length)), ConfirmDown, () => sfx.Play("select"));
         }
 
         /// <summary>DQ 가게처럼 지금 장비와 비교: " ▲공3 ▼방1" (좋아지면 초록, 나빠지면 빨강, 같으면 "=").</summary>
@@ -243,7 +188,7 @@ namespace GirlAdventure.View
             {
                 var owned = Items.Owned(P);
                 if (owned.Count == 0) { yield return Talk("item_none"); yield break; }
-                if (owned.Count > MaxChoices - 1) owned.RemoveRange(MaxChoices - 1, owned.Count - (MaxChoices - 1));
+                if (owned.Count > ChoiceMenu.MaxRows - 1) owned.RemoveRange(ChoiceMenu.MaxRows - 1, owned.Count - (ChoiceMenu.MaxRows - 1));
                 var labels = new string[owned.Count + 1];
                 for (int i = 0; i < owned.Count; i++)
                     labels[i] = $"{GameData.ItemName(owned[i])} ×{P.Count(owned[i])} <size=15><color=#9AA3C7>{Items.EffectText(owned[i])}</color></size>";
@@ -309,11 +254,11 @@ namespace GirlAdventure.View
         }
 
         // ---- 프로브용
-        public bool ChoiceOpen => choiceWin != null && choiceWin.activeSelf;
-        public int ChoiceCount => choiceItems?.Length ?? 0;
+        public bool ChoiceOpen => choices != null && choices.Visible;
+        public int ChoiceCount => choices.Count;
         /// <summary>커서 줄이 지금 보이는 줄 안에 있나 (스크롤), 보이는 줄 수.</summary>
-        public bool ChoiceCursorVisible => choiceIndex >= choiceOffset && choiceIndex < choiceOffset + Mathf.Min(ChoiceCount, MaxChoices) && choiceTexts[choiceIndex - choiceOffset].text.Contains("▶");
-        public int ChoiceRows => choiceTexts.FindAll(t => t.gameObject.activeSelf).Count;
+        public bool ChoiceCursorVisible => choices.CursorVisible;
+        public int ChoiceRows => choices.VisibleRows;
         public bool HasSfx(string name) => sfx != null && sfx.Has(name);
         public void DebugSetGold(int g) { P.Gold = g; RefreshHud(); }
         public void DebugSetMp(int mp) { P.Mp = Mathf.Clamp(mp, 0, P.MaxMp); RefreshHud(); }

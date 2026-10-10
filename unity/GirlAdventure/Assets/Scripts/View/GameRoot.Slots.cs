@@ -39,7 +39,7 @@ namespace GirlAdventure.View
         }
 
         // ---- 프로브용
-        public bool SlotPickerOpen => Current == Mode.Title && busy && choiceWin.activeSelf;
+        public bool SlotPickerOpen => Current == Mode.Title && busy && choices.Visible;
         public int CurrentSlot => SaveStore.Slot;
         public void DebugSaveTo(int slot) { SaveStore.Slot = slot; AutoSave(); }
     }
