@@ -661,7 +661,7 @@ namespace GirlAdventure.View
             var tall = Mask(m, ",");
             var camp = Mask(m, village ? "" : field ? "FS" : ":FSMN");
             // 숲은 짙은 초록·햇살 얼룩, 초원(챕터 1)은 밝은 연두
-            field |= village;
+            field |= village;
             Color32 g0 = H(field ? "#4E9C3C" : "#2F6E2A"), g1 = H(field ? "#6EBA4E" : "#4A8E34"), g2 = H(field ? "#90D262" : "#6AAE48"), tallC = H(field ? "#3A8430" : "#2A6A26"), sun = H(field ? "#E8F090" : "#C8E070");
             Color32 s0 = H("#9A7448"), s1 = H("#B88E5A"), sRim = H("#6E5030"), w0 = H("#5ABEE0"), w1 = H("#2A78B0"), foam = H("#E8FAFF");
             for (int py = 0; py < h; py++)
@@ -1228,6 +1228,15 @@ namespace GirlAdventure.View
             R.Rect(L - 4, Tp - 4, Wd + 8, Ht + 8, Ink);                                   // 바깥 테두리
             R.Rect(L, Tp, Wd, Ht, H("#5A3A24"));                                            // 벽 (나무)
             R.Rect(L + 6, Tp + 6, Wd - 12, Ht - 12, H("#6E4A2E"));
+            for (float py = Tp + 6; py < Tp + Ht - 6; py++)                                   // 벽 나무 결 (가로 통나무)
+                for (float px = L + 6; px < L + Wd - 6; px++)
+                {
+                    int log = (int)(py - Tp) / 16;
+                    float g = Mathf.Sin(px * .07f + log * 2.1f + Mathf.Sin(py * .4f) * .8f);
+                    var c = Mul(H("#6E4A2E"), .9f + g * .06f + Hash(log, 0, 106) * .1f);
+                    if ((int)(py - Tp) % 16 == 0) c = H("#4A2E1A");
+                    R.Blend((int)px, (int)py, c);
+                }
             // 벽지 (위 벽 두 줄) + 줄무늬 + 징두리 판자
             float fx = 13 * T, fy = 8 * T, fw = 9 * T, fh = 7 * T;
             R.Rect(fx, Tp + 4, fw, 2 * T - 4, H(pc[0]));
@@ -1235,14 +1244,24 @@ namespace GirlAdventure.View
             R.Rect(fx, fy - 24, fw, 24, H("#B07A4A"));
             R.Rect(fx, fy - 26, fw, 4, H("#8A5A32"));
             for (float x = fx + 20; x < fx + fw; x += 40) R.Rect(x, fy - 22, 2, 20, H("#8A5A32"));
-            // 바닥 (판자)
-            R.Rect(fx, fy, fw, fh, H("#C99560"));
-            for (int j = 0; j < 14; j++)
-            {
-                float y = fy + j * 24;
-                R.Rect(fx, y, fw, 2, H("#A87442"));
-                for (float x = fx + (j % 2 == 0 ? 30 : 70); x < fx + fw; x += 96) R.Rect(x, y, 2, 24, H("#A87442"));
-            }
+            // 바닥 (판자, 2026-10-10 그래픽 점검: 판자마다 색·나뭇결·이음매 그늘 — 예전 단색 판자)
+            Color32 p0 = H("#B98450"), p1 = H("#D6A56C"), pseam = H("#8A5A30");
+            for (float py = fy; py < fy + fh; py++)
+                for (float px = fx; px < fx + fw; px++)
+                {
+                    int row = (int)((py - fy) / 24), ry = (int)(py - fy) % 24;
+                    float off = Hash(row, 3, 101) * 96;
+                    int col = (int)((px - fx + off) / 96), rx = (int)(px - fx + off) % 96;
+                    float tone = Hash(col, row, 102);
+                    var c = Lerp(p0, p1, .25f + tone * .6f);
+                    float grain = Mathf.Sin((px + tone * 40) * .09f + Mathf.Sin(py * .5f + col) * 1.6f + ry * .35f);
+                    c = Mul(c, .93f + grain * .05f + Hash((int)px, (int)py, 103) * .04f);
+                    if (Hash(col, row, 104) > .85f && Mathf.Abs(rx - 48) < 4 && Mathf.Abs(ry - 12) < 3) c = Mul(c, .75f);   // 옹이
+                    if (ry < 2) c = ry == 0 ? pseam : Mul(c, 1.08f);
+                    else if (ry == 23) c = Mul(c, .82f);
+                    if (rx < 2) c = rx == 0 ? pseam : Mul(c, .9f);
+                    R.Blend((int)px, (int)py, c);
+                }
             R.Rect(fx, fy, fw, 8, new Color32(0, 0, 0, 50));                                // 벽 아래 그늘
             // 창문 둘 (햇살이 바닥까지)
             foreach (int wx in new[] { 14, 20 })
@@ -1259,9 +1278,27 @@ namespace GirlAdventure.View
                 R.Rect(X, Y + T - 8, T, 6, H("#8A5A32"));
             }
             // 깔개
-            R.Ellipse(17.5f * T, 11.6f * T, 2.6f * T, 1.5f * T, H(pc[2]));
-            R.Ellipse(17.5f * T, 11.6f * T, 2.6f * T - 8, 1.5f * T - 8, H(pc[1]));
-            R.Ellipse(17.5f * T, 11.6f * T, 1.6f * T, .8f * T, H(pc[0]));
+            {   // 무늬 깔개: 테두리 띠 + 점 무늬 띠 + 가운데, 천 결과 술 (2026-10-10)
+                float cx = 17.5f * T, cy = 11.6f * T, rxr = 2.6f * T, ryr = 1.5f * T;
+                Color32 a0 = H(pc[2]), a1 = H(pc[1]), a2 = H(pc[0]), cream = H("#FFF6E4");
+                R.Ellipse(cx + 4, cy + 6, rxr, ryr, new Color32(0, 0, 0, 45));
+                for (float py = cy - ryr - 2; py <= cy + ryr + 2; py++)
+                    for (float px = cx - rxr - 8; px <= cx + rxr + 8; px++)
+                    {
+                        float ux = (px - cx) / rxr, uy = (py - cy) / ryr, r = Mathf.Sqrt(ux * ux + uy * uy);
+                        float ang = Mathf.Atan2(uy, ux);
+                        if (r > 1)
+                        {
+                            if (r < 1.06f && Mathf.Abs(uy) < .5f && ((int)py % 4) < 2) R.Blend((int)px, (int)py, cream);   // 양 끝 술
+                            continue;
+                        }
+                        Color32 c = r > .9f ? a0 : r > .84f ? cream : r > .62f ? a1 : r > .58f ? a0 : a2;
+                        if (r > .64f && r < .82f && Mathf.Abs(Mathf.Sin(ang * 12)) > .93f) c = cream;              // 점 무늬
+                        if (r < .3f && Mathf.Abs(Mathf.Sin(ang * 4)) * (.3f - r) > .06f) c = a1;                    // 가운데 꽃
+                        c = Mul(c, .94f + Hash((int)px, (int)py, 105) * .08f + (((int)px + (int)py) % 3 == 0 ? .02f : 0));
+                        R.Blend((int)px, (int)py, c);
+                    }
+            }
             // 문: 바깥 햇빛 + 빨간 발판
             float dx = WorldMap.HomeDoor.x * T, dy = WorldMap.HomeDoor.y * T;
             R.Rect(dx + 2, dy, T - 4, T, H("#4A2E18"));
