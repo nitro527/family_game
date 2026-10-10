@@ -14,7 +14,7 @@ namespace GirlAdventure.View
         const float StepTime = .17f, FieldCharHeight = 1.75f, MobHeight = 1.15f;
 
         Transform fieldRoot;
-        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR, wellWaterSR, sandTwisterSR, momSR;
+        SpriteRenderer mapSR, playerSR, shadowSR, chestOpenSR, doorOpenSR, guardSR, guardShadowSR, wellWaterSR, sandTwisterSR;
         const float GuardHeight = 1.6f;         // 보물상자 지킴이는 보통 젤리보다 크게
         Sprite[] sideFrames;
         Sprite[] frontFrames, backFrames;       // 앞/뒤 걷기: 한 발 → 두 발 모음 → 반대 발 → 두 발 모음 (tools/make_walk_frames.py)
@@ -119,58 +119,9 @@ namespace GirlAdventure.View
             sandTwisterSR.sortingOrder = 2;
             sandTwisterSR.enabled = false;
             doorOpenSR = Prop("DoorOpen", MapPainter.OpenDoorTexture(), (WorldMap.BaseDoor.x, WorldMap.BaseDoor.y - 1));
-            BuildBroCage();
             BuildFieldFx();
             BuildLighting();
             RebuildMapFx();
-        }
-
-        /// <summary>
-        /// 동굴 기지 왕좌 옆 철창 (2026-10-09, 합류 장면이 "철창 안에 있던 건…" 인데 철창이 없던 것): 철창 그림 → 갇힌 지훈 → 앞 창살 순서로 겹친다
-        /// (같은 sortingOrder, FeetAt 의 z 로 앞뒤). 합류하면 문이 열린 철창만 남는다. 그림은 tools/make_cage.py.
-        /// </summary>
-        void BuildBroCage()
-        {
-            var feet = FeetAt(WorldMap.BroCage.x, WorldMap.BroCage.y);
-            SpriteRenderer Make(string name, Sprite sp, float dz)
-            {
-                var sr = new GameObject(name).AddComponent<SpriteRenderer>();
-                sr.transform.SetParent(fieldRoot, false);
-                sr.sprite = sp;
-                sr.transform.localPosition = feet + new Vector3(0, -.06f, dz);
-                sr.sortingOrder = 2;
-                sr.enabled = false;
-                return sr;
-            }
-            Sprite Cage(string n)
-            {
-                var t = Resources.Load<Texture2D>("Tiles/Props/" + n);
-                return t == null ? null : Art.FromTexture(t, new Vector2(26f / 59f, 0), Painter.Tile);   // 닫힌 철창 몸통 가운데 (폭 52px 중 26)
-            }
-            cageClosed = Cage("cage");
-            cageOpen = Cage("cage_open");
-            cageSR = Make("BroCage", cageClosed, .002f);
-            cagedBroSR = Make("CagedBro", Art.Get("Boy/walk_front", FieldCharHeight * .62f), 0);
-            cagedBroSR.transform.localPosition += new Vector3(0, .12f, 0);
-            cagedBroBase = cagedBroSR.transform.localPosition;
-            cageBarsSR = Make("BroCageBars", Cage("cage_bars"), -.002f);
-        }
-
-        Sprite cageClosed, cageOpen;
-        Vector3 cagedBroBase;
-        SpriteRenderer cageSR, cagedBroSR, cageBarsSR;
-
-        /// <summary>철창: 동굴에서만. 지훈이 아직 합류 전이면 닫힌 철창 안에 지훈 (장군을 이기기 전엔 그림자), 합류하면 열린 철창.</summary>
-        void RefreshBroCage()
-        {
-            if (cageSR == null) return;
-            bool cave = map != null && map.Kind == MapKind.Cave && cageClosed != null;
-            bool caged = cave && !P.BrotherJoined;
-            cageSR.enabled = cave;
-            cageSR.sprite = caged || cageOpen == null ? cageClosed : cageOpen;
-            cagedBroSR.enabled = caged;
-            cagedBroSR.color = P.Boss2Down ? Color.white : new Color(.13f, .1f, .18f, .92f);   // 장군을 이기기 전엔 "누군가" 그림자 (합류 장면에서 지훈이라고 밝혀진다)
-            cageBarsSR.enabled = caged && cageBarsSR.sprite != null;
         }
 
         SpriteRenderer Prop(string name, Texture2D tex, (int x, int y) at)
@@ -216,6 +167,7 @@ namespace GirlAdventure.View
             RebuildMapFx();
             RebuildLights();
             RebuildNpcs();
+            RebuildObjects();
             RebuildHoles();
             mobs.Reset(map, P.X, P.Y);
             SyncMobViews();
@@ -232,23 +184,13 @@ namespace GirlAdventure.View
             RefreshQuestSpots();
             chestOpenSR.enabled = cave && P.Opened.Contains($"{WorldMap.Chest.x},{WorldMap.Chest.y}");
             doorOpenSR.enabled = cave && Quest.DoorOpen(P);
-            RefreshBroCage();
+            RefreshObjects();                                                   // 상태 오브젝트 (props.json Objects: 철창·마법진의 엄마)
             letterSR.enabled = map.Kind == MapKind.Desert && !Quest.HasLetter(P);
             (int x, int y) hc = map.Kind == MapKind.Home || map.Kind == MapKind.Snow || map.Kind == MapKind.Library || map.Kind == MapKind.Forest ? map.Find('H') : (-1, -1);
             homeChestSR.enabled = hc.x >= 0 && P.Opened.Contains(map.Kind == MapKind.Snow ? Quest.SnowChestId : map.Kind == MapKind.Library ? Quest.LibChestId : map.Kind == MapKind.Forest ? Quest.ForChestId : Quest.HomeChestId(map.Room));
             if (homeChestSR.enabled) homeChestSR.transform.localPosition = new Vector3(hc.x, -hc.y, 0);
             wellWaterSR.enabled = map.Kind == MapKind.Oasis && P.Boss3Down;      // 사막 보스를 이기면 마른 우물에 물이 찬다
             sandTwisterSR.enabled = map.Kind == MapKind.Desert && !P.Boss3Down && sandTwisterSR.sprite != null;
-            bool momHere = map.Kind == MapKind.Library && !Quest.MomJoined(P);
-            if (momHere && momSR == null)
-            {
-                momSR = new GameObject("MomAtCircle").AddComponent<SpriteRenderer>();
-                momSR.transform.SetParent(fieldRoot, false);
-                momSR.sprite = Art.Get("Mom/walk_front", FieldCharHeight * 1.12f);
-                momSR.sortingOrder = 2;
-                momSR.transform.localPosition = FeetAt(WorldMap.MomCircle.x, WorldMap.MomCircle.y - .35f);
-            }
-            if (momSR != null) momSR.enabled = momHere;
             bool guard = cave && Quest.GuardAlive(P);
             if (guard && guardSR == null)
             {

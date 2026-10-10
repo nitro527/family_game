@@ -45,12 +45,7 @@ namespace GirlAdventure.View
 
         void TickNpcs()
         {
-            if (cagedBroSR != null && cagedBroSR.enabled)        // 철창 안 지훈: 훌쩍훌쩍 어깨가 들썩 (장군을 이긴 뒤엔 손 흔들듯 통통)
-            {
-                float k = P.Boss2Down ? Mathf.Abs(Mathf.Sin(Time.time * 6)) * .08f : Mathf.Abs(Mathf.Sin(Time.time * 7)) * .025f;
-                cagedBroSR.transform.localPosition = cagedBroBase + new Vector3(0, k, 0);
-                cagedBroSR.transform.localRotation = Quaternion.Euler(0, 0, P.Boss2Down ? Mathf.Sin(Time.time * 6) * 6 : 0);
-            }
+            TickObjects();                                      // 상태 오브젝트 움직임 (철창 안 지훈 훌쩍 등)
             npcHopT = Mathf.Max(0, npcHopT - Time.deltaTime);
             foreach (var (n, body, sh, s) in npcViews)
             {

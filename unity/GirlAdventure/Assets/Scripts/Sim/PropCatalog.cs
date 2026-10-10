@@ -83,6 +83,30 @@ namespace GirlAdventure.Sim
         public EllipseDef[] Under;
     }
 
+    /// <summary>
+    /// 상태에 따라 바뀌는 필드 오브젝트의 한 겹 (props.json Objects[].Layers). Prop = 소품 그림, Art = 캐릭터 그림(Resources 경로, 높이 Height 칸).
+    /// 위치 = 칸의 발 자리(FeetAt) + (Dx, Dy) 칸, Z = 앞뒤 (작을수록 앞). PivotX = 그림 아래쪽 기준점(0~1, 기본 .5).
+    /// ShowIf = 보일 조건, Tint/TintIf = 조건이 맞으면 색 입히기, Anim = 움직임 (AnimIf 가 맞으면 Anim2).
+    /// 조건: "BrotherJoined", "MomJoined", "Boss2Down" … "Opened:아이디", 앞에 "!" 면 반대, "&amp;" 로 여럿.
+    /// </summary>
+    [Serializable]
+    public class LayerDef
+    {
+        public string Prop, Art;
+        public float Height, Dx, Dy, Z, PivotX;
+        public string ShowIf, Tint, TintIf, Anim, Anim2, AnimIf;
+    }
+
+    /// <summary>상태 오브젝트 (철창·마법진의 엄마 등): 맵 Map 의 칸 (X, Y) 에 겹(Layers)을 쌓는다. Block 이면 그 칸을 막는다.</summary>
+    [Serializable]
+    public class ObjectDef
+    {
+        public string Id, Map;
+        public int X, Y;
+        public bool Block;
+        public LayerDef[] Layers;
+    }
+
     [Serializable]
     public class PropTable
     {
@@ -90,6 +114,7 @@ namespace GirlAdventure.Sim
         public PropDef[] Props;
         public ThemeDef[] Themes;
         public PlacedDef[] Placed;
+        public ObjectDef[] Objects;
     }
 
     public static class PropCatalog
@@ -107,6 +132,8 @@ namespace GirlAdventure.Sim
             blocks.Clear();
             foreach (var p in table.Placed ?? new PlacedDef[0])
                 if (p.Block && Enum.TryParse<MapKind>(p.Map, out var k)) blocks.Add((k, p.X, p.Y));
+            foreach (var o in table.Objects ?? new ObjectDef[0])
+                if (o.Block && Enum.TryParse<MapKind>(o.Map, out var k)) blocks.Add((k, o.X, o.Y));
         }
 
         /// <summary>데이터로 놓은 장식이 이 칸을 막는지 (WorldMap.Blocked 가 묻는다).</summary>
@@ -119,6 +146,40 @@ namespace GirlAdventure.Sim
             foreach (var p in table.Placed ?? new PlacedDef[0])
                 if (p.Map == k.ToString()) yield return p;
         }
+        public static IEnumerable<ObjectDef> ObjectsOn(MapKind k)
+        {
+            foreach (var o in table.Objects ?? new ObjectDef[0])
+                if (o.Map == k.ToString()) yield return o;
+        }
+        public static IReadOnlyList<ObjectDef> AllObjects => table.Objects ?? new ObjectDef[0];
+
+        /// <summary>오브젝트 조건 하나를 푼다 ("!" 반대, "&amp;" 여럿, "Opened:아이디"). 모르는 이름은 false.</summary>
+        public static bool Cond(string c, PlayerState p)
+        {
+            if (string.IsNullOrEmpty(c)) return true;
+            if (c.Contains("&"))
+            {
+                foreach (var part in c.Split('&')) if (!Cond(part.Trim(), p)) return false;
+                return true;
+            }
+            if (c.StartsWith("!")) return !Cond(c.Substring(1), p);
+            if (c.StartsWith("Opened:")) return p.Opened.Contains(c.Substring(7));
+            switch (c)
+            {
+                case "BrotherJoined": return p.BrotherJoined;
+                case "MomJoined": return Quest.MomJoined(p);
+                case "BossDown": return p.BossDown;
+                case "Boss2Down": return p.Boss2Down;
+                case "Boss3Down": return p.Boss3Down;
+                case "Boss4Down": return p.Boss4Down;
+                case "Boss5Down": return p.Boss5Down;
+                case "Boss6Down": return p.Boss6Down;
+                case "Boss7Down": return p.Boss7Down;
+                case "DoorOpen": return Quest.DoorOpen(p);
+                default: return false;
+            }
+        }
+
         public static IReadOnlyList<ThemeDef> AllThemes => table.Themes ?? new ThemeDef[0];
         public static IReadOnlyList<PlacedDef> AllPlaced => table.Placed ?? new PlacedDef[0];
     }

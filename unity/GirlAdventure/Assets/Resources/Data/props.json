@@ -119,5 +119,9 @@
   {"Map": "LavaTown", "Prop": "stonelantern", "X": 25, "Y": 10, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 12, "Ry": 5}]},
   {"Map": "LavaTown", "Prop": "barrels", "X": 10, "Y": 6, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 20, "Ry": 5}]},
   {"Map": "LavaTown", "Prop": "barrels", "X": 28, "Y": 15, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 20, "Ry": 5}]}
+ ],
+ "Objects": [
+  {"Id": "bro_cage", "Map": "Cave", "X": 26, "Y": 3, "Layers": [{"Prop": "cage", "PivotX": 0.4407, "Dy": -0.06, "Z": 0.002, "ShowIf": "!BrotherJoined"}, {"Prop": "cage_open", "PivotX": 0.4407, "Dy": -0.06, "Z": 0.002, "ShowIf": "BrotherJoined"}, {"Art": "Boy/walk_front", "Height": 1.085, "Dy": 0.06, "ShowIf": "!BrotherJoined", "Tint": "#211A2EEB", "TintIf": "!Boss2Down", "Anim": "sob", "Anim2": "cheer", "AnimIf": "Boss2Down"}, {"Prop": "cage_bars", "PivotX": 0.4407, "Dy": -0.06, "Z": -0.002, "ShowIf": "!BrotherJoined"}]},
+  {"Id": "mom_circle", "Map": "Library", "X": 17, "Y": 3, "Layers": [{"Art": "Mom/walk_front", "Height": 1.96, "Dy": 0.35, "Z": 0.0035, "ShowIf": "!MomJoined"}]}
  ]
 }

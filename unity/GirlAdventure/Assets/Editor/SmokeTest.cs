@@ -1304,6 +1304,29 @@ namespace GirlAdventure.EditorTools
                 if (!System.Enum.TryParse<MapKind>(pl.Map, out _)) unknown += "map:" + pl.Map + " ";
                 Use(pl.Map, pl.Prop);
             }
+            var known = new System.Collections.Generic.HashSet<string> { "BrotherJoined", "MomJoined", "BossDown", "Boss2Down", "Boss3Down", "Boss4Down", "Boss5Down", "Boss6Down", "Boss7Down", "DoorOpen" };
+            void CondOk(string where, string c)
+            {
+                if (string.IsNullOrEmpty(c)) return;
+                foreach (var part in c.Split('&'))
+                {
+                    string n = part.Trim().TrimStart('!');
+                    if (!known.Contains(n) && !n.StartsWith("Opened:")) unknown += where + ":cond " + n + " ";
+                }
+            }
+            foreach (var o in PropCatalog.AllObjects)
+            {
+                if (!System.Enum.TryParse<MapKind>(o.Map, out _)) unknown += "map:" + o.Map + " ";
+                foreach (var l in o.Layers ?? new LayerDef[0])
+                {
+                    if (!string.IsNullOrEmpty(l.Prop)) Use(o.Id, l.Prop);
+                    else if (Resources.Load<Texture2D>(l.Art) == null) unknown += o.Id + ":art " + l.Art + " ";
+                    CondOk(o.Id, l.ShowIf); CondOk(o.Id, l.TintIf); CondOk(o.Id, l.AnimIf);
+                }
+            }
+            var pp = PlayerState.NewGame("p");
+            Check("props objects: conditions", PropCatalog.Cond("!BrotherJoined", pp) && !PropCatalog.Cond("BrotherJoined & !MomJoined", pp) && !PropCatalog.Cond("Opened:x", pp));
+            Check("props placed: lamp blocks its tile", WorldMap.SnowTown().Blocked(15, 11) && !WorldMap.SnowTown().Blocked(16, 11));
             Check("props.json: every prop has a picture", missing == "", missing);
             Check("props.json: every picture is listed", extra == "", extra);
             Check("props.json: themes use known props and maps", unknown == "", unknown);

@@ -323,7 +323,7 @@ namespace GirlAdventure.View
             if (!late)
             {
                 sfx.Play("unlock");                     // 철컥! 문이 열리고 지훈이 나와 누나 옆에 선다
-                RefreshBroCage();
+                RefreshObjects();
                 ResetBrother();
                 UpdatePlayerVisual();
                 yield return Talk("bro_join_out");
