@@ -112,15 +112,10 @@ namespace GirlAdventure.Sim
         /// <summary>조건 낱말 하나의 값 (모르는 낱말이면 null).</summary>
         public static bool? Word(string w, PlayerState p)
         {
+            if (w == "boss") return p.BossBeaten(1);                                       // boss = 챕터 1, bossN = 챕터 N (챕터 표 길이까지)
+            if (w.StartsWith("boss") && int.TryParse(w.Substring(4), out int bn) && bn >= 1 && bn <= Chapters.Last) return p.BossBeaten(bn);
             switch (w)
             {
-                case "boss": return p.BossDown;
-                case "boss2": return p.Boss2Down;
-                case "boss3": return p.Boss3Down;
-                case "boss4": return p.Boss4Down;
-                case "boss5": return p.Boss5Down;
-                case "boss6": return p.Boss6Down;
-                case "boss7": return p.Boss7Down;
                 case "mom": return Quest.MomJoined(p);
                 case "guard": return p.GuardDown;
                 case "key": return p.HasItem(Quest.KeyItem);

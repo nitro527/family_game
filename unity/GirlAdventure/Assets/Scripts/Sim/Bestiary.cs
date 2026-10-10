@@ -26,10 +26,10 @@ namespace GirlAdventure.Sim
         }
 
         public static bool Seen(PlayerState p, EnemyDef d) => p.Seen.Contains(d.Name);
-        public static bool Beaten(PlayerState p, EnemyDef d) => p.Beaten.Contains(d.Name);
+        public static bool BossBeaten(PlayerState p, EnemyDef d) => p.Beaten.Contains(d.Name);
 
         public static int SeenCount(PlayerState p) { int n = 0; foreach (var d in GameData.AllEnemies()) if (Seen(p, d)) n++; return n; }
-        public static int BeatenCount(PlayerState p) { int n = 0; foreach (var d in GameData.AllEnemies()) if (Beaten(p, d)) n++; return n; }
+        public static int BeatenCount(PlayerState p) { int n = 0; foreach (var d in GameData.AllEnemies()) if (BossBeaten(p, d)) n++; return n; }
         public static int Total { get { int n = 0; foreach (var _ in GameData.AllEnemies()) n++; return n; } }
 
         /// <summary>모든 젤리를 쓰러뜨렸나 (칭호 "젤리 박사").</summary>

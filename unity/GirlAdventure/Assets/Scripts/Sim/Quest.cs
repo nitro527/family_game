@@ -75,35 +75,6 @@ namespace GirlAdventure.Sim
             return true;
         }
 
-        /// <summary>
-        /// 챕터 2 를 깬 뒤 챕터 3 으로: 동생 지훈과 함께(혹시 합류 전이면 여기서 합류) 회복하고 사막의 동굴 출구 앞에서 출발.
-        /// </summary>
-        public static void StartChapter3(PlayerState p)
-        {
-            TryJoinBrother(p);
-            p.Items.Remove(KeyItem);            // 기지 열쇠는 동굴에 두고 간다
-            p.Chapter = 3;
-            p.InVillage = false;
-            p.RestoreAll();
-            p.X = WorldMap.DesertStart.x;
-            p.Y = WorldMap.DesertStart.y;
-        }
-
-        /// <summary>
-        /// 챕터 3 을 깬 뒤 챕터 4 (용암 땅)로: 챕터를 시작할 때 아빠가 합류한다 (사용자 2026-10-03). 회복하고 용암 땅 왼쪽 아래에서 출발.
-        /// </summary>
-        public static void StartChapter4(PlayerState p)
-        {
-            TryJoinBrother(p);
-            p.Join("dad");
-            p.Chapter = 4;
-            p.InVillage = false;
-            p.Underground = false;
-            p.RestoreAll();
-            p.X = WorldMap.LavaStart.x;
-            p.Y = WorldMap.LavaStart.y;
-        }
-
         /// <summary>집 안 보물상자 (집 번호 = WorldMap.AllHouses 순, 여관은 없음). ✏️ 임시 — 별빛 → 오아시스 → 온천 → 눈꽃 마을로 갈수록 조금씩 많이.</summary>
         public static readonly (string id, int n)[] HomeChests =
         {
@@ -168,19 +139,15 @@ namespace GirlAdventure.Sim
 
         /// <summary>
         /// 챕터 골라 시작 (사용자 2026-10-03 "업데이트될 때마다 처음부터 시작하는 거 귀찮아"): 앞 챕터들을 깬 것으로 하고
-        /// 그 챕터에 맞는 레벨·장비·골드·사탕으로 새 모험을 만든다. 동료 합류·출발 자리는 StartChapterN 그대로.
+        /// 그 챕터에 맞는 레벨·장비·골드·사탕으로 새 모험을 만든다. 동료 합류·출발 자리는 Chapters.Begin 그대로.
         /// </summary>
         public static PlayerState QuickStart(string name, int chapter)
         {
             chapter = System.Math.Max(2, System.Math.Min(WorldMap.LastChapter, chapter));
             var p = PlayerState.NewGame(name);
             while (p.Lv < QuickLevels[chapter]) p.GainExp(PlayerState.NextExp(p.Lv) - p.Exp);
-            p.BossDown = true;
-            if (chapter >= 3) { p.GuardDown = true; p.Boss2Down = true; }
-            if (chapter >= 4) p.Boss3Down = true;
-            if (chapter >= 5) p.Boss4Down = true;
-            if (chapter >= 6) p.Boss5Down = true;
-            if (chapter >= 7) p.Boss6Down = true;
+            for (int c = 1; c < chapter; c++) p.SetBossBeaten(c);          // 앞 챕터 보스는 이긴 것으로
+            if (chapter >= 3) p.GuardDown = true;
             foreach (var id in QuickGear[chapter])
             {
                 if (!p.Gear.Contains(id)) p.Gear.Add(id);
@@ -192,53 +159,8 @@ namespace GirlAdventure.Sim
             p.Candy = PlayerState.MaxCandy;
             p.AddItem("potion", 2);
             if (chapter >= 3) p.AddItem("moon", 2);
-            if (chapter == 2) StartChapter2(p);
-            else if (chapter == 3) StartChapter3(p);
-            else if (chapter == 4) StartChapter4(p);
-            else if (chapter == 5) StartChapter5(p);
-            else if (chapter == 6) StartChapter6(p);
-            else StartChapter7(p);
+            Chapters.Begin(p, chapter);
             return p;
-        }
-
-        /// <summary>챕터 4 를 깬 뒤 챕터 5 (눈 덮인 곳, 서진이 2026-10-03)로: 셋이 함께 회복하고 눈 덮인 땅 왼쪽 아래에서 출발.</summary>
-        public static void StartChapter5(PlayerState p)
-        {
-            TryJoinBrother(p);
-            p.Join("dad");
-            p.Chapter = 5;
-            p.InVillage = false;
-            p.Underground = false;
-            p.RestoreAll();
-            p.X = WorldMap.SnowStart.x;
-            p.Y = WorldMap.SnowStart.y;
-        }
-
-        /// <summary>챕터 5 를 깬 뒤 챕터 6 (도서관 ⭐ 사용자 2026-10-05)으로: 셋이 함께 회복하고 도서관 입구 열람실에서 출발. 엄마는 안에서 만난다.</summary>
-        public static void StartChapter6(PlayerState p)
-        {
-            TryJoinBrother(p);
-            p.Join("dad");
-            p.Chapter = 6;
-            p.InVillage = false;
-            p.Underground = false;
-            p.RestoreAll();
-            p.X = WorldMap.LibStart.x;
-            p.Y = WorldMap.LibStart.y;
-        }
-
-        /// <summary>챕터 6 을 깬 뒤 챕터 7 (숲 ✏️)로: 넷이 함께 회복하고 숲 속 쉼터에서 출발.</summary>
-        public static void StartChapter7(PlayerState p)
-        {
-            TryJoinBrother(p);
-            p.Join("dad");
-            p.Join("mom");
-            p.Chapter = 7;
-            p.InVillage = false;
-            p.Underground = false;
-            p.RestoreAll();
-            p.X = WorldMap.ForStart.x;
-            p.Y = WorldMap.ForStart.y;
         }
 
         /// <summary>
@@ -281,14 +203,5 @@ namespace GirlAdventure.Sim
             return true;
         }
 
-        /// <summary>챕터 1 을 깬 뒤 챕터 2 로 넘어간다: 회복하고 동굴 입구에서 출발.</summary>
-        public static void StartChapter2(PlayerState p)
-        {
-            p.Chapter = 2;
-            p.InVillage = false;
-            p.RestoreAll();
-            p.X = WorldMap.CaveStart.x;
-            p.Y = WorldMap.CaveStart.y;
-        }
     }
 }

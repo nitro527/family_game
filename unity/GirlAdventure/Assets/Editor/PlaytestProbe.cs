@@ -1148,7 +1148,7 @@ namespace GirlAdventure.EditorTools
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             G.NoGroups = false;
-            Expect("cactus jelly in the book", Bestiary.Beaten(G.P, GameData.Desert[1]));
+            Expect("cactus jelly in the book", Bestiary.BossBeaten(G.P, GameData.Desert[1]));
             Expect("skill level up shown in battle (fire Lv2)", skillUpSeen && SkillLevels.Level(G.P, Cmd.Fire) >= 2);
 
             G.DebugGroupBattle(2);

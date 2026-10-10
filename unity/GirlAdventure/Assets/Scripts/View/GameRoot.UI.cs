@@ -853,10 +853,10 @@ namespace GirlAdventure.View
             hudWin.SetActive(false);
             hintLabel.SetActive(false);
             enemyLabel.text = "";
-            bool ch7 = P.Boss7Down, ch6 = P.Boss6Down, ch5 = P.Boss5Down, ch4 = P.Boss4Down, ch3 = P.Boss3Down, ch2 = P.Boss2Down;
-            endArt.sprite = EndingArt(ch7 ? 7 : ch6 ? 6 : ch5 ? 5 : ch4 ? 4 : ch3 ? 3 : ch2 ? 2 : 1);
-            endHead.text = ch7 ? "챕터 7 완료!" : ch6 ? "챕터 6 완료!" : ch5 ? "챕터 5 완료!" : ch4 ? "챕터 4 완료!" : ch3 ? "챕터 3 완료!" : ch2 ? "챕터 2 완료!" : "챕터 1 완료!";
-            endText.text = FillText(GameData.Talk(ch7 ? "ending_card7" : ch6 ? "ending_card6" : ch5 ? "ending_card5" : ch4 ? "ending_card4" : ch3 ? "ending_card3" : ch2 ? "ending_card2" : "ending_card")[0].Text, new (string, object)[] { ("lv", P.Lv) });
+            var done = Chapters.Get(Chapters.LastBeaten(P));                  // 이긴 보스 중 가장 뒤 챕터 (챕터 표)
+            endArt.sprite = EndingArt(done.No);
+            endHead.text = $"챕터 {done.No} 완료!";
+            endText.text = FillText(GameData.Talk(done.CardTalk)[0].Text, new (string, object)[] { ("lv", P.Lv) });
             bool next = P.Chapter < WorldMap.LastChapter;
             nextChapterBtn.gameObject.SetActive(next);
             if (next) nextChapterBtn.GetComponentInChildren<Text>().text = $"챕터 {P.Chapter + 1} 시작!";

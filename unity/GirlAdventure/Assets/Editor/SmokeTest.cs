@@ -296,7 +296,7 @@ namespace GirlAdventure.EditorTools
             NpcDef miner = null;
             foreach (var n in Npcs.On(MapKind.Cave)) if (n.Id == "miner") miner = n;
             var mp = PlayerState.NewGame("m");
-            Quest.StartChapter2(mp);
+            Chapters.Begin(mp, 2);
             var said = new List<string> { Npcs.TalkId(miner, mp) };
             mp.GuardDown = true; said.Add(Npcs.TalkId(miner, mp));
             Quest.OpenChest(mp, WorldMap.Chest.x, WorldMap.Chest.y, out _); said.Add(Npcs.TalkId(miner, mp));
@@ -405,7 +405,7 @@ namespace GirlAdventure.EditorTools
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(8));
             p.Boss2Down = true; p.Chapter = 2; p.Hp = 1;
-            Quest.StartChapter3(p);
+            Chapters.Begin(p, 3);
             Check("chapter 3 start: desert entrance, brother joined, healed", p.Chapter == 3 && (p.X, p.Y) == st && p.BrotherJoined && p.Hp == p.MaxHp && p.BroHp == p.BroMaxHp);
             p.X = WorldMap.Oasis.x - 5; p.Y = WorldMap.Oasis.y;
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
@@ -455,7 +455,7 @@ namespace GirlAdventure.EditorTools
                   string.Join(",", goods));
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(8));
-            p.Boss2Down = true; Quest.StartChapter3(p);
+            p.Boss2Down = true; Chapters.Begin(p, 3);
             int sAtk = p.Atk, bAtk = p.BroAtk, bDef = p.BroDef;
             p.GainGold(1000);
             Shop.Buy(p, "bro_sword"); Shop.Buy(p, "bro_shield");
@@ -488,6 +488,7 @@ namespace GirlAdventure.EditorTools
             GimmickTests();
             MapQuestTests();
             PropCatalogTests();
+            ChapterTableTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -902,7 +903,7 @@ namespace GirlAdventure.EditorTools
                   && lake > 20 && lakeReach == lake && enc > 200 && m.At(-1, 5) == 'P', $"lake {lakeReach}/{lake} enc {enc}");
             var p = PlayerState.NewGame("s");
             p.Boss2Down = true; Quest.TryJoinBrother(p); p.Join("dad"); p.Chapter = 4; p.Boss4Down = true; p.InVillage = true; p.Hp = 1;
-            Quest.StartChapter5(p);
+            Chapters.Begin(p, 5);
             Check("chapter 4 → 5: three together at the snow start, healed, snow town",
                   WorldMap.LastChapter >= 5 && p.Chapter == 5 && !p.InVillage && (p.X, p.Y) == WorldMap.SnowStart && p.Companions.Count == 2 && p.Hp == p.MaxHp
                   && WorldMap.HasTown(5) && WorldMap.ForPlayer(5, true).Kind == MapKind.SnowTown && WorldMap.ForPlayer(4, true).Kind == MapKind.LavaTown);
@@ -1139,7 +1140,7 @@ namespace GirlAdventure.EditorTools
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(12));
             p.Boss2Down = true; p.Boss3Down = true; p.Chapter = 3; Quest.TryJoinBrother(p); p.Hp = 1; p.InVillage = true;
-            Quest.StartChapter4(p);
+            Chapters.Begin(p, 4);
             Check("chapter 4 start: dad joins, lava start, healed, not in town", p.Chapter == 4 && p.Has("dad") && p.Companions.Count == 2 && p.Companions[1].Id == "dad"
                   && (p.X, p.Y) == st && p.Hp == p.MaxHp && !p.InVillage);
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
@@ -1281,6 +1282,30 @@ namespace GirlAdventure.EditorTools
         /// 맵마다 찾기 부탁 + 숨겨진 이벤트 (G-4): 부탁하는 사람이 있고, 찾을 칸 셋이 서로 다르고 걸어서 닿고,
         /// 받기 → 찾기 → 보상 흐름, 숨겨진 물건이 그 맵에 있고 옆 칸에서 닿는지, 보상·대사가 있는지.
         /// </summary>
+        /// <summary>챕터 표 (Sim/Chapters.cs): 챕터마다 보스·대사·출발 자리·보스 칸이 맞는지 — 새 챕터를 넣을 때 빠뜨린 것을 잡는다.</summary>
+        static void ChapterTableTests()
+        {
+            string bad = "";
+            foreach (var c in Chapters.All)
+            {
+                var m = WorldMap.Build(c.Field);
+                var (sx, sy) = c.Start();
+                if (c.Boss() == null) bad += $"ch{c.No}:boss ";
+                foreach (var t in new[] { c.IntroTalk, c.BossTalk, c.ClearTalk, c.CardTalk })
+                    if (!string.IsNullOrEmpty(t) && !GameData.HasTalk(t)) bad += $"ch{c.No}:talk {t} ";
+                if (m.Blocked(sx, sy)) bad += $"ch{c.No}:start blocked ";
+                if (WorldMap.Build(c.BossMap).Find(c.BossTile).x < 0) bad += $"ch{c.No}:boss tile ";
+                if (c.Goal == null || string.IsNullOrEmpty(c.Goal(PlayerState.NewGame("g")))) bad += $"ch{c.No}:goal ";
+                if (Chapters.ByBoss(c.Boss()) != c) bad += $"ch{c.No}:byboss ";
+            }
+            Check("chapter table: bosses, talks, starts, boss tiles, goals", bad == "", bad);
+            var p = PlayerState.NewGame("c");
+            p.SetBossBeaten(3);
+            Check("chapter table: boss flags by number", p.Boss3Down && p.BossBeaten(3) && !p.BossBeaten(2) && Chapters.LastBeaten(p) == 3 && Npcs.Word("boss3", p) == true);
+            Chapters.Begin(p, 4);
+            Check("chapter table: begin chapter 4 (dad joins, lava start)", p.Chapter == 4 && p.Has("dad") && (p.X, p.Y) == WorldMap.LavaStart && !p.InVillage);
+        }
+
         /// <summary>소품 데이터 (props.json): 목록의 그림이 다 있고, 그림이 다 목록에 있고, 테마·배치가 아는 소품·맵만 쓴다.</summary>
         static void PropCatalogTests()
         {
@@ -1974,7 +1999,7 @@ namespace GirlAdventure.EditorTools
                   && boss != null && boss.Boss && boss.Art == "desert_cowboy" && boss.Backdrop == "desert_boss" && m.EncounterRate(b.x, b.y) == 0);
             var p = PlayerState.NewGame("t");
             p.GainExp(PlayerState.NextExp(10));
-            p.Boss2Down = true; Quest.StartChapter3(p);
+            p.Boss2Down = true; Chapters.Begin(p, 3);
             Check("boss3 word false before", Npcs.Holds("boss3", p) == false && Npcs.TalkId(new List<NpcDef>(Npcs.On(MapKind.Oasis)).Find(n => n.Id == "elder"), p) == "npc_elder");
             p.Boss3Down = true;
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
@@ -2562,7 +2587,7 @@ namespace GirlAdventure.EditorTools
             Bestiary.Meet(p, GameData.Normal[0]);
             Bestiary.Beat(p, GameData.King);
             Check("book: meet/beat counted once, beat implies seen", Bestiary.SeenCount(p) == 2 && Bestiary.BeatenCount(p) == 1
-                  && Bestiary.Seen(p, GameData.King) && !Bestiary.Beaten(p, GameData.Normal[0]));
+                  && Bestiary.Seen(p, GameData.King) && !Bestiary.BossBeaten(p, GameData.Normal[0]));
             foreach (var d in all) Bestiary.Beat(p, d);
             Check("book: all beaten → title", Bestiary.Complete(p) && Bestiary.BeatenCount(p) == Bestiary.Total);
             var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));
@@ -2666,7 +2691,7 @@ namespace GirlAdventure.EditorTools
             Check("chapter1: chest sealed", Quest.OpenChest(p, WorldMap.Chest.x, WorldMap.Chest.y, out _) == ChestResult.Sealed && !p.HasItem(Quest.KeyItem));
             Check("chapter1: door sealed", Quest.TryBaseDoor(p) == DoorResult.Sealed);
             p.BossDown = true;
-            Quest.StartChapter2(p);
+            Chapters.Begin(p, 2);
             Check("chapter2 starts at cave entrance", p.Chapter == 2 && (p.X, p.Y) == WorldMap.CaveStart && p.BossDown);
             Check("door locked without key", Quest.TryBaseDoor(p) == DoorResult.Locked && !Quest.DoorOpen(p));
             // 보물상자 지킴이: 살아 있으면 상자가 안 열리고 그 자리는 못 지나간다. 옆 칸까지는 걸어갈 수 있다

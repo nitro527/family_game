@@ -191,13 +191,25 @@ namespace GirlAdventure.Sim
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
         public (int x, int y) RevivePoint => (Spring.x - 1, Spring.y + 1);
 
-        public const int LastChapter = 7;
-        public static WorldMap ForChapter(int chapter) => chapter >= 7 ? Forest() : chapter == 6 ? Library() : chapter == 5 ? Snow() : chapter == 4 ? Lava() : chapter == 3 ? Desert() : chapter == 2 ? Cave() : new WorldMap();
-        /// <summary>그 챕터에 들어가 볼 마을이 있나 (챕터 1 별빛 마을, 챕터 3 오아시스 마을).</summary>
-        public static bool HasTown(int chapter) => chapter <= 1 || (chapter >= 3 && chapter <= 5);     // 챕터 2 동굴·챕터 6 도서관·챕터 7 숲은 마을이 없다 (입구 열람실·숲 속 쉼터가 쉼터)
+        public static int LastChapter => Chapters.Last;              // 챕터 표(Sim/Chapters.cs) 길이
+        /// <summary>맵 종류로 새 맵을 만든다 (집 안은 0번 집).</summary>
+        public static WorldMap Build(MapKind k) => k switch
+        {
+            MapKind.Village => Village(), MapKind.Cave => Cave(), MapKind.Desert => Desert(), MapKind.Oasis => OasisTown(), MapKind.Underworld => Underworld(),
+            MapKind.Lava => Lava(), MapKind.LavaTown => LavaTown(), MapKind.Snow => Snow(), MapKind.SnowTown => SnowTown(), MapKind.Library => Library(),
+            MapKind.Forest => Forest(), MapKind.Home => Home(0), _ => new WorldMap(),
+        };
+        /// <summary>그 챕터의 바깥 맵 (챕터 표).</summary>
+        public static WorldMap ForChapter(int chapter) => Build(Chapters.Get(chapter).Field);
+        /// <summary>그 챕터에 들어가 볼 마을이 있나 (챕터 표 — 동굴·도서관·숲은 마을 대신 쉼터).</summary>
+        public static bool HasTown(int chapter) => Chapters.Get(chapter).Town.HasValue;
         /// <summary>지금 있어야 할 맵 (지하세계 안이면 지하세계, 마을 안이면 그 챕터의 마을).</summary>
-        public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false) =>
-            underground ? Underworld() : inVillage && chapter <= 1 ? Village() : inVillage && chapter == 3 ? OasisTown() : inVillage && chapter == 4 ? LavaTown() : inVillage && chapter == 5 ? SnowTown() : ForChapter(chapter);
+        public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false)
+        {
+            if (underground) return Underworld();
+            var c = Chapters.Get(chapter);
+            return Build(inVillage && c.Town.HasValue ? c.Town.Value : c.Field);
+        }
 
         public WorldMap(int seed = 7)
         {

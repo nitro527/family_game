@@ -65,6 +65,26 @@ namespace GirlAdventure.Sim
         public bool Boss6Down;              // 악마 대장 (챕터 6 ✏️) — 도서관이 원래대로 돌아온다
         public bool Boss7Down;              // 장수풍뎅이 대장 (챕터 7 ✏️) — 숲이 다시 초록빛
         public bool Boss3Down;              // 카우보이 젤리 대장 (챕터 3) — 사막에 물이 돌아온다
+
+        /// <summary>챕터 n 보스를 이겼는지 (세이브 칸 BossDown·Boss2Down~Boss7Down 을 챕터 번호로, 2026-10-10 코드 정리 A).</summary>
+        public bool BossBeaten(int chapter) => chapter switch
+        {
+            1 => BossDown, 2 => Boss2Down, 3 => Boss3Down, 4 => Boss4Down, 5 => Boss5Down, 6 => Boss6Down, 7 => Boss7Down, _ => false,
+        };
+
+        public void SetBossBeaten(int chapter, bool v = true)
+        {
+            switch (chapter)
+            {
+                case 1: BossDown = v; break;
+                case 2: Boss2Down = v; break;
+                case 3: Boss3Down = v; break;
+                case 4: Boss4Down = v; break;
+                case 5: Boss5Down = v; break;
+                case 6: Boss6Down = v; break;
+                case 7: Boss7Down = v; break;
+            }
+        }
         public int Chapter = 1;
         public bool InVillage;              // 별빛 마을 맵 안 (챕터 1)
         public bool Underground;            // 지하세계 안 (숨겨진 구멍으로 내려옴)

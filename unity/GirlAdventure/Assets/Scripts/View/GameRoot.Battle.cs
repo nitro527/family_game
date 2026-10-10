@@ -1172,60 +1172,12 @@ namespace GirlAdventure.View
                 P.GuardDown = true;             // 보물상자를 열 수 있게 된다 (EndBattle → EnterField 가 지킴이 그림을 치우고 저장)
                 yield return Talk("guard_down");
             }
-            else if (def == GameData.ForestBoss)
+            else if (Chapters.ByBoss(def) is ChapterDef ch)          // 챕터 보스 (챕터 표): 이긴 것으로 → 필드가 보이게 → 완료 대사·카드
             {
-                P.Boss7Down = true;
+                P.SetBossBeaten(ch.No);
                 LeaveBattleStage();
                 ShowFieldBehindTalk();
-                yield return Chapter7ClearRoutine();
-                yield break;
-            }
-            else if (def == GameData.LibraryBoss)
-            {
-                P.Boss6Down = true;
-                LeaveBattleStage();
-                ShowFieldBehindTalk();
-                yield return Chapter6ClearRoutine();
-                yield break;
-            }
-            else if (def == GameData.SnowBoss)
-            {
-                P.Boss5Down = true;
-                LeaveBattleStage();
-                ShowFieldBehindTalk();
-                yield return Chapter5ClearRoutine();
-                yield break;
-            }
-            else if (def == GameData.LavaBoss)
-            {
-                P.Boss4Down = true;
-                LeaveBattleStage();
-                ShowFieldBehindTalk();
-                yield return Chapter4ClearRoutine();
-                yield break;
-            }
-            else if (def == GameData.DesertBoss)
-            {
-                P.Boss3Down = true;
-                LeaveBattleStage();
-                ShowFieldBehindTalk();
-                yield return Chapter3ClearRoutine();
-                yield break;
-            }
-            else if (def == GameData.General)
-            {
-                P.Boss2Down = true;
-                LeaveBattleStage();
-                ShowFieldBehindTalk();
-                yield return Chapter2ClearRoutine();
-                yield break;
-            }
-            else if (def == GameData.King)
-            {
-                P.BossDown = true;
-                LeaveBattleStage();
-                ShowFieldBehindTalk();
-                yield return EndingRoutine();
+                yield return ChapterClearRoutine(ch);
                 yield break;
             }
             yield return EndBattle();

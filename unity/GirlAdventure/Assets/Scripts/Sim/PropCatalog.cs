@@ -164,17 +164,12 @@ namespace GirlAdventure.Sim
             }
             if (c.StartsWith("!")) return !Cond(c.Substring(1), p);
             if (c.StartsWith("Opened:")) return p.Opened.Contains(c.Substring(7));
+            if (c.StartsWith("Boss") && c.EndsWith("Down") && int.TryParse(c.Substring(4, c.Length - 8), out int n)) return p.BossBeaten(n);   // Boss2Down … (챕터 번호)
             switch (c)
             {
                 case "BrotherJoined": return p.BrotherJoined;
                 case "MomJoined": return Quest.MomJoined(p);
-                case "BossDown": return p.BossDown;
-                case "Boss2Down": return p.Boss2Down;
-                case "Boss3Down": return p.Boss3Down;
-                case "Boss4Down": return p.Boss4Down;
-                case "Boss5Down": return p.Boss5Down;
-                case "Boss6Down": return p.Boss6Down;
-                case "Boss7Down": return p.Boss7Down;
+                case "BossDown": return p.BossBeaten(1);
                 case "DoorOpen": return Quest.DoorOpen(p);
                 default: return false;
             }

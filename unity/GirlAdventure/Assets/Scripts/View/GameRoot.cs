@@ -185,16 +185,16 @@ namespace GirlAdventure.View
         {
             P = Quest.QuickStart(nameInput.text, chapter);
             PlayerPrefs.SetString("girlName", P.Name);
-            facing = chapter >= 4 ? "right" : "down";
+            facing = Chapters.Get(P.Chapter).StartFacing;
             sfx.Play("start");
-            StartCoroutine(chapter >= 7 ? Chapter7Routine() : chapter == 6 ? Chapter6Routine() : chapter == 5 ? Chapter5Routine() : chapter == 4 ? Chapter4Routine() : chapter == 3 ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(ChapterStartRoutine(Chapters.Get(P.Chapter)));
         }
 
         /// <summary>프로브용: 타이틀에서 챕터 고르기 메뉴만 연다 / 고른 셈 치고 그 칸에서 바로 시작한다.</summary>
         public void DebugOpenChapterPick() => PickChapter();
         public void DebugQuickStart(int chapter, int slot) { StopAllCoroutines(); HideMessage(); busy = false; SaveStore.Slot = slot; BeginQuick(chapter); }
 
-        static string ChapterPlace(int c) => c == 2 ? "동굴" : c == 3 ? "사막" : c == 4 ? "용암 땅" : c == 5 ? "눈 덮인 곳" : c == 6 ? "도서관" : c == 7 ? "숲" : "초원";
+        static string ChapterPlace(int c) => Chapters.Get(c).Place;
 
         void ContinueGame()
         {
@@ -235,83 +235,6 @@ namespace GirlAdventure.View
             busy = false;
         }
 
-        IEnumerator Chapter2ClearRoutine()
-        {
-            yield return Talk("ch2_clear");
-            yield return BrotherJoinRoutine(false);
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
-        }
-
-        /// <summary>챕터 7 끝 (✏️): 장수풍뎅이 대장이 도토리를 내려놓고 숲이 다시 초록빛 → 번쩍 → 챕터 7 완료 카드.</summary>
-        IEnumerator Chapter7ClearRoutine()
-        {
-            yield return Talk("ch7_clear");
-            yield return Flash(.6f);
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
-        }
-
-        /// <summary>챕터 6 끝 (✏️): 악마 대장이 사라지고 도서관이 원래대로 → 번쩍 → 챕터 6 완료 카드.</summary>
-        IEnumerator Chapter6ClearRoutine()
-        {
-            yield return Talk("ch6_clear");
-            yield return Flash(.6f);
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
-        }
-
-        /// <summary>챕터 5 끝 (C5-5): 예티와 친구가 되는 대사 → 번쩍 → 챕터 5 완료 카드.</summary>
-        IEnumerator Chapter5ClearRoutine()
-        {
-            yield return Talk("ch5_clear");
-            yield return Flash(.6f);
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
-        }
-
-        /// <summary>챕터 4 끝 (C4-7b): 화산이 잠잠해지는 대사 → 번쩍 → 챕터 4 완료 카드.</summary>
-        IEnumerator Chapter4ClearRoutine()
-        {
-            yield return Talk("ch4_clear");
-            yield return Flash(.6f);
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
-        }
-
-        /// <summary>챕터 3 끝 (백로그 53): 물이 돌아오는 대사 → 화면이 하얗게 번쩍 → 챕터 3 완료 카드.</summary>
-        IEnumerator Chapter3ClearRoutine()
-        {
-            yield return Talk("ch3_clear");
-            yield return Flash(.6f);
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
-        }
-
         /// <summary>
         /// 동생 지훈 합류 (백로그 49): 철창에서 구해 주는 대사 → "용사 지훈 합류!" 컷인 → 동료가 되었다.
         /// late 는 옛 세이브(이미 보스를 이김)를 이어할 때: 짧은 대사만.
@@ -339,82 +262,43 @@ namespace GirlAdventure.View
         {
             if (Current != Mode.Ending || P.Chapter >= WorldMap.LastChapter) return;
             confirmFrame = Time.frameCount;
-            int from = P.Chapter;
-            if (from == 6) Quest.StartChapter7(P);
-            else if (from == 5) Quest.StartChapter6(P);
-            else if (from == 4) Quest.StartChapter5(P);
-            else if (from == 3) Quest.StartChapter4(P);
-            else if (from == 2) Quest.StartChapter3(P);
-            else Quest.StartChapter2(P);
-            facing = from >= 3 ? "right" : "down";
+            var next = Chapters.Get(P.Chapter + 1);
+            Chapters.Begin(P, next.No);
+            facing = next.StartFacing;
             sfx.Play("start");
-            StartCoroutine(from == 6 ? Chapter7Routine() : from == 5 ? Chapter6Routine() : from == 4 ? Chapter5Routine() : from == 3 ? Chapter4Routine() : from == 2 ? Chapter3Routine() : Chapter2Routine());
+            StartCoroutine(ChapterStartRoutine(next));
         }
 
-        /// <summary>챕터 4 시작 (사용자 2026-10-03): 용암 땅 도입 → 아빠 합류 대사 → "기사 아빠 합류!" 컷인 → 셋이 함께.</summary>
-        IEnumerator Chapter4Routine()
+        /// <summary>챕터 시작 (챕터 표): 바깥 맵으로 → 시작 대사 → (있으면) 가족 합류 장면 → 저장.</summary>
+        IEnumerator ChapterStartRoutine(ChapterDef c)
         {
             EnterField();
             busy = true;
-            yield return Talk("ch4_intro");
-            yield return Talk("dad_join");
-            yield return CutinRoutine(Art.UI("Dad/hero"), "기사 아빠 합류!", "lvup");
-            RefreshHud();
-            yield return Talk("dad_joined");
+            if (!string.IsNullOrEmpty(c.IntroTalk)) yield return Talk(c.IntroTalk);
+            if (c.JoinScene is var (talk, party, cutin, joined))
+            {
+                yield return Talk(talk);
+                yield return CutinRoutine(Art.UI(party + "/hero"), cutin, "lvup");
+                RefreshHud();
+                yield return Talk(joined);
+            }
             HideMessage();
             AutoSave();
             busy = false;
         }
 
-        /// <summary>챕터 7 시작 (숲 ✏️): 엄마가 찾은 숲의 정령의 책 → 넷이 숲 속 쉼터에서 출발.</summary>
-        IEnumerator Chapter7Routine()
+        /// <summary>챕터 완료 (챕터 표): 보스를 이긴 뒤 대사 → (챕터 2) 지훈 합류 → (있으면) 하얗게 번쩍 → 저장 → 완료 카드.</summary>
+        IEnumerator ChapterClearRoutine(ChapterDef c)
         {
-            EnterField();
-            busy = true;
-            yield return Talk("ch7_intro");
+            yield return Talk(c.ClearTalk);
+            if (c.BrotherJoinsAtClear) yield return BrotherJoinRoutine(false);
+            if (c.ClearFlash) yield return Flash(.6f);
             HideMessage();
             AutoSave();
-            busy = false;
-        }
-
-        /// <summary>챕터 6 시작 (도서관 ⭐ 사용자 2026-10-05): 악마가 점령한 도서관 도입 → 셋이 입구 열람실에서 출발 (엄마는 안에서).</summary>
-        IEnumerator Chapter6Routine()
-        {
-            EnterField();
-            busy = true;
-            yield return Talk("ch6_intro");
-            HideMessage();
-            AutoSave();
-            busy = false;
-        }
-
-        /// <summary>챕터 5 시작 (눈 덮인 곳, 서진이 2026-10-03): 도입 대사 → 셋이 눈밭에서 출발.</summary>
-        IEnumerator Chapter5Routine()
-        {
-            EnterField();
-            busy = true;
-            yield return Talk("ch5_intro");
-            HideMessage();
-            AutoSave();
-            busy = false;
-        }
-
-        IEnumerator Chapter3Routine()
-        {
-            EnterField();
-            busy = true;
-            yield return Talk("ch3_intro");
-            HideMessage();
-            busy = false;
-        }
-
-        IEnumerator Chapter2Routine()
-        {
-            EnterField();
-            busy = true;
-            yield return Talk("ch2_intro");
-            HideMessage();
-            busy = false;
+            Current = Mode.Ending;
+            ShowEnding();
+            bgm.Play("ending");
+            sfx.Play("lvup");
         }
 
         /// <summary>자동 저장: 필드로 돌아올 때, 샘물, 엔딩, 창 닫을 때.</summary>
@@ -432,17 +316,6 @@ namespace GirlAdventure.View
             yield return Talk("intro");
             HideMessage();
             busy = false;
-        }
-
-        IEnumerator EndingRoutine()
-        {
-            yield return Talk("ending_light");
-            HideMessage();
-            AutoSave();
-            Current = Mode.Ending;
-            ShowEnding();
-            bgm.Play("ending");
-            sfx.Play("lvup");
         }
 
         // ------------------------------------------------------------------ debug hooks (Editor 프로브용)
@@ -637,9 +510,9 @@ namespace GirlAdventure.View
         {
             StopAllCoroutines();
             LeaveBattleStage();
-            P.Boss2Down = true;
+            P.SetBossBeaten(2);
             busy = true;
-            StartCoroutine(Chapter2ClearRoutine());
+            StartCoroutine(ChapterClearRoutine(Chapters.Get(2)));
         }
 
         public string NextChapterLabel => nextChapterBtn != null && nextChapterBtn.gameObject.activeSelf ? nextChapterBtn.GetComponentInChildren<UnityEngine.UI.Text>().text : "";
@@ -682,8 +555,8 @@ namespace GirlAdventure.View
         {
             StopAllCoroutines();
             LeaveBattleStage();
-            P.BossDown = true;
-            StartCoroutine(EndingRoutine());
+            P.SetBossBeaten(1);
+            StartCoroutine(ChapterClearRoutine(Chapters.Get(1)));
         }
     }
 }

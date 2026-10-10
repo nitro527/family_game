@@ -34,7 +34,7 @@ namespace GirlAdventure.View
         readonly List<Follower> followers = new List<Follower>();
         float moveT = -1, walkT;
         bool sliding;                           // 얼음 위를 미끄러지는 중 (C5-3): 걷는 그림 대신 선 채로 쭉
-        WorldMap fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap, libraryMap, forestMap;
+        readonly Dictionary<MapKind, WorldMap> worldMaps = new Dictionary<MapKind, WorldMap>();   // 바깥 맵·마을·지하세계 (맵 종류마다 하나)
         WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
         SpriteRenderer homeChestSR, letterSR;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
@@ -51,33 +51,19 @@ namespace GirlAdventure.View
         void BuildField()
         {
             fieldRoot = new GameObject("Field").transform;
-            fieldMap = map;
-            caveMap = WorldMap.Cave();
-            villageMap = WorldMap.Village();
-            desertMap = WorldMap.Desert();
-            townMap = WorldMap.OasisTown();
-            underMap = WorldMap.Underworld();
-            lavaMap = WorldMap.Lava();
-            lavaTownMap = WorldMap.LavaTown();
-            snowMap = WorldMap.Snow();
-            libraryMap = WorldMap.Library();
-            forestMap = WorldMap.Forest();
-            snowTownMap = WorldMap.SnowTown();
-            Npcs.Place(snowTownMap);
+            worldMaps[MapKind.Field] = map;
+            foreach (var k in new[] { MapKind.Cave, MapKind.Village, MapKind.Desert, MapKind.Oasis, MapKind.Underworld, MapKind.Lava, MapKind.LavaTown,
+                                      MapKind.Snow, MapKind.SnowTown, MapKind.Library, MapKind.Forest })
+                worldMaps[k] = WorldMap.Build(k);
             homeMaps = new WorldMap[WorldMap.AllHouses.Length];
             for (int i = 0; i < homeMaps.Length; i++) { homeMaps[i] = WorldMap.Home(i); Npcs.Place(homeMaps[i]); }
             mobs = new FieldMonsters(rng);
-            Npcs.Place(fieldMap);               // 마을 사람 칸('N')을 먼저 놓고 그린다
-            Npcs.Place(caveMap);
-            Npcs.Place(villageMap);
-            Npcs.Place(desertMap);
-            Npcs.Place(townMap);
-            Npcs.Place(underMap);
-            Npcs.Place(lavaTownMap);
+            foreach (var k in new[] { MapKind.Field, MapKind.Cave, MapKind.Village, MapKind.Desert, MapKind.Oasis, MapKind.Underworld, MapKind.LavaTown, MapKind.SnowTown })
+                Npcs.Place(worldMaps[k]);       // 마을 사람 칸('N')을 먼저 놓고 그린다 (도서관·숲·용암·눈 맵은 맵이 직접 놓는다)
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
-            foreach (var m in new List<WorldMap> { fieldMap, caveMap, villageMap, desertMap, townMap, underMap, lavaMap, lavaTownMap, snowMap, snowTownMap, libraryMap, forestMap })   // 집 안 18채는 미리 그리지 않고 처음 들어갈 때 그린다 (한 장 8MB, Q-16)
+            foreach (var m in worldMaps.Values)   // 집 안 18채는 미리 그리지 않고 처음 들어갈 때 그린다 (한 장 8MB, Q-16)
             {
 #if !(UNITY_WEBGL && !UNITY_EDITOR)
                 var mm = m;
@@ -160,7 +146,7 @@ namespace GirlAdventure.View
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
-            var want = P.Underground ? underMap : P.Home >= 0 && P.Home < homeMaps.Length ? homeMaps[P.Home] : SurfaceMap;
+            var want = P.Underground ? worldMaps[MapKind.Underworld] : P.Home >= 0 && P.Home < homeMaps.Length ? homeMaps[P.Home] : SurfaceMap;
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
@@ -174,7 +160,14 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지하세계가 아닐 때 있어야 할 맵 (챕터·마을 안).</summary>
-        WorldMap SurfaceMap => P.Chapter >= 7 ? forestMap : P.Chapter >= 6 ? libraryMap : P.Chapter >= 5 ? (P.InVillage ? snowTownMap : snowMap) : P.Chapter >= 4 ? (P.InVillage ? lavaTownMap : lavaMap) : P.Chapter == 3 ? (P.InVillage ? townMap : desertMap) : P.Chapter == 2 ? caveMap : P.InVillage ? villageMap : fieldMap;
+        WorldMap SurfaceMap
+        {
+            get
+            {
+                var c = Chapters.Get(P.Chapter);                         // 챕터 표: 마을 안이면 그 챕터의 마을, 아니면 바깥 맵
+                return worldMaps[P.InVillage && c.Town.HasValue ? c.Town.Value : c.Field];
+            }
+        }
 
         /// <summary>연 상자·열린 문·보물상자 지킴이 그림.</summary>
         void RefreshQuestProps()
@@ -837,13 +830,8 @@ namespace GirlAdventure.View
             if (found != null) { StartCoroutine(QuestFoundRoutine(found)); return; }
             var ev = Quests.EventAt(P, map, P.X, P.Y);                         // 맵 이벤트 (G-3): 처음 지나가는 곳의 짧은 장면
             if (ev != null) { StartCoroutine(MapEventRoutine(ev)); return; }
-            if (here == 'G' && !P.BossDown && map.Kind == MapKind.Field) { StartCoroutine(BossGateRoutine()); return; }
-            if (here == 'B' && !P.Boss2Down && map.Kind == MapKind.Cave) { StartCoroutine(Boss2Routine()); return; }
-            if (here == 'B' && !P.Boss3Down && map.Kind == MapKind.Desert) { StartCoroutine(Boss3Routine()); return; }
-            if (here == 'B' && !P.Boss4Down && map.Kind == MapKind.Lava) { StartCoroutine(Boss4Routine()); return; }
-            if (here == 'B' && !P.Boss5Down && map.Kind == MapKind.Snow) { StartCoroutine(Boss5Routine()); return; }
-            if (here == 'B' && !P.Boss6Down && map.Kind == MapKind.Library) { StartCoroutine(Boss6Routine()); return; }
-            if (here == 'B' && !P.Boss7Down && map.Kind == MapKind.Forest) { StartCoroutine(Boss7Routine()); return; }
+            foreach (var ch in Chapters.All)                        // 챕터 보스 자리 (챕터 표: 맵·칸 글자)
+                if (here == ch.BossTile && map.Kind == ch.BossMap && !P.BossBeaten(ch.No)) { StartCoroutine(BossRoutine(ch)); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
             if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'E') { StartCoroutine(HomeRoutine(-1)); return; }
@@ -1054,14 +1042,17 @@ namespace GirlAdventure.View
         }
 
         /// <summary>킹 젤리에게 도전하기 좋은 레벨 (서진이 시험 플레이: "4렙에는 힘들고 5렙은 할만했음", P-4).</summary>
-        public const int KingReadyLevel = 5;
+        public static int KingReadyLevel => Chapters.Get(1).ReadyLevel;
 
-        IEnumerator BossGateRoutine()
+        /// <summary>
+        /// 챕터 보스 만나기 (챕터 표): 준비 레벨보다 약하면 먼저 물어보고(챕터 1 킹 젤리 — 그래도 들어갈 수 있다), 만남 대사 → 보스전.
+        /// </summary>
+        IEnumerator BossRoutine(ChapterDef ch)
         {
             busy = true;
-            if (P.Lv < KingReadyLevel)                  // 아직 약하면 물어본다 (그래도 들어갈 수 있다)
+            if (ch.ReadyLevel > 0 && P.Lv < ch.ReadyLevel)
             {
-                yield return Talk("boss_gate_warn", ("lv", KingReadyLevel));
+                yield return Talk("boss_gate_warn", ("lv", ch.ReadyLevel));
                 ShowMessageWindow(true);
                 choiceIndex = 1;
                 yield return Choose("그래도 들어간다!", "조금 더 강해지고 올래");
@@ -1077,31 +1068,8 @@ namespace GirlAdventure.View
                     yield break;
                 }
             }
-            yield return Talk("boss_gate");
-            yield return BattleRoutine(GameData.King);
-        }
-
-        IEnumerator Boss2Routine()
-        {
-            busy = true;
-            yield return Talk("boss2_meet");
-            yield return BattleRoutine(GameData.General);
-        }
-
-        /// <summary>장수풍뎅이 대장 (챕터 7 ✏️): 큰 고목 구멍 앞에서 뿔이 쑥 → 보스전.</summary>
-        IEnumerator Boss7Routine()
-        {
-            busy = true;
-            yield return Talk("boss7_meet");
-            yield return BattleRoutine(GameData.ForestBoss);
-        }
-
-        /// <summary>악마 대장 (챕터 6 ✏️): 책 더미 옥좌 앞에서 저주의 책이 번쩍 → 보스전.</summary>
-        IEnumerator Boss6Routine()
-        {
-            busy = true;
-            yield return Talk("boss6_meet");
-            yield return BattleRoutine(GameData.LibraryBoss);
+            yield return Talk(ch.BossTalk);
+            yield return BattleRoutine(ch.Boss());
         }
 
         /// <summary>
@@ -1123,26 +1091,5 @@ namespace GirlAdventure.View
             busy = false;
         }
 
-        /// <summary>예티 (C5-5): 눈 산 동굴 입구에서 눈보라 → 예티가 걸어 나온다.</summary>
-        IEnumerator Boss5Routine()
-        {
-            busy = true;
-            yield return Talk("boss5_meet");
-            yield return BattleRoutine(GameData.SnowBoss);
-        }
-
-        IEnumerator Boss4Routine()
-        {
-            busy = true;
-            yield return Talk("boss4_meet");
-            yield return BattleRoutine(GameData.LavaBoss);
-        }
-
-        IEnumerator Boss3Routine()
-        {
-            busy = true;
-            yield return Talk("boss3_meet");
-            yield return BattleRoutine(GameData.DesertBoss);
-        }
     }
 }
