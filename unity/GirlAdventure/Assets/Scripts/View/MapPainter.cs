@@ -1694,7 +1694,11 @@ namespace GirlAdventure.View
                         float ww = Soft(water, px - wob * .5f, py + wob * .5f);
                         if (ww > .45f)
                         {
-                            var wc = Lerp(wA, wB, Soft(deep, px, py) * .8f + (n - .5f) * .3f);
+                            // 물: 가장자리에서 가운데로 깊어지고(부드럽게), 일렁이는 빛 무늬 (2026-10-10: 가운데 검은 띠 같던 것)
+                            float dk = Smooth(.55f, 1f, ww) * .55f + Soft(deep, px, py) * .25f;
+                            var wc = Lerp(wA, wB, Mathf.Clamp01(dk + (n - .5f) * .2f));
+                            float caus = Mathf.Sin(px * .11f + Mathf.Sin(py * .07f) * 2.4f) * Mathf.Sin(py * .13f + Mathf.Sin(px * .05f) * 2f);
+                            if (caus > .55f) wc = Lerp(wc, wGlow, (caus - .55f) * .9f);
                             c = ww < .55f ? Lerp(c, wGlow, 1 - Mathf.Abs(ww - .5f) / .05f) : wc;
                         }
                     }
@@ -1712,8 +1716,14 @@ namespace GirlAdventure.View
                         }
                         else
                         {
-                            c = Lerp(top0, top1, n);
-                            c = Mul(c, .9f + fine * .15f);
+                            // 바위 윗면: 울퉁불퉁한 돌덩이 (왼쪽 위에서 빛, 2026-10-10: 단색 어둠 대신)
+                            float h0 = Noise(px / 17f, py / 17f, 13) + Noise(px / 7f, py / 7f, 14) * .35f;
+                            float h1 = Noise((px + 3) / 17f, (py + 3) / 17f, 13) + Noise((px + 3) / 7f, (py + 3) / 7f, 14) * .35f;
+                            float lit = Mathf.Clamp((h0 - h1) * 9f, -1, 1);
+                            c = Lerp(top0, top1, n * .6f + h0 * .4f);
+                            c = lit > 0 ? Lerp(c, H("#4E4260"), lit * .42f) : Lerp(c, H("#0C0912"), -lit * .6f);
+                            if (Mathf.Abs(Noise(px / 26f, py / 26f, 15) - .5f) < .012f) c = Mul(c, .55f);     // 바위 틈
+                            c = Mul(c, .9f + fine * .12f);
                         }
                     }
                     R.Blend(px, py, c);
