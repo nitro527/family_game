@@ -393,6 +393,7 @@ namespace GirlAdventure.View
                         if (!Prop(R, Hash(x, y, 77) < .55f ? "desertrock0" : "desertrock1", x * T + T / 2f + jx, y * T + T + 3 + jy)) R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44"));
                     }
             Scatter(R, m, ".", new[] { "dec_sandflower", "dec_sandrocks", "dec_shrub" }, .05f, 208);        // 바닥 장식 (마을 모래밭)
+            TownPaths(R, WorldMap.TownHouses, WorldMap.TownExit, WorldMap.TownWell.y + 1, false, H("#D2B47C"), H("#C8A870"), H("#B0905A"));   // 발자국 난 모래길
             TownArch(R, WorldMap.TownExit.x * T, WorldMap.TownExit.y * T);
             for (int i = 0; i < WorldMap.TownHouses.Length; i++)
             {
