@@ -2587,7 +2587,7 @@ namespace GirlAdventure.EditorTools
             Bestiary.Meet(p, GameData.Normal[0]);
             Bestiary.Beat(p, GameData.King);
             Check("book: meet/beat counted once, beat implies seen", Bestiary.SeenCount(p) == 2 && Bestiary.BeatenCount(p) == 1
-                  && Bestiary.Seen(p, GameData.King) && !Bestiary.BossBeaten(p, GameData.Normal[0]));
+                  && Bestiary.Seen(p, GameData.King) && !Bestiary.Beaten(p, GameData.Normal[0]));
             foreach (var d in all) Bestiary.Beat(p, d);
             Check("book: all beaten → title", Bestiary.Complete(p) && Bestiary.BeatenCount(p) == Bestiary.Total);
             var back = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(p.ToSave())));

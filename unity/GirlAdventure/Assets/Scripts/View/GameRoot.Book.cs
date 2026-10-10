@@ -80,14 +80,14 @@ namespace GirlAdventure.View
                 frame.gameObject.SetActive(i < bookEntries.Count);
                 if (i >= bookEntries.Count) continue;
                 var d = bookEntries[i];
-                bool seen = Bestiary.Seen(P, d), beaten = Bestiary.BossBeaten(P, d);
+                bool seen = Bestiary.Seen(P, d), beaten = Bestiary.Beaten(P, d);
                 frame.color = i == bookSel ? new Color(.95f, .76f, .26f, .55f) : new Color(1, 1, 1, .07f);
                 pic.sprite = JellySprite(d);
                 pic.color = seen ? Color.white : new Color(0, 0, 0, .8f);      // 못 만난 젤리는 까만 그림자
                 name.text = !seen ? "<color=#9AA3C7>???</color>" : beaten ? $"<color=#F2C443>★</color>{d.Name}" : d.Name;
             }
             var s = bookEntries[bookSel];
-            bool sSeen = Bestiary.Seen(P, s), sBeat = Bestiary.BossBeaten(P, s);
+            bool sSeen = Bestiary.Seen(P, s), sBeat = Bestiary.Beaten(P, s);
             bookBig.sprite = JellySprite(s);
             bookBig.color = sSeen ? Color.white : new Color(0, 0, 0, .8f);
             bookName.text = sSeen ? s.Name : "???";
