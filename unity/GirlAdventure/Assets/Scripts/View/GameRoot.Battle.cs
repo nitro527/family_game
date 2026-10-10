@@ -72,7 +72,7 @@ namespace GirlAdventure.View
         readonly Dictionary<EnemyDef, Sprite> jellySprites = new Dictionary<EnemyDef, Sprite>();
         readonly Dictionary<string, Sprite> backdrops = new Dictionary<string, Sprite>();
         readonly Dictionary<string, Sprite> poses = new Dictionary<string, Sprite>();
-        readonly List<Fx> fx = new List<Fx>();
+        ParticleLayer fx;                                // 전투 입자 (불꽃·별·먼지 — ParticleLayer)
 
         BattleSystem battle;
         public EnemyDef BattleEnemy => battle?.Def;   // 프로브용: 지금 싸우는 적
@@ -84,20 +84,12 @@ namespace GirlAdventure.View
         bool moveImpacted, fxFrozen;
         const float HurtFlashTime = .35f;
 
-        class Fx
-        {
-            public SpriteRenderer sr;
-            public Vector3 vel;
-            public float age, life, spin;
-            public bool fadeInOut;      // 서서히 나타났다 사라짐 (필드 꽃잎·빛 먼지)
-            public float alpha = -1;    // fadeInOut 의 최대 알파 (처음 색에서 읽음)
-        }
-
         static Vector3 Px(float x, float y) => Stage + new Vector3((x - 480) / 48f, (270 - y) / 48f, 0);
 
         void BuildBattle()
         {
             battleRoot = new GameObject("Battle").transform;
+            fx = new ParticleLayer(battleRoot, "Fx", ParticleFade.Tail, 5, worldSpace: true);
             bgNormal = Art.FromTexture(Painter.BattleBackground(false), new Vector2(.5f, .5f), 48);
             bgBoss = Art.FromTexture(Painter.BattleBackground(true), new Vector2(.5f, .5f), 48);
             bgCave = Art.FromTexture(Painter.CaveBattleBackground(false), new Vector2(.5f, .5f), 48);
@@ -1231,7 +1223,6 @@ namespace GirlAdventure.View
             targetMark = -1; pickingTarget = false;
             cmdWin.SetActive(false);
             HideSwirl();
-            foreach (var f in fx) if (f.sr) Destroy(f.sr.gameObject);
             fx.Clear();
         }
 
@@ -1330,27 +1321,11 @@ namespace GirlAdventure.View
             if (!fxFrozen) camShake = Mathf.Max(0, camShake - dt);
 
             // 이펙트
-            for (int i = fx.Count - 1; i >= 0; i--)
-            {
-                var f = fx[i];
-                f.age += dt;
-                if (f.age >= f.life || !f.sr) { if (f.sr) Destroy(f.sr.gameObject); fx.RemoveAt(i); continue; }
-                f.sr.transform.position += f.vel * dt;
-                f.sr.transform.Rotate(0, 0, f.spin * dt);
-                var c = f.sr.color; c.a = Mathf.Clamp01((f.life - f.age) / (f.life * .4f)); f.sr.color = c;
-            }
+            fx.Tick(dt);
         }
 
         SpriteRenderer Spawn(Sprite s, Vector3 pos, Vector3 vel, float life, float scale, Color color, float spin = 0)
-        {
-            var sr = NewSR("Fx", 5);
-            sr.sprite = s;
-            sr.color = color;
-            sr.transform.position = pos;
-            sr.transform.localScale = Vector3.one * scale;
-            fx.Add(new Fx { sr = sr, vel = vel, life = life, spin = spin });
-            return sr;
-        }
+            => fx.Spawn(s, pos, vel, life, scale, color, spin);
 
         // ------------------------------------------------------------------ 적 등장·공격 모션
         /// <summary>등장 진행도 k(0→1) → (크기 배율, 위아래 오프셋). 일반 젤리는 위에서 통 떨어지고, 보스는 땅에서 불쑥 커진다.</summary>

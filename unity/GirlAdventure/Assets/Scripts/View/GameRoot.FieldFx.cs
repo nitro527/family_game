@@ -14,7 +14,7 @@ namespace GirlAdventure.View
     {
         Transform fieldFxRoot;
         readonly List<(SpriteRenderer sr, Vector3 at, float phase)> waves = new List<(SpriteRenderer, Vector3, float)>();
-        readonly List<Fx> fieldFx = new List<Fx>();
+        ParticleLayer fieldParticles;                    // 필드 입자 (꽃잎·별가루·먼지 — ParticleLayer)
         Sprite waveSprite, puffSprite, sparkSprite;
         float sparkleTimer, swirlTimer;
         Image swirlImg;
@@ -23,6 +23,7 @@ namespace GirlAdventure.View
         {
             fieldFxRoot = new GameObject("FieldFx").transform;
             fieldFxRoot.SetParent(fieldRoot, false);
+            fieldParticles = new ParticleLayer(fieldFxRoot, "FieldFx", ParticleFade.Linear, 3);
             waveSprite = Art.FromTexture(WaveTexture(), new Vector2(0, 1), Painter.Tile);
             puffSprite = Art.FromTexture(Painter.Glow(), new Vector2(.5f, .5f), 64);
             sparkSprite = Art.FromTexture(Painter.Star(), new Vector2(.5f, .5f), 64);
@@ -47,8 +48,7 @@ namespace GirlAdventure.View
         {
             foreach (var (sr, _, _) in waves) Destroy(sr.gameObject);
             waves.Clear();
-            foreach (var f in fieldFx) if (f.sr) Destroy(f.sr.gameObject);
-            fieldFx.Clear();
+            fieldParticles.Clear();
             RebuildButterflies();
             bool cave = map.IsCaveLike;
             for (int y = 0; y < WorldMap.H; y++)
@@ -176,10 +176,8 @@ namespace GirlAdventure.View
                     swirlTimer = .05f;
                     var b = FeetAt(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y);
                     float a = t * 9f, r = .25f + Random.value * .5f;
-                    var sr = SpawnField(puffSprite, b + new Vector3(Mathf.Cos(a) * r, .1f, 0), new Vector3(-Mathf.Sin(a) * 2.2f, Random.Range(1.2f, 2.2f)), 1.1f,
-                                        Random.Range(.3f, .5f), Random.value < .5f ? new Color(.62f, .45f, .26f, .8f) : new Color(.8f, .66f, .44f, .75f));   // 모래보다 진한 갈색
-                    sr.sortingOrder = 5;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, b + new Vector3(Mathf.Cos(a) * r, .1f, 0), new Vector3(-Mathf.Sin(a) * 2.2f, Random.Range(1.2f, 2.2f)), 1.1f,
+                                        Random.Range(.3f, .5f), Random.value < .5f ? new Color(.62f, .45f, .26f, .8f) : new Color(.8f, .66f, .44f, .75f), order: 5, fade: ParticleFade.InOut);   // 모래보다 진한 갈색
                 }
             }
 
@@ -191,10 +189,8 @@ namespace GirlAdventure.View
                 {
                     darkBoxTimer = .12f;
                     var b = FeetAt(WorldMap.UnderDarkBox.x, WorldMap.UnderDarkBox.y) + new Vector3(Random.Range(-.35f, .35f), .5f, 0);
-                    var sr = SpawnField(puffSprite, b, new Vector3(Random.Range(-.15f, .15f), Random.Range(.5f, .9f)), 1.6f, Random.Range(.12f, .2f),
-                                        Random.value < .5f ? new Color(.7f, .45f, 1f, .8f) : new Color(.45f, .7f, 1f, .8f));
-                    sr.sortingOrder = 5;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, b, new Vector3(Random.Range(-.15f, .15f), Random.Range(.5f, .9f)), 1.6f, Random.Range(.12f, .2f),
+                                        Random.value < .5f ? new Color(.7f, .45f, 1f, .8f) : new Color(.45f, .7f, 1f, .8f), order: 5, fade: ParticleFade.InOut);
                 }
             }
 
@@ -208,38 +204,30 @@ namespace GirlAdventure.View
                 {
                     ambientTimer = .12f;
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
-                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.15f, .15f), Random.Range(.05f, .3f)), Random.Range(2.5f, 4.5f),
-                                        Random.Range(.08f, .16f), Random.value < .6f ? new Color(.5f, .95f, 1f, .9f) : new Color(1f, .8f, 1f, .9f));
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, p, new Vector3(Random.Range(-.15f, .15f), Random.Range(.05f, .3f)), Random.Range(2.5f, 4.5f),
+                                        Random.Range(.08f, .16f), Random.value < .6f ? new Color(.5f, .95f, 1f, .9f) : new Color(1f, .8f, 1f, .9f), order: 7, fade: ParticleFade.InOut);
                 }
                 else if (map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown)
                 {
                     bool calm = P.Boss5Down;            // 눈 덮인 땅: 예티와 친구가 되기 전엔 옆으로 몰아치는 눈보라, 뒤엔 사뿐사뿐
                     ambientTimer = calm ? .09f : .035f;
                     var p = new Vector3(camPos.x + Random.Range(-halfW - (calm ? 1 : 4), halfW), camPos.y + halfH + .3f, 0);
-                    var sr = SpawnField(puffSprite, p, calm ? new Vector3(Random.Range(.05f, .3f), Random.Range(-.9f, -.5f)) : new Vector3(Random.Range(1.2f, 2.2f), Random.Range(-1.6f, -1.0f)), Random.Range(9f, 12f),
-                                        Random.Range(.05f, .1f), new Color(1f, 1f, 1f, .92f));
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, p, calm ? new Vector3(Random.Range(.05f, .3f), Random.Range(-.9f, -.5f)) : new Vector3(Random.Range(1.2f, 2.2f), Random.Range(-1.6f, -1.0f)), Random.Range(9f, 12f),
+                                        Random.Range(.05f, .1f), new Color(1f, 1f, 1f, .92f), order: 7, fade: ParticleFade.InOut);
                 }
                 else if (map.Kind == MapKind.Home)
                 {
                     ambientTimer = .5f;                 // 집 안: 창으로 든 햇살에 먼지가 반짝
                     var p = new Vector3(Random.Range(13.5f, 21.5f), -Random.Range(8.5f, 14f), 0);
-                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.08f, .08f), Random.Range(.02f, .12f)), Random.Range(2.5f, 4f),
-                                        Random.Range(.04f, .07f), new Color(1f, .95f, .75f, .7f));
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, p, new Vector3(Random.Range(-.08f, .08f), Random.Range(.02f, .12f)), Random.Range(2.5f, 4f),
+                                        Random.Range(.04f, .07f), new Color(1f, .95f, .75f, .7f), order: 7, fade: ParticleFade.InOut);
                 }
                 else if (map.Kind == MapKind.Lava || map.Kind == MapKind.LavaTown)
                 {
                     ambientTimer = .08f;                // 용암 땅: 아래에서 솟아오르는 불티
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y - halfH - .2f, 0);
-                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)), Random.Range(3f, 5f),
-                                        Random.Range(.05f, .1f), Random.value < .6f ? new Color(1f, .55f, .15f, .9f) : new Color(1f, .85f, .3f, .9f));
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, p, new Vector3(Random.Range(-.3f, .3f), Random.Range(1.2f, 2.4f)), Random.Range(3f, 5f),
+                                        Random.Range(.05f, .1f), Random.value < .6f ? new Color(1f, .55f, .15f, .9f) : new Color(1f, .85f, .3f, .9f), order: 7, fade: ParticleFade.InOut);
                 }
                 else if (map.Kind == MapKind.Forest)
                 {
@@ -248,38 +236,30 @@ namespace GirlAdventure.View
                     var p = new Vector3(camPos.x - halfW + Random.Range(0, halfW * 2), camPos.y + halfH + .5f, 0);
                     var col = green ? (Random.value < .5f ? new Color(.45f, .8f, .35f, .95f) : new Color(.65f, .9f, .4f, .95f))
                                     : (Random.value < .5f ? new Color(.75f, .55f, .25f, .95f) : new Color(.95f, .8f, .3f, .95f));
-                    var sr = SpawnField(petalSprite, p, new Vector3(Random.Range(-.4f, .6f), Random.Range(-1.0f, -.6f)), 9f, Random.Range(.16f, .24f), col, Random.Range(-200, 200));
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(petalSprite, p, new Vector3(Random.Range(-.4f, .6f), Random.Range(-1.0f, -.6f)), 9f, Random.Range(.16f, .24f), col, Random.Range(-200, 200), order: 7, fade: ParticleFade.InOut);
                 }
                 else if (map.Kind == MapKind.Library)
                 {
                     bool calm = P.Boss6Down;            // 도서관: 악마가 있을 땐 보랏빛 마법 먼지, 이긴 뒤엔 금빛 반짝이가 둥실
                     ambientTimer = .15f;
                     var p = new Vector3(camPos.x + Random.Range(-halfW, halfW), camPos.y + Random.Range(-halfH, halfH), 0);
-                    var sr = SpawnField(calm ? sparkSprite : puffSprite, p, new Vector3(Random.Range(-.12f, .12f), Random.Range(.1f, .35f)), Random.Range(2.5f, 4f),
+                    SpawnField(calm ? sparkSprite : puffSprite, p, new Vector3(Random.Range(-.12f, .12f), Random.Range(.1f, .35f)), Random.Range(2.5f, 4f),
                                         calm ? Random.Range(.1f, .16f) : Random.Range(.08f, .14f),
-                                        calm ? new Color(1f, .9f, .5f, .9f) : (Random.value < .5f ? new Color(.7f, .4f, 1f, .85f) : new Color(1f, .5f, .9f, .8f)), calm ? Random.Range(-90, 90) : 0);
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                                        calm ? new Color(1f, .9f, .5f, .9f) : (Random.value < .5f ? new Color(.7f, .4f, 1f, .85f) : new Color(1f, .5f, .9f, .8f)), calm ? Random.Range(-90, 90) : 0, order: 7, fade: ParticleFade.InOut);
                 }
                 else if (map.Kind == MapKind.Desert || map.Kind == MapKind.Oasis)
                 {
                     ambientTimer = .1f;
                     var p = new Vector3(camPos.x - halfW - .3f, camPos.y + Random.Range(-halfH, halfH), 0);
-                    var sr = SpawnField(puffSprite, p, new Vector3(Random.Range(2.2f, 3.6f), Random.Range(-.2f, .15f)), Random.Range(4f, 6f),
-                                        Random.Range(.05f, .11f), new Color(1f, .9f, .68f, .55f));
-                    sr.sortingOrder = 7;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(puffSprite, p, new Vector3(Random.Range(2.2f, 3.6f), Random.Range(-.2f, .15f)), Random.Range(4f, 6f),
+                                        Random.Range(.05f, .11f), new Color(1f, .9f, .68f, .55f), order: 7, fade: ParticleFade.InOut);
                 }
                 else
                 {
                     ambientTimer = .45f;
                     var p = new Vector3(camPos.x - halfW - .5f + Random.Range(0, halfW * 1.5f), camPos.y + halfH + .5f, 0);
-                    var sr = SpawnField(petalSprite, p, new Vector3(Random.Range(.6f, 1.1f), Random.Range(-.9f, -.5f)), 9f, Random.Range(.12f, .18f),
-                                        Random.value < .5f ? new Color(1f, .8f, .9f, .9f) : new Color(1f, 1f, 1f, .85f), Random.Range(-160, 160));
-                    sr.sortingOrder = 4;
-                    fieldFx[fieldFx.Count - 1].fadeInOut = true;
+                    SpawnField(petalSprite, p, new Vector3(Random.Range(.6f, 1.1f), Random.Range(-.9f, -.5f)), 9f, Random.Range(.12f, .18f),
+                                        Random.value < .5f ? new Color(1f, .8f, .9f, .9f) : new Color(1f, 1f, 1f, .85f), Random.Range(-160, 160), order: 4, fade: ParticleFade.InOut);
                 }
             }
             // 구름 그림자: 천천히 흘러가고, 화면 밖으로 나가면 반대편에서 다시
@@ -291,42 +271,11 @@ namespace GirlAdventure.View
                 c.transform.localPosition = lp;
             }
 
-            for (int i = fieldFx.Count - 1; i >= 0; i--)
-            {
-                var f = fieldFx[i];
-                f.age += dt;
-                if (f.age >= f.life || f.sr == null)
-                {
-                    if (f.sr) Destroy(f.sr.gameObject);
-                    fieldFx.RemoveAt(i);
-                    continue;
-                }
-                f.sr.transform.localPosition += f.vel * dt;
-                f.sr.transform.Rotate(0, 0, f.spin * dt);
-                var col = f.sr.color;
-                if (f.fadeInOut)
-                {
-                    if (f.alpha < 0) f.alpha = col.a;
-                    col.a = f.alpha * Mathf.Sin(Mathf.PI * f.age / f.life);
-                    f.sr.transform.localPosition += new Vector3(Mathf.Sin(f.age * 2 + i) * .15f * dt, 0, 0);   // 살랑살랑
-                }
-                else col.a = 1 - f.age / f.life;
-                f.sr.color = col;
-            }
+            fieldParticles.Tick(dt);
         }
 
-        SpriteRenderer SpawnField(Sprite s, Vector3 pos, Vector3 vel, float life, float scale, Color color, float spin = 0)
-        {
-            var sr = new GameObject("FieldFx").AddComponent<SpriteRenderer>();
-            sr.transform.SetParent(fieldFxRoot, false);
-            sr.transform.localPosition = pos;
-            sr.transform.localScale = Vector3.one * scale;
-            sr.sprite = s;
-            sr.color = color;
-            sr.sortingOrder = 3;
-            fieldFx.Add(new Fx { sr = sr, vel = vel, life = life, spin = spin });
-            return sr;
-        }
+        SpriteRenderer SpawnField(Sprite s, Vector3 pos, Vector3 vel, float life, float scale, Color color, float spin = 0, int? order = null, ParticleFade? fade = null)
+            => fieldParticles.Spawn(s, pos, vel, life, scale, color, spin, order, fade);
 
         /// <summary>걸음을 뗄 때 발밑에 흙먼지 두 줌 (걷는 반대 방향으로 퍼진다).</summary>
         void SpawnDust(int fromX, int fromY, int dx, int dy)
