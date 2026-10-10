@@ -743,7 +743,11 @@ namespace GirlAdventure.View
                     float dy = Mathf.Max(0, Mathf.Max(r - (y + .5f), (y + .5f) - (s - r)));
                     float d = r - Mathf.Sqrt(dx * dx + dy * dy);          // 가장자리까지 거리
                     if (d < 0) continue;
-                    R.Blend(x, y, d < 4 ? line : fill, Mathf.Clamp01(d + .5f));
+                    // 2026-10-10: 위는 살짝 밝은 남색 → 아래는 짙게 (9칸 늘이기라 창 전체에 이어진다) + 테두리 안쪽 은은한 하늘빛 선
+                    float v = y / (float)(s - 1);                              // Raster 는 y=0 이 위
+                    Color32 grad = Color32.Lerp(new Color32(22, 28, 64, 236), new Color32(6, 8, 24, 240), v);
+                    Color32 c = d < 4 ? line : d < 5.2f ? Color32.Lerp(grad, new Color32(150, 180, 255, 255), .45f) : grad;
+                    R.Blend(x, y, c, Mathf.Clamp01(d + .5f));
                 }
             return Sprite.Create(R.ToTexture(), new Rect(0, 0, s, s), new Vector2(.5f, .5f), 100, 0, SpriteMeshType.FullRect, new Vector4(16, 16, 16, 16));
         }
