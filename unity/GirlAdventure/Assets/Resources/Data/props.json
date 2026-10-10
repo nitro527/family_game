@@ -88,6 +88,12 @@
   {"Id": "campfire", "Width": 50, "Seed": 2, "Prompt": "One cozy campfire: a ring of stones, crossed logs and bright orange flames, a little melted snow around it."},
   {"Id": "cage_open", "Width": 52, "Seed": 3, "From": "cage", "Prompt": "Edit this image: the same iron jail cage, but its small front door is swung wide open to the right side, the padlock hangs open, the cage is empty. Keep the exact same cage, same style, same size, same plain white background.", "Note": "tools/make_cage.py 가 cage 와 같은 상자로 맞춘다"},
   {"Id": "cage_bars", "Width": 52, "Derived": "cage", "Note": "tools/make_cage.py 가 닫힌 철창에서 앞 창살만 오린다"}
+,
+  {"Id": "streetlamp", "Width": 22, "Seed": 2, "Prompt": "One old-fashioned black iron street lamp post with a glowing warm yellow lantern on top and a little cap of snow on the lantern."},
+  {"Id": "sled", "Width": 46, "Seed": 2, "Prompt": "One small wooden sled with red runners and a little rope, a bit of snow on it."},
+  {"Id": "woodpile", "Width": 48, "Seed": 2, "Prompt": "One neat stack of chopped firewood logs with round cut ends visible, a little snow on top."},
+  {"Id": "stonelantern", "Width": 30, "Seed": 2, "Prompt": "One small grey stone garden lantern (like a Japanese toro) with a warm orange fire glowing inside its window."},
+  {"Id": "barrels", "Width": 44, "Seed": 2, "Prompt": "Two wooden barrels with dark iron bands standing side by side, one slightly in front of the other."}
  ],
  "Themes": [
   {"Map": "Field", "Scatter": [{"Floor": ".", "Props": ["dec_mossrock", "dec_wildflowers", "dec_stump"], "Density": 0.05, "Seed": 205}], "Tiles": [{"Chars": "T?", "Props": ["oak1", "oak0"], "PickSeed": 93, "Split": 0.5, "X": 24, "Y": 52, "JitterX": 10, "JitterSeedX": 91, "JitterY": 6, "JitterSeedY": 92, "Under": [{"Color": "#00000046", "X": 30, "Y": 45, "Rx": 22, "Ry": 7}]}, {"Chars": "m", "Props": ["dec_wildflowers"], "Spots": [12, 42, 36, 42, 24, 28], "Under": [{"Color": "#FFF0A078", "X": 24, "Y": 30, "Rx": 22, "Ry": 10}]}, {"Chars": "G", "Props": ["castle"], "X": 24, "Y": 196, "Under": [{"Color": "#00000050", "X": 32, "Y": 186, "Rx": 163.2, "Ry": 16}], "Pass": 2}]},
@@ -103,5 +109,15 @@
   {"Map": "Cave", "Scatter": [{"Floor": "_", "Props": ["dec_glowshroom", "dec_cavepebbles"], "Density": 0.07, "Seed": 204}], "Secret": {"Prop": "dec_glowshroom", "Glow": "#9AF0FF"}},
   {"Map": "Underworld", "Secret": {"Prop": "dec_glowshroom", "Glow": "#9AF0FF"}}
  ],
- "Placed": []
+ "Placed": [
+  {"Map": "SnowTown", "Prop": "streetlamp", "X": 15, "Y": 11, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#3C50823C", "X": 27, "Y": 44, "Rx": 8, "Ry": 5}]},
+  {"Map": "SnowTown", "Prop": "streetlamp", "X": 21, "Y": 11, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#3C50823C", "X": 27, "Y": 44, "Rx": 8, "Ry": 5}]},
+  {"Map": "SnowTown", "Prop": "woodpile", "X": 10, "Y": 6, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#3C50823C", "X": 27, "Y": 44, "Rx": 22, "Ry": 5}]},
+  {"Map": "SnowTown", "Prop": "woodpile", "X": 28, "Y": 15, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#3C50823C", "X": 27, "Y": 44, "Rx": 22, "Ry": 5}]},
+  {"Map": "SnowTown", "Prop": "sled", "X": 11, "Y": 17, "Dx": 24, "Dy": 44, "Block": true, "Under": [{"Color": "#3C50823C", "X": 27, "Y": 42, "Rx": 20, "Ry": 5}]},
+  {"Map": "LavaTown", "Prop": "stonelantern", "X": 12, "Y": 10, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 12, "Ry": 5}]},
+  {"Map": "LavaTown", "Prop": "stonelantern", "X": 25, "Y": 10, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 12, "Ry": 5}]},
+  {"Map": "LavaTown", "Prop": "barrels", "X": 10, "Y": 6, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 20, "Ry": 5}]},
+  {"Map": "LavaTown", "Prop": "barrels", "X": 28, "Y": 15, "Dx": 24, "Dy": 46, "Block": true, "Under": [{"Color": "#00000046", "X": 27, "Y": 44, "Rx": 20, "Ry": 5}]}
+ ]
 }

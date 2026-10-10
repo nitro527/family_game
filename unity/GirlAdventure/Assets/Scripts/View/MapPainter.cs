@@ -40,7 +40,14 @@ namespace GirlAdventure.View
 
         /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
         /// <summary>tiles 가 있으면 초원은 PIPOYA 타일로, 없으면 코드로 그린다.</summary>
-        public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null) =>
+        public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null)
+        {
+            var R = RenderBase(m, tiles);
+            PlacedPass(R, m);                                               // props.json Placed: 데이터로 놓은 장식 (맨 위, 위 칸부터)
+            return R;
+        }
+
+        static Raster RenderBase(WorldMap m, FieldTiles tiles) =>
             m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
             : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m) : m.Kind == MapKind.Library ? Library(m) : m.Kind == MapKind.Forest ? Meadow(m, false)
             : Meadow(m, true);                                              // 챕터 1 초원도 숲처럼 손그림 풍으로 (2026-10-10 그래픽 점검: 네모난 타일 수풀이 가장 낮은 퀄리티)
@@ -187,6 +194,20 @@ namespace GirlAdventure.View
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                     TileProp(R, m, x, y, pass);
+        }
+
+        /// <summary>한 번만 놓는 장식 (props.json Placed): 위 칸부터 그려 아래 것이 위를 덮게.</summary>
+        static void PlacedPass(Raster R, WorldMap m)
+        {
+            var list = new List<PlacedDef>(PropCatalog.PlacedOn(m.Kind));
+            if (list.Count == 0) return;
+            list.Sort((a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
+            foreach (var p in list)
+            {
+                float X = p.X * T, Y = p.Y * T;
+                if (p.Under != null) foreach (var e in p.Under) R.Ellipse(X + e.X, Y + e.Y, e.Rx, e.Ry, HexA(e.Color));
+                Prop(R, p.Prop, X + p.Dx, Y + p.Dy);
+            }
         }
 
         /// <summary>"#RRGGBB" 또는 "#RRGGBBAA".</summary>

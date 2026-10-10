@@ -710,7 +710,7 @@ namespace GirlAdventure.Sim
 
         public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? (IsCaveLike ? '#' : Kind == MapKind.Desert || Kind == MapKind.Oasis || Kind == MapKind.Lava || Kind == MapKind.LavaTown ? 'R' : Kind == MapKind.Snow || Kind == MapKind.SnowTown ? 'P' : Kind == MapKind.Library ? '#' : 'T') : tiles[x, y];
 
-        public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0;
+        public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0 || PropCatalog.Blocks(Kind, x, y);   // props.json Placed 의 Block 장식도
 
         /// <summary>밟으면 다른 맵으로 가는 칸 (초원 'V' → 마을, 마을 'E' → 초원).</summary>
         public bool IsDoorway(int x, int y) => ((Kind == MapKind.Field || Kind == MapKind.Desert || Kind == MapKind.Lava || Kind == MapKind.Snow) && At(x, y) == 'V') || (IsTown && At(x, y) == 'E');

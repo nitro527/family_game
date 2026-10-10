@@ -96,6 +96,7 @@ namespace GirlAdventure.Sim
     {
         static PropTable table = new PropTable();
         static readonly Dictionary<MapKind, ThemeDef> themes = new Dictionary<MapKind, ThemeDef>();
+        static readonly HashSet<(MapKind, int, int)> blocks = new HashSet<(MapKind, int, int)>();
 
         public static void Set(PropTable t)
         {
@@ -103,7 +104,13 @@ namespace GirlAdventure.Sim
             themes.Clear();
             foreach (var th in table.Themes ?? new ThemeDef[0])
                 if (Enum.TryParse<MapKind>(th.Map, out var k)) themes[k] = th;
+            blocks.Clear();
+            foreach (var p in table.Placed ?? new PlacedDef[0])
+                if (p.Block && Enum.TryParse<MapKind>(p.Map, out var k)) blocks.Add((k, p.X, p.Y));
         }
+
+        /// <summary>데이터로 놓은 장식이 이 칸을 막는지 (WorldMap.Blocked 가 묻는다).</summary>
+        public static bool Blocks(MapKind k, int x, int y) => blocks.Count > 0 && blocks.Contains((k, x, y));
 
         public static IReadOnlyList<PropDef> Props => table.Props ?? new PropDef[0];
         public static ThemeDef Theme(MapKind k) => themes.TryGetValue(k, out var t) ? t : null;
