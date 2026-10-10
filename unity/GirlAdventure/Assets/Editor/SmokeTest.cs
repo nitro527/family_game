@@ -487,6 +487,7 @@ namespace GirlAdventure.EditorTools
             SupportSkillTests();
             GimmickTests();
             MapQuestTests();
+            PropCatalogTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -1280,6 +1281,35 @@ namespace GirlAdventure.EditorTools
         /// 맵마다 찾기 부탁 + 숨겨진 이벤트 (G-4): 부탁하는 사람이 있고, 찾을 칸 셋이 서로 다르고 걸어서 닿고,
         /// 받기 → 찾기 → 보상 흐름, 숨겨진 물건이 그 맵에 있고 옆 칸에서 닿는지, 보상·대사가 있는지.
         /// </summary>
+        /// <summary>소품 데이터 (props.json): 목록의 그림이 다 있고, 그림이 다 목록에 있고, 테마·배치가 아는 소품·맵만 쓴다.</summary>
+        static void PropCatalogTests()
+        {
+            var have = new System.Collections.Generic.HashSet<string>();
+            foreach (var t in Resources.LoadAll<Texture2D>("Tiles/Props")) have.Add(t.name);
+            var ids = new System.Collections.Generic.HashSet<string>();
+            foreach (var p in PropCatalog.Props) ids.Add(p.Id);
+            string missing = "", extra = "", unknown = "";
+            foreach (var id in ids) if (!have.Contains(id)) missing += id + " ";
+            foreach (var h in have) if (!ids.Contains(h)) extra += h + " ";
+            void Use(string where, string id) { if (!ids.Contains(id)) unknown += where + ":" + id + " "; }
+            foreach (var th in PropCatalog.AllThemes)
+            {
+                if (!System.Enum.TryParse<MapKind>(th.Map, out _)) unknown += "map:" + th.Map + " ";
+                foreach (var sc in th.Scatter ?? new ScatterDef[0]) foreach (var id in sc.Props) Use(th.Map, id);
+                foreach (var r in th.Tiles ?? new TilePropDef[0]) foreach (var id in r.Props) Use(th.Map, id);
+                if (!string.IsNullOrEmpty(th.Secret?.Prop)) Use(th.Map, th.Secret.Prop);     // 없으면 JsonUtility 가 빈 것을 채운다
+            }
+            foreach (var pl in PropCatalog.AllPlaced)
+            {
+                if (!System.Enum.TryParse<MapKind>(pl.Map, out _)) unknown += "map:" + pl.Map + " ";
+                Use(pl.Map, pl.Prop);
+            }
+            Check("props.json: every prop has a picture", missing == "", missing);
+            Check("props.json: every picture is listed", extra == "", extra);
+            Check("props.json: themes use known props and maps", unknown == "", unknown);
+            Check("props.json: themes loaded", PropCatalog.Theme(MapKind.Forest)?.Tiles?.Length > 0 && PropCatalog.Props.Count >= 80);
+        }
+
         static void MapQuestTests()
         {
             WorldMap MapOf(MapKind k) => k == MapKind.Field ? new WorldMap() : k == MapKind.Cave ? WorldMap.Cave() : k == MapKind.Desert ? WorldMap.Desert()

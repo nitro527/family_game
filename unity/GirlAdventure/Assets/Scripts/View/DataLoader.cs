@@ -18,6 +18,7 @@ namespace GirlAdventure.View
                 Read<EncounterTable>("encounters"));
             Npcs.Set(Read<NpcTable>("npcs"));
             Quests.Set(Read<QuestTable>("quests"));
+            PropCatalog.Set(Read<PropTable>("props"));     // 맵 소품 목록·맵별 테마 (MapPainter 가 읽는다)
         }
 
         static T Read<T>(string name)

@@ -112,153 +112,6 @@ namespace GirlAdventure.View
         static Color32 Mul(Color32 c, float k) => new Color32((byte)Mathf.Clamp(c.r * k, 0, 255), (byte)Mathf.Clamp(c.g * k, 0, 255), (byte)Mathf.Clamp(c.b * k, 0, 255), c.a);
         static Color32 H(string hex, byte a = 255) => Raster.Hex(hex, a);
 
-        // ------------------------------------------------------------------ 초원
-        static Raster Field(WorldMap m)
-        {
-            int w = WorldMap.W * T, h = WorldMap.H * T;
-            var R = new Raster(w, h);
-            var path = Mask(m, "=Gb");
-            var water = Mask(m, "wb");
-            var deep = Erode(water);
-            var tall = Mask(m, ",");
-            var shade = Mask(m, "TC");
-            Color32 g0 = H("#4E9E3C"), g1 = H("#6CBF4A"), g2 = H("#8ED35C"), tallC = H("#3F8A33");
-            Color32 s0 = H("#D9BE85"), s1 = H("#E9D3A0"), sRim = H("#B08A55");
-            Color32 w0 = H("#5DB6F2"), w1 = H("#2E6BC8"), foam = H("#EAF8FF");
-
-            for (int py = 0; py < h; py++)
-                for (int px = 0; px < w; px++)
-                {
-                    float n = Fbm(px, py, 1), fine = Hash(px, py, 9);
-                    float wob = (Noise(px / 14f, py / 14f, 5) - .5f) * 16;       // 경계 흔들기
-                    float pw = Soft(path, px + wob, py - wob);
-                    float ww = Soft(water, px - wob * .6f, py + wob * .6f);
-                    float tw = Soft(tall, px + wob, py + wob);
-
-                    // 풀밭: 큰 얼룩 + 잔 무늬
-                    var c = n < .5f ? Lerp(g0, g1, n * 2) : Lerp(g1, g2, (n - .5f) * 2);
-                    c = Lerp(c, tallC, Smooth(.35f, .6f, tw) * .85f);
-                    c = Mul(c, .96f + fine * .08f);
-
-                    // 큰 물체(나무·성) 그림자: 왼쪽 위의 물체가 오른쪽 아래로 드리운다
-                    float sh = Soft(shade, px - 14, py - 16);
-                    c = Mul(c, 1 - .28f * Smooth(.25f, .85f, sh));
-
-                    // 흙길
-                    if (pw > .38f)
-                    {
-                        var sand = Mul(Lerp(s0, s1, Fbm(px, py, 3)), .95f + fine * .1f);
-                        float edge = Smooth(.40f, .56f, pw);
-                        var rim = Lerp(sRim, sand, Smooth(.5f, .66f, pw));
-                        c = Lerp(c, rim, edge);
-                    }
-                    // 물: 물가는 젖은 흙 → 거품 → 얕은 물 → 깊은 물
-                    if (ww > .3f)
-                    {
-                        float dw = Soft(deep, px, py);
-                        var wc = Lerp(w0, w1, Smooth(.1f, .9f, dw) * .85f + (Fbm(px, py, 4) - .5f) * .2f);
-                        if (ww < .5f) c = Lerp(c, Mul(c, .72f), Smooth(.3f, .5f, ww));            // 젖은 물가
-                        else
-                        {
-                            c = wc;
-                            float f = 1 - Mathf.Abs(ww - .56f) / .05f;                               // 물가 거품 줄
-                            if (f > 0) c = Lerp(c, foam, f * .8f);
-                        }
-                    }
-                    R.Blend(px, py, c);
-                }
-
-            // 잔디 디테일·꽃·수풀 잎
-            var rnd = new System.Random(11);
-            float Rn() => (float)rnd.NextDouble();
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                {
-                    char ch = m.At(x, y);
-                    float X = x * T, Y = y * T;
-                    if (ch == '.' || ch == 'f')
-                        for (int i = 0; i < 3; i++) Tuft(R, X + Rn() * 40 + 4, Y + Rn() * 40 + 6, H("#3E8A30", 200), H("#9BDB6A", 220));
-                    if (ch == ',')
-                        for (int i = 0; i < 9; i++)
-                        {
-                            float bx = X + 3 + Rn() * 42, by = Y + 14 + Rn() * 32, bh = 12 + Rn() * 10;
-                            R.Polygon(new[] { new Vector2(bx - 3, by), new Vector2(bx + Rn() * 4 - 2, by - bh), new Vector2(bx + 3, by) },
-                                      (px, py) => Lerp(H("#2E6E26"), H("#7CC853"), (by - py) / bh));
-                        }
-                    if (ch == 'f')
-                        for (int i = 0; i < 5; i++)
-                            Flower(R, X + 6 + Rn() * 36, Y + 8 + Rn() * 34, new[] { "#FFFFFF", "#FFD84A", "#FF8FB0", "#B9A2FF", "#FF9F6B" }[rnd.Next(5)]);
-                    if ((ch == '=' || ch == 'G') && Rn() < .6f)
-                        for (int i = 0; i < 3; i++) R.Ellipse(X + Rn() * 44 + 2, Y + Rn() * 44 + 2, 2 + Rn() * 2, 1.5f + Rn(), H("#A88A5A", 200));
-                }
-
-            // 다리
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'b') Bridge(R, m, x, y);
-
-            Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
-            Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
-
-            // 나무: 위쪽부터 그려서 아래 나무가 위 나무를 살짝 덮게
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'T') Tree(R, x, y, x < 2 || y < 2 || x >= WorldMap.W - 2 || y >= WorldMap.H - 1);
-            Painter.Castle(R);
-            return R;
-        }
-
-        // ------------------------------------------------------------------ field (PIPOYA 타일)
-        /// <summary>
-        /// 초원을 PIPOYA 월드 타일로: 풀밭 바탕 → 수풀·길·물·숲 오토타일 → 다리·샘물·표지판·꽃 → 성.
-        /// 성(C)은 가장자리를 숲으로 덮고, 가운데에 파란 성 그림(2배)을 성문 위치에 맞춰 얹는다.
-        /// </summary>
-        static Raster TiledField(WorldMap m, FieldTiles t)
-        {
-            var R = new Raster(WorldMap.W * T, WorldMap.H * T);
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                    R.Stamp(t.Sheet, 0, 0, T, T, x * T, y * T);             // 풀밭 (시트 0,0)
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                {
-                    char ch = m.At(x, y);
-                    if (ch == ',') AutoTile(R, t.Grass, m, ",", x, y);
-                    else if (ch == '=' || ch == 'G' || ch == 'V') AutoTile(R, t.Path, m, "=GbV", x, y);
-                    else if (ch == 'w' || ch == 'b') AutoTile(R, t.Water, m, "wb", x, y);
-                }
-            // 꽃(f)은 여기서 안 그린다 — View 가 FlowerTuft 스프라이트로 얹어 바람에 살랑이게 한다
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                {
-                    char ch = m.At(x, y);
-                    if (ch == 'b')
-                    {
-                        // 다리: 물이 좌우로 이어지면 세로 다리(시트 1,2), 아니면 가로 다리(시트 0,2 — 다리 기둥까지 64px)
-                        bool vert = "wb".IndexOf(m.At(x - 1, y)) >= 0 && "wb".IndexOf(m.At(x + 1, y)) >= 0;
-                        if (vert) R.Stamp(t.Sheet, T, 2 * T, T, T, x * T, y * T);
-                        else R.Stamp(t.Sheet, 0, 2 * T, T, 64, x * T, y * T);
-                    }
-                }
-            Scatter(R, m, ".", new[] { "dec_mossrock", "dec_wildflowers", "dec_stump", "mushrooms" }, .07f, 205);   // 바닥 장식 (넓은 풀밭이 단조롭던 것)
-            Fountain(R, WorldMap.Fountain.x * T, WorldMap.Fountain.y * T, false);
-            Sign(R, WorldMap.Sign.x * T, WorldMap.Sign.y * T);
-            // 숲: 위 칸부터 (아래 줄 나무가 위 줄을 살짝 덮게)
-            for (int y = 0; y < WorldMap.H; y++)
-                for (int x = 0; x < WorldMap.W; x++)
-                    if ("TC?".IndexOf(m.At(x, y)) >= 0) AutoTile(R, t.Forest, m, "TC?", x, y);   // '?' = 지나갈 수 있는 나무 (숨은 길)
-                    else if (m.At(x, y) == 'm')                                                  // 꽃 요정 고리: 들꽃 셋 + 은은한 빛
-                    {
-                        R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 22, 10, H("#FFF0A0", 120));
-                        Prop(R, "dec_wildflowers", x * T + 12, y * T + T - 6); Prop(R, "dec_wildflowers", x * T + T - 12, y * T + T - 6); Prop(R, "dec_wildflowers", x * T + T / 2f, y * T + T / 2f + 4);
-                    }
-            // 성: 시트 (5,6)~(6,7) 의 96×96 파란 성을 2배 → 4×4 칸. 성문 칸 가운데 위에서부터 아래로
-            int gx = WorldMap.Gate.x * T + T / 2, gy = WorldMap.Gate.y * T;
-            R.Stamp(t.Sheet, 5 * T, 6 * T, 2 * T, 2 * T, gx - 2 * T, gy, 2);
-            VillageArch(R, WorldMap.VillageGate.x * T, WorldMap.VillageGate.y * T);
-            return R;
-        }
-
         // ------------------------------------------------------------------ 사막 (챕터 3)
         /// <summary>모래로 그리는 칸 (오아시스 풀밭·물·야자·샘물 말고 전부).</summary>
         const string SandChars = ".:RYXSVBoQ?m";    // o = 수상한 구멍 (모래 위에 구멍 그림), Q = 리본 편지 (모래 위에 편지 그림)
@@ -281,6 +134,68 @@ namespace GirlAdventure.View
                         R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 24, 11, H(glow, 140)); R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 14, 6, H("#FFFFFF", 160));
                         Prop(R, prop, x * T + 16, y * T + T - 8); Prop(R, prop, x * T + 32, y * T + T - 4);
                     }
+        }
+
+        // ------------------------------------------------------------------ 소품 데이터 (props.json, 2026-10-10)
+        /// <summary>그 맵 테마의 바닥 장식을 모두 (props.json Themes[].Scatter).</summary>
+        static void ThemeScatter(Raster R, WorldMap m)
+        {
+            var th = PropCatalog.Theme(m.Kind);
+            if (th?.Scatter == null) return;
+            foreach (var sc in th.Scatter) Scatter(R, m, sc.Floor, sc.Props, sc.Density, sc.Seed);
+        }
+
+        /// <summary>그 맵 테마의 숨은 빈터 반짝이 (props.json Themes[].Secret).</summary>
+        static void ThemeSecret(Raster R, WorldMap m)
+        {
+            var sg = PropCatalog.Theme(m.Kind)?.Secret;
+            if (sg != null && !string.IsNullOrEmpty(sg.Prop)) SecretGlints(R, m, sg.Prop, sg.Glow);
+        }
+
+        /// <summary>
+        /// 칸 (x, y) 글자에 맞는 테마 소품을 이 차례(pass)에 그린다 (props.json Themes[].Tiles). 그 글자를 데이터가 맡으면 true —
+        /// 다른 차례 것이거나 덩어리의 왼쪽 위 칸이 아니어서 안 그려도 true (코드가 따로 그리지 않게).
+        /// </summary>
+        static bool TileProp(Raster R, WorldMap m, int x, int y, int pass)
+        {
+            var tiles = PropCatalog.Theme(m.Kind)?.Tiles;
+            if (tiles == null) return false;
+            char c = m.At(x, y);
+            foreach (var r in tiles)
+            {
+                if (string.IsNullOrEmpty(r.Chars) || r.Chars.IndexOf(c) < 0) continue;
+                if (r.Pass != pass) return true;
+                if (r.Anchor == "block" && (m.At(x - 1, y) == c || m.At(x, y - 1) == c)) return true;
+                if (r.Props == null || r.Props.Length == 0) return true;
+                float X = x * T, Y = y * T;
+                float jx = r.JitterX != 0 ? (Hash(x, y, r.JitterSeedX) - .5f) * r.JitterX : 0;
+                float jy = r.JitterY != 0 ? Hash(x, y, r.JitterSeedY) * r.JitterY : 0;
+                string id = r.Props.Length == 1 ? r.Props[0] : Hash(x, y, r.PickSeed) < r.Split ? r.Props[0] : r.Props[1];
+                if (r.Under != null)
+                    foreach (var e in r.Under) R.Ellipse(X + e.X + jx, Y + e.Y + jy, e.Rx, e.Ry, HexA(e.Color));
+                if (r.Spots != null && r.Spots.Length >= 2)
+                    for (int i = 0; i + 1 < r.Spots.Length; i += 2) Prop(R, id, X + r.Spots[i], Y + r.Spots[i + 1]);
+                else Prop(R, id, X + r.X + jx, Y + r.Y + jy);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>맵 전체를 위 칸부터 돌며 이 차례(pass)의 테마 소품만 그린다.</summary>
+        static void TilePropPass(Raster R, WorldMap m, int pass)
+        {
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                    TileProp(R, m, x, y, pass);
+        }
+
+        /// <summary>"#RRGGBB" 또는 "#RRGGBBAA".</summary>
+        static Color32 HexA(string hex)
+        {
+            if (string.IsNullOrEmpty(hex)) return new Color32(0, 0, 0, 0);
+            var c = H(hex.Substring(0, 7));
+            if (hex.Length >= 9) c.a = System.Convert.ToByte(hex.Substring(7, 2), 16);
+            return c;
         }
 
         static void Scatter(Raster R, WorldMap m, string floor, string[] names, float density, int seed)
@@ -340,18 +255,12 @@ namespace GirlAdventure.View
                         R.Line(ox + 12, oy - 2, ox + 22, oy + 1, 1.6f, H("#C9A66A", 120));
                         if (Hash(x, y, 74) < .3f) R.Circle(ox + 4, oy + 10, 2.2f, H("#A88A5A"));     // 조약돌
                     }
-            Scatter(R, m, ".", new[] { "dec_shrub", "dec_sandrocks", "dec_sandflower" }, .09f, 201);     // 바닥 장식 (넓은 모래밭이 텅 비어 보이던 것)
-            SecretGlints(R, m, "dec_sandflower", "#FFE9A0");                // 숨은 빈터의 모래 별
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
+            ThemeSecret(R, m);                                              // 숨은 빈터 반짝이 (props.json Themes)
             // 바위 언덕: 위 칸부터 (아래 줄이 위 줄을 덮게)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if ("RX?".IndexOf(m.At(x, y)) >= 0)                       // '?' = 지나갈 수 있는 바위 (숨은 길)
-                    {
-                        float jx = (Hash(x, y, 75) - .5f) * 8, jy = Hash(x, y, 76) * 5;
-                        R.Ellipse(x * T + 28 + jx, y * T + T - 4 + jy, 24, 7, new Color32(90, 60, 20, 70));
-                        if (!Prop(R, Hash(x, y, 77) < .55f ? "desertrock0" : "desertrock1", x * T + T / 2f + jx, y * T + T + 3 + jy))
-                        { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#A8865A")); }
-                    }
+                    TileProp(R, m, x, y, 0);                                    // 바위 언덕 (props.json)
             var cave = WorldMap.DesertCave;
             CaveMouth(R, cave.x * T, cave.y * T);
             Fountain(R, WorldMap.OasisSpring.x * T, WorldMap.OasisSpring.y * T, false);
@@ -361,8 +270,7 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                 {
                     char ch = m.At(x, y);
-                    if (ch == 'Y') Cactus(R, x, y);
-                    else if (ch == 'p') Palm(R, x, y);
+                    TileProp(R, m, x, y, 1);                                    // 선인장·야자 (props.json)
                 }
             return R;
         }
@@ -386,13 +294,8 @@ namespace GirlAdventure.View
             R.Ellipse(w.x * T + 24, w.y * T + 30, 130, 80, H("#F3DDB0", 120));
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'R')
-                    {
-                        float jx = (Hash(x, y, 75) - .5f) * 8, jy = Hash(x, y, 76) * 5;
-                        R.Ellipse(x * T + 28 + jx, y * T + T - 4 + jy, 24, 7, new Color32(90, 60, 20, 70));
-                        if (!Prop(R, Hash(x, y, 77) < .55f ? "desertrock0" : "desertrock1", x * T + T / 2f + jx, y * T + T + 3 + jy)) R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#8A6A44"));
-                    }
-            Scatter(R, m, ".", new[] { "dec_sandflower", "dec_sandrocks", "dec_shrub" }, .05f, 208);        // 바닥 장식 (마을 모래밭)
+                    TileProp(R, m, x, y, 0);                                    // 바위 테두리 (props.json)
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             TownPaths(R, WorldMap.TownHouses, WorldMap.TownExit, WorldMap.TownWell.y + 1, false, H("#D2B47C"), H("#C8A870"), H("#B0905A"));   // 발자국 난 모래길
             TownArch(R, WorldMap.TownExit.x * T, WorldMap.TownExit.y * T);
             for (int i = 0; i < WorldMap.TownHouses.Length; i++)
@@ -408,7 +311,7 @@ namespace GirlAdventure.View
             Sign(R, WorldMap.TownSign.x * T, WorldMap.TownSign.y * T);
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'p') Palm(R, x, y);
+                    TileProp(R, m, x, y, 1);                                    // 야자 (props.json)
             return R;
         }
 
@@ -528,7 +431,7 @@ namespace GirlAdventure.View
                     }
                     R.Blend(px, py, c);
                 }
-            Scatter(R, m, ".", new[] { "dec_vent", "dec_obsidian" }, .07f, 202);                          // 바닥 장식: 증기 구멍·흑요석
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             // 돌다리
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -551,16 +454,11 @@ namespace GirlAdventure.View
                         R.Rect(x0, y * T + T - 10, x1 - x0, 4, H("#3E3A44"));
                         for (int k = 0; k < 3; k++) R.Rect(x * T + 4 + k * 16, y * T + 12, 1.5f, T - 24, H("#4E4A54"));
                     }
-            SecretGlints(R, m, "dec_obsidian", "#FFB060");                  // 숨은 빈터의 불꽃 결정
+            ThemeSecret(R, m);                                              // 숨은 빈터 반짝이 (props.json Themes)
             // 검은 바위: 위 칸부터
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'R' || m.At(x, y) == '?')                 // '?' = 지나갈 수 있는 바위 (숨은 길)
-                    {
-                        if (Prop(R, Hash(x, y, 77) < .5f ? "lavarock0" : "lavarock1", x * T + 24, y * T + T)) continue;   // 소품 그림: 화산 바위 (덤불처럼 보이던 회색 타일 대신)
-                        if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "RK", x, y);
-                        else { R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640")); R.Ellipse(x * T + 20, y * T + 20, 14, 12, H("#5A5662")); }
-                    }
+                    TileProp(R, m, x, y, 0);                                    // 검은 바위 ('?' = 지나갈 수 있는 바위, props.json)
             // 화산: 시트 (6,4)~(7,5) 의 96×96 용암이 넘치는 화산을 2배 → 4×4 칸
             // 소품 그림이 있으면 그것 (동굴 입구가 VolcanoDoor 바로 위에 오게: 왼쪽에서 1.5칸)
             if (!Prop(R, "volcano", WorldMap.Volcano.x * T + 1.5f * T, WorldMap.Volcano.y * T + 4 * T + 4) && t != null)
@@ -628,26 +526,16 @@ namespace GirlAdventure.View
                     }
                     R.Blend(px, py, col);
                 }
-            Scatter(R, m, ".", new[] { "dec_bookpile", "dec_scroll", "dec_candle", "dec_spellbook" }, .06f, 207);   // 바닥 장식: 흩어진 책·두루마리·촛대 (넓은 마루가 텅 비어 보이던 것)
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             // 소품 (위에서 아래로 — 아래 줄 소품이 윗줄을 덮는다)
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
                     char c = m.At(x, y);
                     float X = x * T, Y = y * T;
-                    if (c == 'm') { R.Ellipse(X + T / 2f, Y + T / 2f + 6, 24, 12, H("#FFE9A0", 130)); Prop(R, "lectern", X + T / 2f, Y + T - 2); }   // 숨은 독서 공간의 빛나는 책 받침대
-                    else if (c == 'q' || c == '?') { if (!Prop(R, "bookshelf", X + T / 2f, Y + T + 2)) { R.Rect(X + 2, Y - 20, T - 4, T + 20, H("#5A3A22")); R.Rect(X + 5, Y - 16, T - 10, T + 10, H("#8A2A2A")); } }
-                    else if (c == 'a') { R.Ellipse(X + T / 2 + 3, Y + T - 4, T / 2, 7, new Color32(0, 0, 0, 60)); if (!Prop(R, "libtable", X + T / 2f, Y + T - 2)) R.Ellipse(X + T / 2, Y + 22, T / 2 - 2, 14, H("#9A6238")); }
-                    else if (c == 'O') { if (!Prop(R, "magiccircle", X + T / 2f, Y + T / 2f + 54)) { R.Ellipse(X + T / 2, Y + T / 2, 50, 40, H("#E8C860", 120)); } }
-                    else if (c == 'F') { R.Ellipse(X + 26, Y + 44, 18, 5, new Color32(0, 0, 0, 70)); if (!Prop(R, "lectern", X + T / 2f, Y + T - 2)) Fountain(R, X, Y, false); }
-                    else if (c == 'S') Sign(R, X, Y);
+                    if (TileProp(R, m, x, y, 0)) continue;                      // 책 받침대·책장·책상·마법진·사서 책상·책 더미 옥좌 (props.json)
+                    if (c == 'S') Sign(R, X, Y);
                     else if (c == 'H') Painter.Chest(R, X, Y, false);
-                    else if (c == 'M') { R.Ellipse(X + 26, Y + 45, 24, 5, new Color32(0, 0, 0, 80)); if (!Prop(R, "libdesk", X + T / 2f, Y + T - 1)) CandyShop(R, X, Y); }
-                    else if (c == 'K' && m.At(x - 1, y) != 'K' && m.At(x, y - 1) != 'K')       // 책 더미 옥좌: 3×2 의 왼쪽 위 칸에서 한 번
-                    {
-                        R.Ellipse(X + 1.5f * T + 6, Y + 2 * T - 4, 1.6f * T, 12, new Color32(40, 0, 60, 90));
-                        if (!Prop(R, "bookthrone", X + 1.5f * T, Y + 2 * T + 8)) R.Rect(X, Y, 3 * T, 2 * T, H("#3A2050"));
-                    }
                 }
             return R;
         }
@@ -730,46 +618,21 @@ namespace GirlAdventure.View
                     char c = m.At(x, y);
                     float X = x * T, Y = y * T;
                     if (village && c != 'T') continue;                          // 마을: 나무만 (집·우물·가게는 Village 가)
-                    if (c == 'T' || c == '?')                                   // '?' = 지나갈 수 있는 나무 (숨은 길) — 똑같이 그린다
-                    {
-                        bool border = x < 2 || y < 2 || x >= WorldMap.W - 2 || y >= WorldMap.H - 2;
-                        float jx = (Hash(x, y, 91) - .5f) * 10, jy = Hash(x, y, 92) * 6;
-                        R.Ellipse(X + T / 2f + 6 + jx, Y + T - 3 + jy, 22, 7, new Color32(0, 0, 0, 70));
-                        if (!Prop(R, Hash(x, y, 93) > .5f ? "oak0" : "oak1", X + T / 2f + jx, Y + T + 4 + jy)) Tree(R, x, y, border);
-                    }
-                    else if (c == 'm' && field)                                 // 꽃 요정 고리: 들꽃 셋 + 은은한 빛
-                    {
-                        R.Ellipse(X + T / 2f, Y + T / 2f + 6, 22, 10, H("#FFF0A0", 120));
-                        Prop(R, "dec_wildflowers", X + 12, Y + T - 6); Prop(R, "dec_wildflowers", X + T - 12, Y + T - 6); Prop(R, "dec_wildflowers", X + T / 2f, Y + T / 2f + 4);
-                    }
-                    else if (c == 'm')                                          // 요정 버섯 고리: 버섯 셋을 둥글게 + 은은한 빛
-                    {
-                        R.Ellipse(X + T / 2f, Y + T / 2f + 6, 20, 9, H("#B8F0C8", 70));
-                        Prop(R, "mushrooms", X + 10, Y + T - 6); Prop(R, "mushrooms", X + T - 10, Y + T - 6); Prop(R, "mushrooms", X + T / 2f, Y + T / 2f + 2);
-                    }
-                    else if (c == 'L' && m.At(x - 1, y) != 'L')
+                    if (TileProp(R, m, x, y, 0)) continue;                      // 나무('?' 숨은 길도)·요정 고리·큰 고목·요정 샘·그루터기 가게 (props.json)
+                    if (c == 'L' && m.At(x - 1, y) != 'L')
                     {
                         bool pair = m.At(x + 1, y) == 'L';
                         R.Ellipse(X + (pair ? T : T / 2f) + 4, Y + T - 6, pair ? 44 : 24, 7, new Color32(0, 0, 0, 70));
                         if (!Prop(R, "log", X + (pair ? T : T / 2f), Y + T - 2)) R.Rect(X + 2, Y + 20, (pair ? 2 * T : T) - 4, 18, H("#6B4424"));
                     }
-                    else if (c == 'K' && m.At(x - 1, y) != 'K' && m.At(x, y - 1) != 'K')       // 큰 고목: 3×3 의 왼쪽 위 칸에서 한 번
-                    {
-                        R.Ellipse(X + 1.5f * T + 8, Y + 3 * T - 4, 1.7f * T, 14, new Color32(0, 0, 0, 90));
-                        if (!Prop(R, "bigoak", X + 1.5f * T, Y + 3 * T + 30)) { R.Rect(X + T, Y + T, T, 2 * T, H("#6B4424")); R.Circle(X + 1.5f * T, Y + T, 70, H("#2F6E2A")); }
-                    }
-                    else if (c == 'F' && field) Fountain(R, X, Y, false);
-                    else if (c == 'F') { R.Ellipse(X + 26, Y + 44, 22, 6, new Color32(0, 0, 0, 60)); if (!Prop(R, "fairyspring", X + T / 2f, Y + T + 2)) Fountain(R, X, Y, false); }
+                    else if (c == 'F') Fountain(R, X, Y, false);                // 초원 샘물 (숲 요정 샘은 props.json)
                     else if (c == 'S') Sign(R, X, Y);
                     else if (c == 'H') Painter.Chest(R, X, Y, false);
-                    else if (c == 'M') { R.Ellipse(X + 26, Y + 45, 26, 6, new Color32(0, 0, 0, 80)); if (!Prop(R, "stumpshop", X + T / 2f, Y + T + 2)) CandyShop(R, X, Y); }
                 }
             if (field && !village)
             {
-                Scatter(R, m, ".", new[] { "dec_mossrock", "dec_wildflowers", "dec_stump" }, .05f, 205);   // 바닥 장식
-                int gx = WorldMap.Gate.x * T + T / 2, gy = WorldMap.Gate.y * T;                         // 성: 성문 칸 아래로 4줄 (문이 아래 가운데)
-                R.Ellipse(gx + 8, gy + 4 * T - 6, 3.4f * T, 16, new Color32(0, 0, 0, 80));
-                if (!Prop(R, "castle", gx, gy + 4 * T + 4)) R.Rect(gx - 2 * T, gy, 4 * T, 4 * T, H("#C8C8D0"));
+                ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
+                TilePropPass(R, m, 2);                                          // 성: 성문 칸 아래로 4줄, 다른 것 위에 (props.json)
                 VillageArch(R, WorldMap.VillageGate.x * T, WorldMap.VillageGate.y * T);
             }
             return R;
@@ -810,7 +673,7 @@ namespace GirlAdventure.View
                     }
                     R.Blend(px, py, c);
                 }
-            Scatter(R, m, ".", new[] { "dec_snowbush", "dec_iceshard" }, .06f, 203);                    // 바닥 장식: 눈 덤불·얼음 결정
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             for (int y = 0; y < WorldMap.H; y++)                                       // 눈길 발자국 (동글동글 두 줄)
                 for (int x = 0; x < WorldMap.W; x++)
                     if (m.At(x, y) == '=')
@@ -843,12 +706,7 @@ namespace GirlAdventure.View
                 for (int x = 0; x < WorldMap.W; x++)
                 {
                     char pc = m.At(x, y);
-                    if (pc == 'P' || pc == '?') SnowPine(R, x * T, y * T, Hash(x, y, 67));       // '?' = 지나갈 수 있는 전나무 (똑같이)
-                    else if (pc == 'm')                                                          // 얼음 꽃: 얼음 결정 둘 + 은은한 빛
-                    {
-                        R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 24, 11, H("#BFE8FF", 150)); R.Ellipse(x * T + T / 2f, y * T + T / 2f + 6, 14, 6, H("#FFFFFF", 170));
-                        Prop(R, "dec_iceshard", x * T + 16, y * T + T - 8); Prop(R, "dec_iceshard", x * T + 32, y * T + T - 4);
-                    }
+                    TileProp(R, m, x, y, 0);                                    // 전나무('?' 지나갈 수 있는 것도)·얼음 꽃 (props.json)
                 }
             SnowPeakArt(R, WorldMap.SnowPeak.x * T, WorldMap.SnowPeak.y * T);
             TownArch(R, WorldMap.SnowGate.x * T, WorldMap.SnowGate.y * T);       // 눈꽃 마을 문
@@ -924,8 +782,8 @@ namespace GirlAdventure.View
                         R.Line(x * T + 8, y * T + 30, x * T + 40, y * T + 22, 2, H("#FFFFFF", 160));
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'P') SnowPine(R, x * T, y * T, Hash(x, y, 75));
-            Scatter(R, m, ".", new[] { "dec_snowbush", "dec_iceshard" }, .05f, 209);                       // 바닥 장식 (마을 눈밭)
+                    TileProp(R, m, x, y, 0);                                    // 전나무 (props.json)
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             TownPaths(R, WorldMap.SnowTownHouses, WorldMap.SnowTownExit, 12, false, H("#C4D0E2"), H("#D6E0EE"), H("#A8B8D0"));   // 집마다 밟힌 눈길
             TownArch(R, WorldMap.SnowTownExit.x * T, WorldMap.SnowTownExit.y * T);
             for (int i = 0; i < WorldMap.SnowTownHouses.Length; i++)
@@ -992,22 +850,6 @@ namespace GirlAdventure.View
             R.Rect(X + 3, Y + 31, 42, 13, H("#A8743F"));
             R.Ellipse(X + 14, Y + 22, 8, 6, H("#D8574A")); R.Circle(X + 14, Y + 15, 3, H("#FFFFFF"));   // 털모자
             R.Rect(X + 26, Y + 18, 16, 6, H("#4FA85A")); R.Rect(X + 36, Y + 18, 5, 10, H("#4FA85A"));  // 목도리
-        }
-
-        /// <summary>눈 덮인 전나무 한 그루 (칸 위로 조금 솟는다, 세 층마다 눈).</summary>
-        static void SnowPine(Raster R, float X, float Y, float k)
-        {
-            float cx = X + T / 2f + (k - .5f) * 6;
-            R.Ellipse(cx + 5, Y + T - 3, 19, 6, new Color32(60, 80, 130, 60));
-            if (Prop(R, k < .5f ? "snowpine0" : "snowpine1", cx, Y + T + 2)) return;
-            R.Rect(cx - 4, Y + T - 14, 8, 12, H("#6B4A30"));
-            for (int i = 0; i < 3; i++)
-            {
-                float top = Y - 16 + i * 14, bot = top + 28, half = 11 + i * 6;
-                R.Polygon(new[] { new Vector2(cx, top), new Vector2(cx + half, bot), new Vector2(cx - half, bot) }, H(i == 2 ? "#2A5E46" : "#2F6B4E"), Ink, 2);
-                R.Polygon(new[] { new Vector2(cx, top + 2), new Vector2(cx + half * .6f, top + 15), new Vector2(cx + half * .2f, top + 12),
-                                  new Vector2(cx - half * .15f, top + 16), new Vector2(cx - half * .6f, top + 15) }, H("#FFFFFF"));
-            }
         }
 
         /// <summary>눈 산 (4×4 칸): 푸른 회색 산에 하얀 눈 모자, 오른쪽 그늘, 아래 가운데 동굴 입구 (보스 C5-5).</summary>
@@ -1091,13 +933,8 @@ namespace GirlAdventure.View
                         R.Ellipse(x * T + 24, y * T + 10, 10, 14, H("#FFFFFF", 60));
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
-                    if (m.At(x, y) == 'R')
-                    {
-                        if (Prop(R, Hash(x, y, 78) < .5f ? "lavarock0" : "lavarock1", x * T + 24, y * T + T)) continue;   // 소품 그림: 화산 바위
-                        if (t != null && t.GrayRock != null) AutoTile(R, t.GrayRock, m, "R", x, y);
-                        else R.Ellipse(x * T + 24, y * T + 26, 24, 22, H("#3A3640"));
-                    }
-            Scatter(R, m, ".", new[] { "dec_obsidian", "dec_vent" }, .05f, 210);                           // 바닥 장식 (마을 화산재 땅)
+                    TileProp(R, m, x, y, 0);                                    // 화산 바위 (props.json)
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             TownPaths(R, WorldMap.LavaTownHouses, WorldMap.LavaTownExit, 11, true, H("#7A6E6A"), H("#968880"), H("#3A302C"));   // 돌 포장 길
             TownArch(R, WorldMap.LavaTownExit.x * T, WorldMap.LavaTownExit.y * T);
             for (int i = 0; i < WorldMap.LavaTownHouses.Length; i++)
@@ -1153,62 +990,6 @@ namespace GirlAdventure.View
             R.Rect(X + 6, Y + 44, 36, 4, H("#C9A66A"));                      // 문턱 모래
         }
 
-        /// <summary>선인장 (사구아로): 몸통 + 양팔(높이가 칸마다 다름) + 세로 줄무늬, 가끔 분홍 꽃.</summary>
-        static void Cactus(Raster R, int tx, int ty)
-        {
-            float v = Hash(tx, ty, 81), v2 = Hash(tx, ty, 82);
-            float cx = tx * T + 24 + (v - .5f) * 8, top = ty * T + 2 + v2 * 6, bot = ty * T + 44;
-            Color32 dark = H("#1F5A2C"), mid = Lerp(H("#3E9A4A"), H("#4FA84A"), v), lite = H("#7CCB6E");
-            R.Ellipse(cx + 6, bot, 14, 4, new Color32(0, 0, 0, 70));         // 그림자
-            if (Prop(R, v < .5f ? "cactus0" : "cactus1", cx, bot + 2)) return;
-            float ly = top + 16 + v * 8, ry = top + 10 + v2 * 8;            // 팔이 붙는 높이
-            void Arm(float side, float y0, float up)
-            {
-                R.Line(cx, y0, cx + side * 12, y0, 9, dark);
-                R.Line(cx + side * 12, y0, cx + side * 12, y0 - up, 9, dark);
-                R.Line(cx, y0, cx + side * 12, y0, 6, mid);
-                R.Line(cx + side * 12, y0, cx + side * 12, y0 - up, 6, mid);
-            }
-            Arm(-1, ly, 9 + v * 6);
-            if (v2 > .25f) Arm(1, ry, 7 + v2 * 6);
-            R.Line(cx, top + 6, cx, bot - 2, 15, dark);                       // 몸통 외곽
-            R.Line(cx, top + 6, cx, bot - 2, 12, mid);
-            R.Line(cx - 3, top + 8, cx - 3, bot - 4, 2.5f, lite);             // 빛 받는 줄
-            R.Line(cx + 2, top + 9, cx + 2, bot - 4, 1.2f, dark);
-            for (int i = 0; i < 5; i++)                                       // 가시
-                R.Circle(cx + (i % 2 == 0 ? -6 : 6), top + 12 + i * 6, .9f, H("#F4F0D0"));
-            if (v > .6f) { R.Circle(cx, top + 2, 3.2f, H("#FF7FB0")); R.Circle(cx, top + 2, 1.3f, H("#FFE27A")); }
-        }
-
-        /// <summary>야자나무: 살짝 휜 줄기(마디 줄) + 늘어진 잎 6장 + 코코넛. 칸 위로 높이 솟는다.</summary>
-        static void Palm(Raster R, int tx, int ty)
-        {
-            float v = Hash(tx, ty, 91);
-            float bx = tx * T + 24, by = ty * T + 44, lean = (v - .5f) * 14;
-            float hx = bx + lean, hy = ty * T - 14;                          // 잎이 모이는 꼭대기
-            R.Ellipse(bx + 10, by, 18, 5, new Color32(0, 0, 0, 70));
-            if (Prop(R, v < .5f ? "palm0" : "palm1", bx, by + 3)) return;
-            for (int i = 0; i < 8; i++)                                       // 줄기 (아래 → 위로 굵기 줄임)
-            {
-                float k0 = i / 8f, k1 = (i + 1) / 8f;
-                float x0 = Mathf.Lerp(bx, hx, k0 * k0), y0 = Mathf.Lerp(by, hy, k0), x1 = Mathf.Lerp(bx, hx, k1 * k1), y1 = Mathf.Lerp(by, hy, k1);
-                R.Line(x0, y0, x1, y1, 9 - i * .5f, H("#5E3B1C"));
-                R.Line(x0, y0, x1, y1, 6 - i * .4f, i % 2 == 0 ? H("#9A6A3A") : H("#B07E48"));
-            }
-            for (int i = 0; i < 6; i++)                                       // 잎
-            {
-                float a = (i / 6f) * Mathf.PI * 2 + v;
-                float ex = hx + Mathf.Cos(a) * 26, ey = hy + Mathf.Sin(a) * 12 + 12;    // 바깥으로 갈수록 아래로 처진다
-                float mx = hx + Mathf.Cos(a) * 14, my = hy + Mathf.Sin(a) * 6 - 4;
-                R.Line(hx, hy, mx, my, 7, H("#1E6A2C"));
-                R.Line(mx, my, ex, ey, 6, H("#1E6A2C"));
-                R.Line(hx, hy, mx, my, 4.5f, H("#3FAE4A"));
-                R.Line(mx, my, ex, ey, 3.5f, H("#5CC85A"));
-            }
-            R.Circle(hx - 4, hy + 4, 3.5f, H("#6B4424"));
-            R.Circle(hx + 3, hy + 5, 3.5f, H("#7A4E2A"));
-        }
-
         // ------------------------------------------------------------------ 별빛 마을
         /// <summary>초원 쪽 마을 입구: 숲 사이 나무 아치 + 별 간판.</summary>
         static void VillageArch(Raster R, float X, float Y)
@@ -1243,7 +1024,7 @@ namespace GirlAdventure.View
         static Raster Village(WorldMap m, FieldTiles t)
         {
             var R = Meadow(m, true, true);                                  // 손그림 풀밭·흙길·나무 (2026-10-10, 예전 네모 타일 대신)
-            Scatter(R, m, ".", new[] { "dec_wildflowers", "dec_mossrock" }, .06f, 206);                    // 바닥 장식 (마을 풀밭)
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             // 울타리 (텃밭) — 울타리 뒤(위)에 채소 줄
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -1538,27 +1319,6 @@ namespace GirlAdventure.View
             R.Circle(x, y, 1.5f, H("#F2B233"));
         }
 
-        /// <summary>둥근 수관 나무. 칸마다 크기·색·위치가 조금씩 달라 숲이 자연스럽게 보인다.</summary>
-        static void Tree(Raster R, int tx, int ty, bool border)
-        {
-            float v = Hash(tx, ty, 21), v2 = Hash(tx, ty, 22);
-            float s = (border ? 1.15f : .9f) + v * .2f;
-            float cx = tx * T + 24 + (v2 - .5f) * 8, cy = ty * T + 20 + (v - .5f) * 6;
-            Color32 dark = Lerp(H("#1E5A2A"), H("#2C5A1E"), v2), mid = Lerp(H("#2F8A3A"), H("#4B8F2C"), v2), lite = Lerp(H("#5DBB55"), H("#8CC84E"), v2);
-            if (border) { dark = Mul(dark, .85f); mid = Mul(mid, .9f); }
-            R.Ellipse(cx + 6, cy + 22 * s, 20 * s, 7 * s, new Color32(0, 0, 0, 70));                  // 발밑 그림자
-            R.Rect(cx - 4, cy + 8 * s, 8, 14 * s, H("#6B4424"));
-            R.Rect(cx - 4, cy + 8 * s, 3, 14 * s, H("#8A5A30"));
-            R.Circle(cx, cy, 22 * s, H("#153D1E"));                                                     // 부드러운 짙은 외곽
-            R.Circle(cx, cy, 20.5f * s, dark);
-            R.Circle(cx - 4 * s, cy - 4 * s, 15 * s, mid);
-            R.Circle(cx + 7 * s, cy + 3 * s, 10 * s, mid);
-            R.Circle(cx - 8 * s, cy - 9 * s, 8 * s, lite);                                              // 왼쪽 위 빛
-            R.Circle(cx - 11 * s, cy - 12 * s, 3.5f * s, H("#C8F08A", 200));
-            for (int i = 0; i < 4; i++)
-                R.Circle(cx + (Hash(tx, ty, 30 + i) - .5f) * 26 * s, cy + (Hash(tx, ty, 40 + i) - .5f) * 22 * s, 1.6f, H("#A9E27A", 180));
-        }
-
         static void Bridge(Raster R, WorldMap m, int x, int y)
         {
             float X = x * T, Y = y * T;
@@ -1773,7 +1533,7 @@ namespace GirlAdventure.View
                     R.Blend(px, py, c);
                 }
 
-            Scatter(R, m, "_", new[] { "dec_glowshroom", "dec_cavepebbles" }, m.Kind == MapKind.Cave ? .07f : 0, 204);   // 바닥 장식: 빛나는 버섯·자갈
+            ThemeScatter(R, m);                                             // 바닥 장식 (props.json Themes)
             // 바닥 디테일: 자갈, 금
             var rnd = new System.Random(13);
             float Rn() => (float)rnd.NextDouble();
@@ -1814,7 +1574,7 @@ namespace GirlAdventure.View
 
             Fountain(R, m.Spring.x * T, m.Spring.y * T, true);
             Sign(R, m.SignPos.x * T, m.SignPos.y * T);
-            SecretGlints(R, m, "dec_glowshroom", "#9AF0FF");                  // 숨은 굴의 빛나는 버섯
+            ThemeSecret(R, m);                                              // 숨은 빈터 반짝이 (props.json Themes)
             if (m.Kind != MapKind.Cave) return R;           // 아래는 챕터 2 동굴에만 있는 것
             CandyShop(R, WorldMap.CaveShop.x * T, WorldMap.CaveShop.y * T);
             Painter.Chest(R, WorldMap.Chest.x * T, WorldMap.Chest.y * T, false);

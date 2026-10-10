@@ -13,6 +13,7 @@ namespace GirlAdventure.EditorTools
     {
         public static void Run()
         {
+            GirlAdventure.View.DataLoader.Load();                           // 소품 테마(props.json) 등
             var tiles = FieldTiles.Load();
             string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../playtest/maps"));
             Directory.CreateDirectory(dir);
