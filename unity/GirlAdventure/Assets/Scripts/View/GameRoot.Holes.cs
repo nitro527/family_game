@@ -34,13 +34,37 @@ namespace GirlAdventure.View
             var R = new Raster(Painter.Tile, Painter.Tile);
             Color32 shade = cave ? new Color32(20, 14, 26, 90) : k == MapKind.Snow ? new Color32(60, 80, 130, 80) : k == MapKind.Lava ? new Color32(30, 10, 6, 110) : new Color32(40, 26, 12, 90);
             Color32 crack = cave ? Raster.Hex("#2A2232") : k == MapKind.Snow ? Raster.Hex("#8EA4C4") : k == MapKind.Lava ? Raster.Hex("#FF7A2A") : Raster.Hex("#4A3420");   // 눈밭은 푸른 금, 용암 땅은 주황빛 금
-            R.Ellipse(24, 30, 20, 12, shade);                                  // 가장자리가 살짝 어둡게 번진 땅
-            R.Ellipse(24, 30, 16.5f, 9.5f, Raster.Hex("#0C0810"));             // 구멍
-            R.Ellipse(24, 26.5f, 13, 4, cave ? Raster.Hex("#2E2638") : Raster.Hex("#3A2814"));   // 위쪽 안벽 (조금 보인다)
-            R.Ellipse(24, 31, 13, 7, Raster.Hex("#05030A"));
-            R.Line(6, 28, 1, 25, 1.4f, crack);                                 // 금
-            R.Line(41, 33, 47, 36, 1.4f, crack);
-            R.Line(40, 25, 44, 21, 1.2f, crack);
+            static Color32 Mul(Color32 c, float f) => new Color32((byte)Mathf.Min(255, c.r * f), (byte)Mathf.Min(255, c.g * f), (byte)Mathf.Min(255, c.b * f), c.a);
+            // 2026-10-10 그래픽 점검: 흙이 둥글게 쌓인 둔덕(위는 밝고 아래는 그늘, 자갈) + 안쪽은 깊어질수록 어둡게
+            Color32 soil = k == MapKind.Snow ? Raster.Hex("#D8E4F4") : k == MapKind.Desert ? Raster.Hex("#D8B070") : k == MapKind.Lava ? Raster.Hex("#5A4640") : cave ? Raster.Hex("#5A5068") : Raster.Hex("#8A6236");
+            R.Ellipse(25, 33, 21, 11, shade);                                  // 바닥 그늘
+            for (int py = 14; py < 46; py++)
+                for (int px = 1; px < 47; px++)
+                {
+                    float ux = (px - 24) / 20f, uy = (py - 30) / 12f, r = Mathf.Sqrt(ux * ux + uy * uy);
+                    if (r > 1) continue;
+                    float n = Mathf.PerlinNoise(px * .3f, py * .3f);
+                    Color32 c;
+                    if (r > .68f)                                              // 흙 둔덕: 위쪽은 햇빛, 아래쪽은 그늘
+                    {
+                        float lit = Mathf.Clamp01(.6f - uy * .7f);
+                        c = Color32.Lerp(Mul(soil, .62f), Mul(soil, 1.12f), Mathf.Clamp01(lit * .8f + n * .25f));
+                        if (r > .94f) c = Mul(c, .82f);
+                    }
+                    else                                                       // 구멍 안: 위쪽 안벽은 흙빛이 조금, 아래로 갈수록 깜깜
+                    {
+                        float depth = Mathf.Clamp01((r / .68f) * .6f + (uy + 1) * .35f);
+                        c = Color32.Lerp(Mul(soil, .28f), Raster.Hex("#05030A"), uy < -.2f ? depth * .7f : .5f + depth * .5f);
+                    }
+                    R.Blend(px, py, c);
+                }
+            foreach (var (gx, gy, gr) in new[] { (7f, 33f, 1.8f), (40f, 35f, 1.6f), (34f, 20f, 1.3f), (12f, 23f, 1.2f) })   // 자갈
+            {
+                R.Circle(gx, gy, gr, Mul(soil, .55f));
+                R.Circle(gx - .4f, gy - .5f, gr * .55f, Mul(soil, 1.2f));
+            }
+            R.Line(4, 36, 0, 39, 1.2f, crack);                                 // 금
+            R.Line(44, 25, 47, 22, 1.1f, crack);
             if (empty)
             {
                 R.Ellipse(24, 32, 9, 4.5f, Raster.Hex(cave ? "#3A3240" : "#3E2C1C"));    // 들여다본 뒤: 얕은 바닥

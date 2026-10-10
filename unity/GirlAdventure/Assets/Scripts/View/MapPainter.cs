@@ -516,7 +516,10 @@ namespace GirlAdventure.View
                             float flow = Noise(px / 18f + py / 40f, py / 18f, 45);
                             var lc = Lerp(l0, l1, flow);
                             lc = Lerp(lc, l2, Smooth(.65f, .9f, flow) * .8f);
-                            if (Noise(px / 9f, py / 9f, 46) > .72f + d * .1f) lc = Lerp(lc, crust, .7f);   // 검은 딱지
+                            lc = Lerp(lc, l2, d * .22f);                                                  // 가운데일수록 더 뜨겁게
+                            float pl = Noise(px / 15f + flow * .6f, py / 15f, 46), th = .63f + d * .08f;      // 식어 굳은 딱지 판 (2026-10-10: 점 무늬 대신 판과 빛나는 틈)
+                            if (pl > th) lc = Lerp(lc, Lerp(crust, H("#2E100A"), Fbm(px, py, 47)), Smooth(th, th + .05f, pl) * .88f);
+                            else if (pl > th - .035f) lc = Lerp(lc, l2, (1 - (th - pl) / .035f) * .75f);
                             float edge = 1 - Mathf.Abs(lw - .52f) / .05f;                                  // 빛나는 테두리
                             if (edge > 0) lc = Lerp(lc, l2, edge * .9f);
                             c = lc;
