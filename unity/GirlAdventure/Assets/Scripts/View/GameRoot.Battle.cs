@@ -776,8 +776,8 @@ namespace GirlAdventure.View
         {
             for (int i = 0; i < groupTags.Length; i++)
             {
-                groupTags[i] = UIKit.Label(ui, "FoeTag" + i, "", 0, 0, 120, 26, 16, TextAnchor.MiddleCenter, Color.white, true);
-                groupTags[i].GetComponent<TextRim>().effectDistance = new Vector2(1.7f, 1.7f);
+                groupTags[i] = UIKit.Label(ui, "FoeTag" + i, "", 0, 0, 120, 26, 18, TextAnchor.MiddleCenter, Color.white, true);
+                groupTags[i].GetComponent<TextRim>().effectDistance = new Vector2(2.2f, 2.2f);       // 밝은 배경에서도 잘 보이게
                 groupBars[i] = UIKit.Bar(groupTags[i].transform, "Hp", 22, 26, 76, 7, new Color32(86, 212, 106, 255));
                 groupGroups[i] = groupTags[i].gameObject.AddComponent<CanvasGroup>();
                 groupGroups[i].blocksRaycasts = false;
@@ -1517,7 +1517,7 @@ namespace GirlAdventure.View
             }
             for (int i = 0; i < 10; i++)
                 Spawn(starSprite, Px(HeroX + Random.Range(-80, 80), HeroY), new Vector3(0, Random.Range(2f, 3.5f)), 1.2f, .3f, new Color(1f, .95f, .6f));
-            Pop("LEVEL UP!", HeroX + 20, 205, UIKit.Gold, 50);
+            Pop("레벨 업!", HeroX + 20, 150, UIKit.Gold, 54);                 // 머리 위로, 한글로 (얼굴을 가리던 것)
         }
 
         /// <summary>프로브용: 지금 재생 중인 주문 이펙트 ("fire" / "star" / "heal", 없으면 null).</summary>

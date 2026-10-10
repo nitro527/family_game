@@ -882,6 +882,7 @@ namespace GirlAdventure.View
                 var (t, age, from) = pops[i];
                 age += Time.deltaTime;
                 t.rectTransform.anchoredPosition = from + new Vector2(0, Mathf.Min(30, age * 80));
+                t.rectTransform.localScale = Vector3.one * (age < .12f ? Mathf.Lerp(1.6f, .92f, age / .12f) : age < .22f ? Mathf.Lerp(.92f, 1f, (age - .12f) / .1f) : 1f);   // 퐁 튀어나오기
                 var c = t.color; c.a = Mathf.Clamp01(1 - Mathf.Max(0, age - .7f) / .4f); t.color = c;
                 if (age > 1.1f) { Destroy(t.gameObject); pops.RemoveAt(i); }
                 else pops[i] = (t, age, from);
