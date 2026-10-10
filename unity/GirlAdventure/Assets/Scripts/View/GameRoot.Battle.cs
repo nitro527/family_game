@@ -128,8 +128,7 @@ namespace GirlAdventure.View
         Sprite Backdrop(EnemyDef def)
         {
             bool cave = map.IsCaveLike;
-            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : map.Kind == MapKind.Forest ? "forest" : map.Kind == MapKind.Library ? "library" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : cave ? "cave"
-                        : map.Kind == MapKind.Desert ? "desert" : "meadow";
+            string name = !string.IsNullOrEmpty(def.Backdrop) ? def.Backdrop : MapKinds.Of(map.Kind).Backdrop;   // 맵 종류 표
             if (!backdrops.TryGetValue(name, out var s))
             {
                 var tex = Resources.Load<Texture2D>("Battle/" + name);

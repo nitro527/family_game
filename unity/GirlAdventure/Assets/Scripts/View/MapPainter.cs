@@ -47,10 +47,25 @@ namespace GirlAdventure.View
             return R;
         }
 
-        static Raster RenderBase(WorldMap m, FieldTiles tiles) =>
-            m.Kind == MapKind.Cave ? Cave(m) : m.Kind == MapKind.Village ? Village(m, tiles) : m.Kind == MapKind.Desert ? Desert(m, tiles)
-            : m.Kind == MapKind.Oasis ? OasisTown(m, tiles) : m.Kind == MapKind.Underworld ? Underworld(m) : m.Kind == MapKind.Lava ? LavaLand(m, tiles) : m.Kind == MapKind.LavaTown ? LavaTown(m, tiles) : m.Kind == MapKind.Home ? Home(m) : m.Kind == MapKind.Snow ? SnowLand(m) : m.Kind == MapKind.SnowTown ? SnowTown(m) : m.Kind == MapKind.Library ? Library(m) : m.Kind == MapKind.Forest ? Meadow(m, false)
-            : Meadow(m, true);                                              // 챕터 1 초원도 숲처럼 손그림 풍으로 (2026-10-10 그래픽 점검: 네모난 타일 수풀이 가장 낮은 퀄리티)
+        /// <summary>맵 종류 → 그리는 함수 (새 맵 종류 = 여기 한 줄 + Sim/MapKinds.cs 한 줄).</summary>
+        static readonly Dictionary<MapKind, System.Func<WorldMap, FieldTiles, Raster>> painters = new Dictionary<MapKind, System.Func<WorldMap, FieldTiles, Raster>>
+        {
+            { MapKind.Field, (m, t) => Meadow(m, true) },               // 챕터 1 초원도 숲처럼 손그림 풍으로 (2026-10-10 그래픽 점검)
+            { MapKind.Village, (m, t) => Village(m, t) },
+            { MapKind.Cave, (m, t) => Cave(m) },
+            { MapKind.Desert, (m, t) => Desert(m, t) },
+            { MapKind.Oasis, (m, t) => OasisTown(m, t) },
+            { MapKind.Underworld, (m, t) => Underworld(m) },
+            { MapKind.Lava, (m, t) => LavaLand(m, t) },
+            { MapKind.LavaTown, (m, t) => LavaTown(m, t) },
+            { MapKind.Home, (m, t) => Home(m) },
+            { MapKind.Snow, (m, t) => SnowLand(m) },
+            { MapKind.SnowTown, (m, t) => SnowTown(m) },
+            { MapKind.Library, (m, t) => Library(m) },
+            { MapKind.Forest, (m, t) => Meadow(m, false) },
+        };
+
+        static Raster RenderBase(WorldMap m, FieldTiles tiles) => painters.TryGetValue(m.Kind, out var paint) ? paint(m, tiles) : Meadow(m, true);
 
         // ------------------------------------------------------------------ noise / mask helpers
         static float Hash(int x, int y, int s)

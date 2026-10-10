@@ -489,6 +489,7 @@ namespace GirlAdventure.EditorTools
             MapQuestTests();
             PropCatalogTests();
             ChapterTableTests();
+            MapKindTableTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();
@@ -1282,6 +1283,23 @@ namespace GirlAdventure.EditorTools
         /// 맵마다 찾기 부탁 + 숨겨진 이벤트 (G-4): 부탁하는 사람이 있고, 찾을 칸 셋이 서로 다르고 걸어서 닿고,
         /// 받기 → 찾기 → 보상 흐름, 숨겨진 물건이 그 맵에 있고 옆 칸에서 닿는지, 보상·대사가 있는지.
         /// </summary>
+        /// <summary>맵 종류 표 (Sim/MapKinds.cs): 모든 맵 종류가 표에 있고, 출발 자리가 막히지 않고, 노래·표지판 대사가 있는지.</summary>
+        static void MapKindTableTests()
+        {
+            string bad = "";
+            foreach (MapKind k in System.Enum.GetValues(typeof(MapKind)))
+            {
+                var info = MapKinds.Of(k);
+                if (info.Kind != k) { bad += $"{k}:missing "; continue; }
+                var m = WorldMap.Build(k);
+                var (sx, sy) = info.Spawn();
+                if (m.Blocked(sx, sy)) bad += $"{k}:spawn ";
+                if (Music.Get(info.Song) == null) bad += $"{k}:song ";
+                if (k != MapKind.Home && !GameData.HasTalk(info.SignTalk)) bad += $"{k}:sign ";
+            }
+            Check("map kind table: every kind, spawn, song, sign", bad == "", bad);
+        }
+
         /// <summary>챕터 표 (Sim/Chapters.cs): 챕터마다 보스·대사·출발 자리·보스 칸이 맞는지 — 새 챕터를 넣을 때 빠뜨린 것을 잡는다.</summary>
         static void ChapterTableTests()
         {

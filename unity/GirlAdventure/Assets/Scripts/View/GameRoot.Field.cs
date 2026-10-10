@@ -365,7 +365,7 @@ namespace GirlAdventure.View
         }
 
         /// <summary>지금 맵의 배경음악: 초원 "field", 동굴 "cave", 마을 "village", 사막 "desert".</summary>
-        string MapSong => map.Kind == MapKind.Forest ? "forest" : map.Kind == MapKind.Library ? "library" : map.Kind == MapKind.Home ? "village" : map.Kind == MapKind.SnowTown ? "snowtown" : map.Kind == MapKind.Snow ? "snow" : map.Kind == MapKind.Lava ? "lava" : map.Kind == MapKind.Underworld ? "underworld" : map.IsCaveLike ? "cave" : map.IsTown ? "village" : map.Kind == MapKind.Desert ? "desert" : "field";
+        string MapSong => MapKinds.Of(map.Kind).Song;                 // 맵 종류 표
 
         /// <summary>
         /// 초원 'V' ↔ 마을 'E': 화면이 어두워졌다가 다른 맵에서 밝아진다.
@@ -1034,7 +1034,7 @@ namespace GirlAdventure.View
         {
             if (busy) yield break;
             busy = true;
-            yield return Talk(map.Kind == MapKind.Forest ? "sign_forest" : map.Kind == MapKind.Library ? "sign_library" : map.Kind == MapKind.SnowTown ? "sign_snowtown" : map.Kind == MapKind.Snow ? "sign_snow" : map.Kind == MapKind.LavaTown ? "sign_lavatown" : map.Kind == MapKind.Lava ? "sign_lava" : map.Kind == MapKind.Underworld ? "sign_under" : map.Kind == MapKind.Village ? "sign_village" : map.Kind == MapKind.Oasis ? "sign_oasis" : map.Kind == MapKind.Desert ? "sign_ch3" : P.Chapter >= 2 ? "sign_ch2" : "sign");
+            yield return Talk(MapKinds.Of(map.Kind).SignTalk);
             string tip = "tip_" + map.Kind.ToString().ToLowerInvariant();      // 그 맵 몬스터 기믹 힌트 (G-1, 아이가 알 수 있게)
             if (GameData.HasTalk(tip)) yield return Talk(tip);
             HideMessage();

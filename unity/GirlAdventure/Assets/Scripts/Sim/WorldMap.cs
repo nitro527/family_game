@@ -132,20 +132,14 @@ namespace GirlAdventure.Sim
         public List<(int x, int y)> Holes { get; private set; } = new List<(int x, int y)>();
         readonly char[,] tiles = new char[W, H];
 
-        public (int x, int y) SpawnPoint => Kind == MapKind.Field ? Start : Kind == MapKind.Village ? VillageStart : Kind == MapKind.Desert ? DesertStart
-                                            : Kind == MapKind.Oasis ? TownStart : Kind == MapKind.Underworld ? UnderStart : Kind == MapKind.Lava ? LavaStart
-                                            : Kind == MapKind.LavaTown ? LavaTownStart : Kind == MapKind.Home ? HomeStart : Kind == MapKind.Snow ? SnowStart : Kind == MapKind.SnowTown ? SnowTownStart : Kind == MapKind.Library ? LibStart : Kind == MapKind.Forest ? ForStart : CaveStart;
+        public (int x, int y) SpawnPoint => MapKinds.Of(Kind).Spawn();          // 맵 종류 표 (Sim/MapKinds.cs)
         /// <summary>샘물 (마을은 우물 — 별가루가 반짝이는 자리, 사막은 오아시스 샘, 오아시스 마을은 마른 우물).</summary>
-        public (int x, int y) Spring => Kind == MapKind.Field ? Fountain : Kind == MapKind.Village ? Well : Kind == MapKind.Desert ? OasisSpring
-                                        : Kind == MapKind.Oasis ? TownWell : Kind == MapKind.Underworld ? UnderSpring : Kind == MapKind.Lava ? LavaSpring
-                                        : Kind == MapKind.LavaTown ? LavaTownSpring : Kind == MapKind.Snow ? SnowFire : Kind == MapKind.SnowTown ? SnowTownFire : Kind == MapKind.Library ? LibSpring : Kind == MapKind.Forest ? ForSpring : CaveSpring;
-        public (int x, int y) SignPos => Kind == MapKind.Field ? Sign : Kind == MapKind.Village ? VillageSign : Kind == MapKind.Desert ? DesertSign
-                                         : Kind == MapKind.Oasis ? TownSign : Kind == MapKind.Underworld ? UnderSign : Kind == MapKind.Lava ? LavaSign
-                                         : Kind == MapKind.LavaTown ? LavaTownSign : Kind == MapKind.Snow ? SnowSign : Kind == MapKind.SnowTown ? SnowTownSign : Kind == MapKind.Library ? LibSign : Kind == MapKind.Forest ? ForSign : CaveSign;
+        public (int x, int y) Spring => MapKinds.Of(Kind).Spring();
+        public (int x, int y) SignPos => MapKinds.Of(Kind).Sign();
         /// <summary>사탕 가게 (초원·사막 바깥에는 없다 — 마을 가게를 쓴다).</summary>
-        public (int x, int y) ShopPos => Kind == MapKind.Village ? VillageShop : Kind == MapKind.Cave ? CaveShop : Kind == MapKind.Oasis ? TownShop : Kind == MapKind.LavaTown ? LavaTownShop : Kind == MapKind.SnowTown ? SnowTownShop : Kind == MapKind.Library ? LibShop : Kind == MapKind.Forest ? ForShop : (-1, -1);
+        public (int x, int y) ShopPos => MapKinds.Of(Kind).ShopAt();
         /// <summary>동굴처럼 어둡고 바위벽('#')인 맵 (동굴·지하세계): 어둠·빛·수정 그림을 같이 쓴다.</summary>
-        public bool IsCaveLike => Kind == MapKind.Cave || Kind == MapKind.Underworld;
+        public bool IsCaveLike => MapKinds.Of(Kind).CaveLike;
 
         /// <summary>
         /// 숨겨진 구멍 자리 (초원·동굴·사막): 이 맵의 수상한 구멍을 모두 들여다보면 여기에 보랏빛 구멍이 열리고, 밟으면 지하세계로.
@@ -187,7 +181,7 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>마을 맵 (별빛 마을·오아시스 마을): 몬스터가 없고 출구 'E' 로 나간다.</summary>
-        public bool IsTown => Kind == MapKind.Village || Kind == MapKind.Oasis || Kind == MapKind.LavaTown || Kind == MapKind.SnowTown;
+        public bool IsTown => MapKinds.Of(Kind).Town;
         /// <summary>쓰러졌을 때 다시 일어나는 곳 (샘물 왼쪽 아래).</summary>
         public (int x, int y) RevivePoint => (Spring.x - 1, Spring.y + 1);
 
@@ -720,7 +714,7 @@ namespace GirlAdventure.Sim
             if (x >= 0 && y >= 0 && x < W && y < H) tiles[x, y] = c;
         }
 
-        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? (IsCaveLike ? '#' : Kind == MapKind.Desert || Kind == MapKind.Oasis || Kind == MapKind.Lava || Kind == MapKind.LavaTown ? 'R' : Kind == MapKind.Snow || Kind == MapKind.SnowTown ? 'P' : Kind == MapKind.Library ? '#' : 'T') : tiles[x, y];
+        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? MapKinds.Of(Kind).Edge : tiles[x, y];
 
         public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0 || PropCatalog.Blocks(Kind, x, y);   // props.json Placed 의 Block 장식도
 

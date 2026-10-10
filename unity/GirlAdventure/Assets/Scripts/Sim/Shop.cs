@@ -18,7 +18,7 @@ namespace GirlAdventure.Sim
         /// <summary>이 맵 가게에서 파는 물건 id (소모품 다음 장비, 데이터 순서).</summary>
         public static List<string> Goods(MapKind kind)
         {
-            string where = kind == MapKind.Cave ? "cave" : kind == MapKind.Village ? "village" : kind == MapKind.Oasis ? "oasis" : kind == MapKind.LavaTown ? "lavatown" : kind == MapKind.SnowTown ? "snowtown" : kind == MapKind.Library ? "library" : kind == MapKind.Forest ? "forest" : "field";
+            string where = MapKinds.Of(kind).Shop;
             var list = new List<string>();
             foreach (var d in GameData.Consumables) if (Sells(d, where)) list.Add(d.Id);
             foreach (var d in GameData.Gear) if (Sells(d, where)) list.Add(d.Id);

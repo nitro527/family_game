@@ -130,8 +130,8 @@ namespace GirlAdventure.Sim
         /// <summary>그 맵의 일반 적 목록 (출현표 인덱스가 가리키는 곳): 동굴 Cave, 사막 Desert, 나머지(초원·마을) Normal.</summary>
         public static EnemyDef[] ListFor(MapKind kind) => kind == MapKind.Cave ? Cave : kind == MapKind.Desert ? Desert : kind == MapKind.Underworld ? Under : kind == MapKind.Lava ? Lava : kind == MapKind.Snow ? Snow : kind == MapKind.Library ? Library : kind == MapKind.Forest ? Forest : Normal;
 
-        static string ZoneMap(MapKind kind) => kind == MapKind.Cave ? "cave" : kind == MapKind.Desert ? "desert" : kind == MapKind.Underworld ? "under" : kind == MapKind.Lava ? "lava" : kind == MapKind.Snow ? "snow" : kind == MapKind.Library ? "library" : kind == MapKind.Forest ? "forest" : "field";
-        static MapKind ZoneKind(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "under" ? MapKind.Underworld : map == "lava" ? MapKind.Lava : map == "snow" ? MapKind.Snow : map == "library" ? MapKind.Library : map == "forest" ? MapKind.Forest : MapKind.Field;
+        static string ZoneMap(MapKind kind) => MapKinds.Of(kind).Zone;
+        static MapKind ZoneKind(string map) => MapKinds.ByZone(map);
         public static EnemyDef Guard { get; private set; }
         public static EnemyDef General { get; private set; }
         public static EnemyDef DesertBoss { get; private set; }

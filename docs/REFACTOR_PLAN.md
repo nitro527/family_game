@@ -28,3 +28,7 @@
   Boss2~7Routine·BossGateRoutine, 보스 이긴 뒤 7갈래·완료 카드·지금 할 일·맵 고르기(SurfaceMap·ForChapter·ForPlayer·HasTown)·보스 칸 밟기 사슬,
   맵 변수 12개 → `worldMaps` 사전. 대화 조건 boss2~7 → bossN 일반화. 스모크 ChapterTableTests 추가. 프로브 통과.
   **새 챕터 넣는 법**: Chapters.cs 에 ChapterDef 한 줄 + WorldMap 맵 함수 + MapKind + dialogue.json 대사 + (세이브에 BossNDown 칸 하나, BossBeaten switch 한 줄).
+- **B. 맵 종류 표 (2026-10-10 완료)**: `Sim/MapKinds.cs` (MapKindInfo: 노래·전투 배경·표지판 대사·동굴/마을·맵 밖 칸·겁 레벨·몬스터 구역·가게·출발/샘물/표지판/가게 칸),
+  MapPainter `painters` 사전. 정리한 사슬: SpawnPoint·Spring·SignPos·ShopPos·IsCaveLike·IsTown·맵 밖 칸(At)·MapSong·전투 배경·표지판 대사·TimidLevel·ZoneMap/ZoneKind·가게 이름·RenderBase.
+  스모크 MapKindTableTests 추가. 맵 그림 픽셀 비교 같음, 프로브 통과.
+  **새 맵 종류 넣는 법**: MapKind 에 이름 + MapKinds.cs 한 줄 + WorldMap 맵 함수(+Build) + MapPainter painters 한 줄 + (있으면) props.json 테마.
