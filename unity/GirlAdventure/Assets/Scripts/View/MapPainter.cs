@@ -24,6 +24,8 @@ namespace GirlAdventure.View
         public static void LoadProps()
         {
             var d = new Dictionary<string, TileImage>();
+            foreach (var t in Resources.LoadAll<Texture2D>("Tiles/Cliffs"))      // 절벽 무늬 (tools/cliff_gen.py, Qwen)
+                if (t.isReadable) d[t.name] = new TileImage(t);
             foreach (var t in Resources.LoadAll<Texture2D>("Tiles/Props"))
                 if (t.isReadable) d[t.name] = new TileImage(t);
                 else Debug.LogWarning($"[Props] {t.name} 읽기 불가");

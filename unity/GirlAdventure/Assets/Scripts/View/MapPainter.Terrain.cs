@@ -115,6 +115,8 @@ namespace GirlAdventure.View
             int X = x * T, Y = y * T;
             bool leftEnd = !m.IsFace(x - 1, y), rightEnd = !m.IsFace(x + 1, y);
             bool wood = style == "wood";
+            TileImage tex = null;                                                                   // 그림 생성 절벽 무늬 (없으면 코드 무늬)
+            if (!wood && Props != null) Props.TryGetValue("cliff_" + style, out tex);
             for (int py = 0; py < T; py++)
                 for (int px = 0; px < T; px++)
                 {
@@ -137,6 +139,14 @@ namespace GirlAdventure.View
                             if (px % 12 == 0) c = Mul(c, .75f);                                       // 판자 사이
                             c = Mul(c, .93f + .14f * Noise(gx / 3f, gy / 20f, 507));                  // 나뭇결
                             if (py > T - 9 && py < T - 6) c = Lerp(c, lip, .6f);                       // 아래 몰딩
+                        }
+                        else if (tex != null)
+                        {
+                            int u = gx % (tex.W * 2); if (u >= tex.W) u = tex.W * 2 - 1 - u;              // 좌우 거울로 이어 붙임
+                            int v = Mathf.Clamp((int)(t * (tex.H - 1)), 0, tex.H - 1);
+                            c = Mul(tex.At(u, v), 1.08f - t * .38f);                                   // 위 밝고 아래 어둡게
+                            if (py == (int)lipH) c = Mul(c, .6f);
+                            else if (py < lipH + 4) c = Mul(c, .82f);
                         }
                         else
                         {

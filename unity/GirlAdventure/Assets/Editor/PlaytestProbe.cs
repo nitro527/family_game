@@ -1936,7 +1936,7 @@ namespace GirlAdventure.EditorTools
                 if (G.CommandOpen || G.ChoiceOpen) Keys.Press(KeyCode.Return); else Keys.Press(KeyCode.Z);
                 yield return .2f;
             }
-            yield return (Func<bool>)(() => G.MessageText.Contains("합체"));
+            yield return (Func<bool>)(() => G.MessageText.Contains("합체") || G.MergeCount > 0);   // 합체 대사가 빨리 지나가도 (대기 초과 없게)
             Shot("gimmick_merge");
             Expect("two imps merged into a big imp", G.MergeCount > 0, $"merges {G.MergeCount}");
             G.DebugSetAllFoesHp(1);

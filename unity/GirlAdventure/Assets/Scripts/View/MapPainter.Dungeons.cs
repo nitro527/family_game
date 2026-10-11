@@ -39,7 +39,7 @@ namespace GirlAdventure.View
             });
             if (theme == "castle") CastleDress(R, m);
             else if (theme == "archive" || theme == "oak") WallDress(R, m, theme);
-            if (theme == "archive") PlankFloor(R, m, "_:Hlr");
+            if (theme == "archive") PlankFloor(R, m, "_:Hlrm");
             if (theme == "cellar") PlankFloor(R, m, ":rl");                 // 지하 창고: 쉼터는 나무 마루, 젤리 굴은 흙바닥
             if (theme == "volcano") LavaPools(R, m);
             for (int y = 0; y < WorldMap.H; y++)
@@ -63,7 +63,7 @@ namespace GirlAdventure.View
         {
             Color32 brick = H("#8E93A8"), brickDark = H("#6A6E82"), mortar = H("#4A4C5C"), topC = H("#2C2E3C"), topLine = H("#3A3D4E");
             Color32 slab = H("#9EA2B4"), slabEdge = H("#7C8094");
-            bool Floor(int x, int y) => "_:=BFSHlrwE".IndexOf(m.At(x, y)) >= 0;
+            bool Floor(int x, int y) => "_:=BFSHlrwEm".IndexOf(m.At(x, y)) >= 0;
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
@@ -96,7 +96,7 @@ namespace GirlAdventure.View
                             }
                         if (face && Hash(x, y, 613) > .78f && Floor(x, y + 1) && m.At(x, y + 1) != 'E') Banner(R, X, Y);
                     }
-                    else if ("_:Hlr".IndexOf(ch) >= 0)
+                    else if ("_:Hlrm".IndexOf(ch) >= 0)
                     {
                         for (int py = 0; py < T; py++)
                             for (int px = 0; px < T; px++)
@@ -116,7 +116,7 @@ namespace GirlAdventure.View
         /// <summary>서고 = 벽면이 책장(소품 그림 bookshelf, 없으면 코드 책장) · 윗면 짙은 나무 / 고목 속 = 벽면이 세로결 나무껍질 · 윗면 나이테.</summary>
         static void WallDress(Raster R, WorldMap m, string theme)
         {
-            bool Floor(int x, int y) => "_:=BFSHlrwE".IndexOf(m.At(x, y)) >= 0;
+            bool Floor(int x, int y) => "_:=BFSHlrwEm".IndexOf(m.At(x, y)) >= 0;
             bool archive = theme == "archive";
             TileImage shelf = null;
             if (archive && Props != null) Props.TryGetValue("bookshelf", out shelf);
