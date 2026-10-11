@@ -150,6 +150,31 @@ namespace GirlAdventure.EditorTools
             }
         }
 
+        /// <summary>
+        /// 챕터 던전 (2026-10-11): 바깥 보스 칸(=던전 입구)을 밟은 뒤 — 던전에 들어가 들어감 대사를 넘기고, 보스 바로 아래 칸에서 위로 한 걸음.
+        /// 그 챕터에 던전이 없으면 아무것도 안 한다 (예전처럼 바로 보스전).
+        /// </summary>
+        static IEnumerable DungeonToBoss()
+        {
+            var ch = Chapters.Get(G.P.Chapter);
+            if (!ch.HasDungeon) yield break;
+            var dk = ch.DungeonKind.Value;
+            yield return (Func<bool>)(() => G.MapKindNow == dk);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            yield return .4f;
+            Shot("dungeon_" + dk.ToString().ToLower());
+            Expect($"chapter {ch.No}: entered the dungeon ({dk})", G.MapKindNow == dk && G.P.InDungeon, $"{G.MapKindNow}");
+            G.DebugMobs(true, true);
+            var m = WorldMap.Build(dk);
+            (int x, int y) b = (-1, -1);
+            for (int y = 0; y < WorldMap.H && b.x < 0; y++) for (int x = 0; x < WorldMap.W && b.x < 0; x++) if (m.At(x, y) == 'B') b = (x, y);
+            G.DebugTeleport(b.x, b.y + 1, "up");
+            yield return .5f;
+            Shot("dungeon_boss_" + dk.ToString().ToLower());
+            Expect($"chapter {ch.No}: boss notices you (!)", G.BossAlertShown);
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+        }
+
         /// <summary>명령창에서 idx 번째(0 파이어,1 주문,2 도구,3 도망)로 커서를 옮겨 결정.</summary>
         static IEnumerable Choose(int idx, string shotBeforeConfirm = null)
         {
@@ -1084,6 +1109,7 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(28, 4, "up");
             yield return .3f;
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             Shot("boss2_command");
             G.DebugSetEnemyHp(25);                     // 흐름만 확인 (난이도는 SmokeTest 밸런스로)
@@ -1404,6 +1430,7 @@ namespace GirlAdventure.EditorTools
             Shot("desert_boss_swirl");
             Expect("sand twister marks the boss canyon", G.SandTwisterShown);
             Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .4f;
             Shot("boss3_battle");
@@ -1536,6 +1563,7 @@ namespace GirlAdventure.EditorTools
             yield return .6f;
             Shot("lava_boss_door");
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .4f;
             Shot("boss4_battle");
@@ -1686,7 +1714,7 @@ namespace GirlAdventure.EditorTools
             G.DebugGroupBattle(3, 1);
             yield return 1.5f;
             G.DebugSetAllFoesHp(600);
-            for (float t = 0; t < 120 && !(G.CutinsPlayed.Contains("combo_sisdad") || G.CutinsPlayed.Contains("combo_brodad")) && G.Current == GameRoot.Mode.Battle; t += .1f)
+            for (float t = 0; t < 120 && !(G.CutinsPlayed.Contains("combo_sisdad") || G.CutinsPlayed.Contains("combo_brodad") || G.CutinsPlayed.Contains("combo_sisbrodad")) && G.Current == GameRoot.Mode.Battle; t += .1f)
             {
                 if (G.CutinShowing != null && G.CutinShowing.Contains("!!") && !comboCutinShot) { comboCutinShot = true; yield return .5f; Shot("combo_dad_cutin"); }
                 if (G.CommandOpen) Keys.Press(KeyCode.Return);
@@ -1695,7 +1723,8 @@ namespace GirlAdventure.EditorTools
                 yield return .1f;
             }
             G.DebugCombo = -1;
-            Expect("Q-34 dad combo played", G.CutinsPlayed.Contains("combo_sisdad") || G.CutinsPlayed.Contains("combo_brodad"), string.Join(",", G.CutinsPlayed));
+            Expect("Q-34 dad combo played", G.CutinsPlayed.Contains("combo_sisdad") || G.CutinsPlayed.Contains("combo_brodad") || G.CutinsPlayed.Contains("combo_sisbrodad"),   // 셋이 하는 협동 공격에도 아빠가 들어간다
+                   string.Join(",", G.CutinsPlayed));
             G.DebugSetAllFoesHp(1);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
@@ -1707,6 +1736,7 @@ namespace GirlAdventure.EditorTools
             yield return .6f;
             Shot("snow_boss_door");
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .4f;
             Shot("boss5_battle");
@@ -1765,6 +1795,7 @@ namespace GirlAdventure.EditorTools
             G.DebugNearLibraryBoss();
             yield return .4f;
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .4f;
             Shot("boss6_battle");
@@ -1923,6 +1954,7 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Shot("ch7_old_oak");
             Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .4f;
             Shot("boss7_battle");

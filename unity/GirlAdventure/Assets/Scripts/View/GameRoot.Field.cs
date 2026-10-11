@@ -562,6 +562,7 @@ namespace GirlAdventure.View
             TickGuard();
             TickNpcs();
             TickHoles();
+            TickDungeonBoss();
             UpdatePlayerVisual();
             TickFieldFx();
             TickLighting();

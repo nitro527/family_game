@@ -93,7 +93,7 @@ def fort():
     g.put(32, 20, 'H').put(5, 14, 'H')
     return dungeon("Fort", "젤리 장군의 기지", "fort", 2, g, (5, 21), (4, 19), (8, 19),
                    [(32, 20, "potion", 2, 0), (5, 14, "moon", 1, 120)], "cave_general", (27, 3),
-                   raise_=[(22, 2, 32, 4, 1)], stairs=["27,5"], style="rock")
+                   raise_=[(22, 2, 33, 4, 1)], stairs=["27,5"], style="rock")
 
 
 def canyon():

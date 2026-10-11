@@ -35,3 +35,12 @@
 ## 원칙
 - 길 이어짐 스모크(HeightTests 와 같은 BFS)로 입구 → 보스 앞까지 길이 있는지 맵마다 확인.
 - 기존 세이브: 보스 칸에 서 있던 세이브도 바깥 맵에서 시작하니 문제없음. `InDungeon` 은 없으면 false.
+
+## 진행 (2026-10-11)
+- **D1 틀 완료**: `Sim/Dungeons.cs` + `dungeons.json` (`tools/dungeons_gen.py` 로 만든다 — 던전 하나를 정의하면 dungeons.json·terrain.json(단상 높이)·props.json(보스 그림·보물상자·장식 오브젝트)을 같이 갱신),
+  `ChapterDef.Dungeon/EntryMap/EntryTile/DungeonExit/ExitFacing/DungeonTalk`, `PlayerState.InDungeon`(세이브), `GameRoot.Dungeons.cs`(드나들기·던전 상자),
+  `MapPainter.Dungeons.cs`(동굴 그림 + 테마 색 · 융단 · 출구 아치 · 횃불 받침 · 성 꾸미기), 던전 불빛, 보스 오브젝트 "breathe" 움직임, 맵 종류 표 `Enemies`(던전 몬스터 목록).
+  스모크 `DungeonTests`: 맵 모양, 출발 → 보스·출구·상자·샘물 길(높이 포함), 챕터 입구·출구 칸, 보스 그림 오브젝트, 상자 한 번만, 던전 안 세이브.
+- **D2 챕터 1 성 완료**: 입구 홀 → 큰 홀(옥좌 방 문은 막힘) → 서쪽 탑 → 위 복도 → 옥좌 방 단상 계단 → 킹 젤리. 프로브: 성문 → 성 안 → 출구로 나갔다 다시 → 옥좌 앞 (Lv5 전이면 물러나기).
+- **D3 챕터 2~7**: 젤리 장군의 기지 · 바위 골짜기 굴(2단 바위턱) · 화산 속 · 얼음 동굴 · 금지된 서고(책장 틈 미로) · 큰 고목 속. 프로브 `DungeonToBoss`: 바깥 보스 칸 → 던전 → 보스 바로 아래에서 한 걸음.
+- **D4 다음**: 서고 벽을 책장으로, 고목 속 벽을 나무껍질·뿌리로, 화산 웅덩이를 빛나는 용암으로, 던전 전용 음악, 보스 방 연출(보스가 돌아봄), 던전 이름 띠.

@@ -12,6 +12,10 @@
   {"Map": "Oasis", "Style": "sand", "Raise": [{"X0": 16, "Y0": 3, "X1": 21, "Y1": 4, "Level": 1}], "Stairs": ["18,5"]},
   {"Map": "LavaTown", "Style": "basalt", "Raise": [{"X0": 14, "Y0": 3, "X1": 20, "Y1": 4, "Level": 1}], "Stairs": ["17,5"]},
   {"Map": "SnowTown", "Style": "ice", "Raise": [{"X0": 14, "Y0": 3, "X1": 20, "Y1": 4, "Level": 1}], "Stairs": ["17,5"]},
-  {"Map": "Castle", "Style": "rock", "Raise": [{"X0": 13, "Y0": 2, "X1": 22, "Y1": 4, "Level": 1}], "Stairs": ["17,5", "18,5"]}
+  {"Map": "Castle", "Style": "rock", "Raise": [{"X0": 13, "Y0": 2, "X1": 22, "Y1": 4, "Level": 1}], "Stairs": ["17,5", "18,5"]},
+  {"Map": "Fort", "Style": "rock", "Raise": [{"X0": 22, "Y0": 2, "X1": 33, "Y1": 4, "Level": 1}], "Stairs": ["27,5"]},
+  {"Map": "Canyon", "Style": "sand", "Raise": [{"X0": 9, "Y0": 2, "X1": 30, "Y1": 7, "Level": 1}, {"X0": 22, "Y0": 2, "X1": 30, "Y1": 3, "Level": 2}], "Stairs": ["21,8", "26,4"]},
+  {"Map": "VolcanoIn", "Style": "basalt", "Raise": [{"X0": 11, "Y0": 2, "X1": 24, "Y1": 3, "Level": 1}], "Stairs": ["17,4"]},
+  {"Map": "Archive", "Style": "wood", "Raise": [{"X0": 12, "Y0": 1, "X1": 23, "Y1": 1, "Level": 1}], "Stairs": ["17,2", "18,2"]}
  ]
 }

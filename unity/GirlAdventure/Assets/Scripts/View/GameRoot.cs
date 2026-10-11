@@ -417,6 +417,7 @@ namespace GirlAdventure.View
         public void DebugSetVillage(bool inVillage)
         {
             P.InVillage = inVillage;
+            if (inVillage) P.InDungeon = false;         // 던전에서 바로 마을로 (프로브)
             ApplyMap();
             bgm.Play(MapSong);
             RefreshQuestProps();

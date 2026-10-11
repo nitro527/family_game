@@ -41,6 +41,7 @@ namespace GirlAdventure.View
             AutoSave();
             yield return Fade(1, 0, .35f);
             HideSwirl();
+            if (enter && Dungeons.Of(ch.DungeonKind.Value) is DungeonDef dd) ShowBanner("<color=#F2C443>" + dd.Name + "</color>");   // 던전 이름 띠
             if (enter && !string.IsNullOrEmpty(ch.DungeonTalk) && !P.Opened.Contains("dg_" + ch.No))
             {
                 P.Opened.Add("dg_" + ch.No);
@@ -50,6 +51,43 @@ namespace GirlAdventure.View
             }
             busy = false;
         }
+
+        // ---- 보스가 알아챔: 던전 보스 세 칸 안으로 다가가면 보스 머리 위에 "!" (한 번 소리)
+        SpriteRenderer bossAlert;
+        bool bossNoticed;
+
+        void TickDungeonBoss()
+        {
+            var ch = P != null ? Chapters.Get(P.Chapter) : null;
+            bool on = false;
+            Vector3 at = default;
+            if (ch != null && ch.HasDungeon && P.InDungeon && map != null && map.Kind == ch.DungeonKind && !P.BossBeaten(ch.No))
+            {
+                (int x, int y) b = (-1, -1);
+                for (int y = 0; y < WorldMap.H && b.x < 0; y++) for (int x = 0; x < WorldMap.W && b.x < 0; x++) if (map.At(x, y) == ch.BossChar) b = (x, y);
+                if (b.x >= 0 && Mathf.Abs(b.x - P.X) + Mathf.Abs(b.y - P.Y) <= 3)
+                {
+                    on = true;
+                    at = FeetAt(b.x + .5f, b.y) + new Vector3(0, 2.5f + Mathf.Abs(Mathf.Sin(Time.time * 5)) * .12f, -.5f);
+                }
+            }
+            if (on && bossAlert == null)
+            {
+                bossAlert = new GameObject("BossAlert").AddComponent<SpriteRenderer>();
+                bossAlert.transform.SetParent(fieldRoot, false);
+                bossAlert.sprite = alertSprite ??= Art.FromTexture(AlertTexture(), new Vector2(.5f, 0), 96);
+                bossAlert.sortingOrder = 8;
+            }
+            if (bossAlert != null)
+            {
+                bossAlert.enabled = on;
+                if (on) bossAlert.transform.localPosition = at;
+            }
+            if (on && !bossNoticed) sfx.Play("peek");
+            bossNoticed = on;
+        }
+
+        public bool BossAlertShown => bossAlert != null && bossAlert.enabled;
 
         /// <summary>던전 보물상자: 처음이면 아이템·골드 (dungeons.json Chests), 열린 그림은 props.json Objects 가 "Opened:dch_…" 로.</summary>
         IEnumerator DungeonChestRoutine(int x, int y)

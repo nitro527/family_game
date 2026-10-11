@@ -104,7 +104,7 @@ namespace GirlAdventure.View
         {
             if (bannerWin == null)
             {
-                var w = UIKit.Window(ui, "Banner", UIKit.RefW / 2 - 210, 14, 420, 44);
+                var w = UIKit.Window(ui, "Banner", UIKit.RefW / 2 - 210, 150, 420, 44);      // 위쪽 상태창(가족 HUD) 아래
                 bannerWin = w.gameObject;
                 bannerText = UIKit.Label(w.transform, "Text", "", 10, 4, 400, 36, 20, TextAnchor.MiddleCenter);
                 bannerText.supportRichText = true;

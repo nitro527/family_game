@@ -37,6 +37,9 @@ namespace GirlAdventure.View
                                    (byte)Mathf.Clamp(g * tb * (1 - keep) + c.b * keep, 0, 255), c.a);
             });
             if (theme == "castle") CastleDress(R, m);
+            else if (theme == "archive" || theme == "oak") WallDress(R, m, theme);
+            if (theme == "archive") PlankFloor(R, m);
+            if (theme == "volcano") LavaPools(R, m);
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
@@ -105,6 +108,92 @@ namespace GirlAdventure.View
                             }
                         if (ch == 'r') Column(R, X, Y);
                     }
+                }
+        }
+
+        /// <summary>서고 = 벽면이 책장(소품 그림 bookshelf, 없으면 코드 책장) · 윗면 짙은 나무 / 고목 속 = 벽면이 세로결 나무껍질 · 윗면 나이테.</summary>
+        static void WallDress(Raster R, WorldMap m, string theme)
+        {
+            bool Floor(int x, int y) => "_:=BFSHlrwE".IndexOf(m.At(x, y)) >= 0;
+            bool archive = theme == "archive";
+            TileImage shelf = null;
+            if (archive && Props != null) Props.TryGetValue("bookshelf", out shelf);
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    if (m.At(x, y) != '#') continue;
+                    int X = x * T, Y = y * T;
+                    bool face = Floor(x, y + 1);
+                    for (int py = 0; py < T; py++)
+                        for (int px = 0; px < T; px++)
+                        {
+                            int gx = X + px, gy = Y + py;
+                            Color32 c;
+                            if (archive)
+                                c = face ? Lerp(H("#6A4426"), H("#3E2614"), py / (float)T)
+                                         : Mul(H("#2A1A10"), .9f + .2f * Noise(gx / 3f, gy / 30f, 621));
+                            else
+                            {
+                                float grain = Noise(gx / 2.5f, gy / 26f, 622);
+                                c = face ? Lerp(H("#7A5A34"), H("#3E2A16"), py / (float)T * .7f + grain * .35f)
+                                         : Lerp(H("#2A1E10"), H("#463220"), Noise(gx / 4f, gy / 18f, 626) * .7f + Noise(gx / 30f, gy / 30f, 627) * .3f);   // 짙은 나무 속
+                                if (face && grain > .78f) c = Mul(c, .7f);
+                            }
+                            if (face && py < 3) c = Mul(c, 1.25f);
+                            R.Blend(gx, gy, c);
+                        }
+                    if (archive && face)
+                    {
+                        if (shelf != null) R.StampFit(shelf, X, Y - 6, T, T + 6);
+                        else
+                            for (int k = 0; k < 3; k++)
+                                for (int b = 0; b < 7; b++)
+                                    R.Rect(X + 4 + b * 6, Y + 6 + k * 14, 5, 11, Lerp(H("#B03A3A"), H("#3A6AB0"), Hash(x * 7 + b, y + k, 623)));
+                    }
+                }
+        }
+
+        /// <summary>서고 바닥: 바닥 칸('_' ':' 상자·횃불·기둥 칸)에 가로 나무 마루.</summary>
+        static void PlankFloor(Raster R, WorldMap m)
+        {
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    char ch = m.At(x, y);
+                    if ("_:Hlr".IndexOf(ch) < 0) continue;
+                    int X = x * T, Y = y * T;
+                    for (int py = 0; py < T; py++)
+                        for (int px = 0; px < T; px++)
+                        {
+                            int gx = X + px, gy = Y + py, row = gy / 12;
+                            bool seam = gy % 12 == 0 || (gx + row * 37) % 72 == 0;
+                            var c = seam ? H("#4A3018") : Mul(Lerp(H("#9A6A3A"), H("#7A5030"), Hash(row, (gx + row * 37) / 72, 628)), .92f + .12f * Noise(gx / 2f, gy / 9f, 629));
+                            if (ch == ':') c = Mul(c, 1.08f);
+                            R.Blend(gx, gy, Lerp(R.Get(gx, gy), c, .85f));
+                        }
+                }
+        }
+
+        /// <summary>화산 속 웅덩이 = 빛나는 용암 (가장자리 검은 딱지, 가운데 밝은 주황, 일렁이는 줄무늬).</summary>
+        static void LavaPools(Raster R, WorldMap m)
+        {
+            for (int y = 0; y < WorldMap.H; y++)
+                for (int x = 0; x < WorldMap.W; x++)
+                {
+                    if (m.At(x, y) != 'w') continue;
+                    int X = x * T, Y = y * T;
+                    bool l = m.At(x - 1, y) == 'w', r = m.At(x + 1, y) == 'w', u = m.At(x, y - 1) == 'w', d = m.At(x, y + 1) == 'w';
+                    for (int py = 0; py < T; py++)
+                        for (int px = 0; px < T; px++)
+                        {
+                            int gx = X + px, gy = Y + py;
+                            float edge = Mathf.Min(Mathf.Min(l ? 99 : px, r ? 99 : T - 1 - px), Mathf.Min(u ? 99 : py, d ? 99 : T - 1 - py));
+                            float wave = Mathf.Sin(gx * .09f + Mathf.Sin(gy * .07f) * 2.2f) * .5f + .5f;
+                            var c = Lerp(H("#E8401A"), H("#FFC24A"), wave * .8f + Noise(gx / 11f, gy / 11f, 624) * .3f);
+                            if (edge < 6) c = Lerp(H("#2A1A16"), c, edge / 6f);
+                            else if (Noise(gx / 7f, gy / 7f, 625) > .72f) c = Lerp(c, H("#5A2A1A"), .6f);
+                            R.Blend(gx, gy, c);
+                        }
                 }
         }
 
@@ -184,6 +273,7 @@ namespace GirlAdventure.View
                     if (ch == 'l') list.Add((new Vector2(x + .5f, y + .3f), ice ? new Color(.55f, .9f, 1f) : new Color(1f, .7f, .35f), 3.4f));
                     else if (ch == 'E') list.Add((new Vector2(x + .5f, y + .6f), new Color(1f, .95f, .8f), 3.6f));
                     else if (ch == 'B') list.Add((new Vector2(x + .5f, y + .2f), new Color(1f, .4f, .3f), 4f));
+                    else if (ch == 'w' && Dungeons.Of(m.Kind)?.Theme == "volcano" && (x + y) % 3 == 0) list.Add((new Vector2(x + .5f, y + .5f), new Color(1f, .5f, .2f), 2.6f));   // 용암 빛
                 }
             var sp = m.Spring;
             if (sp.x >= 0) list.Add((new Vector2(sp.x + .5f, sp.y + .6f), new Color(.45f, .9f, 1f), 3.2f));

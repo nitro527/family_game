@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace GirlAdventure.Sim
 {
     public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home, Snow, SnowTown, Library, Forest,
-                          Castle }   // 챕터 던전 (dungeons.json, 2026-10-11) — 던전이 생길 때마다 뒤에 하나씩
+                          Castle, Fort, Canyon, VolcanoIn, IceCave, Archive, OakHollow }   // 챕터 던전 (dungeons.json, 2026-10-11) — 던전이 생길 때마다 뒤에 하나씩
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:

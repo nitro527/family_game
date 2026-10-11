@@ -1,5 +1,11 @@
 {
   "Zones": [
+    { "Map": "fort", "MinFar": 0, "Pool": ["광물 젤리", "수정 젤리", "큰 돌멩이 젤리", "호박 젤리", "동굴 거미", "두더지"], "Group": 0.35, "MaxGroup": 3 },
+    { "Map": "canyon", "MinFar": 0, "Pool": ["카우보이 젤리", "큰 선인장 젤리", "전갈", "전갈", "사막 독수리"], "Group": 0.4, "MaxGroup": 3 },
+    { "Map": "volcano", "MinFar": 0, "Pool": ["용암 젤리", "큰 용암 젤리", "불도마뱀", "불새", "불새"], "Group": 0.4, "MaxGroup": 3 },
+    { "Map": "icecave", "MinFar": 0, "Pool": ["고드름 젤리", "큰 눈송이 젤리", "얼음 골렘", "펭귄", "눈토끼"], "Group": 0.4, "MaxGroup": 3 },
+    { "Map": "archive", "MinFar": 0, "Pool": ["책 악마", "잉크 악마", "촛불 악마", "큰 꼬마 악마"], "Group": 0.45, "MaxGroup": 3 },
+    { "Map": "oak", "MinFar": 0, "Pool": ["버섯 젤리", "나무 젤리", "꿀벌 젤리", "큰 나무 젤리", "부엉이"], "Group": 0.45, "MaxGroup": 3 },
     { "Map": "castle", "MinFar": 0, "Pool": ["분홍 젤리", "큰 초록 젤리", "큰 분홍 젤리", "큰 초록 젤리", "뿔토끼", "파랑새"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "field", "MinFar": 0,  "Pool": ["파랑 젤리", "파랑 젤리", "초록 젤리"], "Group": 0 },
     { "Map": "field", "MinFar": 21, "Pool": ["파랑 젤리", "초록 젤리", "초록 젤리", "분홍 젤리", "파랑새", "뿔토끼"], "Group": 0.2, "MaxGroup": 2 },
