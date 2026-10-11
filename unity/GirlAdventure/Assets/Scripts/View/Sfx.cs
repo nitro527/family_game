@@ -17,6 +17,7 @@ namespace GirlAdventure.View
             src.playOnAwake = false;
             Add("step", Wave.Square, .025f, .10f, 180);
             Add("step_snow", Wave.Saw, .03f, .06f, 120, 95);
+            Add("step_stair", Wave.Triangle, .03f, .09f, 260, 200);           // 계단: 톡톡 (맵 입체화)
             Add("door", Wave.Triangle, .06f, .18f, 523, 0, 392, 349, 330);           // 집 문 (딸깍, 끼익)                      // 눈 밟는 소리 (뽀득)
             Add("slide", Wave.Triangle, .045f, .16f, 1568, 1397, 1245, 1175, 1046, 988, 880);   // 얼음 미끄럼 (슈르르륵)
             Add("bump", Wave.Triangle, .035f, .06f, 160, 120);                  // 톡 (나무·벽에 부딪힘 — 사용자 2026-10-10 "너무 시끄러" → 부드럽고 작게)

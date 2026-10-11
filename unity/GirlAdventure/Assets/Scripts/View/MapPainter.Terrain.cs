@@ -101,33 +101,92 @@ namespace GirlAdventure.View
             }
         }
 
-        /// <summary>절벽면 한 칸: 처마(윗 6px) → 결 줄 있는 몸통(위 밝고 아래 어둡게) → 바닥 그림자, 그 아래 칸 위쪽에 드리운 그림자.</summary>
+        /// <summary>
+        /// 절벽면 한 칸: 들쭉날쭉한 처마(풀·모래·눈·나무 끝) → 결 줄 몸통(위 밝고 아래 어둡게) + 박힌 돌·금 → 바닥 그림자.
+        /// 테마 장식: 흙·숲 = 늘어진 덩굴, 얼음 = 고드름, 현무암 = 빛나는 용암 금, 나무 = 판자 결·몰딩. 그 아래 칸에 그림자.
+        /// </summary>
         static void Cliff(Raster R, WorldMap m, int x, int y, Color32 lip, Color32 lipDark, Color32 top, Color32 bottom, Color32 strata)
         {
+            string style = Heights.Style(m.Kind);
             int X = x * T, Y = y * T;
             bool leftEnd = !m.IsFace(x - 1, y), rightEnd = !m.IsFace(x + 1, y);
+            bool wood = style == "wood";
             for (int py = 0; py < T; py++)
                 for (int px = 0; px < T; px++)
                 {
                     int gx = X + px, gy = Y + py;
                     float n = Fbm(gx * 1.6f, gy * 3.2f, 501);
-                    // 끝 칸은 둥글게 (모서리가 바닥으로 깎인 모양)
                     float edge = leftEnd ? px : rightEnd ? T - 1 - px : 99;
-                    if (edge < 10 && py > 6 + edge * 3.5f) continue;
-                    float lipH = 5 + 3 * Noise(gx / 7f, 3, 502);
+                    if (edge < 10 && py > 6 + edge * 3.5f) continue;                                // 끝 칸은 둥글게
+                    // 처마: 아래 가장자리가 들쭉날쭉 (나무 단상은 반듯하게)
+                    float lipH = wood ? 7 : 5 + 4 * Noise(gx / 6f, 3, 502) + (Hash(gx / 3, 7, 506) > .8f ? 3 : 0);
                     Color32 c;
-                    if (py < lipH) c = Lerp(lip, lipDark, py / lipH);                               // 처마 (풀·모래·눈·나무 끝)
+                    if (py < lipH) c = Lerp(lip, lipDark, py / lipH);
                     else
                     {
                         float t = (py - lipH) / (T - lipH);
-                        c = Lerp(top, bottom, t * .85f + n * .3f - .1f);
-                        float band = Mathf.Repeat(py + 6 * Noise(gx / 18f, 5, 503), 11f);
-                        if (band < 1.6f) c = Lerp(c, strata, .7f);                                   // 지층 줄
-                        if (Hash(gx / 5, gy / 5, 504) > .93f) c = Mul(c, 1.18f);                     // 작은 돌 반짝
+                        if (wood)
+                        {
+                            c = Lerp(top, bottom, t * .7f);
+                            if (px % 12 == 0) c = Mul(c, .75f);                                       // 판자 사이
+                            c = Mul(c, .93f + .14f * Noise(gx / 3f, gy / 20f, 507));                  // 나뭇결
+                            if (py > T - 9 && py < T - 6) c = Lerp(c, lip, .6f);                       // 아래 몰딩
+                        }
+                        else
+                        {
+                            c = Lerp(top, bottom, t * .85f + n * .3f - .1f);
+                            float band = Mathf.Repeat(py + 6 * Noise(gx / 18f, 5, 503), 11f);
+                            if (band < 1.6f) c = Lerp(c, strata, .7f);                               // 지층 줄
+                            if (py == (int)lipH) c = Mul(c, .6f);                                     // 처마 밑 그늘
+                            else if (py < lipH + 4) c = Mul(c, .82f);
+                            // 박힌 돌: 칸마다 0~2 개, 둥글고 위가 밝다
+                            for (int k = 0; k < 2; k++)
+                            {
+                                if (Hash(x, y * 7 + k, 508) < .45f) continue;
+                                float sx = 8 + Hash(x, y + k, 509) * (T - 16), sy = lipH + 8 + Hash(x + k, y, 510) * (T - lipH - 16);
+                                float rx = 4 + Hash(x * 3 + k, y, 511) * 3, ry = rx * .75f;
+                                float dx = (px - sx) / rx, dy = (py - sy) / ry, d = dx * dx + dy * dy;
+                                if (d < 1) c = Lerp(Mul(top, 1.12f), Mul(bottom, 1.1f), (dy + 1) * .5f);
+                                else if (d < 1.4f && dy > 0) c = Mul(c, .7f);
+                            }
+                            if (Hash(x, y, 512) > .6f)                                                 // 짧고 비뚤한 금 (칸마다 하나쯤)
+                            {
+                                float cx0 = 10 + Hash(x, y, 520) * (T - 20), cy0 = lipH + 6, clen = 8 + Hash(x, y, 521) * 16;
+                                float cxAt = cx0 + (py - cy0) * .25f * (Hash(x, y, 522) > .5f ? 1 : -1) + Mathf.Sin(py * .6f) * .8f;
+                                if (py >= cy0 && py < cy0 + clen && Mathf.Abs(px - cxAt) < .8f) c = Mul(c, .55f);
+                            }
+                            if (style == "basalt" && Mathf.Abs(Noise(gx / 9f, gy / 9f, 513) - .5f) < .025f) c = Lerp(c, H("#FF8A2A"), .75f);   // 용암 금
+                        }
                         if (py > T - 5) c = Mul(c, .72f);                                            // 바닥에 닿는 어두운 줄
                         if (edge < 6) c = Mul(c, .8f);
                     }
                     R.Blend(gx, gy, c);
+                }
+            // 테마 장식 (처마에서 늘어진 것)
+            if (style == "earth" || style == "forest")
+                for (int k = 0; k < 3; k++)
+                {
+                    if (Hash(x, y * 5 + k, 514) < .55f) continue;
+                    int vx = X + 6 + (int)(Hash(x + k, y, 515) * (T - 12));
+                    int len = 10 + (int)(Hash(x, y + k, 516) * 24);
+                    var vine = Lerp(lipDark, H("#2E6A22"), .5f);
+                    for (int i = 0; i < len; i++)
+                    {
+                        int wx = vx + Mathf.RoundToInt(Mathf.Sin(i * .35f + k) * 1.5f);
+                        R.Blend(wx, Y + 5 + i, vine); R.Blend(wx + 1, Y + 5 + i, vine, .5f);
+                        if (i % 6 == 3) { R.Ellipse(wx + 2.5f, Y + 5 + i, 2.2f, 1.4f, lip); }   // 잎
+                    }
+                }
+            if (style == "ice")
+                for (int k = 0; k < 5; k++)
+                {
+                    if (Hash(x, y * 3 + k, 517) < .4f) continue;
+                    int ix = X + 4 + (int)(Hash(x + k, y, 518) * (T - 8)), len = 6 + (int)(Hash(x, y + k, 519) * 12);
+                    for (int i = 0; i < len; i++)
+                    {
+                        float w = 2.2f * (1 - i / (float)len);
+                        for (int dx = -2; dx <= 2; dx++) if (Mathf.Abs(dx) <= w) R.Blend(ix + dx, Y + 6 + i, dx < 0 ? H("#FFFFFF", 230) : H("#CFE6F8", 220));
+                    }
                 }
             for (int px = 0; px < T; px++)                                                          // 아래 칸에 드리운 그림자
                 for (int i = 0; i < 9; i++)

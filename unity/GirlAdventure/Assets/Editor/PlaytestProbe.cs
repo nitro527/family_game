@@ -547,6 +547,16 @@ namespace GirlAdventure.EditorTools
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
             yield return .4f;
             Expect("cliff face blocks the way up", G.P.X == 25 && G.P.Y == 14, $"{G.P.X},{G.P.Y}");
+            // 뛰어내리기: 북동 능선 가장자리(25,3)에서 아래로 → 절벽을 넘어 (25,5) 로 폴짝 (올라갈 때는 계단)
+            int jumps0 = G.JumpCount;
+            G.DebugTeleport(25, 3, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return .25f;
+            Shot("jump_down");
+            yield return (Func<bool>)(() => !G.Busy);
+            Expect("jumped down the ridge", G.JumpCount > jumps0 && G.P.X == 25 && G.P.Y == 5, $"{G.P.X},{G.P.Y} jumps {G.JumpCount}");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             // 앞뒤 가리기: 나무 바로 위(뒤) 칸에 서면 나뭇잎 덮개가 주인공을 가린다
             G.DebugTeleport(26, 12, "down");
             yield return .3f;

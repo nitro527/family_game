@@ -575,6 +575,7 @@ namespace GirlAdventure.View
             var mob = mobs.At(nx, ny);
             if (mob != null && mobs.Grace <= 0 && map.CanStep(P.X, P.Y, nx, ny)) { StartMobBattle(mob); return; }
             if (Quest.GuardAt(map, P, nx, ny)) { if (!busy) StartCoroutine(GuardRoutine()); return; }
+            if (dir == "down" && !busy && JumpLanding(P.X, P.Y) is (int, int) land) { StartCoroutine(JumpDownRoutine(land.Item1, land.Item2)); return; }   // 절벽 가장자리에서 아래로 = 폴짝
             if (!Quest.CanMove(map, P, P.X, P.Y, nx, ny))
             {
                 if (Keys.AnyDown && Time.time - lastBump > .4f) { sfx.Play("bump"); lastBump = Time.time; }   // 연달아 부딪혀도 0.4초에 한 번만
@@ -615,8 +616,9 @@ namespace GirlAdventure.View
             float k = moveT >= 0 ? moveT : 1;
             float rx = moveT >= 0 ? Mathf.Lerp(moveFrom.x, P.X, k) : P.X;
             float ry = moveT >= 0 ? Mathf.Lerp(moveFrom.y, P.Y, k) : P.Y;
+            if (jumping) { rx = jumpPos.x; ry = jumpPos.y; }                 // 뛰어내리는 중 (GameRoot.Jump.cs)
             playerTilePos = new Vector2(rx, ry);
-            bool moving = moveT >= 0 || (!busy && HeldDir() != null);
+            bool moving = moveT >= 0 || jumping || (!busy && HeldDir() != null);
             var feet = FeetAt(rx, ry);
             float bob = 0, sway = 0, lean = 0;
             if (facing == "left" || facing == "right")
@@ -638,7 +640,7 @@ namespace GirlAdventure.View
                 lean = moving ? Mathf.Sin(ph) * 4f : 0;
                 sway = moving ? Mathf.Sin(ph) * .04f : 0;
             }
-            playerSR.transform.localPosition = feet + new Vector3(sway, bob, 0);
+            playerSR.transform.localPosition = feet + new Vector3(sway, bob + jumpLift, 0);
             playerSR.transform.localRotation = Quaternion.Euler(0, 0, lean);
             shadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
             UpdateFollowers(k, moving);
@@ -786,7 +788,7 @@ namespace GirlAdventure.View
         /// </summary>
         void UpdateFollowers(float k, bool moving)
         {
-            if (P == null) return;
+            if (P == null || followersScripted) return;                      // 뛰어내리는 중엔 Jump 가 직접 움직인다
             if (followers.Count != P.Companions.Count) { SyncFollowers(); ResetBrother(); }
             var lead = new Vector2Int(P.X, P.Y);
             bool apart = false;
@@ -856,7 +858,7 @@ namespace GirlAdventure.View
             bool slid = sliding;
             sliding = false;
             if (slid && !P.Opened.Contains("ice_hint")) { P.Opened.Add("ice_hint"); StartCoroutine(IceHintRoutine()); }
-            sfx.Play(map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown ? "step_snow" : "step");
+            sfx.Play(map.IsStair(P.X, P.Y) ? "step_stair" : map.Kind == MapKind.Snow || map.Kind == MapKind.SnowTown ? "step_snow" : "step");
             char here = map.At(P.X, P.Y);
             StepFx(here);
             var found = Quests.FindAt(P, map, P.X, P.Y);                       // 찾기 부탁 (G-4): 반짝이는 칸을 밟으면
