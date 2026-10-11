@@ -12,6 +12,7 @@ namespace GirlAdventure.Sim
     {
         public string Kind;
         public string Song = "field", Backdrop = "meadow", SignTalk = "sign", Edge = "T", Zone = "field", Shop = "field";
+        public string Enemies;                  // 몬스터 목록 (Normal·Cave·Desert·Under·Lava·Snow·Library·Forest) — 비면 맵 종류로 (던전은 그 챕터 목록)
         public bool CaveLike, Town;
         public int TimidLevel = 7;
 
@@ -50,6 +51,10 @@ namespace GirlAdventure.Sim
             { MapKind.Library, (WorldMap.LibStart, WorldMap.LibSpring, WorldMap.LibSign, WorldMap.LibShop) },
             { MapKind.Forest, (WorldMap.ForStart, WorldMap.ForSpring, WorldMap.ForSign, WorldMap.ForShop) },
         };
+
+        /// <summary>데이터로 만든 맵(던전)의 칸을 올린다 (Dungeons.Set).</summary>
+        public static void Register(MapKind k, (int x, int y) spawn, (int x, int y) spring, (int x, int y) sign, (int x, int y) shop) =>
+            points[k] = (spawn, spring, sign, shop);
 
         public static ((int x, int y) spawn, (int x, int y) spring, (int x, int y) sign, (int x, int y) shop) Of(MapKind k) =>
             points.TryGetValue(k, out var p) ? p : points[MapKind.Field];

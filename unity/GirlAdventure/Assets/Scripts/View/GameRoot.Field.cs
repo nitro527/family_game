@@ -54,6 +54,7 @@ namespace GirlAdventure.View
         {
             fieldRoot = new GameObject("Field").transform;
             worldMaps[MapKind.Field] = map;
+            foreach (var d in Dungeons.All) worldMaps[d.Type] = WorldMap.Build(d.Type);   // 챕터 던전
             foreach (var k in new[] { MapKind.Cave, MapKind.Village, MapKind.Desert, MapKind.Oasis, MapKind.Underworld, MapKind.Lava, MapKind.LavaTown,
                                       MapKind.Snow, MapKind.SnowTown, MapKind.Library, MapKind.Forest })
                 worldMaps[k] = WorldMap.Build(k);
@@ -172,7 +173,8 @@ namespace GirlAdventure.View
         {
             get
             {
-                var c = Chapters.Get(P.Chapter);                         // 챕터 표: 마을 안이면 그 챕터의 마을, 아니면 바깥 맵
+                var c = Chapters.Get(P.Chapter);                         // 챕터 표: 던전 안이면 던전, 마을 안이면 그 챕터의 마을, 아니면 바깥 맵
+                if (P.InDungeon && c.DungeonKind.HasValue && worldMaps.TryGetValue(c.DungeonKind.Value, out var dm)) return dm;
                 return worldMaps[P.InVillage && c.TownKind.HasValue ? c.TownKind.Value : c.FieldKind];
             }
         }
@@ -587,6 +589,7 @@ namespace GirlAdventure.View
                 if (Keys.AnyDown && BumpObject(nx, ny, c)) return;               // 나무 흔들기·물방울 (G-3)
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
+                else if (c == 'H' && Dungeons.Has(map.Kind)) StartCoroutine(DungeonChestRoutine(nx, ny));
                 else if (c == 'H') StartCoroutine(map.Kind == MapKind.Home || map.Kind == MapKind.Snow || map.Kind == MapKind.Library || map.Kind == MapKind.Forest ? HomeChestRoutine(nx, ny) : ChestRoutine(nx, ny));
                 else if (c == 'h' && map.IsTown && dir == "up" && WorldMap.HouseAtDoor(map.Kind, nx, ny) >= 0) StartCoroutine(HomeRoutine(WorldMap.HouseAtDoor(map.Kind, nx, ny)));
                 else if (c == 'Q' && map.Kind == MapKind.Desert) StartCoroutine(LetterRoutine());
@@ -867,6 +870,12 @@ namespace GirlAdventure.View
             if (ev != null) { StartCoroutine(MapEventRoutine(ev)); return; }
             var story = Stories.OnStep(map, P, P.X, P.Y);                      // 이야기 장면 (stories.json): 그 근처에 오면
             if (story != null) { StartCoroutine(StoryScene(story)); return; }
+            foreach (var ch in Chapters.All)                        // 던전 입구·출구 (챕터 표: 바깥 맵의 입구 칸, 던전 'E')
+            {
+                if (!ch.HasDungeon || ch.No != P.Chapter) continue;
+                if (!P.InDungeon && map.Kind == ch.EntryMapKind && here == ch.EntryChar) { StartCoroutine(DungeonRoutine(ch, true)); return; }
+                if (P.InDungeon && map.Kind == ch.DungeonKind && here == 'E') { StartCoroutine(DungeonRoutine(ch, false)); return; }
+            }
             foreach (var ch in Chapters.All)                        // 챕터 보스 자리 (챕터 표: 맵·칸 글자)
                 if (here == ch.BossChar && map.Kind == ch.BossMapKind && !P.BossBeaten(ch.No)) { StartCoroutine(BossRoutine(ch)); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }

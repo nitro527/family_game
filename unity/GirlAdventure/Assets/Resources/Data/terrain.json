@@ -11,6 +11,7 @@
   {"Map": "Village", "Style": "earth", "Raise": [{"X0": 16, "Y0": 3, "X1": 21, "Y1": 4, "Level": 1}], "Stairs": ["18,5"]},
   {"Map": "Oasis", "Style": "sand", "Raise": [{"X0": 16, "Y0": 3, "X1": 21, "Y1": 4, "Level": 1}], "Stairs": ["18,5"]},
   {"Map": "LavaTown", "Style": "basalt", "Raise": [{"X0": 14, "Y0": 3, "X1": 20, "Y1": 4, "Level": 1}], "Stairs": ["17,5"]},
-  {"Map": "SnowTown", "Style": "ice", "Raise": [{"X0": 14, "Y0": 3, "X1": 20, "Y1": 4, "Level": 1}], "Stairs": ["17,5"]}
+  {"Map": "SnowTown", "Style": "ice", "Raise": [{"X0": 14, "Y0": 3, "X1": 20, "Y1": 4, "Level": 1}], "Stairs": ["17,5"]},
+  {"Map": "Castle", "Style": "rock", "Raise": [{"X0": 13, "Y0": 2, "X1": 22, "Y1": 4, "Level": 1}], "Stairs": ["17,5", "18,5"]}
  ]
 }

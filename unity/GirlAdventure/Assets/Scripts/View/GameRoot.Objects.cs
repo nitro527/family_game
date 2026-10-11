@@ -54,7 +54,7 @@ namespace GirlAdventure.View
             }
         }
 
-        /// <summary>겹 움직임: sob = 훌쩍훌쩍 어깨 들썩, cheer = 통통 뛰며 흔들기, bob = 둥실.</summary>
+        /// <summary>겹 움직임: sob = 훌쩍훌쩍 어깨 들썩, cheer = 통통 뛰며 흔들기, bob = 둥실, breathe = 보스가 숨 쉬듯 천천히 들썩·기우뚱 (던전 보스).</summary>
         void TickObjects()
         {
             float t = Time.time;
@@ -62,9 +62,9 @@ namespace GirlAdventure.View
             {
                 if (!sr || !sr.enabled || string.IsNullOrEmpty(l.Anim)) continue;
                 string a = !string.IsNullOrEmpty(l.Anim2) && PropCatalog.Cond(l.AnimIf, P) ? l.Anim2 : l.Anim;
-                float y = a == "sob" ? Mathf.Abs(Mathf.Sin(t * 7)) * .025f : a == "cheer" ? Mathf.Abs(Mathf.Sin(t * 6)) * .08f : a == "bob" ? Mathf.Sin(t * 2) * .05f : 0;
+                float y = a == "sob" ? Mathf.Abs(Mathf.Sin(t * 7)) * .025f : a == "cheer" ? Mathf.Abs(Mathf.Sin(t * 6)) * .08f : a == "bob" ? Mathf.Sin(t * 2) * .05f : a == "breathe" ? Mathf.Sin(t * 1.7f) * .05f : 0;
                 sr.transform.localPosition = at + new Vector3(0, y, 0);
-                sr.transform.localRotation = Quaternion.Euler(0, 0, a == "cheer" ? Mathf.Sin(t * 6) * 6 : 0);
+                sr.transform.localRotation = Quaternion.Euler(0, 0, a == "cheer" ? Mathf.Sin(t * 6) * 6 : a == "breathe" ? Mathf.Sin(t * .85f) * 2.5f : 0);
             }
         }
     }

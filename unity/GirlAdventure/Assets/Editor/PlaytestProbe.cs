@@ -859,19 +859,42 @@ namespace GirlAdventure.EditorTools
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
             Expect("back to field after slot tests", G.Current == GameRoot.Mode.Field && G.P.Lv == savedLv);
 
-            // 킹 젤리 성문 (P-4): Lv5 전이면 "조금 더 강해지고 올까?" → 물러나기
+            // 킹 젤리의 성 (던전, 2026-10-11 "성에 들어가면 성 안을 돌아다니다가 보스를 만나게"): 성문을 밟으면 성 안 →
+            // 출구로 나갔다가 다시 들어가기 → 옥좌 단상 계단 아래에서 킹 젤리 그림 → (Lv5 전이면) 옥좌 앞에서 물러나기
+            G.DebugMobs(true, true);
+            G.DebugTeleport(WorldMap.Gate.x, WorldMap.Gate.y - 1, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return (Func<bool>)(() => G.MapKindNow == MapKind.Castle);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            yield return .4f;
+            Shot("castle_enter");
+            Expect("castle gate leads into the castle dungeon", G.MapKindNow == MapKind.Castle && G.P.InDungeon && G.DungeonEnterCount > 0, $"{G.MapKindNow}");
+            var cs = MapPoints.Of(MapKind.Castle).spawn;
+            G.DebugTeleport(cs.x, cs.y, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return (Func<bool>)(() => G.MapKindNow == MapKind.Field && !G.Busy);
+            Expect("castle exit leads back outside the gate", G.MapKindNow == MapKind.Field && !G.P.InDungeon && (G.P.X, G.P.Y) == (WorldMap.Gate.x, WorldMap.Gate.y - 1), $"{G.P.X},{G.P.Y}");
+            G.DebugTeleport(WorldMap.Gate.x, WorldMap.Gate.y - 1, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return (Func<bool>)(() => G.MapKindNow == MapKind.Castle && !G.Busy);
+            G.DebugMobs(true, true);
+            G.DebugTeleport(17, 7, "up");
+            yield return .6f;
+            Shot("castle_throne");
             if (G.P.Lv < GameRoot.KingReadyLevel)
             {
-                G.DebugMobs(true, true);
-                G.DebugTeleport(WorldMap.Gate.x, WorldMap.Gate.y - 1, "down");
+                G.DebugTeleport(17, 4, "up");
                 yield return .3f;
-                Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+                Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
                 foreach (var x in SkipTalk(() => G.ChoiceOpen)) yield return x;
                 yield return .3f;
                 Shot("king_gate_warn");
                 Keys.Press(KeyCode.Return);            // 기본 = 조금 더 강해지고 올래
                 foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
-                Expect("king gate asks below Lv5 and lets you step back", G.Current == GameRoot.Mode.Field && G.P.Y == WorldMap.Gate.y - 1 && !G.P.BossDown);
+                Expect("king asks below Lv5 and lets you step back", G.Current == GameRoot.Mode.Field && G.MapKindNow == MapKind.Castle && G.P.Y == 4 && !G.P.BossDown, $"{G.P.X},{G.P.Y}");
             }
             else Log("king gate warn skipped (already Lv5)");
 

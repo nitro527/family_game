@@ -13,6 +13,7 @@
   {"Kind": "Snow", "Song": "snow", "Backdrop": "snow", "SignTalk": "sign_snow", "Edge": "P", "TimidLevel": 24, "Zone": "snow", "Shop": "field"},
   {"Kind": "SnowTown", "Song": "snowtown", "Backdrop": "meadow", "SignTalk": "sign_snowtown", "Town": true, "Edge": "P", "TimidLevel": 7, "Zone": "field", "Shop": "snowtown"},
   {"Kind": "Library", "Song": "library", "Backdrop": "library", "SignTalk": "sign_library", "Edge": "#", "TimidLevel": 27, "Zone": "library", "Shop": "library"},
-  {"Kind": "Forest", "Song": "forest", "Backdrop": "forest", "SignTalk": "sign_forest", "Edge": "T", "TimidLevel": 30, "Zone": "forest", "Shop": "forest"}
+  {"Kind": "Forest", "Song": "forest", "Backdrop": "forest", "SignTalk": "sign_forest", "Edge": "T", "TimidLevel": 30, "Zone": "forest", "Shop": "forest"},
+  {"Kind": "Castle", "Song": "cave", "Backdrop": "cave", "SignTalk": "sign_castle", "CaveLike": true, "Edge": "#", "TimidLevel": 9, "Zone": "castle", "Enemies": "Normal", "Shop": "village"}
  ]
 }

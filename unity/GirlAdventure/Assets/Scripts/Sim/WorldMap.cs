@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 namespace GirlAdventure.Sim
 {
-    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home, Snow, SnowTown, Library, Forest }
+    public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home, Snow, SnowTown, Library, Forest,
+                          Castle }   // 챕터 던전 (dungeons.json, 2026-10-11) — 던전이 생길 때마다 뒤에 하나씩
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
@@ -191,17 +192,28 @@ namespace GirlAdventure.Sim
         {
             MapKind.Village => Village(), MapKind.Cave => Cave(), MapKind.Desert => Desert(), MapKind.Oasis => OasisTown(), MapKind.Underworld => Underworld(),
             MapKind.Lava => Lava(), MapKind.LavaTown => LavaTown(), MapKind.Snow => Snow(), MapKind.SnowTown => SnowTown(), MapKind.Library => Library(),
-            MapKind.Forest => Forest(), MapKind.Home => Home(0), _ => new WorldMap(),
+            MapKind.Forest => Forest(), MapKind.Home => Home(0), _ => Dungeons.Has(k) ? Dungeons.Build(k) : new WorldMap(),
         };
+
+        /// <summary>글자 줄로 맵을 만든다 (던전 — dungeons.json). 모자란 칸은 벽('#').</summary>
+        public static WorldMap FromRows(MapKind k, string[] rows)
+        {
+            var m = new WorldMap(k);
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    m.tiles[x, y] = y < rows.Length && x < rows[y].Length ? rows[y][x] : '#';
+            return m;
+        }
         /// <summary>그 챕터의 바깥 맵 (챕터 표).</summary>
         public static WorldMap ForChapter(int chapter) => Build(Chapters.Get(chapter).FieldKind);
         /// <summary>그 챕터에 들어가 볼 마을이 있나 (챕터 표 — 동굴·도서관·숲은 마을 대신 쉼터).</summary>
         public static bool HasTown(int chapter) => Chapters.Get(chapter).TownKind.HasValue;
         /// <summary>지금 있어야 할 맵 (지하세계 안이면 지하세계, 마을 안이면 그 챕터의 마을).</summary>
-        public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false)
+        public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false, bool inDungeon = false)
         {
             if (underground) return Underworld();
             var c = Chapters.Get(chapter);
+            if (inDungeon && c.DungeonKind.HasValue) return Build(c.DungeonKind.Value);
             return Build(inVillage && c.TownKind.HasValue ? c.TownKind.Value : c.FieldKind);
         }
 

@@ -37,9 +37,15 @@ namespace GirlAdventure.Sim
         public bool BrotherJoinsAtClear;        // 완료 대사 뒤 지훈 합류 장면 (챕터 2)
         public string CardTalk;
         public GoalLine[] Goal = new GoalLine[0];
+        // 던전 (2026-10-11 "보스전은 바로 하지 말고 던전을 하나"): 바깥 맵(EntryMap)의 EntryTile 칸을 밟으면 던전으로, 나오면 DungeonExit 칸에 ExitFacing 으로.
+        // 보스는 던전 안 BossTile 칸 (BossMap = 던전).
+        public string Dungeon, EntryMap, EntryTile = "B", DungeonExit, ExitFacing = "down", DungeonTalk;
 
         [NonSerialized] public MapKind FieldKind, BossMapKind;
-        [NonSerialized] public MapKind? TownKind;
+        [NonSerialized] public MapKind? TownKind, DungeonKind;
+        [NonSerialized] public MapKind EntryMapKind;
+        public bool HasDungeon => DungeonKind.HasValue;
+        public char EntryChar => string.IsNullOrEmpty(EntryTile) ? 'B' : EntryTile[0];
 
         public char BossChar => string.IsNullOrEmpty(BossTile) ? 'B' : BossTile[0];
         public bool HasJoinScene => !string.IsNullOrEmpty(JoinTalk);
@@ -74,6 +80,8 @@ namespace GirlAdventure.Sim
                 c.FieldKind = Enum.TryParse<MapKind>(c.Field, out var f) ? f : MapKind.Field;
                 c.BossMapKind = Enum.TryParse<MapKind>(c.BossMap, out var b) ? b : c.FieldKind;
                 c.TownKind = !string.IsNullOrEmpty(c.Town) && Enum.TryParse<MapKind>(c.Town, out var tk) ? tk : (MapKind?)null;
+                c.DungeonKind = !string.IsNullOrEmpty(c.Dungeon) && Enum.TryParse<MapKind>(c.Dungeon, out var dk) ? dk : (MapKind?)null;
+                c.EntryMapKind = Enum.TryParse<MapKind>(c.EntryMap, out var ek) ? ek : c.FieldKind;
                 c.Joins ??= new string[0];
                 c.DropItems ??= new string[0];
                 c.Goal ??= new GoalLine[0];
@@ -98,7 +106,7 @@ namespace GirlAdventure.Sim
         /// <summary>이 맵(바깥 맵이나 마을)이 어느 챕터 것인지 (아니면 null — 지하세계·집 안).</summary>
         public static ChapterDef OfMap(MapKind k)
         {
-            foreach (var c in all) if (c.FieldKind == k || c.TownKind == k) return c;
+            foreach (var c in all) if (c.FieldKind == k || c.TownKind == k || c.DungeonKind == k) return c;
             return null;
         }
 
@@ -121,6 +129,7 @@ namespace GirlAdventure.Sim
             foreach (var it in c.DropItems) p.Items.Remove(it);
             p.Chapter = c.No;
             p.InVillage = false;
+            p.InDungeon = false;
             p.Underground = false;
             p.RestoreAll();
             (p.X, p.Y) = c.Start();

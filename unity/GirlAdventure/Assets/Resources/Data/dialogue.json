@@ -73,9 +73,16 @@
     { "Id": "shop_bye",     "Lines": [ { "Text": "\"조심해서 다녀오렴! 또 오렴~\"", "Face": "smile", "Hold": 0.8 } ] },
     { "Id": "enemy_fast", "Lines": [ { "Text": "{enemy:은/는} 너무 빨라! 한 번 더 온다!", "Face": "surprised", "Hold": 0.7 } ] },
     { "Id": "boss_gate_warn", "Lines": [
-      { "Text": "성문 너머에서 쿵… 쿵… 킹 젤리의 발소리가 들려요. 아직 조금 무서워요.", "Face": "surprised" },
+      { "Text": "저 앞에서 쿵… 쿵… 킹 젤리의 발소리가 들려요. 아직 조금 무서워요.", "Face": "surprised" },
       { "Text": "레벨 {lv}이 되면 이길 수 있을 것 같아요. 그래도 들어갈까?", "Face": "pout" } ] },
-    { "Id": "boss_gate_later", "Lines": [ { "Text": "좋아, 초원에서 조금 더 연습하고 오자! 사탕도 챙기고!", "Face": "smile" } ] },
+    { "Id": "boss_gate_later", "Lines": [ { "Text": "좋아, 조금 더 연습하고 오자! 사탕도 챙기고!", "Face": "smile" } ] },
+    { "Id": "castle_enter", "Lines": [
+      { "Text": "성 안은 어둡고 조용해… 횃불만 일렁일렁.", "Face": "surprised" },
+      { "Text": "킹 젤리는 맨 안쪽 옥좌에 있을 거야. 그런데 큰 홀에서 옥좌로 가는 문이 막혀 있대. 다른 길을 찾아보자!", "Face": "smile" } ] },
+    { "Id": "sign_castle", "Lines": [ { "Text": "← 서쪽 탑 (옥좌 방으로 가는 위층 복도)     동쪽 보물 창고 →", "Face": "smile" } ] },
+    { "Id": "boss1_throne", "Lines": [
+      { "Text": "옥좌 위에 거대한 그림자가… 킹 젤리다!", "Face": "surprised" },
+      { "Text": "킹 젤리: 내 별빛을 찾으러 여기까지 왔느냐, 꼬마 마법사! 덤벼라!", "Face": "surprised" } ] },
     { "Id": "boss_gate", "Lines": [
       { "Text": "성문 앞에 거대한 그림자가… 킹 젤리다!", "Face": "surprised" } ] },
 

@@ -87,9 +87,10 @@ namespace GirlAdventure.View
             { MapKind.SnowTown, (m, t) => SnowTown(m) },
             { MapKind.Library, (m, t) => Library(m) },
             { MapKind.Forest, (m, t) => Meadow(m, false) },
+            { MapKind.Castle, (m, t) => Dungeon(m) },
         };
 
-        static Raster RenderBase(WorldMap m, FieldTiles tiles) => painters.TryGetValue(m.Kind, out var paint) ? paint(m, tiles) : Meadow(m, true);
+        static Raster RenderBase(WorldMap m, FieldTiles tiles) => painters.TryGetValue(m.Kind, out var paint) ? paint(m, tiles) : Dungeons.Has(m.Kind) ? Dungeon(m) : Meadow(m, true);
 
         // ------------------------------------------------------------------ noise / mask helpers
         static float Hash(int x, int y, int s)
@@ -1491,6 +1492,7 @@ namespace GirlAdventure.View
         {
             var list = new List<(Vector2, Color, float)>();
             if (!m.IsCaveLike) return list;
+            if (Dungeons.Has(m.Kind)) return DungeonLights(m);
             bool under = m.Kind == MapKind.Underworld;
             foreach (var (x, y) in CrystalSpots(m))
             {
@@ -1529,7 +1531,7 @@ namespace GirlAdventure.View
         {
             int w = WorldMap.W * T, h = WorldMap.H * T;
             var R = new Raster(w, h);
-            var floor = Mask(m, "_:FSHDBrwCMolcmJ");                         // '?'(숨은 길)는 벽처럼 그린다
+            var floor = Mask(m, "_:FSHDBrwCMolcmJ=E");                       // '?'(숨은 길)는 벽처럼 그린다, '=' 융단·'E' 출구는 던전
             var safe = Mask(m, ":FSM");
             var water = Mask(m, "w");
             var deep = Erode(water);
@@ -1622,7 +1624,8 @@ namespace GirlAdventure.View
                 }
 
             // 수정 (절벽면에 박힌 빛나는 결정)
-            foreach (var (x, y) in CrystalSpots(m)) Crystal(R, x * T + 24, y * T + T - 2, Hash(x, y, 71) < .35f, Hash(x, y, 72));
+            if (!Dungeons.Has(m.Kind))                                     // 던전엔 수정 대신 횃불 (MapPainter.Dungeons.cs)
+                foreach (var (x, y) in CrystalSpots(m)) Crystal(R, x * T + 24, y * T + T - 2, Hash(x, y, 71) < .35f, Hash(x, y, 72));
 
             // 입구 햇빛 줄기 (왼쪽 아래, 챕터 2 동굴만)
             for (int i = 0; i < (m.Kind == MapKind.Cave ? 3 : 0); i++)

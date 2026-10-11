@@ -21,6 +21,7 @@ namespace GirlAdventure.Sim
         public bool Boss7Down;          // 버전 17: 장수풍뎅이 대장 (챕터 7)
         public int Chapter;
         public bool InVillage;          // 버전 7: 별빛 마을 안에서 저장 (X, Y 는 마을 좌표)
+        public bool InDungeon;          // 2026-10-11: 챕터 던전 안에서 저장 (없으면 false — 옛 세이브는 바깥)
         public string[] Items, Opened;
         public string[] Bag;            // 사탕 외 소모품 "id:개수" (사탕은 Candy 칸, 옛 세이브 호환)
         public string[] Gear, Equipped; // 가진 장비 id, 장착한 장비 id
@@ -88,6 +89,7 @@ namespace GirlAdventure.Sim
         public int Chapter = 1;
         public bool InVillage;              // 별빛 마을 맵 안 (챕터 1)
         public bool Underground;            // 지하세계 안 (숨겨진 구멍으로 내려옴)
+        public bool InDungeon;              // 챕터 던전 안 (chapters.json Dungeon)
         public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
         public List<string> Gear = new List<string>();      // 가진 장비 id
@@ -242,7 +244,7 @@ namespace GirlAdventure.Sim
         public SaveData ToSave(string savedAt = "") => new SaveData
         {
             Name = Name, Lv = Lv, Exp = Exp, Hp = Hp, Mp = Mp, Candy = Candy, Gold = Gold, X = Home >= 0 ? WorldMap.HomeDoorFront(Home).x : X, Y = Home >= 0 ? WorldMap.HomeDoorFront(Home).y : Y, BossDown = BossDown, Boss2Down = Boss2Down, GuardDown = GuardDown, Boss3Down = Boss3Down, Boss4Down = Boss4Down, Boss5Down = Boss5Down, Boss6Down = Boss6Down, Boss7Down = Boss7Down, SavedAt = savedAt,
-            Chapter = Chapter, InVillage = InVillage, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
+            Chapter = Chapter, InVillage = InVillage, InDungeon = InDungeon, Items = Items.ToArray(), Opened = Opened.ToArray(), Bag = BagEntries(),
             Gear = Gear.ToArray(), Equipped = new List<string>(Equipped.Values).ToArray(),
             Seen = Seen.ToArray(), Beaten = Beaten.ToArray(),
             BrotherJoined = BrotherJoined, BroHp = BroHp, BroMp = BroMp,     // 옛 버전 게임에서 열어도 지훈은 있게
@@ -338,8 +340,9 @@ namespace GirlAdventure.Sim
             }
             p.InVillage = s.InVillage && WorldMap.HasTown(p.Chapter);
             p.Underground = s.Underground;
+            p.InDungeon = s.InDungeon && Chapters.Get(p.Chapter).HasDungeon && !p.Underground && !p.InVillage;
             if (p.Underground) p.InVillage = false;
-            var map = WorldMap.ForPlayer(p.Chapter, p.InVillage, p.Underground);
+            var map = WorldMap.ForPlayer(p.Chapter, p.InVillage, p.Underground, p.InDungeon);
             (p.X, p.Y) = map.SpawnPoint;
             if (Quest.Walkable(map, p, s.X, s.Y) && s.X > 0 && s.Y > 0 && s.X < WorldMap.W && s.Y < WorldMap.H)
             {
