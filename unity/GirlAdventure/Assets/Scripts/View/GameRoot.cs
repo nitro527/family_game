@@ -574,7 +574,7 @@ namespace GirlAdventure.View
         public void DebugNearMom() => DebugTeleport(WorldMap.MomCircle.x, WorldMap.MomCircle.y + 1, "up");
         public void DebugNearSnowBoss() => DebugTeleport(WorldMap.SnowBossDoor.x, WorldMap.SnowBossDoor.y + 1, "up");
         public void DebugNearLavaBoss() => DebugTeleport(WorldMap.VolcanoDoor.x, WorldMap.VolcanoDoor.y + 1, "up");
-        public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y - 1, "down");
+        public void DebugNearDesertBoss() => DebugTeleport(WorldMap.DesertBoss.x, WorldMap.DesertBoss.y + 1, "up");
 
         /// <summary>플레이테스트용: 지금 진행 그대로 완료 화면 (다음 챕터 버튼까지).</summary>
         public void DebugShowEnding()

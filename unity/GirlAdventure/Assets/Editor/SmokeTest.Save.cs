@@ -98,7 +98,7 @@ namespace GirlAdventure.EditorTools
             var m = new WorldMap();
             var p = PlayerState.NewGame("서진");
             p.GainExp(PlayerState.NextExp(3));
-            p.Hp = 7; p.Mp = 2; p.Candy = 1; p.Gold = 57; p.X = WorldMap.Gate.x; p.Y = WorldMap.Gate.y - 1; p.BossDown = true;
+            p.Hp = 7; p.Mp = 2; p.Candy = 1; p.Gold = 57; p.X = WorldMap.Gate.x; p.Y = WorldMap.GateFront.y; p.BossDown = true;
             var json = JsonUtility.ToJson(p.ToSave("t"));
             var q = PlayerState.FromSave(JsonUtility.FromJson<SaveData>(json));
             Check("save roundtrip", q.Name == "서진" && q.Lv == p.Lv && q.Exp == p.Exp && q.Hp == 7 && q.Mp == 2 && q.Candy == 1 && q.Gold == 57

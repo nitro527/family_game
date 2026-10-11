@@ -48,7 +48,7 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>몬스터가 살 수 있는 칸: 인카운트 지형이고 안전지대가 아님.</summary>
-        public bool Habitat(int x, int y) => Map.EncounterRate(x, y) > 0 && !Map.Safe(x, y) && !Map.IsFace(x, y)
+        public bool Habitat(int x, int y) => Map.EncounterRate(x, y) > 0 && !Map.Safe(x, y) && !Map.Blocked(x, y)
                                              && !(Map.Kind == MapKind.Cave && (x, y) == WorldMap.GuardSpot);   // 지킴이 자리는 비워 둔다
 
         public FieldMonster At(int x, int y)

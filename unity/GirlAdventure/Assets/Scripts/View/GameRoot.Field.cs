@@ -1044,7 +1044,7 @@ namespace GirlAdventure.View
             AutoSave();
             RefreshHud();
             sfx.Play("heal");
-            yield return Talk("fountain", ("candy", PlayerState.MaxCandy));
+            yield return Talk(GameData.HasTalk(MapKinds.Of(map.Kind).HealTalk) ? MapKinds.Of(map.Kind).HealTalk : "fountain", ("candy", PlayerState.MaxCandy));   // 회복 자리마다 대사 (샘물·우물·모닥불·온천·책 받침대·요정 샘)
             HideMessage();
             busy = false;
         }

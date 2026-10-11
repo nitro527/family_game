@@ -35,7 +35,9 @@ namespace GirlAdventure.Sim
     {
         public const int W = 36, H = 24;
         // 초원 (챕터 1)
-        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 19);
+        public static readonly (int x, int y) Start = (3, 4), Fountain = (6, 3), Sign = (4, 3), Gate = (31, 17);
+        /// <summary>초원 성문 앞 칸 (성문은 성 아래쪽 가운데 — 아래에서 올라가며 들어간다, 2026-10-12).</summary>
+        public static (int x, int y) GateFront => (Gate.x, Gate.y + 1);
         // 동굴 (챕터 2)
         public static readonly (int x, int y) CaveStart = (4, 20), CaveSpring = (7, 18), CaveSign = (3, 18),
                                                     Chest = (3, 8), BaseDoor = (28, 8), BossSpot = (28, 3), BroCage = (26, 3),
@@ -47,7 +49,7 @@ namespace GirlAdventure.Sim
         // 사막 (챕터 3): 왼쪽 동굴 출구로 나와서 시작 (맵 위쪽이면 HUD 창에 가려서 조금 아래), 가운데 동쪽 오아시스
         public static readonly (int x, int y) DesertStart = (4, 15), DesertCave = (3, 13), DesertSign = (5, 14),
                                                     Oasis = (24, 10), OasisSpring = (20, 11),
-                                                    DesertBoss = (24, 20),    // 남쪽 바위 골짜기 끝: 카우보이 젤리 대장 (53)
+                                                    DesertBoss = (24, 17),    // 남쪽 바위 골짜기 굴 입구: 카우보이 젤리 대장 (53) — 아래 좁은 길에서 올라가며 들어간다 (2026-10-12)
                                                     DesertLetter = (7, 15);   // 출발 자리 바로 동쪽: 리본 묶인 편지 (서진이 노트 3, Q-13)
         // 용암 땅 (챕터 4): 왼쪽 아래에서 아빠와 함께 출발, 가운데 용암 강(돌다리 둘), 오른쪽 위 화산
         public static readonly (int x, int y) LavaStart = (4, 20), LavaSpring = (7, 19), LavaSign = (6, 21), Volcano = (28, 2), VolcanoDoor = (29, 6);   // 화산 아래 동굴 입구 앞: 화산 젤리 대장 (C4-7b)
@@ -252,7 +254,7 @@ namespace GirlAdventure.Sim
                 if (tiles[x, y] == '.') Set(x, y, 'f');
             }
             // 길 (마을 → 성)
-            var pts = new[] { (3, 4), (3, 11), (13, 11), (13, 5), (22, 5), (22, 14), (31, 14), (31, 18) };
+            var pts = new[] { (3, 4), (3, 11), (13, 11), (13, 5), (22, 5), (22, 14), (27, 14), (27, 19), (31, 19), (31, 18) };   // 성문 앞으로는 아래에서 올라간다
             for (int i = 0; i < pts.Length - 1; i++)
             {
                 var (x, y) = pts[i];
@@ -272,10 +274,15 @@ namespace GirlAdventure.Sim
             Set(Fountain.x, Fountain.y, 'F');
             Set(Sign.x, Sign.y, 'S');
             // 성
-            Fill(28, 19, 34, 22, 'C');
-            for (int x = 27; x <= 35; x++)
-                if (tiles[x, 18] == 'T' || tiles[x, 18] == 'w') Set(x, 18, '.');
+            // 성 (2026-10-12 사용자 "던전은 아래에서 입구로 들어가는 길로"): 성벽 4줄, 성문은 아래쪽 가운데. 성문 앞은 빈 마당
+            for (int y = 18; y <= 21; y++)
+                for (int x = 28; x <= 33; x++)
+                    if (tiles[x, y] == 'T' || tiles[x, y] == 'w' || tiles[x, y] == 'C') Set(x, y, (x + y) % 4 == 0 ? 'f' : '.');
+            Fill(28, Gate.y - 1, 34, Gate.y, 'C');                         // 성벽 (그림의 성벽 높이만)
+            Fill(30, Gate.y - 3, 32, Gate.y - 2, 'C');                     // 가운데 큰 탑
+            Set(28, Gate.y - 2, 'C');                                       // 왼쪽 끝 둥근 탑
             Set(Gate.x, Gate.y, 'G');
+            Set(Gate.x, Gate.y + 1, '=');
             // 마을 입구: 공터 오른쪽 위 (왼쪽 위는 HUD 창에 가려서). 공터에서 입구까지 작은 길
             for (int x = 8; x <= VillageGate.x; x++) Set(x, VillageGate.y + 1, '=');
             Set(VillageGate.x, VillageGate.y, 'V');
@@ -657,9 +664,11 @@ namespace GirlAdventure.Sim
             m.Set(OasisSpring.x, OasisSpring.y, 'F');
             m.Set(TownGate.x, TownGate.y, 'V');
             // 남쪽 바위 골짜기: 양쪽 바위 벽 사이 좁은 길 끝에 대장 자리
-            m.Fill(DesertBoss.x - 2, DesertBoss.y - 3, DesertBoss.x - 2, DesertBoss.y, 'R');
-            m.Fill(DesertBoss.x + 2, DesertBoss.y - 3, DesertBoss.x + 2, DesertBoss.y, 'R');
-            m.Set(DesertBoss.x - 1, DesertBoss.y - 3, 'R'); m.Set(DesertBoss.x + 1, DesertBoss.y - 3, 'R');
+            // 굴 입구는 바위 덩어리 아래쪽, 그 앞으로 양쪽 바위 벽 사이 좁은 길이 아래로 열려 있다 (아래에서 올라가며 들어간다)
+            m.Fill(DesertBoss.x - 2, DesertBoss.y - 2, DesertBoss.x + 2, DesertBoss.y - 1, 'R');
+            m.Set(DesertBoss.x - 1, DesertBoss.y, 'R'); m.Set(DesertBoss.x + 1, DesertBoss.y, 'R');
+            m.Fill(DesertBoss.x - 2, DesertBoss.y, DesertBoss.x - 2, DesertBoss.y + 3, 'R');
+            m.Fill(DesertBoss.x + 2, DesertBoss.y, DesertBoss.x + 2, DesertBoss.y + 3, 'R');
             m.Set(DesertBoss.x, DesertBoss.y, 'B');
             // 선인장: 출구 앞과 오아시스 둘레는 비워 둔다
             var r = new Random(5);
@@ -667,7 +676,7 @@ namespace GirlAdventure.Sim
             {
                 int x = 3 + r.Next(30), y = 3 + r.Next(18);
                 if (m.tiles[x, y] != '.' || Math.Abs(x - DesertStart.x) + Math.Abs(y - DesertStart.y) <= 4 || (x >= 16 && x <= 33 && y >= 5 && y <= 15)
-                    || (Math.Abs(x - DesertBoss.x) <= 4 && y >= DesertBoss.y - 5)) continue;   // 오아시스·마을 문·골짜기 둘레는 비움
+                    || (Math.Abs(x - DesertBoss.x) <= 4 && y >= DesertBoss.y - 4)) continue;   // 오아시스·마을 문·골짜기 둘레는 비움
                 m.Set(x, y, 'Y');
                 n++;
             }

@@ -35,6 +35,43 @@ namespace GirlAdventure.EditorTools
                 var sb = new System.Text.StringBuilder();                   // 글자 지도도 (배치 고칠 때 칸 좌표 보기)
                 for (int y = 0; y < WorldMap.H; y++) { for (int x = 0; x < WorldMap.W; x++) sb.Append(m.At(x, y)); sb.Append('\n'); }
                 File.WriteAllText(Path.Combine(dir, name + ".txt"), sb.ToString());
+                // 막힌 칸 확인 (2026-10-12 사용자 "아무것도 없는데 길이 막힘·못 가는 공간"): block/ 폴더 — 빨강 = 막힌 칸, 파랑 = 안 막혔는데 출발에서 못 가는 칸
+                {
+                    var reach = new bool[WorldMap.W, WorldMap.H];
+                    var q = new System.Collections.Generic.Queue<(int, int)>();
+                    var sp = m.SpawnPoint;
+                    if (sp.x >= 0 && !m.Blocked(sp.x, sp.y)) { reach[sp.x, sp.y] = true; q.Enqueue(sp); }
+                    while (q.Count > 0)
+                    {
+                        var (cx, cy) = q.Dequeue();
+                        foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                        {
+                            int nx = cx + dx, ny = cy + dy;
+                            if (nx < 0 || ny < 0 || nx >= WorldMap.W || ny >= WorldMap.H || reach[nx, ny] || m.Blocked(nx, ny) || !m.CanStep(cx, cy, nx, ny)) continue;
+                            reach[nx, ny] = true; q.Enqueue((nx, ny));
+                        }
+                    }
+                    var bt = raster.ToTexture(FilterMode.Bilinear, true);
+                    var lines = new System.Text.StringBuilder();
+                    for (int y = 0; y < WorldMap.H; y++)
+                        for (int x = 0; x < WorldMap.W; x++)
+                        {
+                            bool b = m.Blocked(x, y), lost = !b && !reach[x, y];
+                            if (!b && !lost) continue;
+                            if (lost) lines.Append($"lost {x},{y} '{m.At(x, y)}'\n");
+                            if (b && PropCatalog.Blocks(m.Kind, x, y)) lines.Append($"prop {x},{y} '{m.At(x, y)}'\n");
+                            if (b && m.IsFace(x, y)) lines.Append($"face {x},{y} '{m.At(x, y)}'\n");
+                            var tint = lost ? new Color(0, .3f, 1f) : PropCatalog.Blocks(m.Kind, x, y) ? new Color(1, .8f, 0) : m.IsFace(x, y) ? new Color(1, 0, 1) : Color.red;
+                            int px0 = x * 48, py0 = bt.height - (y + 1) * 48;
+                            for (int yy = 4; yy < 44; yy += 3) for (int xx = 4; xx < 44; xx += 3)
+                                bt.SetPixel(px0 + xx, py0 + yy, Color.Lerp(bt.GetPixel(px0 + xx, py0 + yy), tint, .7f));
+                        }
+                    bt.Apply();
+                    Directory.CreateDirectory(Path.Combine(dir, "block"));
+                    File.WriteAllBytes(Path.Combine(dir, "block", name + ".png"), bt.EncodeToPNG());
+                    File.WriteAllText(Path.Combine(dir, "block", name + ".txt"), lines.ToString());
+                    Object.DestroyImmediate(bt);
+                }
                 Object.DestroyImmediate(tex);
             }
             {   // 동굴 기지 문이 열린 모습 (열린 성문 그림을 문 자리에 겹쳐서)

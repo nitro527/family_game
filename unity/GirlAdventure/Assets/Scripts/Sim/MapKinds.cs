@@ -11,7 +11,7 @@ namespace GirlAdventure.Sim
     public class MapKindInfo
     {
         public string Kind;
-        public string Song = "field", Backdrop = "meadow", SignTalk = "sign", Edge = "T", Zone = "field", Shop = "field";
+        public string Song = "field", Backdrop = "meadow", SignTalk = "sign", HealTalk = "fountain", Edge = "T", Zone = "field", Shop = "field";
         public string Enemies;                  // 몬스터 목록 (Normal·Cave·Desert·Under·Lava·Snow·Library·Forest) — 비면 맵 종류로 (던전은 그 챕터 목록)
         public bool CaveLike, Town;
         public int TimidLevel = 7;

@@ -59,6 +59,30 @@
       { "Text": "표지판: \"킹 젤리의 성은 길을 따라 남동쪽! 풀숲에는 젤리들이 숨어 있어요.\"", "Face": "smile" } ] },
     { "Id": "fountain", "Lines": [
       { "Text": "반짝이는 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_well", "Lines": [
+      { "Text": "마을 우물에서 시원한 물을 길어 마셨다! 별가루가 반짝반짝~ HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_oasis", "Lines": [
+      { "Text": "우물지기 젤리가 아껴 둔 물을 한 바가지 나눠 줬다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_oasis_spring", "Lines": [
+      { "Text": "오아시스 샘물을 손으로 떠 마셨다! 사막의 더위가 싹 가셨다. HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_hotspring", "Lines": [
+      { "Text": "따끈따끈한 온천에 발을 담갔다~ 몸이 사르르 녹는다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_fire", "Lines": [
+      { "Text": "타닥타닥 모닥불 앞에서 몸을 녹였다! 손끝까지 따뜻해졌다. HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_book", "Lines": [
+      { "Text": "빛나는 책을 펼치자 따스한 빛이 가족을 감쌌다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_fairy", "Lines": [
+      { "Text": "요정 샘에서 작은 빛 요정들이 빙글빙글 춤을 췄다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_under", "Lines": [
+      { "Text": "지하 샘의 파란 물빛을 마셨다! 몸이 가벼워졌다. HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_cave", "Lines": [
+      { "Text": "바위 틈에서 퐁퐁 솟는 맑은 샘물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_bucket", "Lines": [
+      { "Text": "할머니의 물동이에서 시원한 물을 한 모금! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_castle", "Lines": [
+      { "Text": "성 안뜰 분수의 맑은 물을 마셨다! HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
+    { "Id": "heal_ice", "Lines": [
+      { "Text": "얼음 사이로 흐르는 차갑고 맑은 물을 마셨다! 정신이 번쩍 든다. HP와 MP가 모두 회복되고, 사탕도 {candy}개까지 채웠다!", "Face": "laugh" } ] },
     { "Id": "shop_hello", "Lines": [
       { "Text": "가게 아주머니: \"어서 오렴! 달콤한 사탕이랑 신기한 물약, 튼튼한 장비도 있단다.\"", "Face": "smile" } ] },
     { "Id": "shop_gear",    "Lines": [ { "Text": "{item:을/를} 샀다! 지금 장착할까?", "Face": "laugh" } ] },

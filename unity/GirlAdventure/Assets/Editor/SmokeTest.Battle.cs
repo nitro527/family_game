@@ -727,7 +727,7 @@ namespace GirlAdventure.EditorTools
             int tx = 0, ty = 0;
             for (int y = 8; y < WorldMap.H - 2 && tx == 0; y++)
                 for (int x = 10; x < WorldMap.W - 2; x++)
-                    if (mm.Habitat(x, y) && mm.Habitat(x, y + 1)) { tx = x; ty = y; break; }
+                    if (mm.Habitat(x, y) && mm.Habitat(x, y + 1) && mm.Habitat(x, y - 1) && mm.Habitat(x, y - 2) && mm.Habitat(x, y - 3) && mm.Habitat(x + 1, y - 2) && mm.Habitat(x - 1, y - 2)) { tx = x; ty = y; break; }   // 겁쟁이가 도망칠 자리가 있게
             var target = mm.Spawn(tx, ty, 0);
             target.Wait = 0;
             FieldMonster got = null;

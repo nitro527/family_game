@@ -90,6 +90,10 @@ namespace GirlAdventure.EditorTools
                 Check("heights rule: stair up/down, face blocks, side cliff blocks",
                       f.IsStair(24, 13) && f.CanStep(24, 14, 24, 13) && f.CanStep(24, 13, 24, 12) && f.CanStep(24, 12, 24, 13)
                       && f.Blocked(25, 13) && !f.CanStep(22, 11, 23, 11) && f.Level(23, 11) == 1 && f.Level(22, 11) == 0);
+                // 뒤쪽 비탈 (2026-10-12): 높은 땅 북쪽 가장자리는 위아래로 걸어 다닌다 / 둥근 언덕은 모서리가 낮다
+                Check("heights rule: back edge is a walkable slope, round hill corners stay low",
+                      f.Level(28, 9) == 0 && f.Level(28, 10) == 1 && f.CanStep(28, 9, 28, 10) && f.CanStep(28, 10, 28, 9)
+                      && f.Level(23, 10) == 0 && f.Level(24, 10) == 1);
             }
         }
     }

@@ -36,31 +36,32 @@ namespace GirlAdventure.View
             int maxLv = 0;
             for (int y = 0; y < Hh; y++) for (int x = 0; x < W; x++) maxLv = Mathf.Max(maxLv, m.Level(x, y));
             var wallM = Mask(m, "#TRP");
+            var inside = new bool[maxLv + 1][,];                                     // 층마다 높은 땅 픽셀 (곡선 절벽이 이 경계를 따라 내려간다)
             for (int L = 1; L <= maxLv; L++)
             {
-                var mk = new float[W, Hh];
-                for (int y = 0; y < Hh; y++) for (int x = 0; x < W; x++) mk[x, y] = m.Level(x, y) >= L ? 1 : 0;
+                var mk0 = new float[W, Hh];
+                for (int y = 0; y < Hh; y++) for (int x = 0; x < W; x++) mk0[x, y] = m.Level(x, y) >= L ? 1 : 0;
+                var mk = Blur3(mk0);                                                 // 모서리·계단진 칸을 둥글게 (곧은 경계는 칸 선 그대로)
+                var ins = inside[L] = new bool[W * T, Hh * T];
                 for (int y = 0; y < Hh; y++)
                     for (int x = 0; x < W; x++)
                     {
                         bool near = false;
                         for (int dy = -1; dy <= 1 && !near; dy++) for (int dx = -1; dx <= 1 && !near; dx++) near = m.Level(x + dx, y + dy) >= L;
                         if (!near) continue;
-                        bool faceHere = m.IsFace(x, y) && m.Level(x, y - 1) >= L;            // 이 층의 절벽면 칸 (절벽이 그린다)
-                        bool aboveFace = m.Level(x, y) >= L && m.IsFace(x, y + 1);           // 절벽면 바로 위 칸: 아래쪽 반은 늘 높은 땅
                         int X = x * T, Y = y * T;
+                        bool sideHere = SideEdge(m, x, y, -1) || SideEdge(m, x, y, 1) || SideEdge(m, x - 1, y, 1) || SideEdge(m, x + 1, y, -1);   // 옆 절벽 둘레는 경계를 칸 선에 맞춘다 (벽이 그려지는 자리)
                         for (int py = 0; py < T; py++)
                             for (int px = 0; px < T; px++)
                             {
                                 int gx = X + px, gy = Y + py;
-                                if (faceHere) continue;
                                 float wob = (Noise(gx / 13f, gy / 13f, 700 + L) - .5f) * 18;
-                                float sv = Soft(mk, gx + wob, gy + wob * .6f);
-                                if (aboveFace && py >= T / 2) sv = 1;
+                                float sv = Soft(mk, sideHere ? gx : gx + wob, gy + wob * .4f);
                                 bool wall = Soft(wallM, gx, gy) > .35f;
                                 if (sv >= .5f)
                                 {
-                                    R.Blend(gx, gy, Mul(R.Get(gx, gy), 1.06f));
+                                    ins[gx, gy] = true;
+                                    R.Blend(gx, gy, Mul(R.Get(gx, gy), 1.1f));
                                     if (sv < .62f && !wall) R.Blend(gx, gy, lip, .55f * (1 - (sv - .5f) / .12f));      // 빛 테두리
                                 }
                                 else if (sv > .3f && !wall) R.Blend(gx, gy, new Color32(0, 0, 0, (byte)(85 * (sv - .3f) / .2f)));   // 바깥 그림자
@@ -68,14 +69,14 @@ namespace GirlAdventure.View
                     }
             }
 
-            // 3) 절벽면 (높은 땅 바로 아래 칸) · 계단
+            // 2b) 옆 절벽 (2026-10-12 사용자 "아무것도 없는데 길이 막힐 때가 있음"): 둥근 경계의 왼쪽·오른쪽 가장자리에 보이는 바위 벽
+            for (int L = 1; L <= maxLv; L++) SideRim(R, m, inside[L], lip, lipDark, top, bottom);
+
+            // 3) 절벽 (2026-10-12 "직선만 있는 게 아니라 곡선도"): 칸마다 네모 대신 높은 땅의 둥근 남쪽 경계를 따라 한 칸 높이 절벽 띠
+            for (int L = 1; L <= maxLv; L++) CliffBand(R, m, inside[L], lip, lipDark, top, bottom, strata);
             for (int y = 0; y < Hh; y++)
                 for (int x = 0; x < W; x++)
-                {
-                    if (!m.IsFace(x, y)) continue;
-                    if (m.IsStair(x, y)) Stairs(R, m, x, y, lip, lipDark, top, bottom);
-                    else Cliff(R, m, x, y, lip, lipDark, top, bottom, strata);
-                }
+                    if (m.IsFace(x, y) && m.IsStair(x, y)) Stairs(R, m, x, y, lip, lipDark, top, bottom);
 
             // 4) 절벽 앞 소품 다시 찍기 (발 칸이 절벽면 줄이거나 그 아래이고, 그림이 절벽면과 겹치면)
             foreach (var (img, x, y) in log)
@@ -94,136 +95,169 @@ namespace GirlAdventure.View
         /// <summary>벽·숲·바위처럼 원래 막힌 칸 (그 쪽 가장자리엔 테두리를 안 그린다 — 액자처럼 보이지 않게). 절벽면은 아니다.</summary>
         static bool Wall(WorldMap m, int x, int y) => x < 0 || y < 0 || x >= WorldMap.W || y >= WorldMap.H || "#TRP".IndexOf(m.At(x, y)) >= 0;
 
-        /// <summary>옆쪽 절벽: 높은 땅 가장자리 픽셀 줄 (side = -1 왼쪽, 1 오른쪽) — 바깥으로 4px 벽, 안쪽 1px 빛.</summary>
-        static void EdgeV(Raster R, int X, int Y, int side, Color32 lipDark, Color32 bottom)
+        /// <summary>(x,y) 높은 칸의 sd 쪽(−1 왼쪽, 1 오른쪽) 옆 칸이 더 낮고 막히지 않은 땅인가 (옆 절벽 자리).</summary>
+        static bool SideEdge(WorldMap m, int x, int y, int sd)
         {
-            for (int py = 0; py < T; py++)
-            {
-                R.Blend(X - side, Y + py, H("#FFFFFF", 70));
-                for (int i = 0; i < 4; i++) R.Blend(X + side * (1 + i), Y + py, Lerp(lipDark, bottom, i / 3f), 1 - i * .18f);
-                R.Blend(X + side * 5, Y + py, new Color32(0, 0, 0, 60));
-            }
+            if (x < 0 || y < 0 || x >= WorldMap.W || y >= WorldMap.H) return false;
+            int nx = x + sd;
+            return !Wall(m, nx, y) && !Wall(m, x, y) && m.Level(x, y) > m.Level(nx, y) && !m.IsFace(x, y);
         }
 
         /// <summary>
-        /// 절벽면 한 칸: 들쭉날쭉한 처마(풀·모래·눈·나무 끝) → 결 줄 몸통(위 밝고 아래 어둡게) + 박힌 돌·금 → 바닥 그림자.
-        /// 테마 장식: 흙·숲 = 늘어진 덩굴, 얼음 = 고드름, 현무암 = 빛나는 용암 금, 나무 = 판자 결·몰딩. 그 아래 칸에 그림자.
+        /// 옆 절벽: 픽셀 줄마다 높은 땅(ins)의 왼쪽·오른쪽 끝에서 바깥으로 바위 벽 띠(처마 빛 → 위 밝고 아래 어둡게 → 그림자).
+        /// 둥근 경계를 그대로 따라가서 곡선 절벽(CliffBand)과 이어진다. 벽·숲·바위 칸 쪽은 그리지 않는다.
         /// </summary>
-        static void Cliff(Raster R, WorldMap m, int x, int y, Color32 lip, Color32 lipDark, Color32 top, Color32 bottom, Color32 strata)
+        static void SideRim(Raster R, WorldMap m, bool[,] ins, Color32 lip, Color32 lipDark, Color32 top, Color32 bottom)
+        {
+            int PW = ins.GetLength(0), PH = ins.GetLength(1);
+            for (int gy = 0; gy < PH; gy++)
+                for (int gx = 1; gx < PW - 1; gx++)
+                {
+                    if (!ins[gx, gy]) continue;
+                    foreach (int sd in new[] { -1, 1 })
+                    {
+                        int ox = gx + sd;
+                        if (ins[ox, gy] || Wall(m, ox / T, gy / T)) continue;
+                        float n = Noise(gx / 5f, gy / 7f, 731);
+                        int ww = 11 - (int)(4 * n);
+                        for (int i = 0; i < 3; i++) R.Blend(gx - sd * i, gy, lip, .8f - i * .25f);                    // 높은 땅 끝 빛
+                        for (int i = 0; i < ww; i++)
+                        {
+                            int px = ox + sd * i;
+                            if (px < 0 || px >= PW || ins[px, gy]) break;
+                            var c = Lerp(Lerp(lipDark, top, .5f), bottom, i / (float)ww * .8f + n * .2f);
+                            if (Mathf.Repeat(gy + 4 * n, 9f) < 1.4f) c = Mul(c, .8f);                                  // 결 줄
+                            R.Blend(px, gy, c);
+                        }
+                        for (int i = 0; i < 5; i++)
+                        {
+                            int px = ox + sd * (ww + i);
+                            if (px >= 0 && px < PW && !ins[px, gy]) R.Blend(px, gy, new Color32(0, 0, 0, (byte)(60 - i * 12)));   // 그림자
+                        }
+                    }
+                }
+        }
+
+        /// <summary>칸 마스크를 [1 2 1] 가중 3×3 으로 흐리게 — 0.5 경계는 곧은 곳은 칸 선 그대로, 모서리·계단진 곳은 둥글게.</summary>
+        static float[,] Blur3(float[,] a)
+        {
+            int W = a.GetLength(0), Hh = a.GetLength(1);
+            var k = new float[W, Hh];
+            for (int y = 0; y < Hh; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float s = 0, w = 0;
+                    for (int dy = -1; dy <= 1; dy++)
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            int xx = Mathf.Clamp(x + dx, 0, W - 1), yy = Mathf.Clamp(y + dy, 0, Hh - 1);
+                            float g = (dx == 0 ? 2 : 1) * (dy == 0 ? 2 : 1);
+                            s += a[xx, yy] * g; w += g;
+                        }
+                    k[x, y] = s / w;
+                }
+            return k;
+        }
+
+        /// <summary>
+        /// 곡선 절벽 띠: 픽셀 열마다 높은 땅(ins) 아래 경계에서 한 칸(T) 아래까지 —
+        /// 높은 땅이 처마처럼 덮고 → 들쭉날쭉한 처마 끝(풀·모래·눈·나무) → 결 줄 몸통(위 밝고 아래 어둡게, 그림 생성 무늬가 있으면 그것) → 땅에 닿는 선 → 그림자.
+        /// 테마 장식: 흙·숲 = 늘어진 덩굴, 얼음 = 고드름, 현무암 = 빛나는 용암 금, 나무 = 판자 결·몰딩. 계단 칸은 비운다 (계단이 그린다).
+        /// </summary>
+        static void CliffBand(Raster R, WorldMap m, bool[,] ins, Color32 lip, Color32 lipDark, Color32 top, Color32 bottom, Color32 strata)
         {
             string style = Heights.Style(m.Kind);
-            int X = x * T, Y = y * T;
-            bool leftEnd = !m.IsFace(x - 1, y), rightEnd = !m.IsFace(x + 1, y);
             bool wood = style == "wood";
             TileImage tex = null;                                                                   // 그림 생성 절벽 무늬 (없으면 코드 무늬)
             if (!wood && Props != null) Props.TryGetValue("cliff_" + style, out tex);
-            for (int py = 0; py < T; py++)
-                for (int px = 0; px < T; px++)
+            int PW = ins.GetLength(0), PH = ins.GetLength(1);
+            for (int gx = 0; gx < PW; gx++)
+            {
+                int b0 = -1;                                                                        // 지금 그리는 띠의 경계 y
+                for (int gy = 1; gy < PH; gy++)
                 {
-                    int gx = X + px, gy = Y + py;
-                    float n = Fbm(gx * 1.6f, gy * 3.2f, 501);
-                    float edge = leftEnd ? px : rightEnd ? T - 1 - px : 99;
-                    if (edge < 10 && py > 6 + edge * 3.5f) continue;                                // 끝 칸은 둥글게
-                    int bcut = T - 1 - (int)(6 * Noise(gx / 9f, y * 5 + 1, 704));                  // 땅에 닿는 선 울퉁불퉁
-                    if (!wood && py > bcut) continue;
-                    // 처마: 아래 가장자리가 들쭉날쭉 (나무 단상은 반듯하게)
-                    float lipH = wood ? 7 : 5 + 4 * Noise(gx / 6f, 3, 502) + (Hash(gx / 3, 7, 506) > .8f ? 3 : 0);
+                    if (ins[gx, gy]) { b0 = -1; continue; }
+                    if (ins[gx, gy - 1]) b0 = gy;
+                    if (b0 < 0) continue;
+                    int d = gy - b0;
+                    int bcut = T - 1 - (int)(6 * Noise(gx / 9f, b0 / 9f, 704));                       // 땅에 닿는 선 울퉁불퉁
+                    int foot = wood ? T - 1 : bcut;
+                    if (d > foot + 9) { b0 = -1; continue; }
+                    if (m.IsStair(gx / T, gy / T) || m.IsStair(gx / T, (b0 + T / 2) / T)) continue;
+                    if (d > foot)                                                                     // 아래 땅에 드리운 그림자
+                    {
+                        R.Blend(gx, gy, new Color32(0, 0, 0, (byte)Mathf.Max(0, 70 - (d - foot - 1) * 8)));
+                        continue;
+                    }
+                    int over = wood ? 0 : 3 + (int)(8 * Noise(gx / 7f, b0 / 11f, 703));                // 높은 땅이 처마처럼 덮는다
+                    if (d < over)
+                    {
+                        R.Blend(gx, gy, Mul(R.Get(gx, b0 - 1 - ((over - d) % 7)), 1 - .12f * d / over));
+                        if (d == over - 1) R.Blend(gx, gy, new Color32(0, 0, 0, 95));
+                        continue;
+                    }
+                    int dd = d - over;
+                    float t = Mathf.Clamp01(d / (float)T);
+                    float lipH = wood ? 7 : 4 + 3 * Noise(gx / 6f, 3, 502) + (Hash(gx / 3, 7, 506) > .8f ? 3 : 0);
                     Color32 c;
-                    if (py < lipH) c = Lerp(lip, lipDark, py / lipH);
+                    if (dd < lipH) c = Lerp(lip, lipDark, dd / lipH);
+                    else if (wood)
+                    {
+                        c = Lerp(top, bottom, t * .7f);
+                        if (gx % 12 == 0) c = Mul(c, .75f);                                          // 판자 사이
+                        c = Mul(c, .93f + .14f * Noise(gx / 3f, gy / 20f, 507));                     // 나뭇결
+                        if (d > T - 9 && d < T - 6) c = Lerp(c, lip, .6f);                            // 아래 몰딩
+                    }
+                    else if (tex != null)
+                    {
+                        int u = gx % (tex.W * 2); if (u >= tex.W) u = tex.W * 2 - 1 - u;              // 좌우 거울로 이어 붙임
+                        int v = Mathf.Clamp((int)(t * (tex.H - 1)), 0, tex.H - 1);
+                        c = Mul(tex.At(u, v), 1.08f - t * .38f);                                      // 위 밝고 아래 어둡게
+                        if (dd == (int)lipH) c = Mul(c, .6f);
+                        else if (dd < lipH + 4) c = Mul(c, .82f);
+                    }
                     else
                     {
-                        float t = (py - lipH) / (T - lipH);
-                        if (wood)
+                        float n = Fbm(gx * 1.6f, gy * 3.2f, 501);
+                        c = Lerp(top, bottom, t * .85f + n * .3f - .1f);
+                        float band = Mathf.Repeat(d + 6 * Noise(gx / 18f, 5, 503), 11f);
+                        if (band < 1.6f) c = Lerp(c, strata, .7f);                                  // 지층 줄
+                        if (dd == (int)lipH) c = Mul(c, .6f);                                        // 처마 밑 그늘
+                        else if (dd < lipH + 4) c = Mul(c, .82f);
+                        float st = Noise(gx / 7f, gy / 7f, 508);                                     // 박힌 돌 (둥글게 밝은 얼룩)
+                        if (st > .8f) c = Lerp(c, Mul(top, 1.15f), (st - .8f) * 4);
+                    }
+                    if (style == "basalt" && Mathf.Abs(Noise(gx / 9f, gy / 9f, 513) - .5f) < .025f) c = Lerp(c, H("#FF8A2A"), .75f);   // 용암 금
+                    if (d > foot - 4) c = Mul(c, .72f);                                               // 바닥에 닿는 어두운 줄
+                    R.Blend(gx, gy, c);
+                }
+            }
+            // 테마 장식: 처마에서 늘어진 덩굴·고드름 (경계 픽셀 열에서)
+            if (style != "earth" && style != "forest" && style != "ice") return;
+            bool vine = style != "ice";
+            for (int gx = 2; gx < PW - 2; gx++)
+            {
+                if (Hash(gx, 11, vine ? 514 : 517) < (vine ? .975f : .955f)) continue;
+                for (int gy = 1; gy < PH - T; gy++)
+                {
+                    if (!ins[gx, gy - 1] || ins[gx, gy] || m.IsStair(gx / T, (gy + T / 2) / T)) continue;
+                    int len = vine ? 10 + (int)(Hash(gx, gy, 516) * 24) : 6 + (int)(Hash(gx, gy, 519) * 12);
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (vine)
                         {
-                            c = Lerp(top, bottom, t * .7f);
-                            if (px % 12 == 0) c = Mul(c, .75f);                                       // 판자 사이
-                            c = Mul(c, .93f + .14f * Noise(gx / 3f, gy / 20f, 507));                  // 나뭇결
-                            if (py > T - 9 && py < T - 6) c = Lerp(c, lip, .6f);                       // 아래 몰딩
-                        }
-                        else if (tex != null)
-                        {
-                            int u = gx % (tex.W * 2); if (u >= tex.W) u = tex.W * 2 - 1 - u;              // 좌우 거울로 이어 붙임
-                            int v = Mathf.Clamp((int)(t * (tex.H - 1)), 0, tex.H - 1);
-                            c = Mul(tex.At(u, v), 1.08f - t * .38f);                                   // 위 밝고 아래 어둡게
-                            if (py == (int)lipH) c = Mul(c, .6f);
-                            else if (py < lipH + 4) c = Mul(c, .82f);
+                            var vc = Lerp(lipDark, H("#2E6A22"), .5f);
+                            int wx = gx + Mathf.RoundToInt(Mathf.Sin(i * .35f + gx) * 1.5f);
+                            R.Blend(wx, gy + 5 + i, vc); R.Blend(wx + 1, gy + 5 + i, vc, .5f);
+                            if (i % 6 == 3) R.Ellipse(wx + 2.5f, gy + 5 + i, 2.2f, 1.4f, lip);   // 잎
                         }
                         else
                         {
-                            c = Lerp(top, bottom, t * .85f + n * .3f - .1f);
-                            float band = Mathf.Repeat(py + 6 * Noise(gx / 18f, 5, 503), 11f);
-                            if (band < 1.6f) c = Lerp(c, strata, .7f);                               // 지층 줄
-                            if (py == (int)lipH) c = Mul(c, .6f);                                     // 처마 밑 그늘
-                            else if (py < lipH + 4) c = Mul(c, .82f);
-                            // 박힌 돌: 칸마다 0~2 개, 둥글고 위가 밝다
-                            for (int k = 0; k < 2; k++)
-                            {
-                                if (Hash(x, y * 7 + k, 508) < .45f) continue;
-                                float sx = 8 + Hash(x, y + k, 509) * (T - 16), sy = lipH + 8 + Hash(x + k, y, 510) * (T - lipH - 16);
-                                float rx = 4 + Hash(x * 3 + k, y, 511) * 3, ry = rx * .75f;
-                                float dx = (px - sx) / rx, dy = (py - sy) / ry, d = dx * dx + dy * dy;
-                                if (d < 1) c = Lerp(Mul(top, 1.12f), Mul(bottom, 1.1f), (dy + 1) * .5f);
-                                else if (d < 1.4f && dy > 0) c = Mul(c, .7f);
-                            }
-                            if (Hash(x, y, 512) > .6f)                                                 // 짧고 비뚤한 금 (칸마다 하나쯤)
-                            {
-                                float cx0 = 10 + Hash(x, y, 520) * (T - 20), cy0 = lipH + 6, clen = 8 + Hash(x, y, 521) * 16;
-                                float cxAt = cx0 + (py - cy0) * .25f * (Hash(x, y, 522) > .5f ? 1 : -1) + Mathf.Sin(py * .6f) * .8f;
-                                if (py >= cy0 && py < cy0 + clen && Mathf.Abs(px - cxAt) < .8f) c = Mul(c, .55f);
-                            }
-                            if (style == "basalt" && Mathf.Abs(Noise(gx / 9f, gy / 9f, 513) - .5f) < .025f) c = Lerp(c, H("#FF8A2A"), .75f);   // 용암 금
+                            float w = 2.2f * (1 - i / (float)len);
+                            for (int dx = -2; dx <= 2; dx++) if (Mathf.Abs(dx) <= w) R.Blend(gx + dx, gy + 6 + i, dx < 0 ? H("#FFFFFF", 230) : H("#CFE6F8", 220));
                         }
-                        if (py > (wood ? T - 5 : bcut - 4)) c = Mul(c, .72f);                          // 바닥에 닿는 어두운 줄
-                        if (edge < 6) c = Mul(c, .8f);
-                    }
-                    R.Blend(gx, gy, c);
-                }
-            // 테마 장식 (처마에서 늘어진 것)
-            if (style == "earth" || style == "forest")
-                for (int k = 0; k < 3; k++)
-                {
-                    if (Hash(x, y * 5 + k, 514) < .55f) continue;
-                    int vx = X + 6 + (int)(Hash(x + k, y, 515) * (T - 12));
-                    int len = 10 + (int)(Hash(x, y + k, 516) * 24);
-                    var vine = Lerp(lipDark, H("#2E6A22"), .5f);
-                    for (int i = 0; i < len; i++)
-                    {
-                        int wx = vx + Mathf.RoundToInt(Mathf.Sin(i * .35f + k) * 1.5f);
-                        R.Blend(wx, Y + 5 + i, vine); R.Blend(wx + 1, Y + 5 + i, vine, .5f);
-                        if (i % 6 == 3) { R.Ellipse(wx + 2.5f, Y + 5 + i, 2.2f, 1.4f, lip); }   // 잎
                     }
                 }
-            if (style == "ice")
-                for (int k = 0; k < 5; k++)
-                {
-                    if (Hash(x, y * 3 + k, 517) < .4f) continue;
-                    int ix = X + 4 + (int)(Hash(x + k, y, 518) * (T - 8)), len = 6 + (int)(Hash(x, y + k, 519) * 12);
-                    for (int i = 0; i < len; i++)
-                    {
-                        float w = 2.2f * (1 - i / (float)len);
-                        for (int dx = -2; dx <= 2; dx++) if (Mathf.Abs(dx) <= w) R.Blend(ix + dx, Y + 6 + i, dx < 0 ? H("#FFFFFF", 230) : H("#CFE6F8", 220));
-                    }
-                }
-            if (!wood)                                                                              // 높은 땅이 처마처럼 덮는다 (위 줄 땅 무늬를 끌어내림)
-                for (int px = 0; px < T; px++)
-                {
-                    int gx = X + px;
-                    float edge = leftEnd ? px : rightEnd ? T - 1 - px : 99;
-                    if (edge < 4) continue;
-                    int d = 3 + (int)(8 * Noise(gx / 7f, y * 3 + 2, 703));
-                    for (int i = 0; i < d; i++)
-                    {
-                        var src = R.Get(gx, Y - 1 - ((d - i) % 7));
-                        R.Blend(gx, Y + i, Mul(src, 1 - .12f * i / d));
-                    }
-                    R.Blend(gx, Y + d, new Color32(0, 0, 0, 95));
-                    R.Blend(gx, Y + d + 1, new Color32(0, 0, 0, 45));
-                }
-            for (int px = 0; px < T; px++)                                                          // 아래 칸에 드리운 그림자
-            {
-                int gx = X + px, b0 = wood ? T : T - (int)(6 * Noise(gx / 9f, y * 5 + 1, 704));
-                for (int i = 0; i < 9; i++)
-                    R.Blend(gx, Y + b0 + i, new Color32(0, 0, 0, (byte)(70 - i * 7)));
             }
         }
 

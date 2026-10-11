@@ -326,6 +326,7 @@ namespace GirlAdventure.View
                     TileProp(R, m, x, y, 0);                                    // 바위 언덕 (props.json)
             var cave = WorldMap.DesertCave;
             CaveMouth(R, cave.x * T, cave.y * T);
+            CaveMouth(R, WorldMap.DesertBoss.x * T, WorldMap.DesertBoss.y * T);      // 바위 골짜기 굴 입구 (아래 좁은 길에서 올라가며 들어간다)
             Fountain(R, WorldMap.OasisSpring.x * T, WorldMap.OasisSpring.y * T, false);
             Sign(R, WorldMap.DesertSign.x * T, WorldMap.DesertSign.y * T);
             TownArch(R, WorldMap.TownGate.x * T, WorldMap.TownGate.y * T);

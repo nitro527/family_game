@@ -913,9 +913,9 @@ namespace GirlAdventure.EditorTools
             // 킹 젤리의 성 (던전, 2026-10-11 "성에 들어가면 성 안을 돌아다니다가 보스를 만나게"): 성문을 밟으면 성 안 →
             // 출구로 나갔다가 다시 들어가기 → 옥좌 단상 계단 아래에서 킹 젤리 그림 → (Lv5 전이면) 옥좌 앞에서 물러나기
             G.DebugMobs(true, true);
-            G.DebugTeleport(WorldMap.Gate.x, WorldMap.Gate.y - 1, "down");
+            G.DebugTeleport(WorldMap.GateFront.x, WorldMap.GateFront.y, "up");
             yield return .3f;
-            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
             yield return (Func<bool>)(() => G.MapKindNow == MapKind.Castle);
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             yield return .4f;
@@ -927,10 +927,10 @@ namespace GirlAdventure.EditorTools
             yield return .3f;
             Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
             yield return (Func<bool>)(() => G.MapKindNow == MapKind.Field && !G.Busy);
-            Expect("castle exit leads back outside the gate", G.MapKindNow == MapKind.Field && !G.P.InDungeon && (G.P.X, G.P.Y) == (WorldMap.Gate.x, WorldMap.Gate.y - 1), $"{G.P.X},{G.P.Y}");
-            G.DebugTeleport(WorldMap.Gate.x, WorldMap.Gate.y - 1, "down");
+            Expect("castle exit leads back outside the gate", G.MapKindNow == MapKind.Field && !G.P.InDungeon && (G.P.X, G.P.Y) == (WorldMap.GateFront.x, WorldMap.GateFront.y), $"{G.P.X},{G.P.Y}");
+            G.DebugTeleport(WorldMap.GateFront.x, WorldMap.GateFront.y, "up");
             yield return .3f;
-            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
             yield return (Func<bool>)(() => G.MapKindNow == MapKind.Castle && !G.Busy);
             G.DebugMobs(true, true);
             G.DebugTeleport(17, 7, "up");
@@ -1466,7 +1466,7 @@ namespace GirlAdventure.EditorTools
             yield return 1.0f;
             Shot("desert_boss_swirl");
             Expect("sand twister marks the boss canyon", G.SandTwisterShown);
-            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
             foreach (var x in DungeonToBoss()) yield return x;          // 보스 칸 = 던전 입구 → 던전 안 보스 앞으로
             foreach (var x in SkipTalk(() => G.CommandOpen)) yield return x;
             yield return .4f;

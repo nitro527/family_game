@@ -49,6 +49,8 @@ namespace GirlAdventure.View
                     if (ch == '=' || (ch == 'B' && IsCarpet(m, x, y - 1) | IsCarpet(m, x, y + 1))) Carpet(R, m, x, y, theme);
                     else if (ch == 'E') ExitArch(R, x, y);
                     else if (ch == 'l') Brazier(R, x * T, y * T, theme);
+                    else if (ch == 'r' && theme == "archive") WoodColumn(R, x * T, y * T);   // 마루가 바위 그림을 덮으니 다시 (2026-10-12 사용자 "도서관에서 오브젝트에 막혀서")
+                    else if (ch == 'r' && theme == "cellar") Barrel(R, x * T, y * T, Hash(x, y, 640));
                 }
             return R;
         }
@@ -226,6 +228,49 @@ namespace GirlAdventure.View
             R.Rect(X + 15, Y - 18, 5, 56, H("#C4C8D8"));
             R.Rect(X + 28, Y - 18, 5, 56, H("#80849A"));
             R.Rect(X + 11, Y - 24, 26, 7, H("#B4B8C8"));
+        }
+
+        /// <summary>서고 나무 기둥: 둥근 받침 + 짙은 나무 기둥 (세로결·밝은 왼쪽) + 금빛 띠 + 머리 장식.</summary>
+        static void WoodColumn(Raster R, float X, float Y)
+        {
+            R.Ellipse(X + 24, Y + 44, 17, 5, new Color32(0, 0, 0, 90));
+            R.Rect(X + 11, Y + 35, 26, 9, H("#5A3A1E"));
+            R.Rect(X + 11, Y + 35, 26, 3, H("#8A5E34"));
+            for (int py = -20; py < 36; py++)
+                for (int px = 15; px < 33; px++)
+                {
+                    float t = (px - 15) / 18f;
+                    var c = Lerp(H("#B07A44"), H("#4A2E16"), t * .9f);
+                    if (Noise((X + px) / 2f, (Y + py) / 14f, 641) > .7f) c = Mul(c, .82f);
+                    R.Blend((int)X + px, (int)Y + py, c);
+                }
+            R.Rect(X + 14, Y + 6, 20, 3, H("#D8A84A"));                       // 금빛 띠
+            R.Rect(X + 14, Y + 24, 20, 3, H("#D8A84A"));
+            R.Rect(X + 10, Y - 26, 28, 7, H("#7A5030"));                      // 머리 장식
+            R.Rect(X + 10, Y - 26, 28, 2, H("#B88850"));
+        }
+
+        /// <summary>지하 창고 나무통: 둥근 몸통(가운데 볼록) + 쇠테 두 줄 + 위 뚜껑. 칸마다 색이 조금 다르다.</summary>
+        static void Barrel(Raster R, float X, float Y, float h)
+        {
+            R.Ellipse(X + 24, Y + 43, 17, 5, new Color32(0, 0, 0, 90));
+            var wood = Lerp(H("#A86A36"), H("#8A5428"), h);
+            for (int py = 6; py < 43; py++)
+            {
+                float bulge = Mathf.Sin((py - 6) / 37f * Mathf.PI) * 3.5f;
+                float half = 13 + bulge;
+                for (int px = (int)(24 - half); px < (int)(24 + half); px++)
+                {
+                    float t = (px - (24 - half)) / (2 * half);
+                    var c = Mul(wood, 1.15f - Mathf.Abs(t - .38f) * .9f);
+                    if (((int)(px * 1.0f) % 7) == 0) c = Mul(c, .8f);                // 널판 사이
+                    R.Blend((int)X + px, (int)Y + py, c);
+                }
+            }
+            foreach (int by in new[] { 13, 34 })
+                R.Rect(X + 24 - 16, Y + by, 32, 3, H("#4A4A52"));
+            R.Ellipse(X + 24, Y + 7, 13, 4.5f, Mul(wood, .75f));
+            R.Ellipse(X + 24, Y + 7, 10.5f, 3, Mul(wood, 1.05f));
         }
 
         /// <summary>융단: 이웃 '=' 와 이어지는 빨간 융단(성) / 모래 길·나무 바닥 (다른 테마), 가장자리에 금빛 테두리.</summary>
