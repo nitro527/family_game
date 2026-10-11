@@ -179,6 +179,7 @@ namespace GirlAdventure.EditorTools
             yield return .6f;
             Shot("dungeon_roar_" + dk.ToString().ToLower());
             Expect($"chapter {ch.No}: boss roars before the talk", G.BossRoarCount > roar0);
+            Expect($"chapter {ch.No}: you stay in front of the boss (not on it)", G.P.X == b.x && G.P.Y == b.y + 1, $"{G.P.X},{G.P.Y}");
         }
 
         /// <summary>명령창에서 idx 번째(0 파이어,1 주문,2 도구,3 도망)로 커서를 옮겨 결정.</summary>

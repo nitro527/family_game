@@ -578,6 +578,14 @@ namespace GirlAdventure.View
             var mob = mobs.At(nx, ny);
             if (mob != null && mobs.Grace <= 0 && map.CanStep(P.X, P.Y, nx, ny)) { StartMobBattle(mob); return; }
             if (Quest.GuardAt(map, P, nx, ny)) { if (!busy) StartCoroutine(GuardRoutine()); return; }
+            if (P.InDungeon && !busy)                                             // 던전 보스: 그 칸으로 들어가지 않고 앞에서 부딪히면 (보스 그림과 겹치지 않게)
+                foreach (var ch in Chapters.All)
+                    if (map.Kind == ch.BossMapKind && map.At(nx, ny) == ch.BossChar && !P.BossBeaten(ch.No) && map.CanStep(P.X, P.Y, nx, ny))
+                    {
+                        moveFrom = new Vector2Int(P.X, P.Y);                         // 물러나기(준비 레벨)는 제자리
+                        StartCoroutine(BossRoutine(ch));
+                        return;
+                    }
             if (dir == "down" && !busy && JumpLanding(P.X, P.Y) is (int, int) land) { StartCoroutine(JumpDownRoutine(land.Item1, land.Item2)); return; }   // 절벽 가장자리에서 아래로 = 폴짝
             if (!Quest.CanMove(map, P, P.X, P.Y, nx, ny))
             {
