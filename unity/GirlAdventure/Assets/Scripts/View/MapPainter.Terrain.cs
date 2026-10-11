@@ -30,39 +30,43 @@ namespace GirlAdventure.View
             var (lip, lipDark, top, bottom, strata) = CliffColors(Heights.Style(m.Kind));
             int W = WorldMap.W, Hh = WorldMap.H;
 
-            // 1) 높은 땅: 조금 밝게 (한 층마다 6%)
-            for (int y = 0; y < Hh; y++)
-                for (int x = 0; x < W; x++)
-                {
-                    int lv = m.Level(x, y);
-                    if (lv <= 0) continue;
-                    float k = 1 + .06f * lv;
-                    for (int py = 0; py < T; py++)
-                        for (int px = 0; px < T; px++)
-                        {
-                            var c = R.Get(x * T + px, y * T + py);
-                            R.Blend(x * T + px, y * T + py, Mul(c, k));
-                        }
-                }
-
-            // 2) 가장자리: 옆·뒤쪽 높이 차이에 얇은 벽 + 빛 테두리
-            for (int y = 0; y < Hh; y++)
-                for (int x = 0; x < W; x++)
-                {
-                    int lv = m.Level(x, y);
-                    if (lv <= 0) continue;
-                    int X = x * T, Y = y * T;
-                    if (m.Level(x - 1, y) < lv && !Wall(m, x - 1, y)) EdgeV(R, X, Y, -1, lipDark, bottom);
-                    if (m.Level(x + 1, y) < lv && !Wall(m, x + 1, y)) EdgeV(R, X + T - 1, Y, 1, lipDark, bottom);
-                    if (m.Level(x, y - 1) < lv && !Wall(m, x, y - 1))               // 뒤쪽(북) 가장자리: 가는 빛 줄 + 바깥 그림자
-                        for (int px = 0; px < T; px++)
-                        {
-                            R.Blend(X + px, Y, lip, .9f);
-                            R.Blend(X + px, Y + 1, lip, .5f);
-                            R.Blend(X + px, Y - 1, new Color32(0, 0, 0, 90));
-                            R.Blend(X + px, Y - 2, new Color32(0, 0, 0, 45));
-                        }
-                }
+            // 1)·2) 높은 땅 모양을 부드럽게 (2026-10-11 사용자 "언덕 경계가 자연스럽게"): 칸 네모 대신 노이즈로 흔든 경계를 따라
+            //       높은 땅은 조금 밝게(층마다 6%), 경계 안쪽엔 빛 테두리, 바깥엔 그림자. 벽·숲·바위 쪽 경계는 그리지 않는다.
+            //       절벽면 쪽(남쪽) 경계는 절벽이 맡는다 (3).
+            int maxLv = 0;
+            for (int y = 0; y < Hh; y++) for (int x = 0; x < W; x++) maxLv = Mathf.Max(maxLv, m.Level(x, y));
+            var wallM = Mask(m, "#TRP");
+            for (int L = 1; L <= maxLv; L++)
+            {
+                var mk = new float[W, Hh];
+                for (int y = 0; y < Hh; y++) for (int x = 0; x < W; x++) mk[x, y] = m.Level(x, y) >= L ? 1 : 0;
+                for (int y = 0; y < Hh; y++)
+                    for (int x = 0; x < W; x++)
+                    {
+                        bool near = false;
+                        for (int dy = -1; dy <= 1 && !near; dy++) for (int dx = -1; dx <= 1 && !near; dx++) near = m.Level(x + dx, y + dy) >= L;
+                        if (!near) continue;
+                        bool faceHere = m.IsFace(x, y) && m.Level(x, y - 1) >= L;            // 이 층의 절벽면 칸 (절벽이 그린다)
+                        bool aboveFace = m.Level(x, y) >= L && m.IsFace(x, y + 1);           // 절벽면 바로 위 칸: 아래쪽 반은 늘 높은 땅
+                        int X = x * T, Y = y * T;
+                        for (int py = 0; py < T; py++)
+                            for (int px = 0; px < T; px++)
+                            {
+                                int gx = X + px, gy = Y + py;
+                                if (faceHere) continue;
+                                float wob = (Noise(gx / 13f, gy / 13f, 700 + L) - .5f) * 18;
+                                float sv = Soft(mk, gx + wob, gy + wob * .6f);
+                                if (aboveFace && py >= T / 2) sv = 1;
+                                bool wall = Soft(wallM, gx, gy) > .35f;
+                                if (sv >= .5f)
+                                {
+                                    R.Blend(gx, gy, Mul(R.Get(gx, gy), 1.06f));
+                                    if (sv < .62f && !wall) R.Blend(gx, gy, lip, .55f * (1 - (sv - .5f) / .12f));      // 빛 테두리
+                                }
+                                else if (sv > .3f && !wall) R.Blend(gx, gy, new Color32(0, 0, 0, (byte)(85 * (sv - .3f) / .2f)));   // 바깥 그림자
+                            }
+                    }
+            }
 
             // 3) 절벽면 (높은 땅 바로 아래 칸) · 계단
             for (int y = 0; y < Hh; y++)
@@ -118,6 +122,8 @@ namespace GirlAdventure.View
                     float n = Fbm(gx * 1.6f, gy * 3.2f, 501);
                     float edge = leftEnd ? px : rightEnd ? T - 1 - px : 99;
                     if (edge < 10 && py > 6 + edge * 3.5f) continue;                                // 끝 칸은 둥글게
+                    int bcut = T - 1 - (int)(6 * Noise(gx / 9f, y * 5 + 1, 704));                  // 땅에 닿는 선 울퉁불퉁
+                    if (!wood && py > bcut) continue;
                     // 처마: 아래 가장자리가 들쭉날쭉 (나무 단상은 반듯하게)
                     float lipH = wood ? 7 : 5 + 4 * Noise(gx / 6f, 3, 502) + (Hash(gx / 3, 7, 506) > .8f ? 3 : 0);
                     Color32 c;
@@ -157,7 +163,7 @@ namespace GirlAdventure.View
                             }
                             if (style == "basalt" && Mathf.Abs(Noise(gx / 9f, gy / 9f, 513) - .5f) < .025f) c = Lerp(c, H("#FF8A2A"), .75f);   // 용암 금
                         }
-                        if (py > T - 5) c = Mul(c, .72f);                                            // 바닥에 닿는 어두운 줄
+                        if (py > (wood ? T - 5 : bcut - 4)) c = Mul(c, .72f);                          // 바닥에 닿는 어두운 줄
                         if (edge < 6) c = Mul(c, .8f);
                     }
                     R.Blend(gx, gy, c);
@@ -188,9 +194,27 @@ namespace GirlAdventure.View
                         for (int dx = -2; dx <= 2; dx++) if (Mathf.Abs(dx) <= w) R.Blend(ix + dx, Y + 6 + i, dx < 0 ? H("#FFFFFF", 230) : H("#CFE6F8", 220));
                     }
                 }
+            if (!wood)                                                                              // 높은 땅이 처마처럼 덮는다 (위 줄 땅 무늬를 끌어내림)
+                for (int px = 0; px < T; px++)
+                {
+                    int gx = X + px;
+                    float edge = leftEnd ? px : rightEnd ? T - 1 - px : 99;
+                    if (edge < 4) continue;
+                    int d = 3 + (int)(8 * Noise(gx / 7f, y * 3 + 2, 703));
+                    for (int i = 0; i < d; i++)
+                    {
+                        var src = R.Get(gx, Y - 1 - ((d - i) % 7));
+                        R.Blend(gx, Y + i, Mul(src, 1 - .12f * i / d));
+                    }
+                    R.Blend(gx, Y + d, new Color32(0, 0, 0, 95));
+                    R.Blend(gx, Y + d + 1, new Color32(0, 0, 0, 45));
+                }
             for (int px = 0; px < T; px++)                                                          // 아래 칸에 드리운 그림자
+            {
+                int gx = X + px, b0 = wood ? T : T - (int)(6 * Noise(gx / 9f, y * 5 + 1, 704));
                 for (int i = 0; i < 9; i++)
-                    R.Blend(X + px, Y + T + i, new Color32(0, 0, 0, (byte)(70 - i * 7)));
+                    R.Blend(gx, Y + b0 + i, new Color32(0, 0, 0, (byte)(70 - i * 7)));
+            }
         }
 
         /// <summary>계단 한 칸: 양옆 벽 + 디딤돌 네 단 (단마다 윗면 밝고 앞면 어둡게).</summary>

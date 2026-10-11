@@ -9,7 +9,7 @@ namespace GirlAdventure.EditorTools
         static readonly HashSet<string> storyDos = new HashSet<string>
         {
             "talk", "say", "flag", "unflag", "count", "give", "gold", "candy", "heal", "sfx", "sparkle", "note", "photo", "photo_shot",
-            "ask", "need", "label", "jump", "end", "battle", "flash", "wait",
+            "ask", "need", "label", "jump", "end", "battle", "flash", "wait", "cutin",
         };
 
         /// <summary>조건 글의 낱말이 모두 아는 낱말인지 (모르는 낱말은 늘 틀림이 되어 이야기가 영영 안 나온다).</summary>
@@ -158,6 +158,19 @@ namespace GirlAdventure.EditorTools
             }
             Check("postman: 4 stamps -> mail bag", Stories.Count(p, "post") == 4 && p.Gear.Contains("mail_bag"), Stories.Count(p, "post").ToString());
             Check("postman: idle talk after", Stories.OnTalk("post4", p) == null);
+
+            // 이어지는 부탁: 대장장이 젤리 (찾기 부탁 끝 → 불새 3 → 국자 배달 → 브로치). 온천지기의 사냥 부탁을 안 받아도 국자 전하기가 먼저
+            p = new PlayerState { Chapter = 4 };
+            Check("chain: waits for the find quest", Stories.OnTalk("smith", p) == null || Stories.OnTalk("smith", p).Id.StartsWith("lunch"));
+            p.Opened.Add("q_lavastones_done");
+            Talk("smith", p);
+            var bird = GameData.EnemyByName("불새");
+            for (int i = 0; i < 3; i++) foreach (var s in Stories.OnWin(bird, p)) Run(s, p, true);
+            Talk("smith", p);
+            Check("chain: delivery beats the springkeeper's own request", Stories.OnTalk("springkeeper", p)?.Id == "smith2_give", Stories.OnTalk("springkeeper", p)?.Id);
+            Talk("springkeeper", p);
+            Talk("smith", p);
+            Check("chain: three requests → smith charm", p.Gear.Contains("smith_charm") && Stories.Flag(p, "smith_done") && Stories.Finished(FindErrand("smith"), p));
 
             // 조건 낱말
             p = new PlayerState();

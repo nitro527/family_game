@@ -90,6 +90,7 @@ namespace GirlAdventure.Sim
         public bool InVillage;              // 별빛 마을 맵 안 (챕터 1)
         public bool Underground;            // 지하세계 안 (숨겨진 구멍으로 내려옴)
         public bool InDungeon;              // 챕터 던전 안 (chapters.json Dungeon)
+        [NonSerialized] public bool InCellar;   // 지하실 안 (Home = 위층 집 — 저장하면 그 집 문 앞에서 다시 시작)
         public List<string> Items = new List<string>();     // 중요 아이템 id (예: "key")
         public List<string> Opened = new List<string>();    // 연 보물상자 "x,y"
         public List<string> Gear = new List<string>();      // 가진 장비 id

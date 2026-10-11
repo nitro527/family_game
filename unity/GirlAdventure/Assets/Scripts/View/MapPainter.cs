@@ -1201,6 +1201,7 @@ namespace GirlAdventure.View
                 {
                     char c = m.At(x, y);
                     float X = x * T, Y = y * T;
+                    if (c == 'd') { Hatch(R, X, Y); continue; }                            // 지하실 뚜껑문 (MapPainter.Dungeons.cs)
                     if (c == 'k' && m.At(x, y + 1) == 'k')
                     {
                         R.Ellipse(X + T / 2 + 4, Y + 2 * T - 2, T / 2, 8, new Color32(0, 0, 0, 60));

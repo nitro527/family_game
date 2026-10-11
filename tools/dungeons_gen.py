@@ -207,7 +207,27 @@ def oak():
                    [(4, 12, "moon", 3, 0), (30, 7, "potion", 4, 400)], "forest_beetle", (17, 2), style="forest")
 
 
-ALL = [castle, fort, canyon, volcano, icecave, archive, oak]
+def cellar():
+    """지하실 (챕터와 상관없음, 별빛 마을 첫 집 뚜껑문): 사다리 아래 단 → 계단 → 가운데 창고(쉼터, 통·장작) → 서쪽·동쪽 젤리 굴(상자)."""
+    g = Grid()
+    g.rect(15, 5, 20, 8, ':')              # 사다리 아래 단 (8줄 = 계단 줄)
+    g.rect(9, 9, 26, 15, ':')              # 가운데 창고
+    g.rect(3, 11, 8, 19, '_')              # 서쪽 젤리 굴
+    g.rect(27, 9, 32, 17, '_')             # 동쪽 젤리 굴
+    g.rect(9, 16, 12, 19, '_')
+    g.put(17, 4, 'E')                      # 사다리 (위 집으로)
+    g.puts([(9, 9), (26, 9), (9, 15), (26, 15), (13, 9), (22, 9), (30, 10)], 'r')   # 통·장작 (오브젝트가 그림)
+    g.puts([(15, 5), (20, 5), (4, 11), (32, 9)], 'l')
+    g.put(21, 11, 'S')
+    g.put(4, 18, 'H').put(31, 16, 'H')
+    deco = [{"Id": "cellar_deco_%d_%d" % (x, y), "X": x, "Y": y, "Layers": [{"Prop": p}]}
+            for (x, y), p in [((9, 9), "barrels"), ((26, 9), "woodpile"), ((9, 15), "barrels"), ((26, 15), "pot"), ((13, 9), "woodpile"), ((22, 9), "barrels"), ((30, 10), "pot")]]
+    return dungeon("Cellar", "할머니의 지하 창고", "cellar", 0, g, (17, 5), (-1, -1), (21, 11),
+                   [(4, 18, "potion", 2, 30), (31, 16, "moon", 1, 0)], None, None,
+                   raise_=[(15, 4, 20, 7, 1)], stairs=["17,8", "18,8"], style="wood", extras=deco)
+
+
+ALL = [castle, fort, canyon, volcano, icecave, archive, oak, cellar]
 
 
 def write_json_lines(path, head_keys, list_key, items, rows_key=None):
@@ -258,10 +278,11 @@ def main():
     for d in ds:
         for e in d['_extras']:
             new.append(dict(e, Map=d['Kind']))
-        bx, by = d['_boss_at']
-        new.append({"Id": "boss_" + d['Kind'].lower(), "Map": d['Kind'], "X": bx, "Y": by,
-                    "Layers": [{"Art": "Monsters/" + d['_boss'], "Height": d['_boss_h'], "Dx": 0.5, "Dy": 0.05, "Anim": "breathe",
-                                "ShowIf": "!BossDown" if d['Chapter'] == 1 else "!Boss%dDown" % d['Chapter']}]})
+        if d['_boss']:                     # 보스 그림 (지하실처럼 보스가 없는 곳은 빼고)
+            bx, by = d['_boss_at']
+            new.append({"Id": "boss_" + d['Kind'].lower(), "Map": d['Kind'], "X": bx, "Y": by,
+                        "Layers": [{"Art": "Monsters/" + d['_boss'], "Height": d['_boss_h'], "Dx": 0.5, "Dy": 0.05, "Anim": "breathe",
+                                    "ShowIf": "!BossDown" if d['Chapter'] == 1 else "!Boss%dDown" % d['Chapter']}]})
         for c in d['Chests']:
             oid = "dch_%s_%d_%d" % (d['Kind'], c['X'], c['Y'])
             new.append({"Id": "chest_" + oid, "Map": d['Kind'], "X": c['X'], "Y": c['Y'],

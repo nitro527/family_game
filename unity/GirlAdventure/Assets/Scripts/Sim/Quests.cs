@@ -68,7 +68,7 @@ namespace GirlAdventure.Sim
 
         public static MapKind KindOf(string map) => map == "cave" ? MapKind.Cave : map == "desert" ? MapKind.Desert : map == "lava" ? MapKind.Lava
             : map == "snow" ? MapKind.Snow : map == "library" ? MapKind.Library : map == "forest" ? MapKind.Forest : map == "village" ? MapKind.Village
-            : map == "oasis" ? MapKind.Oasis : map == "lavatown" ? MapKind.LavaTown : map == "snowtown" ? MapKind.SnowTown : map == "under" ? MapKind.Underworld : MapKind.Field;
+            : map == "oasis" ? MapKind.Oasis : map == "lavatown" ? MapKind.LavaTown : map == "snowtown" ? MapKind.SnowTown : map == "under" ? MapKind.Underworld : map == "cellar" ? MapKind.Cellar : MapKind.Field;
 
         static List<(int x, int y)> Parse(string s)
         {

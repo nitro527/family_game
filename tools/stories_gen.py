@@ -8,8 +8,8 @@ def T(id, *lines):
     talks.append({"Id": id, "Lines": [{"Text": l, "Face": "smile"} if isinstance(l, str) else {"Text": l[0], "Face": l[1]} for l in lines]})
     return id
 
-def S(id, on, steps, need="", ch=0, repeat=False):
-    stories.append({"Id": id, "On": on, "Need": need, "Chapter": ch, "Repeat": repeat, "Steps": steps})
+def S(id, on, steps, need="", ch=0, repeat=False, pri=0):
+    stories.append({"Id": id, "On": on, "Need": need, "Chapter": ch, "Repeat": repeat, "Priority": pri, "Steps": steps})
 
 def st(do, a=None, b=None, n=0):
     d = {"Do": do}
@@ -48,7 +48,7 @@ def deliver(id, ch, giver, gname, to, toname, thing, ask, given, thanks, rewards
         st("note", f"새 부탁: {title}"), st("end"), st("label", "no"), st("talk", f"st_{id}_no")],
       need=f"!flag_{id}_on" + ("," + need if need else ""), ch=ch, repeat=True)
     S(f"{id}_give", f"talk:{to}", [st("sfx", "select"), st("talk", f"st_{id}_give"), st("flag", f"{id}_given"),
-        st("note", f"{gname}에게 알려 주자")], need=f"flag_{id}_on,!flag_{id}_given", ch=ch)
+        st("note", f"{gname}에게 알려 주자")], need=f"flag_{id}_on,!flag_{id}_given", ch=ch, pri=2)
     S(f"{id}_wait", f"talk:{giver}", [st("talk", f"st_{id}_wait")], need=f"flag_{id}_on,!flag_{id}_given", ch=ch, repeat=True)
     S(f"{id}_thanks", f"talk:{giver}", [st("sfx", "chest"), st("talk", f"st_{id}_thanks")] + rewards
       + [st("flag", f"{id}_done"), st("note", f"부탁 끝: {title}")], need=f"flag_{id}_given,!flag_{id}_done", ch=ch)
@@ -113,7 +113,7 @@ for id, ch, m, (x, y), title, cap, wow in album:
     S(f"photo_{id}", f"step:{m}:{x},{y}", [
         st("ask", f"st_photo_{id}", "찰칵! 찍자|다음에"), st("photo_shot"), st("photo", id), st("talk", f"st_photo_{id}_done"),
         st("note", f"가족 앨범: {title} ({{photos}}/7)"),
-        st("need", "photos>=7,!flag_album_done"), st("sfx", "lvup"), st("talk", "st_album_full"), give("family_locket"),
+        st("need", "photos>=7,!flag_album_done"), st("sfx", "lvup"), st("cutin", "Cards/ch6_clear", "가족 앨범 완성!"), st("talk", "st_album_full"), give("family_locket"),
         st("flag", "album_done"), st("note", "부탁 끝: 가족 앨범 완성!"), st("end"),
         st("label", "no"), st("talk", "st_photo_no")], need=f"!photo_{id}", ch=ch, repeat=True)
 errands.append({"Id": "album", "Kind": "앨범", "Title": "가족 앨범 모으기", "Show": "photos>=1", "Done": "flag_album_done",
@@ -147,7 +147,7 @@ for id, ch, town, to, toname, sender, read in post:
         st("label", "no"), st("talk", "st_post_no")], need=f"!flag_{id}_on", ch=ch, repeat=True)
     S(f"{id}_wait", f"talk:{id}", [st("talk", "st_post_wait")], need=f"flag_{id}_on,!flag_{id}_given", ch=ch, repeat=True)
     S(f"{id}_give", f"talk:{to}", [st("sfx", "select"), st("talk", f"st_{id}_give"), st("flag", f"{id}_given"),
-        st("note", "우체부 젤리에게 알려 주자")], need=f"flag_{id}_on,!flag_{id}_given", ch=ch)
+        st("note", "우체부 젤리에게 알려 주자")], need=f"flag_{id}_on,!flag_{id}_given", ch=ch, pri=2)
     S(f"{id}_thanks", f"talk:{id}", [st("count", "post"), st("sfx", "coin"), st("talk", "st_post_thanks"), gold(50 * ch),
         st("flag", f"{id}_done"), st("note", "배달 도장 ({cnt:post}/4)"),
         st("need", "cnt_post>=4,!flag_post_gift"), st("sfx", "lvup"), st("talk", "st_post_full"), give("mail_bag"),
@@ -163,6 +163,52 @@ T("st_wish_no", "다음에 빌어야지.")
 S("wish", "bump:village:18,10", [st("ask", "st_wish_ask", "10골드 던지기|그만두기"), st("need", "gold>=10", "no"),
     st("gold", None, None, -10), st("sfx", "coin"), st("talk", "st_wish_yes"), give("candy", 2), st("sparkle"), st("flag", "wished"), st("end"),
     st("label", "no"), st("talk", "st_wish_no")], need="!flag_wished", ch=1, repeat=True)
+
+# ---------------------------------------------------------------- 이어지는 부탁 (챕터 4 대장장이 젤리: 찾기 부탁을 끝낸 뒤 세 단계)
+T("st_smith1_ask", ("대장장이 젤리: 용암석 고마웠어! 그런데 하나 더… 불새 깃털이 있으면 더 좋은 걸 만들 수 있거든.", "surprised"),
+  "대장장이 젤리: 불새 세 마리만 혼내 주면 깃털을 떨어뜨릴 거야. 부탁해!")
+T("st_smith1_wait", "대장장이 젤리: 불새 깃털, 지금 {cnt:firebird}개야. 세 개면 돼!")
+T("st_smith2_ask", ("대장장이 젤리: 깃털 세 개! 좋아, 이걸로 새 국자를 만들었어.", "laugh"),
+  "대장장이 젤리: 온천지기 젤리가 국자를 부러뜨렸대. 이 새 국자 좀 갖다줄래?")
+T("st_smith2_give", "온천지기 젤리에게 반짝반짝 새 국자를 건넸다.", ("온천지기 젤리: 우와, 불새 깃털 무늬 국자! 온천물이 더 따뜻해질 것 같아!", "laugh"))
+T("st_smith2_wait", "대장장이 젤리: 국자는 온천지기 젤리에게 전해 줬어?")
+T("st_smith3", ("대장장이 젤리: 다 해 줬구나! 너희 가족은 정말 든든해.", "laugh"),
+  ("대장장이 젤리: 답례로 불꽃 망치 브로치를 만들었어. 뜨거운 불길도 끄떡없을 거야!", "laugh"), ("불꽃 망치 브로치를 받았다!", "laugh"))
+S("smith1_ask", "talk:smith", [st("talk", "st_smith1_ask"), st("flag", "smith1_on"), st("note", "새 부탁: 불새 깃털 세 개")],
+  need="opened_q_lavastones_done,!flag_smith1_on", ch=4)
+S("smith1_win", "win:불새", [st("count", "firebird"), st("need", "cnt_firebird>=3", "more"), st("note", "불새 깃털 세 개! 대장장이 젤리에게 가자"), st("end"),
+  st("label", "more"), st("note", "불새 깃털 ({cnt:firebird}/3)")], need="flag_smith1_on,!cnt_firebird>=3", ch=4, repeat=True)
+S("smith1_wait", "talk:smith", [st("talk", "st_smith1_wait")], need="flag_smith1_on,!cnt_firebird>=3", ch=4, repeat=True)
+S("smith2_ask", "talk:smith", [st("talk", "st_smith2_ask"), st("flag", "smith2_on"), st("note", "새 부탁: 온천지기 젤리에게 새 국자")],
+  need="flag_smith1_on,cnt_firebird>=3,!flag_smith2_on", ch=4)
+S("smith2_give", "talk:springkeeper", [st("sfx", "select"), st("talk", "st_smith2_give"), st("flag", "smith2_given"), st("note", "대장장이 젤리에게 알려 주자")],
+  need="flag_smith2_on,!flag_smith2_given", ch=4, pri=2)
+S("smith2_wait", "talk:smith", [st("talk", "st_smith2_wait")], need="flag_smith2_on,!flag_smith2_given", ch=4, repeat=True)
+S("smith3", "talk:smith", [st("sfx", "lvup"), st("talk", "st_smith3"), give("smith_charm"), st("flag", "smith_done"), st("note", "부탁 끝: 대장장이 젤리의 세 가지 부탁")],
+  need="flag_smith2_given,!flag_smith_done", ch=4)
+errands.append({"Id": "smith", "Kind": "이어짐", "Title": "대장장이 젤리의 세 가지 부탁", "Show": "flag_smith1_on", "Done": "flag_smith_done",
+                "Count": "", "Goal": 0, "Reward": "smith_charm"})
+
+# ---------------------------------------------------------------- 맵 반응 (작은 장면)
+T("st_snowman_ask", "쉼터 눈사람이 모자도 없이 추워 보인다. 털모자를 씌워 줄까?")
+T("st_snowman_yes", ("눈사람에게 털모자를 씌워 줬다! 눈사람이 방긋 웃는 것 같다.", "laugh"), ("…눈사람 발밑에서 반짝! 누가 두고 간 달님 사탕이다!", "surprised"))
+S("snowman_hat", "bump:snow:3,18", [st("ask", "st_snowman_ask", "씌워 주자!|그냥 두자"), st("sfx", "star"), st("talk", "st_snowman_yes"), give("moon", 1), st("sparkle"),
+  st("flag", "snowman_hat"), st("end"), st("label", "no")], need="!flag_snowman_hat", ch=5, repeat=True)
+T("st_shelfnote", ("책장 틈에 쪽지가 끼어 있다.", "surprised"), "\"악마들은 촛불을 무서워한다. 마법진의 주인이 오면 문이 열릴 것이다.\" …엄마 이야기일까?",
+  ("쪽지 뒤에 동전이 붙어 있었다!", "laugh"))
+S("shelf_note", "bump:library:9,7", [st("sfx", "peek"), st("talk", "st_shelfnote"), st("gold", None, None, 100)], ch=6)
+T("st_hotspring", ("온천물에 손을 담가 보았다. 따끈따끈~ 몸이 사르르 녹는다.", "laugh"), ("모두 기운이 났다!", "laugh"))
+S("hotspring_hands", "bump:lavatown:19,9", [st("sfx", "heal"), st("talk", "st_hotspring"), st("heal")], ch=4)
+
+# ---------------------------------------------------------------- 지하실 통 속 젤리 (싸우기 차례)
+T("st_barrel", ("통 뚜껑이 들썩들썩… 앗, 통 속에서 젤리가 튀어나왔다!", "surprised"))
+T("st_barrel_won", ("장난꾸러기 큰 분홍 젤리가 통에서 몰래 사과를 먹고 있었나 봐.", "smile"), ("통 바닥에 할머니가 숨겨 둔 비상금이 있었다!", "laugh"))
+S("cellar_barrel", "bump:cellar:9,15", [st("talk", "st_barrel"), st("flag", "cellar_barrel"), st("battle", "큰 분홍 젤리")], need="!flag_cellar_barrel")
+S("cellar_barrel_won", "win:큰 분홍 젤리", [st("talk", "st_barrel_won"), st("gold", None, None, 80), st("flag", "cellar_barrel_won")],
+  need="flag_cellar_barrel,!flag_cellar_barrel_won")
+
+T("st_jam", ("오래된 잼 단지다. 뚜껑에 \"우리 손주들 몰래 먹지 말 것\"이라고 적혀 있다…", "surprised"), ("…한 숟가락만! 달콤해서 기운이 났다. 사탕도 하나 숨겨져 있었다!", "laugh"))
+S("cellar_jam", "bump:cellar:30,10", [st("sfx", "coin"), st("talk", "st_jam"), st("heal"), give("candy", 1), st("sparkle")])
 
 data = {"_doc": "이야기 장면·부탁 수첩·가족 앨범 (Sim/Stories.cs 가 읽는다, 2026-10-11). 내용은 모두 임시 — docs/EVENTS_PLAN.md. tools/stories_gen.py 로 만든다 — 손으로 고치지 말고 스크립트를 고쳐서 다시 만들기.",
         "Stories": stories, "Errands": errands, "Photos": photos, "Talks": talks}

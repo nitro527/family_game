@@ -88,6 +88,8 @@
     { "Id": "sign_archive", "Lines": [{ "Text": "금지된 서고 — 책장 사이 틈으로만 위층에 갈 수 있어요", "Face": "smile" }] },
     { "Id": "oak_enter", "Lines": [{ "Text": "고목 구멍 안이 이렇게 넓다니! 뿌리 사이로 길이 빙글빙글 올라가.", "Face": "surprised" }, { "Text": "장수풍뎅이 대장은 꼭대기 빛 아래에 있대. 위로위로 가 보자!", "Face": "smile" }] },
     { "Id": "sign_oak", "Lines": [{ "Text": "큰 고목 속 — 꼭대기로! (동쪽 → 서쪽 → 위)", "Face": "smile" }] },
+    { "Id": "cellar_enter", "Lines": [{ "Text": "삐걱… 사다리를 타고 내려왔다. 집 아래에 이렇게 큰 지하 창고가 있었다니!", "Face": "surprised" }, { "Text": "어둠 속에서 뭔가 꼼지락… 장난꾸러기 젤리들이 숨어 사나 봐. 계단 아래 창고를 둘러보자!", "Face": "smile" }] },
+    { "Id": "sign_cellar", "Lines": [{ "Text": "할머니의 지하 창고 — 사과·잼·감자 (젤리 출입 금지!)", "Face": "smile" }] },
     { "Id": "castle_enter", "Lines": [
       { "Text": "성 안은 어둡고 조용해… 횃불만 일렁일렁.", "Face": "surprised" },
       { "Text": "킹 젤리는 맨 안쪽 옥좌에 있을 거야. 그런데 큰 홀에서 옥좌로 가는 문이 막혀 있대. 다른 길을 찾아보자!", "Face": "smile" } ] },

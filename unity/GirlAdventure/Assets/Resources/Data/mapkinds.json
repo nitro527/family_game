@@ -20,6 +20,7 @@
   {"Kind": "VolcanoIn", "Song": "dungeon", "Backdrop": "lava", "SignTalk": "sign_volcano", "CaveLike": true, "Edge": "#", "TimidLevel": 22, "Zone": "volcano", "Enemies": "Lava", "Shop": "lavatown"},
   {"Kind": "IceCave", "Song": "dungeon", "Backdrop": "snow", "SignTalk": "sign_icecave", "CaveLike": true, "Edge": "#", "TimidLevel": 26, "Zone": "icecave", "Enemies": "Snow", "Shop": "snowtown"},
   {"Kind": "Archive", "Song": "dungeon", "Backdrop": "library", "SignTalk": "sign_archive", "CaveLike": true, "Edge": "#", "TimidLevel": 29, "Zone": "archive", "Enemies": "Library", "Shop": "library"},
-  {"Kind": "OakHollow", "Song": "dungeon", "Backdrop": "forest", "SignTalk": "sign_oak", "CaveLike": true, "Edge": "#", "TimidLevel": 32, "Zone": "oak", "Enemies": "Forest", "Shop": "forest"}
+  {"Kind": "OakHollow", "Song": "dungeon", "Backdrop": "forest", "SignTalk": "sign_oak", "CaveLike": true, "Edge": "#", "TimidLevel": 32, "Zone": "oak", "Enemies": "Forest", "Shop": "forest"},
+  {"Kind": "Cellar", "Song": "cave", "Backdrop": "cave", "SignTalk": "sign_cellar", "CaveLike": true, "Edge": "#", "TimidLevel": 5, "Zone": "cellar", "Enemies": "Normal", "Shop": "village"}
  ]
 }

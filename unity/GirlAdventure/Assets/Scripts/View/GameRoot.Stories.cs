@@ -50,6 +50,11 @@ namespace GirlAdventure.View
                     case "jump": i = Jump(s, st.A); break;
                     case "end": i = s.Steps.Length; break;
                     case "photo_shot": yield return PhotoShot(); break;
+                    case "cutin":
+                        HideMessage();
+                        var art = string.IsNullOrEmpty(st.A) ? null : Resources.Load<Sprite>(st.A) ?? SpriteFromTexture(st.A);
+                        yield return CutinRoutine(art, string.IsNullOrEmpty(st.B) ? null : StoryCounts(st.B));
+                        break;
                     case "battle":
                         var def = GameData.EnemyByName(st.A);
                         if (def != null && Current == Mode.Field) { HideMessage(); StoryCount++; yield return BattleRoutine(def); yield break; }
@@ -72,6 +77,13 @@ namespace GirlAdventure.View
                 t = t.Substring(0, at) + Stories.Count(P, t.Substring(at + 5, end - at - 5)) + t.Substring(end + 1);
             }
             return t;
+        }
+
+        /// <summary>Resources 텍스처를 스프라이트로 (컷인 그림 — 카드 그림 등).</summary>
+        static Sprite SpriteFromTexture(string path)
+        {
+            var t = Resources.Load<Texture2D>(path);
+            return t == null ? null : Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(.5f, .5f), 100);
         }
 
         /// <summary>표시로 건너뛰기 (for 문의 i++ 를 생각해 표시 칸 그대로 돌려준다, 없으면 끝).</summary>

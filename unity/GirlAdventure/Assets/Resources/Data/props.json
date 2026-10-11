@@ -143,6 +143,15 @@
   {"Id": "boss_oakhollow", "Map": "OakHollow", "X": 17, "Y": 2, "Layers": [{"Art": "Monsters/forest_beetle", "Height": 2.3, "Dx": 0.5, "Dy": 0.05, "Anim": "breathe", "ShowIf": "!Boss7Down"}]},
   {"Id": "chest_dch_OakHollow_4_12", "Map": "OakHollow", "X": 4, "Y": 12, "Layers": [{"Prop": "chest", "ShowIf": "!Opened:dch_OakHollow_4_12"}, {"Prop": "chest_open", "ShowIf": "Opened:dch_OakHollow_4_12"}]},
   {"Id": "chest_dch_OakHollow_30_7", "Map": "OakHollow", "X": 30, "Y": 7, "Layers": [{"Prop": "chest", "ShowIf": "!Opened:dch_OakHollow_30_7"}, {"Prop": "chest_open", "ShowIf": "Opened:dch_OakHollow_30_7"}]},
+  {"Id": "cellar_deco_9_9", "X": 9, "Y": 9, "Layers": [{"Prop": "barrels"}], "Map": "Cellar"},
+  {"Id": "cellar_deco_26_9", "X": 26, "Y": 9, "Layers": [{"Prop": "woodpile"}], "Map": "Cellar"},
+  {"Id": "cellar_deco_9_15", "X": 9, "Y": 15, "Layers": [{"Prop": "barrels"}], "Map": "Cellar"},
+  {"Id": "cellar_deco_26_15", "X": 26, "Y": 15, "Layers": [{"Prop": "pot"}], "Map": "Cellar"},
+  {"Id": "cellar_deco_13_9", "X": 13, "Y": 9, "Layers": [{"Prop": "woodpile"}], "Map": "Cellar"},
+  {"Id": "cellar_deco_22_9", "X": 22, "Y": 9, "Layers": [{"Prop": "barrels"}], "Map": "Cellar"},
+  {"Id": "cellar_deco_30_10", "X": 30, "Y": 10, "Layers": [{"Prop": "pot"}], "Map": "Cellar"},
+  {"Id": "chest_dch_Cellar_4_18", "Map": "Cellar", "X": 4, "Y": 18, "Layers": [{"Prop": "chest", "ShowIf": "!Opened:dch_Cellar_4_18"}, {"Prop": "chest_open", "ShowIf": "Opened:dch_Cellar_4_18"}]},
+  {"Id": "chest_dch_Cellar_31_16", "Map": "Cellar", "X": 31, "Y": 16, "Layers": [{"Prop": "chest", "ShowIf": "!Opened:dch_Cellar_31_16"}, {"Prop": "chest_open", "ShowIf": "Opened:dch_Cellar_31_16"}]},
   {"Id": "bro_cage", "Map": "Cave", "X": 26, "Y": 3, "Layers": [{"Prop": "cage", "PivotX": 0.4407, "Dy": -0.06, "Z": 0.002, "ShowIf": "!BrotherJoined"}, {"Prop": "cage_open", "PivotX": 0.4407, "Dy": -0.06, "Z": 0.002, "ShowIf": "BrotherJoined"}, {"Art": "Boy/walk_front", "Height": 1.085, "Dy": 0.06, "ShowIf": "!BrotherJoined", "Tint": "#211A2EEB", "TintIf": "!Boss2Down", "Anim": "sob", "Anim2": "cheer", "AnimIf": "Boss2Down"}, {"Prop": "cage_bars", "PivotX": 0.4407, "Dy": -0.06, "Z": -0.002, "ShowIf": "!BrotherJoined"}]},
   {"Id": "mom_circle", "Map": "Library", "X": 17, "Y": 3, "Layers": [{"Art": "Mom/walk_front", "Height": 1.96, "Dy": 0.35, "Z": 0.0035, "ShowIf": "!MomJoined"}]}
  ]

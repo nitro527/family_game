@@ -37,7 +37,7 @@ namespace GirlAdventure.View
             cam = Camera.main;
             if (cam == null) cam = new GameObject("Main Camera", typeof(Camera)).GetComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 5.625f;          // 세로 11.25 유닛 = 540px / 48
+            cam.orthographicSize = BaseOrtho;       // 세로 11.25 유닛 = 540px / 48
             cam.backgroundColor = Color.black;
             cam.clearFlags = CameraClearFlags.SolidColor;
             sfx = gameObject.AddComponent<Sfx>();
@@ -56,7 +56,7 @@ namespace GirlAdventure.View
         {
             Keys.BeginFrame();
             TickBanner();
-            if (Current != Mode.Field) CameraFlat();       // 기울인 시점은 필드에서만
+            if (Current != Mode.Field) { CameraFlat(); cam.orthographicSize = BaseOrtho; }   // 기울인 시점·언덕 위 경치는 필드에서만
             if (Keys.Down(KeyCode.M) && !(Current == Mode.Title && nameInput.isFocused)) Pop($"음악 {bgm.CycleVolume()}%", 840, 60, Color.white, 28);
             switch (Current)
             {

@@ -41,12 +41,12 @@ namespace GirlAdventure.EditorTools
                     if (m.At(c.X, c.Y) != 'H') bad += $"{d.Kind}:chest data({c.X},{c.Y}) not 'H' ";
                     if (!string.IsNullOrEmpty(c.Item) && GameData.Item(c.Item) == null) bad += $"{d.Kind}:item {c.Item} ";
                 }
-                if (!boss || !exit) bad += $"{d.Kind}:needs B and E ";
+                if ((d.Chapter > 0 && !boss) || !exit) bad += $"{d.Kind}:needs B and E ";   // 지하실(챕터 0)은 보스 없음
                 if (m.EncounterRate(sp.x, sp.y) < 0) bad += $"{d.Kind}:rate ";
                 if (GameData.ListFor(d.Type).Length == 0) bad += $"{d.Kind}:enemies ";
                 bool art = false;
                 foreach (var o in PropCatalog.ObjectsOn(d.Type)) foreach (var l in o.Layers) if (!string.IsNullOrEmpty(l.Art) && l.Art.StartsWith("Monsters/")) art = true;
-                if (!art) bad += $"{d.Kind}:no boss sprite ";
+                if (!art && d.Chapter > 0) bad += $"{d.Kind}:no boss sprite ";
             }
             foreach (var c in Chapters.All)
             {
@@ -60,6 +60,11 @@ namespace GirlAdventure.EditorTools
                 if (c.BossMapKind != c.DungeonKind) bad += $"ch{c.No}:boss not in dungeon ";
                 if (!string.IsNullOrEmpty(c.DungeonTalk) && !GameData.HasTalk(c.DungeonTalk)) bad += $"ch{c.No}:talk ";
                 if (!Dungeons.Has(c.DungeonKind.Value)) bad += $"ch{c.No}:dungeon data ";
+            }
+            {   // 지하실: 별빛 마을 첫 집 뚜껑문 칸이 바닥이고, 그 위 칸으로 올라온다
+                var h = WorldMap.Home(WorldMap.CellarRoom);
+                var (hx, hy) = WorldMap.CellarHatch;
+                if (h.At(hx, hy) != 'd' || h.Blocked(hx, hy) || h.Blocked(hx, hy - 1) || !Dungeons.Has(MapKind.Cellar)) bad += "cellar:hatch ";
             }
             Check($"dungeons ({n}): map shape, spawn → boss/exit/chests reachable, chapter entry/exit, boss sprite", n > 0 && bad == "", bad);
 

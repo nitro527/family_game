@@ -30,6 +30,7 @@ namespace GirlAdventure.Sim
         public string Need;
         public int Chapter;
         public bool Repeat;
+        public int Priority;                    // 같은 사람에게 여러 장면이 맞으면 큰 것부터 (전하기·답례 장면이 새 부탁보다 먼저)
         public StoryStep[] Steps = new StoryStep[0];
 
         [NonSerialized] public string Kind, Key, MapName;
@@ -150,8 +151,9 @@ namespace GirlAdventure.Sim
         /// <summary>마을 사람에게 말 걸 때 볼 이야기 (평소 대사보다 먼저).</summary>
         public static StoryDef OnTalk(string npcId, PlayerState p)
         {
-            foreach (var s in stories) if (s.Kind == "talk" && s.Key == npcId && Ready(s, p)) return s;
-            return null;
+            StoryDef best = null;
+            foreach (var s in stories) if (s.Kind == "talk" && s.Key == npcId && Ready(s, p) && (best == null || s.Priority > best.Priority)) best = s;
+            return best;
         }
 
         /// <summary>이 적을 이겼을 때 볼 이야기들 (사냥 부탁 숫자 세기 등 — 여러 개일 수 있다).</summary>

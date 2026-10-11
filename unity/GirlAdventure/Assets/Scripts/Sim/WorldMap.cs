@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace GirlAdventure.Sim
 {
     public enum MapKind { Field, Cave, Village, Desert, Oasis, Underworld, Lava, LavaTown, Home, Snow, SnowTown, Library, Forest,
-                          Castle, Fort, Canyon, VolcanoIn, IceCave, Archive, OakHollow }   // 챕터 던전 (dungeons.json, 2026-10-11) — 던전이 생길 때마다 뒤에 하나씩
+                          Castle, Fort, Canyon, VolcanoIn, IceCave, Archive, OakHollow, Cellar }   // 챕터 던전 (dungeons.json, 2026-10-11) — 던전이 생길 때마다 뒤에 하나씩
 
     /// <summary>
     /// 맵 두 장: 챕터 1 초원(시드 고정 절차 생성), 챕터 2 동굴(손으로 배치). 타일 문자:
@@ -117,6 +117,9 @@ namespace GirlAdventure.Sim
         const string Blocking = "TwCFSHD#rMNhuxoRYpXtLKlc WkqaPnQZOvmJ";
         // 집 안 (P-5): 방 하나 (바닥 13..21 × 8..14), 아래 벽 가운데 문
         public static readonly (int x, int y) HomeDoor = (17, 15), HomeStart = (17, 14);
+        /// <summary>지하실 (2026-10-11 사용자 "언덕이나 지하실처럼 계단식"): 별빛 마을 첫 집 바닥 뚜껑문 → 지하 창고 (dungeons.json Cellar).</summary>
+        public const int CellarRoom = 0;
+        public static readonly (int x, int y) CellarHatch = (20, 12);
         /// <summary>그 마을의 집 문 칸 (집 3×2 의 아래 가운데) 이면 그 집 번호(AllHouses), 아니면 -1. 아래에서 위로 부딪히면 들어간다.</summary>
         public static int HouseAtDoor(MapKind town, int x, int y)
         {
@@ -336,6 +339,7 @@ namespace GirlAdventure.Sim
             m.Set(left ? 16 : 18, 7, 'q');
             m.Set(left ? 18 : 16, 11, 'a');
             m.Set(13, 14, 'v'); m.Set(21, 14, 'v');                        // 항아리 둘 (G-3, 아래 두 구석 — 살펴보면 한 번 작은 선물)
+            if (room == CellarRoom) m.Set(CellarHatch.x, CellarHatch.y, 'd');   // 지하실 뚜껑문 (2026-10-11 "지하실처럼")
             return m;
         }
 

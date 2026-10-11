@@ -56,6 +56,7 @@
     {"Id": "magic_quill", "Name": "마법 깃펜", "Kind": "acc", "Atk": 5, "Def": 4, "Price": 300, "Resist": "burn", "Shops": "treasure", "Desc": "책장 뒤 숨은 독서 공간에서 찾은 깃펜 — 끼고 있으면 가족 모두 화상을 안 입어요 (특별 아이템, 가게에는 없어요)"},
     {"Id": "frost_blade", "Name": "서리 장검", "Kind": "dad_weapon", "Atk": 10, "Price": 360, "Shops": "snowtown", "Desc": "서리가 반짝이는 아빠의 장검"},
     {"Id": "family_locket", "Name": "가족 사진 로켓", "Kind": "acc", "Atk": 4, "Def": 5, "Price": 300, "Perk": "dodge", "Shops": "treasure", "Desc": "가족 앨범 일곱 장을 모두 모으면 나오는 사진 목걸이 — 끼고 있으면 가족 모두 조금 더 잘 피해요 (특별 아이템, 가게에는 없어요)"},
-    {"Id": "mail_bag", "Name": "우체부 가방", "Kind": "acc", "Atk": 3, "Def": 3, "Price": 300, "Perk": "gold", "Shops": "treasure", "Desc": "떠돌이 우체부 젤리가 아끼던 가방 — 끼고 있으면 전투 골드가 25% 더 (특별 아이템, 가게에는 없어요)"}
+    {"Id": "mail_bag", "Name": "우체부 가방", "Kind": "acc", "Atk": 3, "Def": 3, "Price": 300, "Perk": "gold", "Shops": "treasure", "Desc": "떠돌이 우체부 젤리가 아끼던 가방 — 끼고 있으면 전투 골드가 25% 더 (특별 아이템, 가게에는 없어요)"},
+    {"Id": "smith_charm", "Name": "불꽃 망치 브로치", "Kind": "acc", "Atk": 6, "Def": 3, "Price": 300, "Resist": "burn", "Shops": "treasure", "Desc": "대장장이 젤리가 세 가지 부탁의 답례로 만들어 준 브로치 — 끼고 있으면 가족 모두 화상을 안 입어요 (특별 아이템, 가게에는 없어요)"}
   ]
 }

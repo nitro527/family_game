@@ -1,5 +1,5 @@
 {
- "_doc": "이야기 장면·부탁 수첩·가족 앨범 (Sim/Stories.cs 가 읽는다, 2026-10-11). 내용은 모두 임시 — docs/EVENTS_PLAN.md. tools 없이 scratchpad/make_stories.py 로 만들었다.",
+ "_doc": "이야기 장면·부탁 수첩·가족 앨범 (Sim/Stories.cs 가 읽는다, 2026-10-11). 내용은 모두 임시 — docs/EVENTS_PLAN.md. tools/stories_gen.py 로 만든다 — 손으로 고치지 말고 스크립트를 고쳐서 다시 만들기.",
  "Stories": [
   {
    "Id": "rabbit_ask",
@@ -7,6 +7,7 @@
    "Need": "!flag_rabbit_on",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -40,6 +41,7 @@
    "Need": "flag_rabbit_on,!flag_rabbit_done,!cnt_rabbit>=3",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -73,6 +75,7 @@
    "Need": "flag_rabbit_on,!flag_rabbit_done,cnt_rabbit>=3",
    "Chapter": 1,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -107,6 +110,7 @@
    "Need": "flag_rabbit_on,!flag_rabbit_done,!cnt_rabbit>=3",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -120,6 +124,7 @@
    "Need": "!flag_seed_on",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -153,6 +158,7 @@
    "Need": "flag_seed_on,!flag_seed_given",
    "Chapter": 1,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -178,6 +184,7 @@
    "Need": "flag_seed_on,!flag_seed_given",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -191,6 +198,7 @@
    "Need": "flag_seed_given,!flag_seed_done",
    "Chapter": 1,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -225,6 +233,7 @@
    "Need": "!flag_mole_on,opened_q_crystals",
    "Chapter": 2,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -258,6 +267,7 @@
    "Need": "flag_mole_on,!flag_mole_done,!cnt_mole>=3",
    "Chapter": 2,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -291,6 +301,7 @@
    "Need": "flag_mole_on,!flag_mole_done,cnt_mole>=3",
    "Chapter": 2,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -325,6 +336,7 @@
    "Need": "flag_mole_on,!flag_mole_done,!cnt_mole>=3",
    "Chapter": 2,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -338,6 +350,7 @@
    "Need": "!flag_scorpion_on",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -371,6 +384,7 @@
    "Need": "flag_scorpion_on,!flag_scorpion_done,!cnt_scorpion>=4",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -404,6 +418,7 @@
    "Need": "flag_scorpion_on,!flag_scorpion_done,cnt_scorpion>=4",
    "Chapter": 3,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -438,6 +453,7 @@
    "Need": "flag_scorpion_on,!flag_scorpion_done,!cnt_scorpion>=4",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -451,6 +467,7 @@
    "Need": "!flag_tea_on",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -484,6 +501,7 @@
    "Need": "flag_tea_on,!flag_tea_given",
    "Chapter": 3,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -509,6 +527,7 @@
    "Need": "flag_tea_on,!flag_tea_given",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -522,6 +541,7 @@
    "Need": "flag_tea_given,!flag_tea_done",
    "Chapter": 3,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -556,6 +576,7 @@
    "Need": "!flag_lizard_on",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -589,6 +610,7 @@
    "Need": "flag_lizard_on,!flag_lizard_done,!cnt_lizard>=3",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -622,6 +644,7 @@
    "Need": "flag_lizard_on,!flag_lizard_done,cnt_lizard>=3",
    "Chapter": 4,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -656,6 +679,7 @@
    "Need": "flag_lizard_on,!flag_lizard_done,!cnt_lizard>=3",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -669,6 +693,7 @@
    "Need": "!flag_lunch_on",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -702,6 +727,7 @@
    "Need": "flag_lunch_on,!flag_lunch_given",
    "Chapter": 4,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -727,6 +753,7 @@
    "Need": "flag_lunch_on,!flag_lunch_given",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -740,6 +767,7 @@
    "Need": "flag_lunch_given,!flag_lunch_done",
    "Chapter": 4,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -774,6 +802,7 @@
    "Need": "!flag_snowrabbit_on",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -807,6 +836,7 @@
    "Need": "flag_snowrabbit_on,!flag_snowrabbit_done,!cnt_snowrabbit>=3",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -840,6 +870,7 @@
    "Need": "flag_snowrabbit_on,!flag_snowrabbit_done,cnt_snowrabbit>=3",
    "Chapter": 5,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -874,6 +905,7 @@
    "Need": "flag_snowrabbit_on,!flag_snowrabbit_done,!cnt_snowrabbit>=3",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -887,6 +919,7 @@
    "Need": "!flag_sled_on",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -920,6 +953,7 @@
    "Need": "flag_sled_on,!flag_sled_given",
    "Chapter": 5,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -945,6 +979,7 @@
    "Need": "flag_sled_on,!flag_sled_given",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -958,6 +993,7 @@
    "Need": "flag_sled_given,!flag_sled_done",
    "Chapter": 5,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -992,6 +1028,7 @@
    "Need": "!flag_ink_on",
    "Chapter": 6,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1025,6 +1062,7 @@
    "Need": "flag_ink_on,!flag_ink_done,!cnt_ink>=3",
    "Chapter": 6,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -1058,6 +1096,7 @@
    "Need": "flag_ink_on,!flag_ink_done,cnt_ink>=3",
    "Chapter": 6,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -1092,6 +1131,7 @@
    "Need": "flag_ink_on,!flag_ink_done,!cnt_ink>=3",
    "Chapter": 6,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -1105,6 +1145,7 @@
    "Need": "!flag_mushroom_on",
    "Chapter": 7,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1138,6 +1179,7 @@
    "Need": "flag_mushroom_on,!flag_mushroom_done,!cnt_mushroom>=4",
    "Chapter": 7,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -1171,6 +1213,7 @@
    "Need": "flag_mushroom_on,!flag_mushroom_done,cnt_mushroom>=4",
    "Chapter": 7,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "sfx",
@@ -1205,6 +1248,7 @@
    "Need": "flag_mushroom_on,!flag_mushroom_done,!cnt_mushroom>=4",
    "Chapter": 7,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -1218,6 +1262,7 @@
    "Need": "!photo_ch1",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1246,6 +1291,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1282,6 +1332,7 @@
    "Need": "!photo_ch2",
    "Chapter": 2,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1310,6 +1361,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1346,6 +1402,7 @@
    "Need": "!photo_ch3",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1374,6 +1431,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1410,6 +1472,7 @@
    "Need": "!photo_ch4",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1438,6 +1501,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1474,6 +1542,7 @@
    "Need": "!photo_ch5",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1502,6 +1571,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1538,6 +1612,7 @@
    "Need": "!photo_ch6",
    "Chapter": 6,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1566,6 +1641,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1602,6 +1682,7 @@
    "Need": "!photo_ch7",
    "Chapter": 7,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -1630,6 +1711,11 @@
     {
      "Do": "sfx",
      "A": "lvup"
+    },
+    {
+     "Do": "cutin",
+     "A": "Cards/ch6_clear",
+     "B": "가족 앨범 완성!"
     },
     {
      "Do": "talk",
@@ -1666,6 +1752,7 @@
    "Need": "!flag_post1_on",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "flag",
@@ -1710,6 +1797,7 @@
    "Need": "flag_post1_on,!flag_post1_given",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -1723,6 +1811,7 @@
    "Need": "flag_post1_on,!flag_post1_given",
    "Chapter": 1,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -1748,6 +1837,7 @@
    "Need": "flag_post1_given,!flag_post1_done",
    "Chapter": 1,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -1805,6 +1895,7 @@
    "Need": "!flag_post2_on",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "flag",
@@ -1849,6 +1940,7 @@
    "Need": "flag_post2_on,!flag_post2_given",
    "Chapter": 3,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -1862,6 +1954,7 @@
    "Need": "flag_post2_on,!flag_post2_given",
    "Chapter": 3,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -1887,6 +1980,7 @@
    "Need": "flag_post2_given,!flag_post2_done",
    "Chapter": 3,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -1944,6 +2038,7 @@
    "Need": "!flag_post3_on",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "flag",
@@ -1988,6 +2083,7 @@
    "Need": "flag_post3_on,!flag_post3_given",
    "Chapter": 4,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -2001,6 +2097,7 @@
    "Need": "flag_post3_on,!flag_post3_given",
    "Chapter": 4,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -2026,6 +2123,7 @@
    "Need": "flag_post3_given,!flag_post3_done",
    "Chapter": 4,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -2083,6 +2181,7 @@
    "Need": "!flag_post4_on",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "flag",
@@ -2127,6 +2226,7 @@
    "Need": "flag_post4_on,!flag_post4_given",
    "Chapter": 5,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "talk",
@@ -2140,6 +2240,7 @@
    "Need": "flag_post4_on,!flag_post4_given",
    "Chapter": 5,
    "Repeat": false,
+   "Priority": 2,
    "Steps": [
     {
      "Do": "sfx",
@@ -2165,6 +2266,7 @@
    "Need": "flag_post4_given,!flag_post4_done",
    "Chapter": 5,
    "Repeat": false,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "count",
@@ -2222,6 +2324,7 @@
    "Need": "!flag_wished",
    "Chapter": 1,
    "Repeat": true,
+   "Priority": 0,
    "Steps": [
     {
      "Do": "ask",
@@ -2267,6 +2370,326 @@
     {
      "Do": "talk",
      "A": "st_wish_no"
+    }
+   ]
+  },
+  {
+   "Id": "smith1_ask",
+   "On": "talk:smith",
+   "Need": "opened_q_lavastones_done,!flag_smith1_on",
+   "Chapter": 4,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_smith1_ask"
+    },
+    {
+     "Do": "flag",
+     "A": "smith1_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 불새 깃털 세 개"
+    }
+   ]
+  },
+  {
+   "Id": "smith1_win",
+   "On": "win:불새",
+   "Need": "flag_smith1_on,!cnt_firebird>=3",
+   "Chapter": 4,
+   "Repeat": true,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "firebird"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_firebird>=3",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "불새 깃털 세 개! 대장장이 젤리에게 가자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "불새 깃털 ({cnt:firebird}/3)"
+    }
+   ]
+  },
+  {
+   "Id": "smith1_wait",
+   "On": "talk:smith",
+   "Need": "flag_smith1_on,!cnt_firebird>=3",
+   "Chapter": 4,
+   "Repeat": true,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_smith1_wait"
+    }
+   ]
+  },
+  {
+   "Id": "smith2_ask",
+   "On": "talk:smith",
+   "Need": "flag_smith1_on,cnt_firebird>=3,!flag_smith2_on",
+   "Chapter": 4,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_smith2_ask"
+    },
+    {
+     "Do": "flag",
+     "A": "smith2_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 온천지기 젤리에게 새 국자"
+    }
+   ]
+  },
+  {
+   "Id": "smith2_give",
+   "On": "talk:springkeeper",
+   "Need": "flag_smith2_on,!flag_smith2_given",
+   "Chapter": 4,
+   "Repeat": false,
+   "Priority": 2,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_smith2_give"
+    },
+    {
+     "Do": "flag",
+     "A": "smith2_given"
+    },
+    {
+     "Do": "note",
+     "A": "대장장이 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "smith2_wait",
+   "On": "talk:smith",
+   "Need": "flag_smith2_on,!flag_smith2_given",
+   "Chapter": 4,
+   "Repeat": true,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_smith2_wait"
+    }
+   ]
+  },
+  {
+   "Id": "smith3",
+   "On": "talk:smith",
+   "Need": "flag_smith2_given,!flag_smith_done",
+   "Chapter": 4,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_smith3"
+    },
+    {
+     "Do": "give",
+     "A": "smith_charm"
+    },
+    {
+     "Do": "flag",
+     "A": "smith_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 대장장이 젤리의 세 가지 부탁"
+    }
+   ]
+  },
+  {
+   "Id": "snowman_hat",
+   "On": "bump:snow:3,18",
+   "Need": "!flag_snowman_hat",
+   "Chapter": 5,
+   "Repeat": true,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_snowman_ask",
+     "B": "씌워 주자!|그냥 두자"
+    },
+    {
+     "Do": "sfx",
+     "A": "star"
+    },
+    {
+     "Do": "talk",
+     "A": "st_snowman_yes"
+    },
+    {
+     "Do": "give",
+     "A": "moon",
+     "N": 1
+    },
+    {
+     "Do": "sparkle"
+    },
+    {
+     "Do": "flag",
+     "A": "snowman_hat"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    }
+   ]
+  },
+  {
+   "Id": "shelf_note",
+   "On": "bump:library:9,7",
+   "Need": "",
+   "Chapter": 6,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "peek"
+    },
+    {
+     "Do": "talk",
+     "A": "st_shelfnote"
+    },
+    {
+     "Do": "gold",
+     "N": 100
+    }
+   ]
+  },
+  {
+   "Id": "hotspring_hands",
+   "On": "bump:lavatown:19,9",
+   "Need": "",
+   "Chapter": 4,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "heal"
+    },
+    {
+     "Do": "talk",
+     "A": "st_hotspring"
+    },
+    {
+     "Do": "heal"
+    }
+   ]
+  },
+  {
+   "Id": "cellar_barrel",
+   "On": "bump:cellar:9,15",
+   "Need": "!flag_cellar_barrel",
+   "Chapter": 0,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_barrel"
+    },
+    {
+     "Do": "flag",
+     "A": "cellar_barrel"
+    },
+    {
+     "Do": "battle",
+     "A": "큰 분홍 젤리"
+    }
+   ]
+  },
+  {
+   "Id": "cellar_barrel_won",
+   "On": "win:큰 분홍 젤리",
+   "Need": "flag_cellar_barrel,!flag_cellar_barrel_won",
+   "Chapter": 0,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_barrel_won"
+    },
+    {
+     "Do": "gold",
+     "N": 80
+    },
+    {
+     "Do": "flag",
+     "A": "cellar_barrel_won"
+    }
+   ]
+  },
+  {
+   "Id": "cellar_jam",
+   "On": "bump:cellar:30,10",
+   "Need": "",
+   "Chapter": 0,
+   "Repeat": false,
+   "Priority": 0,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "coin"
+    },
+    {
+     "Do": "talk",
+     "A": "st_jam"
+    },
+    {
+     "Do": "heal"
+    },
+    {
+     "Do": "give",
+     "A": "candy",
+     "N": 1
+    },
+    {
+     "Do": "sparkle"
     }
    ]
   }
@@ -2382,6 +2805,16 @@
    "Count": "post",
    "Goal": 4,
    "Reward": "mail_bag"
+  },
+  {
+   "Id": "smith",
+   "Kind": "이어짐",
+   "Title": "대장장이 젤리의 세 가지 부탁",
+   "Show": "flag_smith1_on",
+   "Done": "flag_smith_done",
+   "Count": "",
+   "Goal": 0,
+   "Reward": "smith_charm"
   }
  ],
  "Photos": [
@@ -3339,6 +3772,167 @@
     {
      "Text": "다음에 빌어야지.",
      "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_smith1_ask",
+   "Lines": [
+    {
+     "Text": "대장장이 젤리: 용암석 고마웠어! 그런데 하나 더… 불새 깃털이 있으면 더 좋은 걸 만들 수 있거든.",
+     "Face": "surprised"
+    },
+    {
+     "Text": "대장장이 젤리: 불새 세 마리만 혼내 주면 깃털을 떨어뜨릴 거야. 부탁해!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_smith1_wait",
+   "Lines": [
+    {
+     "Text": "대장장이 젤리: 불새 깃털, 지금 {cnt:firebird}개야. 세 개면 돼!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_smith2_ask",
+   "Lines": [
+    {
+     "Text": "대장장이 젤리: 깃털 세 개! 좋아, 이걸로 새 국자를 만들었어.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "대장장이 젤리: 온천지기 젤리가 국자를 부러뜨렸대. 이 새 국자 좀 갖다줄래?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_smith2_give",
+   "Lines": [
+    {
+     "Text": "온천지기 젤리에게 반짝반짝 새 국자를 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "온천지기 젤리: 우와, 불새 깃털 무늬 국자! 온천물이 더 따뜻해질 것 같아!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_smith2_wait",
+   "Lines": [
+    {
+     "Text": "대장장이 젤리: 국자는 온천지기 젤리에게 전해 줬어?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_smith3",
+   "Lines": [
+    {
+     "Text": "대장장이 젤리: 다 해 줬구나! 너희 가족은 정말 든든해.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "대장장이 젤리: 답례로 불꽃 망치 브로치를 만들었어. 뜨거운 불길도 끄떡없을 거야!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "불꽃 망치 브로치를 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_snowman_ask",
+   "Lines": [
+    {
+     "Text": "쉼터 눈사람이 모자도 없이 추워 보인다. 털모자를 씌워 줄까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_snowman_yes",
+   "Lines": [
+    {
+     "Text": "눈사람에게 털모자를 씌워 줬다! 눈사람이 방긋 웃는 것 같다.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "…눈사람 발밑에서 반짝! 누가 두고 간 달님 사탕이다!",
+     "Face": "surprised"
+    }
+   ]
+  },
+  {
+   "Id": "st_shelfnote",
+   "Lines": [
+    {
+     "Text": "책장 틈에 쪽지가 끼어 있다.",
+     "Face": "surprised"
+    },
+    {
+     "Text": "\"악마들은 촛불을 무서워한다. 마법진의 주인이 오면 문이 열릴 것이다.\" …엄마 이야기일까?",
+     "Face": "smile"
+    },
+    {
+     "Text": "쪽지 뒤에 동전이 붙어 있었다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_hotspring",
+   "Lines": [
+    {
+     "Text": "온천물에 손을 담가 보았다. 따끈따끈~ 몸이 사르르 녹는다.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "모두 기운이 났다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_barrel",
+   "Lines": [
+    {
+     "Text": "통 뚜껑이 들썩들썩… 앗, 통 속에서 젤리가 튀어나왔다!",
+     "Face": "surprised"
+    }
+   ]
+  },
+  {
+   "Id": "st_barrel_won",
+   "Lines": [
+    {
+     "Text": "장난꾸러기 큰 분홍 젤리가 통에서 몰래 사과를 먹고 있었나 봐.",
+     "Face": "smile"
+    },
+    {
+     "Text": "통 바닥에 할머니가 숨겨 둔 비상금이 있었다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_jam",
+   "Lines": [
+    {
+     "Text": "오래된 잼 단지다. 뚜껑에 \"우리 손주들 몰래 먹지 말 것\"이라고 적혀 있다…",
+     "Face": "surprised"
+    },
+    {
+     "Text": "…한 숟가락만! 달콤해서 기운이 났다. 사탕도 하나 숨겨져 있었다!",
+     "Face": "laugh"
     }
    ]
   }

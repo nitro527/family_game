@@ -133,6 +133,35 @@ namespace GirlAdventure.View
 
         public bool BossAlertShown => bossAlert != null && bossAlert.enabled;
 
+        /// <summary>
+        /// 지하실 드나들기: 집 안 뚜껑문 → 어두워졌다 지하 창고 사다리 아래 (처음이면 대사), 사다리('E') → 위 집 뚜껑문 옆.
+        /// 위층 집 번호(P.Home)는 그대로 두어서, 지하실에서 저장해도 그 집 문 앞에서 다시 시작한다.
+        /// </summary>
+        IEnumerator CellarRoutine(bool down)
+        {
+            busy = true;
+            sfx.Play(down ? "door" : "step_stair");
+            yield return Fade(0, 1, .3f);
+            P.InCellar = down;
+            if (down) { (P.X, P.Y) = MapPoints.Of(MapKind.Cellar).spawn; facing = "down"; }
+            else { (P.X, P.Y) = (WorldMap.CellarHatch.x, WorldMap.CellarHatch.y - 1); facing = "up"; }
+            moveT = -1;
+            ApplyMap();
+            ResetBrother();
+            bgm.Play(MapSong);
+            RefreshQuestProps();
+            UpdatePlayerVisual();
+            mobs.Grace = 2f;
+            yield return Fade(1, 0, .3f);
+            HideSwirl();
+            if (down)
+            {
+                if (Dungeons.Of(MapKind.Cellar) is DungeonDef dd) ShowBanner("<color=#F2C443>" + dd.Name + "</color>");
+                if (!P.Opened.Contains("cellar_seen")) { P.Opened.Add("cellar_seen"); yield return Talk("cellar_enter", ("name", P.Name)); HideMessage(); AutoSave(); }
+            }
+            busy = false;
+        }
+
         /// <summary>던전 보물상자: 처음이면 아이템·골드 (dungeons.json Chests), 열린 그림은 props.json Objects 가 "Opened:dch_…" 로.</summary>
         IEnumerator DungeonChestRoutine(int x, int y)
         {

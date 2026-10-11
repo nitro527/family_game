@@ -20,6 +20,7 @@ namespace GirlAdventure.View
             "ice" => (1.02f, 1.22f, 1.45f, .1f),           // 얼음
             "archive" => (1.25f, 1.02f, .78f, .15f),       // 낡은 나무 서고
             "oak" => (1.12f, 1.05f, .72f, .15f),           // 나무 속
+            "cellar" => (1.18f, 1.0f, .82f, .2f),          // 지하 창고 (따뜻한 돌)
             _ => (1, 1, 1, 1),
         };
 
@@ -38,7 +39,8 @@ namespace GirlAdventure.View
             });
             if (theme == "castle") CastleDress(R, m);
             else if (theme == "archive" || theme == "oak") WallDress(R, m, theme);
-            if (theme == "archive") PlankFloor(R, m);
+            if (theme == "archive") PlankFloor(R, m, "_:Hlr");
+            if (theme == "cellar") PlankFloor(R, m, ":rl");                 // 지하 창고: 쉼터는 나무 마루, 젤리 굴은 흙바닥
             if (theme == "volcano") LavaPools(R, m);
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
@@ -154,13 +156,13 @@ namespace GirlAdventure.View
         }
 
         /// <summary>서고 바닥: 바닥 칸('_' ':' 상자·횃불·기둥 칸)에 가로 나무 마루.</summary>
-        static void PlankFloor(Raster R, WorldMap m)
+        static void PlankFloor(Raster R, WorldMap m, string chars)
         {
             for (int y = 0; y < WorldMap.H; y++)
                 for (int x = 0; x < WorldMap.W; x++)
                 {
                     char ch = m.At(x, y);
-                    if ("_:Hlr".IndexOf(ch) < 0) continue;
+                    if (chars.IndexOf(ch) < 0) continue;
                     int X = x * T, Y = y * T;
                     for (int py = 0; py < T; py++)
                         for (int px = 0; px < T; px++)
@@ -195,6 +197,18 @@ namespace GirlAdventure.View
                             R.Blend(gx, gy, c);
                         }
                 }
+        }
+
+        /// <summary>지하실 뚜껑문: 열린 나무 뚜껑 + 아래로 내려가는 사다리 구멍.</summary>
+        static void Hatch(Raster R, float X, float Y)
+        {
+            R.Rect(X + 6, Y + 8, T - 12, T - 12, H("#1A120C"));                  // 구멍
+            for (int i = 0; i < 3; i++) R.Rect(X + 12, Y + 14 + i * 9, T - 24, 3, H("#8A5A32"));   // 사다리 가로대
+            R.Rect(X + 10, Y + 10, 3, T - 16, H("#6B4426")); R.Rect(X + T - 13, Y + 10, 3, T - 16, H("#6B4426"));
+            R.Rect(X + 4, Y - 6, T - 8, 14, H("#A0703E"));                      // 젖혀 둔 뚜껑
+            R.Rect(X + 4, Y - 6, T - 8, 3, H("#C8945A"));
+            R.Rect(X + T / 2 - 4, Y - 2, 8, 4, H("#5A3A20"));                   // 손잡이
+            R.Rect(X + 5, Y + 7, T - 10, 2, Ink);
         }
 
         static void Banner(Raster R, float X, float Y)

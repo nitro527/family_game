@@ -573,6 +573,8 @@ namespace GirlAdventure.EditorTools
             for (int k = 0; k < 2; k++) { Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false); yield return .45f; }
             Shot("hill_stairs");
             Expect("climbed the hill by the stairs", G.P.X == 24 && G.P.Y == 12, $"{G.P.X},{G.P.Y}");
+            yield return 1.0f;
+            Expect("on the hill the camera pulls back a little", G.CameraSize > GameRoot.BaseOrtho * 1.05f, $"{G.CameraSize:F2}");
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
             G.DebugTeleport(25, 14, "up");
             yield return .3f;
@@ -682,6 +684,23 @@ namespace GirlAdventure.EditorTools
             Shot("home_resident");
             Expect("house resident talks", G.MessageText.Contains(granny.Name));
             foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            // 지하실 (2026-10-11 "언덕이나 지하실처럼"): 뚜껑문 → 할머니의 지하 창고 → 사다리로 다시 위로 (뚜껑문 바로 위 칸)
+            var hatch = WorldMap.CellarHatch;
+            G.DebugTeleport(hatch.x, hatch.y - 1, "down");
+            yield return .3f;
+            Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);
+            yield return (Func<bool>)(() => G.MapKind == MapKind.Cellar);
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            yield return .4f;
+            Shot("cellar");
+            Expect("hatch leads down to the cellar", G.MapKind == MapKind.Cellar && G.P.InCellar);
+            G.DebugMobs(true, true);
+            var cellarUp = MapPoints.Of(MapKind.Cellar).spawn;
+            G.DebugTeleport(cellarUp.x, cellarUp.y, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return (Func<bool>)(() => G.MapKind == MapKind.Home && !G.Busy);
+            Expect("cellar ladder leads back up next to the hatch", G.MapKind == MapKind.Home && !G.P.InCellar && (G.P.X, G.P.Y) == (hatch.x, hatch.y - 1), $"{G.P.X},{G.P.Y}");
             G.DebugTeleport(WorldMap.HomeStart.x, WorldMap.HomeStart.y, "down");
             yield return .3f;
             Keys.Hold(KeyCode.DownArrow, true); yield return .15f; Keys.Hold(KeyCode.DownArrow, false);

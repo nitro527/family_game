@@ -1,5 +1,6 @@
 {
   "Zones": [
+    { "Map": "cellar", "MinFar": 0, "Pool": ["파랑 젤리", "파랑 젤리", "초록 젤리"], "Group": 0.3, "MaxGroup": 2 },
     { "Map": "fort", "MinFar": 0, "Pool": ["광물 젤리", "수정 젤리", "큰 돌멩이 젤리", "호박 젤리", "동굴 거미", "두더지"], "Group": 0.35, "MaxGroup": 3 },
     { "Map": "canyon", "MinFar": 0, "Pool": ["카우보이 젤리", "큰 선인장 젤리", "전갈", "전갈", "사막 독수리"], "Group": 0.4, "MaxGroup": 3 },
     { "Map": "volcano", "MinFar": 0, "Pool": ["용암 젤리", "큰 용암 젤리", "불도마뱀", "불새", "불새"], "Group": 0.4, "MaxGroup": 3 },

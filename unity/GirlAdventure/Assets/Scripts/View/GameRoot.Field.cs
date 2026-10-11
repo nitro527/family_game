@@ -154,7 +154,7 @@ namespace GirlAdventure.View
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
         void ApplyMap()
         {
-            var want = P.Underground ? worldMaps[MapKind.Underworld] : P.Home >= 0 && P.Home < homeMaps.Length ? homeMaps[P.Home] : SurfaceMap;
+            var want = P.InCellar && worldMaps.ContainsKey(MapKind.Cellar) ? worldMaps[MapKind.Cellar] : P.Underground ? worldMaps[MapKind.Underworld] : P.Home >= 0 && P.Home < homeMaps.Length ? homeMaps[P.Home] : SurfaceMap;
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
@@ -657,6 +657,9 @@ namespace GirlAdventure.View
             shadowSR.transform.localPosition = feet + new Vector3(0, .02f, 0);
             UpdateFollowers(k, moving);
 
+            // 언덕 위 경치 (맵 입체화, 2026-10-11): 높은 땅에 서면 카메라가 살짝 물러나 멀리까지 보인다
+            float wantSize = BaseOrtho * (map.Kind != MapKind.Home && map.Level(P.X, P.Y) >= 1 ? 1.1f : 1f);
+            cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, wantSize, Time.deltaTime * .8f);
             // 카메라: 맵 밖이 보이지 않게 가둔다
             float halfH = cam.orthographicSize, halfW = halfH * cam.aspect;
             float cx = Mathf.Clamp(rx + .5f, halfW, WorldMap.W - halfW);
@@ -673,6 +676,8 @@ namespace GirlAdventure.View
 
         // ---- 기울인 시점 (맵 입체화 F): 원근 카메라를 TiltDeg 만큼 기울여 (cx,cy) 를 바라본다. 맵 밖이 보이면 안쪽으로 민다
         const float TiltDeg = 22f, TiltDist = 20f;
+        public const float BaseOrtho = 5.625f;           // 기본 카메라 (세로 11.25 칸)
+        public float CameraSize => cam.orthographicSize;
 
         void PlaceFieldCamera(float cx, float cy, float hudWorld)
         {
@@ -889,6 +894,8 @@ namespace GirlAdventure.View
                 if (here == ch.BossChar && map.Kind == ch.BossMapKind && !P.BossBeaten(ch.No)) { StartCoroutine(BossRoutine(ch)); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
+            if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'd') { StartCoroutine(CellarRoutine(true)); return; }   // 지하실로 (GameRoot.Dungeons.cs)
+            if (map.Kind == MapKind.Cellar && map.At(P.X, P.Y) == 'E') { StartCoroutine(CellarRoutine(false)); return; }
             if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'E') { StartCoroutine(HomeRoutine(-1)); return; }
             if (map.IsDoorway(P.X, P.Y)) { StartCoroutine(TravelRoutine(!map.IsTown)); return; }
             var mob = mobs.At(P.X, P.Y);
