@@ -716,7 +716,15 @@ namespace GirlAdventure.Sim
 
         public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? MapKinds.Of(Kind).EdgeChar : tiles[x, y];
 
-        public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0 || PropCatalog.Blocks(Kind, x, y);   // props.json Placed 의 Block 장식도
+        public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0 || PropCatalog.Blocks(Kind, x, y)   // props.json Placed 의 Block 장식도
+                                             || (IsFace(x, y) && !IsStair(x, y));                       // 절벽면 (맵 입체화, terrain.json)
+
+        // ---- 높이 (맵 입체화 B, Sim/Heights.cs · terrain.json): 집 안은 높이 없음
+        public int Level(int x, int y) => Kind == MapKind.Home ? 0 : Heights.Level(Kind, x, y);
+        public bool IsFace(int x, int y) => Kind != MapKind.Home && Heights.IsFace(Kind, x, y);
+        public bool IsStair(int x, int y) => Kind != MapKind.Home && Heights.IsStair(Kind, x, y);
+        /// <summary>한 칸 걸음이 높이 규칙에 맞는지 (같은 높이, 또는 계단으로 오르내림).</summary>
+        public bool CanStep(int fx, int fy, int tx, int ty) => Kind == MapKind.Home || Heights.CanStep(Kind, fx, fy, tx, ty);
 
         /// <summary>밟으면 다른 맵으로 가는 칸 (초원 'V' → 마을, 마을 'E' → 초원).</summary>
         public bool IsDoorway(int x, int y) => ((Kind == MapKind.Field || Kind == MapKind.Desert || Kind == MapKind.Lava || Kind == MapKind.Snow) && At(x, y) == 'V') || (IsTown && At(x, y) == 'E');

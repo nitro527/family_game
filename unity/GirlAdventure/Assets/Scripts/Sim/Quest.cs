@@ -48,6 +48,9 @@ namespace GirlAdventure.Sim
             m.Kind == MapKind.Cave && (x, y) == WorldMap.GuardSpot && GuardAlive(p);
 
         /// <summary>이 칸으로 걸어갈 수 있나 (열린 기지 문 포함, 지킴이 자리는 못 지나감).</summary>
+        /// <summary>(fx,fy) 에서 (tx,ty) 로 걸어갈 수 있는지: 그 칸이 열려 있고 높이 규칙(계단)에 맞는다.</summary>
+        public static bool CanMove(WorldMap m, PlayerState p, int fx, int fy, int tx, int ty) => Walkable(m, p, tx, ty) && m.CanStep(fx, fy, tx, ty);
+
         public static bool Walkable(WorldMap m, PlayerState p, int x, int y) =>
             !GuardAt(m, p, x, y) && !(m.Kind == MapKind.Library && m.At(x, y) == 'B' && !MomJoined(p)) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)) || (m.At(x, y) == 'Q' && HasLetter(p)));
 

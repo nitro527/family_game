@@ -10,6 +10,7 @@ namespace GirlAdventure.View
         {
             if (GameData.Loaded && !force) return;
             MapKinds.Set(Read<MapKindTable>("mapkinds"));     // 맵 종류 표 (맵을 만들기 전에)
+            Heights.Set(Read<TerrainTable>("terrain"));        // 높이 (언덕·절벽·계단, 맵 입체화)
             Party.Set(Read<PartyTable>("party"));      // 동료 장비 부위를 알아야 items.json 장비를 고를 수 있어 GameData 보다 먼저
             GameData.Set(
                 Read<EnemyTable>("enemies"),

@@ -38,6 +38,8 @@ namespace GirlAdventure.View
         WorldMap[] homeMaps;                    // 별빛 마을 집 안 (P-5)
         SpriteRenderer homeChestSR, letterSR;
         readonly Dictionary<WorldMap, Sprite> mapSprites = new Dictionary<WorldMap, Sprite>();
+        readonly Dictionary<WorldMap, Sprite> mapOverSprites = new Dictionary<WorldMap, Sprite>();   // 덮개 (키 큰 소품 윗부분, 캐릭터 위에)
+        SpriteRenderer mapOverSR;
         FieldTiles fieldTiles;
         readonly Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>> mapJobs = new Dictionary<WorldMap, System.Threading.Tasks.Task<Raster>>();
 
@@ -74,6 +76,9 @@ namespace GirlAdventure.View
             mapSR = new GameObject("Map").AddComponent<SpriteRenderer>();
             mapSR.transform.SetParent(fieldRoot, false);
             mapSR.sortingOrder = 0;
+            mapOverSR = new GameObject("MapOver").AddComponent<SpriteRenderer>();     // 덮개: 캐릭터(순서 2) 위, 걸음 먼지(4) 아래
+            mapOverSR.transform.SetParent(fieldRoot, false);
+            mapOverSR.sortingOrder = 3;
 
             shadowSR = new GameObject("Shadow").AddComponent<SpriteRenderer>();
             shadowSR.transform.SetParent(fieldRoot, false);
@@ -129,6 +134,7 @@ namespace GirlAdventure.View
                 var raster = mapJobs.TryGetValue(m, out var job) ? job.Result : MapPainter.RenderRaster(m, fieldTiles);   // 아직이면 기다린다
                 s = Art.FromTexture(raster.ToTexture(), new Vector2(0, 1), Painter.Tile);   // 1 타일 = 1 유닛
                 mapSprites[m] = s;
+                mapOverSprites[m] = Art.FromTexture(MapPainter.Overlay(raster).ToTexture(), new Vector2(0, 1), Painter.Tile);
                 mapJobs.Remove(m);
                 Debug.Log($"[Map] {m.Kind} 준비 대기 {(Time.realtimeSinceStartup - t0) * 1000:F0}ms");
             }
@@ -141,6 +147,7 @@ namespace GirlAdventure.View
             if (m == map || !mapSprites.TryGetValue(m, out var sp)) return;
             mapSprites.Remove(m);
             if (sp != null) { Destroy(sp.texture); Destroy(sp); }
+            if (mapOverSprites.TryGetValue(m, out var ov)) { mapOverSprites.Remove(m); if (ov != null) { Destroy(ov.texture); Destroy(ov); } }
         }
 
         /// <summary>챕터(와 마을 안인지)에 맞는 맵으로 바꾼다 (이미 그 맵이면 아무것도 안 함).</summary>
@@ -150,6 +157,7 @@ namespace GirlAdventure.View
             if (map == want && mobs.Map == want) return;
             map = want;
             mapSR.sprite = MapSprite(map);
+            mapOverSR.sprite = mapOverSprites.TryGetValue(map, out var ov) ? ov : null;
             RebuildMapFx();
             RebuildLights();
             RebuildNpcs();
@@ -565,9 +573,9 @@ namespace GirlAdventure.View
             int dx = dir == "left" ? -1 : dir == "right" ? 1 : 0, dy = dir == "up" ? -1 : dir == "down" ? 1 : 0;
             int nx = P.X + dx, ny = P.Y + dy;
             var mob = mobs.At(nx, ny);
-            if (mob != null && mobs.Grace <= 0) { StartMobBattle(mob); return; }
+            if (mob != null && mobs.Grace <= 0 && map.CanStep(P.X, P.Y, nx, ny)) { StartMobBattle(mob); return; }
             if (Quest.GuardAt(map, P, nx, ny)) { if (!busy) StartCoroutine(GuardRoutine()); return; }
-            if (!Quest.Walkable(map, P, nx, ny))
+            if (!Quest.CanMove(map, P, P.X, P.Y, nx, ny))
             {
                 if (Keys.AnyDown && Time.time - lastBump > .4f) { sfx.Play("bump"); lastBump = Time.time; }   // 연달아 부딪혀도 0.4초에 한 번만
                 char c = map.At(nx, ny);
@@ -646,7 +654,47 @@ namespace GirlAdventure.View
                 cx = 11.8f + halfW - 2 * halfW * .28f;
                 cy = -11.2f;
             }
-            cam.transform.position = new Vector3(cx, cy, -10);
+            PlaceFieldCamera(cx, cy, hudWorld);
+        }
+
+        // ---- 기울인 시점 (맵 입체화 F): 원근 카메라를 TiltDeg 만큼 기울여 (cx,cy) 를 바라본다. 맵 밖이 보이면 안쪽으로 민다
+        const float TiltDeg = 22f, TiltDist = 20f;
+
+        void PlaceFieldCamera(float cx, float cy, float hudWorld)
+        {
+            if (!Settings.Tilt || map.Kind == MapKind.Home) { CameraFlat(); cam.transform.position = new Vector3(cx, cy, -10); return; }
+            cam.orthographic = false;
+            cam.fieldOfView = 2 * Mathf.Atan(cam.orthographicSize / TiltDist) * Mathf.Rad2Deg;
+            var rot = Quaternion.Euler(-TiltDeg, 0, 0);
+            cam.transform.rotation = rot;
+            for (int i = 0; i < 2; i++)
+            {
+                cam.transform.position = new Vector3(cx, cy, 0) - rot * Vector3.forward * TiltDist;
+                Vector3 tl = GroundAt(0, 1), tr = GroundAt(1, 1), bl = GroundAt(0, 0);
+                float w = tr.x - tl.x;
+                if (w >= WorldMap.W) cx = WorldMap.W / 2f;                              // 위쪽 너비가 맵보다 넓으면 가운데
+                else if (tl.x < 0) cx -= tl.x;
+                else if (tr.x > WorldMap.W) cx -= tr.x - WorldMap.W;
+                if (tl.y > hudWorld) cy -= tl.y - hudWorld;                             // 위: 상태창 높이까지만
+                else if (bl.y < -WorldMap.H) cy += -WorldMap.H - bl.y;                  // 아래: 맵 바닥까지
+            }
+            cam.transform.position = new Vector3(cx, cy, 0) - rot * Vector3.forward * TiltDist;
+        }
+
+        /// <summary>화면 위치(뷰포트 0~1)가 바닥(z=0)의 어디인지.</summary>
+        Vector3 GroundAt(float vx, float vy)
+        {
+            var ray = cam.ViewportPointToRay(new Vector3(vx, vy, 0));
+            float t = Mathf.Abs(ray.direction.z) < 1e-4f ? 0 : -ray.origin.z / ray.direction.z;
+            return ray.origin + ray.direction * t;
+        }
+
+        /// <summary>원래(정면 직교) 카메라로 — 전투·타이틀·집 안·기울임 끔.</summary>
+        void CameraFlat()
+        {
+            if (cam.orthographic) return;
+            cam.orthographic = true;
+            cam.transform.rotation = Quaternion.identity;
         }
 
         Vector2 playerTilePos;
@@ -797,7 +845,7 @@ namespace GirlAdventure.View
             if (map.Slippery(P.X, P.Y))
             {
                 int dx = facing == "left" ? -1 : facing == "right" ? 1 : 0, dy = facing == "up" ? -1 : facing == "down" ? 1 : 0;
-                if (Quest.Walkable(map, P, P.X + dx, P.Y + dy) && mobs.At(P.X + dx, P.Y + dy) == null)
+                if (Quest.CanMove(map, P, P.X, P.Y, P.X + dx, P.Y + dy) && mobs.At(P.X + dx, P.Y + dy) == null)
                 {
                     if (!sliding) sfx.Play("slide");
                     sliding = true;

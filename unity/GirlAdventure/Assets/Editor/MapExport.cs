@@ -25,8 +25,13 @@ namespace GirlAdventure.EditorTools
             };
             foreach (var (name, m) in maps)
             {
-                var tex = MapPainter.RenderRaster(m, tiles).ToTexture(FilterMode.Bilinear, true);
+                var raster = MapPainter.RenderRaster(m, tiles);
+                var tex = raster.ToTexture(FilterMode.Bilinear, true);
                 File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
+                var over = MapPainter.Overlay(raster).ToTexture(FilterMode.Bilinear, true);      // 덮개 (맵 입체화 A) — over/ 폴더
+                Directory.CreateDirectory(Path.Combine(dir, "over"));
+                File.WriteAllBytes(Path.Combine(dir, "over", name + ".png"), over.EncodeToPNG());
+                Object.DestroyImmediate(over);
                 var sb = new System.Text.StringBuilder();                   // 글자 지도도 (배치 고칠 때 칸 좌표 보기)
                 for (int y = 0; y < WorldMap.H; y++) { for (int x = 0; x < WorldMap.W; x++) sb.Append(m.At(x, y)); sb.Append('\n'); }
                 File.WriteAllText(Path.Combine(dir, name + ".txt"), sb.ToString());

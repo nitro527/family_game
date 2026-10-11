@@ -61,6 +61,7 @@ namespace GirlAdventure.EditorTools
             MapKindTableTests();
             StoryTableTests();
             StoryFlowTests();
+            HeightTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();

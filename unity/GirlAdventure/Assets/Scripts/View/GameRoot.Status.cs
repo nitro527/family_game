@@ -274,6 +274,8 @@ namespace GirlAdventure.View
                 foreach (var id in autoIds) lines.Add($"{Party.Def(id)?.Name ?? id} 자동 공격  <color=#F2C443>{(Settings.AllyAuto(id) ? "켬" : "끔")}</color>");
                 int oneIdx = P.BrotherJoined ? lines.Count : -1;        // 지훈 한 버튼 모드 (PLAN 70)
                 if (oneIdx >= 0) lines.Add($"지훈 한 버튼 모드  <color=#F2C443>{(Settings.BroOneButton ? "켬" : "끔")}</color>");
+                int tiltIdx = lines.Count;                               // 화면 시점 (맵 입체화 F)
+                lines.Add($"화면 시점  <color=#F2C443>{(Settings.Tilt ? "기울임" : "기본")}</color>");
                 int controlsIdx = lines.Count;                           // 조작법 (키보드·패드, 2026-10-06 패드 지원)
                 lines.Add("조작법 보기");
                 lines.Add("닫기");
@@ -286,6 +288,15 @@ namespace GirlAdventure.View
                     sfx.Play("select");
                     yield return Say(Settings.BroOneButton ? "지훈이 차례에는 아무 버튼이나 누르면 지훈이가 씩씩하게 공격해요! (자동 공격이 켜져 있으면 자동이 먼저)" : "지훈이 차례에 명령을 골라요.",
                                      Settings.BroOneButton ? "bro_laugh" : "bro_smile", .6f);
+                    choiceIndex = picked;
+                    continue;
+                }
+                if (picked == tiltIdx)
+                {
+                    Settings.Tilt = !Settings.Tilt;
+                    PlayerPrefs.Save();
+                    sfx.Play("select");
+                    yield return Say(Settings.Tilt ? "멀리 있는 곳이 조금 작게 보이도록 화면을 살짝 기울였어요!" : "화면을 원래대로 위에서 내려다보게 했어요.", "laugh", .6f);
                     choiceIndex = picked;
                     continue;
                 }

@@ -12,12 +12,18 @@ namespace GirlAdventure.View
         public readonly int W, H;
         readonly Color32[] px;
 
+        /// <summary>찍은 소품 기록 (그림·왼쪽 위 자리) — 맵 그림이 끝난 뒤 덮개(앞뒤 가리기)·절벽 뒤 다시 찍기에 쓴다 (2026-10-11 맵 입체화).</summary>
+        public readonly System.Collections.Generic.List<(TileImage img, int x, int y)> PropLog = new System.Collections.Generic.List<(TileImage, int, int)>();
+
         public Raster(int w, int h, Color32 clear = default)
         {
             W = w; H = h;
             px = new Color32[w * h];
             if (clear.a != 0) for (int i = 0; i < px.Length; i++) px[i] = clear;
         }
+
+        /// <summary>픽셀 하나 (캔버스 좌표, 밖이면 투명).</summary>
+        public Color32 Get(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? default : px[(H - 1 - y) * W + x];
 
         public void Blend(int x, int y, Color32 c, float cover = 1f)
         {

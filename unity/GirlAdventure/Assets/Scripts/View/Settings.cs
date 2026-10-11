@@ -65,6 +65,13 @@ namespace GirlAdventure.View
         public static void SetBroOneButton(bool on) => PlayerPrefs.SetInt("broOneButton", on ? 1 : 0);
         public static void ToggleBroOneButton() => SetBroOneButton(!BroOneButton);
 
+        /// <summary>기울인 시점 (맵 입체화 F, 2026-10-11 "약간 쿼터뷰로 거리감"): 필드 카메라를 살짝 기울여 먼 쪽(위)이 조금 작게.</summary>
+        public static bool Tilt
+        {
+            get => PlayerPrefs.GetInt("tiltView", 0) != 0;
+            set => PlayerPrefs.SetInt("tiltView", value ? 1 : 0);
+        }
+
         public static int MessageFontSize => BigText ? 26 : 23;
         public static int ChoiceFontSize => BigText ? 25 : 22;
 

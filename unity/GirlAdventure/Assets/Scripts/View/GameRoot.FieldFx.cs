@@ -26,7 +26,7 @@ namespace GirlAdventure.View
         {
             fieldFxRoot = new GameObject("FieldFx").transform;
             fieldFxRoot.SetParent(fieldRoot, false);
-            fieldParticles = new ParticleLayer(fieldFxRoot, "FieldFx", ParticleFade.Linear, 3);
+            fieldParticles = new ParticleLayer(fieldFxRoot, "FieldFx", ParticleFade.Linear, 4);    // 덮개(3) 위
             waveSprite = Art.FromTexture(WaveTexture(), new Vector2(0, 1), Painter.Tile);
             puffSprite = Art.FromTexture(Painter.Glow(), new Vector2(.5f, .5f), 64);
             sparkSprite = Art.FromTexture(Painter.Star(), new Vector2(.5f, .5f), 64);

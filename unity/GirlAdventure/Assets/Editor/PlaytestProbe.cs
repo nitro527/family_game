@@ -216,6 +216,8 @@ namespace GirlAdventure.EditorTools
 
             // 네 방향 걷기 — 방향별 캐릭터 크기 비교 (몬스터가 다가와 전투가 끼어들면 걷기 검사가 흔들려서 멈춤)
             G.DebugMobs(true, false);
+            var evMuted = new List<string>();          // 걷는 동안 맵 이벤트(연못 별 등)가 끼어들지 않게 잠깐 본 것으로
+            foreach (var e in Quests.AllEvents) if (!G.P.Opened.Contains("ev_" + e.Id)) { G.P.Opened.Add("ev_" + e.Id); evMuted.Add("ev_" + e.Id); }
             var open = G.DebugOpenSpot(6);            // 걷는 거리가 프레임마다 조금씩 달라서, 사방이 트인 곳에서 걷는다
             G.DebugTeleport(open.x, open.y, "down");
             yield return .3f;
@@ -228,6 +230,7 @@ namespace GirlAdventure.EditorTools
             Shot("idle_left");
             foreach (var x in Walk(KeyCode.UpArrow, "up", .3f, true)) yield return x;
             Shot("idle_up");
+            foreach (var id in evMuted) G.P.Opened.Remove(id);
             if (G.Current == GameRoot.Mode.Battle)
                 foreach (var x in FightUntilOver(false)) yield return x;
 
@@ -532,6 +535,38 @@ namespace GirlAdventure.EditorTools
             Expect("mob depth sorting (front over, back under)", G.DebugMobDepthOk());
             // 도감 그림 파랑 젤리 (B-5a): 필드(위 mob_depth)와 전투 모두 그림으로
             Expect("blue jelly uses dogam art", G.UsesArt(GameData.Normal[0]));
+            // 맵 입체화 (2026-10-11 "크로노 트리거처럼"): 성 전망 언덕 — 계단으로 두 걸음 오르고, 계단 옆 절벽면은 막힌다
+            G.DebugTeleport(24, 14, "up");
+            yield return .3f;
+            for (int k = 0; k < 2; k++) { Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false); yield return .45f; }
+            Shot("hill_stairs");
+            Expect("climbed the hill by the stairs", G.P.X == 24 && G.P.Y == 12, $"{G.P.X},{G.P.Y}");
+            foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
+            G.DebugTeleport(25, 14, "up");
+            yield return .3f;
+            Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return .4f;
+            Expect("cliff face blocks the way up", G.P.X == 25 && G.P.Y == 14, $"{G.P.X},{G.P.Y}");
+            // 앞뒤 가리기: 나무 바로 위(뒤) 칸에 서면 나뭇잎 덮개가 주인공을 가린다
+            G.DebugTeleport(26, 12, "down");
+            yield return .3f;
+            Shot("behind_tree");
+            Expect("tree canopy overlay covers the player behind a tree", G.OverlayCoversPlayer(), "");
+            // 기울인 시점 (설정): 원근 카메라, 주인공은 화면 안, 화면 귀퉁이가 맵 밖으로 안 나간다 — 맵 가운데·위 끝·오른쪽 아래 끝
+            Settings.Tilt = true;
+            foreach (var (tvx, tvy) in new[] { (18, 12), (5, 2), (33, 21) })
+            {
+                G.DebugTeleport(tvx, tvy, "down");
+                yield return .5f;
+                Shot($"tilt_{tvx}_{tvy}");
+                var vp = G.PlayerViewport;
+                Expect($"tilted view at ({tvx},{tvy}): player on screen, view inside map", G.CameraTilted && vp.x > 0 && vp.x < 1 && vp.y > 0 && vp.y < 1 && G.ViewInsideMap, $"vp {vp}");
+            }
+            Settings.Tilt = false;
+            yield return .3f;
+            Expect("flat view back", !G.CameraTilted);
+            G.DebugTeleport(8, 12, "right");                  // 아래 전투 검사 자리로 돌아간다
+            yield return .3f;
             G.DebugMobs(true, true);
             G.DebugSpawnMob(9, 12, 0);
             yield return .3f;

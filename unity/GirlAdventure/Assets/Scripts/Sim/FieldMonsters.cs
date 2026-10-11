@@ -48,7 +48,7 @@ namespace GirlAdventure.Sim
         }
 
         /// <summary>몬스터가 살 수 있는 칸: 인카운트 지형이고 안전지대가 아님.</summary>
-        public bool Habitat(int x, int y) => Map.EncounterRate(x, y) > 0 && !Map.Safe(x, y)
+        public bool Habitat(int x, int y) => Map.EncounterRate(x, y) > 0 && !Map.Safe(x, y) && !Map.IsFace(x, y)
                                              && !(Map.Kind == MapKind.Cave && (x, y) == WorldMap.GuardSpot);   // 지킴이 자리는 비워 둔다
 
         public FieldMonster At(int x, int y)
@@ -125,7 +125,7 @@ namespace GirlAdventure.Sim
                 int nx = m.X + dx, ny = m.Y + dy;
                 bool toPlayer = nx == px && ny == py;
                 if (toPlayer && Timid) continue;            // 겁먹은 몬스터는 스스로 부딪히지 않는다
-                if (!Habitat(nx, ny) || (!toPlayer && At(nx, ny) != null)) continue;   // 안전지대의 주인공은 못 건드린다
+                if (!Habitat(nx, ny) || !Map.CanStep(m.X, m.Y, nx, ny) || (!toPlayer && At(nx, ny) != null)) continue;   // 절벽은 못 넘는다   // 안전지대의 주인공은 못 건드린다
                 if (toPlayer && Grace > 0) continue;
                 m.FromX = m.X; m.FromY = m.Y;
                 m.X = nx; m.Y = ny;

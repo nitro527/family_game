@@ -106,7 +106,7 @@ namespace GirlAdventure.Sim
                         {
                             if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                             int x = w.x + dx, y = w.y + dy;
-                            if (".,f_=g".IndexOf(m.At(x, y)) < 0 || m.Safe(x, y) || list.Contains((x, y)) || m.Holes.Contains((x, y))) continue;
+                            if (".,f_=g".IndexOf(m.At(x, y)) < 0 || m.Safe(x, y) || m.Blocked(x, y) || list.Contains((x, y)) || m.Holes.Contains((x, y))) continue;   // 절벽면·막는 장식은 빼고
                             best = (x, y);
                         }
                 list.Add(best);

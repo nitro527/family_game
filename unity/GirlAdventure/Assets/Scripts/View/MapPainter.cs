@@ -11,7 +11,7 @@ namespace GirlAdventure.View
     ///  - 땅 색은 여러 겹의 노이즈로 얼룩지게, 큰 물체 아래엔 그림자(오른쪽 아래로 드리움)
     ///  - 동굴은 3/4 시점 절벽면 + 빛나는 수정 (조명 위치는 Lights() 로 View 에 넘긴다)
     /// </summary>
-    public static class MapPainter
+    public static partial class MapPainter
     {
         const int T = Painter.Tile;
         static readonly Color32 Ink = Painter.Ink;
@@ -34,8 +34,31 @@ namespace GirlAdventure.View
         internal static bool Prop(Raster R, string name, float cx, float bottom)
         {
             if (Props == null || !Props.TryGetValue(name, out var img)) return false;
-            R.Stamp(img, 0, 0, img.W, img.H, Mathf.RoundToInt(cx - img.W / 2f), Mathf.RoundToInt(bottom - img.H));
+            int dx = Mathf.RoundToInt(cx - img.W / 2f), dy = Mathf.RoundToInt(bottom - img.H);
+            R.Stamp(img, 0, 0, img.W, img.H, dx, dy);
+            R.PropLog.Add((img, dx, dy));
             return true;
+        }
+
+        /// <summary>소품 바닥이 이만큼(px) 아래 칸으로 삐져나와도 그 위 칸을 바닥 칸으로 본다 (집·나무 여백, 큰 고목 뿌리는 30px).</summary>
+        const int FootSlack = 34;
+
+        /// <summary>
+        /// 덮개 (맵 입체화 A, 2026-10-11 "크로노 트리거처럼"): 키 큰 소품(한 칸 이상)의 바닥 칸보다 위쪽 픽셀만 모은 그림.
+        /// 캐릭터 위에 그려서 나무 줄기 뒤·집 지붕 뒤로 지나가면 가려지게 한다 (바닥 칸 줄은 캐릭터 뒤 그대로).
+        /// </summary>
+        public static Raster Overlay(Raster baseR)
+        {
+            var O = new Raster(baseR.W, baseR.H);
+            foreach (var (img, x, y) in baseR.PropLog)
+            {
+                if (img.H < T - 4) continue;                                    // 낮은 장식(꽃·풀·버섯)은 가리지 않는다
+                int footRow = Mathf.FloorToInt((y + img.H - 1 - FootSlack) / (float)T);
+                int cut = footRow * T - y;                                      // 그림 안에서 이 줄 위쪽만
+                if (cut <= 0) continue;
+                O.Stamp(img, 0, 0, img.W, Mathf.Min(cut, img.H), x, y);
+            }
+            return O;
         }
 
         /// <summary>픽셀만 그린다 (Unity API 없음 → 백그라운드 스레드에서 미리 그릴 수 있다).</summary>
@@ -43,6 +66,7 @@ namespace GirlAdventure.View
         public static Raster RenderRaster(WorldMap m, FieldTiles tiles = null)
         {
             var R = RenderBase(m, tiles);
+            TerrainPass(R, m);                                              // 높이: 언덕 밝게·가장자리·절벽면·계단 (MapPainter.Terrain.cs)
             PlacedPass(R, m);                                               // props.json Placed: 데이터로 놓은 장식 (맨 위, 위 칸부터)
             return R;
         }

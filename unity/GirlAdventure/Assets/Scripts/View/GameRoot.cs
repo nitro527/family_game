@@ -56,6 +56,7 @@ namespace GirlAdventure.View
         {
             Keys.BeginFrame();
             TickBanner();
+            if (Current != Mode.Field) CameraFlat();       // 기울인 시점은 필드에서만
             if (Keys.Down(KeyCode.M) && !(Current == Mode.Title && nameInput.isFocused)) Pop($"음악 {bgm.CycleVolume()}%", 840, 60, Color.white, 28);
             switch (Current)
             {
@@ -444,6 +445,33 @@ namespace GirlAdventure.View
         public WorldMap Map => map;
 
         /// <summary>플레이테스트용: 몬스터 생성·이동 멈춤 + 전부 치우기.</summary>
+        /// <summary>프로브용: 기울인 시점인지, 주인공이 화면(뷰포트) 어디에 있는지, 화면 네 귀퉁이가 맵 안(상태창 위 여백 포함)인지.</summary>
+        public bool CameraTilted => !cam.orthographic;
+        public Vector3 PlayerViewport => cam.WorldToViewportPoint(playerSR.transform.position);
+        public bool ViewInsideMap
+        {
+            get
+            {
+                foreach (var (vx, vy) in new[] { (0f, 0f), (1f, 0f), (0f, 1f), (1f, 1f) })
+                {
+                    var g = cam.orthographic ? cam.ViewportToWorldPoint(new Vector3(vx, vy, 10)) : GroundAtView(vx, vy);
+                    if (g.x < -.05f || g.x > WorldMap.W + .05f || g.y < -WorldMap.H - .05f || g.y > 3f) return false;
+                }
+                return true;
+            }
+        }
+        Vector3 GroundAtView(float vx, float vy) => GroundAt(vx, vy);
+
+        /// <summary>프로브용: 지금 맵 덮개(키 큰 소품 윗부분)가 주인공 몸통 자리를 덮는지 (맵을 다시 그려서 본다 — 느림).</summary>
+        public bool OverlayCoversPlayer()
+        {
+            var over = MapPainter.Overlay(MapPainter.RenderRaster(map, fieldTiles));
+            int px = P.X * Painter.Tile + Painter.Tile / 2, py = P.Y * Painter.Tile + Painter.Tile / 4;   // 칸 위쪽 1/4 (몸통·머리)
+            int n = 0;
+            for (int dy = -6; dy <= 6; dy += 3) for (int dx = -6; dx <= 6; dx += 3) if (over.Get(px + dx, py + dy).a > 128) n++;
+            return n >= 10;
+        }
+
         public void DebugMobs(bool paused, bool clear)
         {
             mobs.Paused = paused;
@@ -468,7 +496,13 @@ namespace GirlAdventure.View
                     bool ok = true;
                     for (int dy = -r; dy <= r && ok; dy++)
                         for (int dx = -r; dx <= r && ok; dx++)
-                            ok = ".,f=b".IndexOf(map.At(x + dx, y + dy)) >= 0;
+                            ok = ".,f=b".IndexOf(map.At(x + dx, y + dy)) >= 0 && !map.Blocked(x + dx, y + dy) && map.Level(x + dx, y + dy) == map.Level(x, y);   // 언덕·절벽면 걸치지 않게
+                    foreach (var e in Quests.AllEvents)                              // 맵 이벤트 근처는 피한다 (걷다가 대사가 끼어들지 않게)
+                        if (ok && e.Chapter == P.Chapter && Quests.KindOf(e.Map) == map.Kind)
+                        {
+                            var c = Quests.EventSpot(e, map);
+                            if (Mathf.Abs(c.x - x) <= r + 1 && Mathf.Abs(c.y - y) <= r + 1) ok = false;
+                        }
                     if (ok) return new Vector2Int(x, y);
                 }
             return null;
