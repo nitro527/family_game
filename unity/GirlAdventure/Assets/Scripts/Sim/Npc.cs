@@ -120,6 +120,7 @@ namespace GirlAdventure.Sim
                 case "guard": return p.GuardDown;
                 case "key": return p.HasItem(Quest.KeyItem);
                 case "door": return Quest.DoorOpen(p);
+                case "letter": return Quest.HasLetter(p);
             }
             if (w.Length > 2 && (w.StartsWith("ch") || w.StartsWith("lv")) && int.TryParse(w.Substring(2), out int n))
                 return w.StartsWith("ch") ? p.Chapter >= n : p.Lv >= n;

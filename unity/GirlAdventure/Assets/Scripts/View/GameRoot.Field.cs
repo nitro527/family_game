@@ -165,7 +165,7 @@ namespace GirlAdventure.View
             get
             {
                 var c = Chapters.Get(P.Chapter);                         // 챕터 표: 마을 안이면 그 챕터의 마을, 아니면 바깥 맵
-                return worldMaps[P.InVillage && c.Town.HasValue ? c.Town.Value : c.Field];
+                return worldMaps[P.InVillage && c.TownKind.HasValue ? c.TownKind.Value : c.FieldKind];
             }
         }
 
@@ -304,9 +304,7 @@ namespace GirlAdventure.View
             {
                 sfx.Play("chest");
                 RefreshQuestProps();
-                var c = FeetAt(x, y) + new Vector3(0, .6f, 0);
-                for (int i = 0; i < 10; i++)
-                    SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
+                RewardSparkle(x, y);
                 AutoSave();
                 RefreshHud();
                 yield return Talk("chest_open", ("item", GameData.ItemName(item)));
@@ -427,61 +425,44 @@ namespace GirlAdventure.View
         /// <summary>집 안 보물상자 (P-5): 집마다 하나, 한 번만.</summary>
         IEnumerator HomeChestRoutine(int x, int y)
         {
-            if (busy) yield break;
-            busy = true;
-            bool snow = map.Kind == MapKind.Snow, lib = map.Kind == MapKind.Library, forest = map.Kind == MapKind.Forest;
-            var r = snow ? Quest.OpenSnowChest(P, out var what) : lib ? Quest.OpenLibraryChest(P, out what) : forest ? Quest.OpenForestChest(P, out what) : Quest.OpenHomeChest(P, map.Room, out what);
-            if (r == ChestResult.Got)
+            IEnumerator Body()
             {
-                sfx.Play("chest");
-                RefreshQuestProps();
-                var c = FeetAt(x, y) + new Vector3(0, .6f, 0);
-                for (int i = 0; i < 10; i++)
-                    SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
-                AutoSave();
-                RefreshHud();
-                yield return Talk(snow ? "snow_chest_open" : lib ? "lib_chest_open" : forest ? "for_chest_open" : "chest_open", ("item", what));
+                bool snow = map.Kind == MapKind.Snow, lib = map.Kind == MapKind.Library, forest = map.Kind == MapKind.Forest;
+                var r = snow ? Quest.OpenSnowChest(P, out var what) : lib ? Quest.OpenLibraryChest(P, out what) : forest ? Quest.OpenForestChest(P, out what) : Quest.OpenHomeChest(P, map.Room, out what);
+                if (r == ChestResult.Got)
+                {
+                    sfx.Play("chest");
+                    RefreshQuestProps();
+                    RewardSparkle(x, y);
+                    AutoSave();
+                    RefreshHud();
+                    yield return Talk(snow ? "snow_chest_open" : lib ? "lib_chest_open" : forest ? "for_chest_open" : "chest_open", ("item", what));
+                }
+                else yield return Talk("chest_empty");
             }
-            else yield return Talk("chest_empty");
-            HideMessage();
-            busy = false;
+            return Scene(Body(), skipIfBusy: true);
         }
 
         /// <summary>리본 편지를 줍고 바로 읽는다 (서진이 노트 3, Q-13).</summary>
         IEnumerator LetterRoutine()
         {
-            if (busy) yield break;
-            busy = true;
-            if (Quest.TakeLetter(P))
+            IEnumerator Body()
             {
+                if (!Quest.TakeLetter(P)) yield break;
                 sfx.Play("chest");
                 RefreshQuestProps();
                 AutoSave();
                 yield return Talk("letter_find");
                 yield return Talk("letter_read");
             }
-            HideMessage();
-            busy = false;
+            return Scene(Body(), skipIfBusy: true);
         }
 
         /// <summary>얼음 위 첫 미끄럼이면 한 번 알려 준다 (C5-3).</summary>
-        IEnumerator IceHintRoutine()
-        {
-            busy = true;
-            yield return Talk("ice_slide");
-            HideMessage();
-            busy = false;
-        }
+        IEnumerator IceHintRoutine() => Scene(Talk("ice_slide"));
 
         /// <summary>대사 하나만 (침대·책장 같은 것에 부딪혔을 때).</summary>
-        IEnumerator TalkOnce(string id)
-        {
-            if (busy) yield break;
-            busy = true;
-            yield return Talk(id);
-            HideMessage();
-            busy = false;
-        }
+        IEnumerator TalkOnce(string id) => Scene(Talk(id), skipIfBusy: true);
 
         /// <summary>
         /// 지하세계 드나들기 (사용자 요청 2026-10-03): 숨겨진 구멍을 밟으면 어두워졌다가 지하세계 밧줄 아래로,
@@ -831,7 +812,7 @@ namespace GirlAdventure.View
             var ev = Quests.EventAt(P, map, P.X, P.Y);                         // 맵 이벤트 (G-3): 처음 지나가는 곳의 짧은 장면
             if (ev != null) { StartCoroutine(MapEventRoutine(ev)); return; }
             foreach (var ch in Chapters.All)                        // 챕터 보스 자리 (챕터 표: 맵·칸 글자)
-                if (here == ch.BossTile && map.Kind == ch.BossMap && !P.BossBeaten(ch.No)) { StartCoroutine(BossRoutine(ch)); return; }
+                if (here == ch.BossChar && map.Kind == ch.BossMapKind && !P.BossBeaten(ch.No)) { StartCoroutine(BossRoutine(ch)); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }
             if ((P.X, P.Y) == map.SecretHole && Holes.SecretOpen(P, map)) { StartCoroutine(UnderworldRoutine(true)); return; }
             if (map.Kind == MapKind.Home && map.At(P.X, P.Y) == 'E') { StartCoroutine(HomeRoutine(-1)); return; }
@@ -1022,7 +1003,7 @@ namespace GirlAdventure.View
                 }
             }
             yield return Talk(ch.BossTalk);
-            yield return BattleRoutine(ch.Boss());
+            yield return BattleRoutine(ch.BossDef());
         }
 
         /// <summary>

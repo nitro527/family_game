@@ -20,7 +20,7 @@ namespace GirlAdventure.EditorTools
             foreach (MapKind k in System.Enum.GetValues(typeof(MapKind)))
             {
                 var info = MapKinds.Of(k);
-                if (info.Kind != k) { bad += $"{k}:missing "; continue; }
+                if (!MapKinds.Has(k) || info.Type != k) { bad += $"{k}:missing "; continue; }
                 var m = WorldMap.Build(k);
                 var (sx, sy) = info.Spawn();
                 if (m.Blocked(sx, sy)) bad += $"{k}:spawn ";
@@ -36,15 +36,15 @@ namespace GirlAdventure.EditorTools
             string bad = "";
             foreach (var c in Chapters.All)
             {
-                var m = WorldMap.Build(c.Field);
+                var m = WorldMap.Build(c.FieldKind);
                 var (sx, sy) = c.Start();
-                if (c.Boss() == null) bad += $"ch{c.No}:boss ";
+                if (c.BossDef() == null) bad += $"ch{c.No}:boss ";
                 foreach (var t in new[] { c.IntroTalk, c.BossTalk, c.ClearTalk, c.CardTalk })
                     if (!string.IsNullOrEmpty(t) && !GameData.HasTalk(t)) bad += $"ch{c.No}:talk {t} ";
                 if (m.Blocked(sx, sy)) bad += $"ch{c.No}:start blocked ";
-                if (WorldMap.Build(c.BossMap).Find(c.BossTile).x < 0) bad += $"ch{c.No}:boss tile ";
-                if (c.Goal == null || string.IsNullOrEmpty(c.Goal(PlayerState.NewGame("g")))) bad += $"ch{c.No}:goal ";
-                if (Chapters.ByBoss(c.Boss()) != c) bad += $"ch{c.No}:byboss ";
+                if (WorldMap.Build(c.BossMapKind).Find(c.BossChar).x < 0) bad += $"ch{c.No}:boss tile ";
+                if (c.Goal.Length == 0 || string.IsNullOrEmpty(c.GoalText(PlayerState.NewGame("g")))) bad += $"ch{c.No}:goal ";
+                if (Chapters.ByBoss(c.BossDef()) != c) bad += $"ch{c.No}:byboss ";
             }
             Check("chapter table: bosses, talks, starts, boss tiles, goals", bad == "", bad);
             var p = PlayerState.NewGame("c");

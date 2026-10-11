@@ -9,6 +9,7 @@ namespace GirlAdventure.View
         public static void Load(bool force = false)
         {
             if (GameData.Loaded && !force) return;
+            MapKinds.Set(Read<MapKindTable>("mapkinds"));     // 맵 종류 표 (맵을 만들기 전에)
             Party.Set(Read<PartyTable>("party"));      // 동료 장비 부위를 알아야 items.json 장비를 고를 수 있어 GameData 보다 먼저
             GameData.Set(
                 Read<EnemyTable>("enemies"),
@@ -18,6 +19,7 @@ namespace GirlAdventure.View
                 Read<EncounterTable>("encounters"));
             Npcs.Set(Read<NpcTable>("npcs"));
             Quests.Set(Read<QuestTable>("quests"));
+            Chapters.Set(Read<ChapterTable>("chapters"));      // 챕터 표 (적 이름으로 보스를 찾으니 GameData 다음)
             PropCatalog.Set(Read<PropTable>("props"));     // 맵 소품 목록·맵별 테마 (MapPainter 가 읽는다)
         }
 

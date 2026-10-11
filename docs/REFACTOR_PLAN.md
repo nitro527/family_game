@@ -38,9 +38,14 @@
   GameRoot 는 "어디에·언제"만 정하고 그리는 일은 부품이. 프로브 통과.
 - **D. 테스트 정리 (2026-10-10 완료)**: SmokeTest 2,950줄 → 핵심(680) + Chapters·Battle·Data·Save partial 파일. 검사 305개 그대로.
 
-## 다음에 하면 좋은 것
-- 퀘스트·이벤트 루틴(Quests·Holes·Npcs)의 공통 "대사 → 연출 → 보상" 흐름을 하나로
-- 챕터 표·맵 종류 표를 JSON 으로 (지금은 C# 표 — 좌표가 WorldMap 코드에 묶여 있어서)
+## 결과 (이어서)
 - **E. 전투 연출 정리 (2026-10-11 완료)**: GameRoot.Battle 1,640줄 → Battle(뼈대 540)·BattleTurns(우리 편 차례)·BattleEnemy(적 차례·기믹·상태 이상)·BattleHud(HP 막대·이름표)·BattleFx(이펙트).
   순수 계산 부품: `MonsterMotion`(필드 걸음새·전투 등장/공격 모션·걸음새별 공격 모습·소리), `BattleLayout`(인원수별 자리·크기). 스모크 BattlePresentationTests 추가,
   TownTests 안에서 이어 부르던 테스트 35개를 RunAll 로. 프로브·빌드 통과.
+- **F. 장면 공통 흐름 (2026-10-11 완료)**: `GameRoot.Scenes.cs` 의 `Scene(본문, save, skipIfBusy)` — 찾기·맵 이벤트·비밀·나무 선물·항아리·집 상자·편지·얼음 힌트·한 번 대사 10곳.
+  보상 반짝 `RewardSparkle`, 잎·물방울 튀기는 공용 입자(중력)로. 프로브·빌드 통과.
+- **G. 표를 JSON 으로 (2026-10-11 완료)**: `chapters.json`(챕터 7줄) · `mapkinds.json`(맵 종류 13줄). 칸 좌표는 맵 모양과 묶여 있어 `MapPoints`(코드)에.
+  **새 챕터 = chapters.json 한 줄 + 맵**. 맵 그림 픽셀 같음, 프로브·빌드 통과.
+
+## 다음
+- 이벤트 엔진·퀘스트 → docs/EVENTS_PLAN.md

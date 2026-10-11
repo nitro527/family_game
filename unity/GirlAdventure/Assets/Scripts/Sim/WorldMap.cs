@@ -194,15 +194,15 @@ namespace GirlAdventure.Sim
             MapKind.Forest => Forest(), MapKind.Home => Home(0), _ => new WorldMap(),
         };
         /// <summary>그 챕터의 바깥 맵 (챕터 표).</summary>
-        public static WorldMap ForChapter(int chapter) => Build(Chapters.Get(chapter).Field);
+        public static WorldMap ForChapter(int chapter) => Build(Chapters.Get(chapter).FieldKind);
         /// <summary>그 챕터에 들어가 볼 마을이 있나 (챕터 표 — 동굴·도서관·숲은 마을 대신 쉼터).</summary>
-        public static bool HasTown(int chapter) => Chapters.Get(chapter).Town.HasValue;
+        public static bool HasTown(int chapter) => Chapters.Get(chapter).TownKind.HasValue;
         /// <summary>지금 있어야 할 맵 (지하세계 안이면 지하세계, 마을 안이면 그 챕터의 마을).</summary>
         public static WorldMap ForPlayer(int chapter, bool inVillage, bool underground = false)
         {
             if (underground) return Underworld();
             var c = Chapters.Get(chapter);
-            return Build(inVillage && c.Town.HasValue ? c.Town.Value : c.Field);
+            return Build(inVillage && c.TownKind.HasValue ? c.TownKind.Value : c.FieldKind);
         }
 
         public WorldMap(int seed = 7)
@@ -714,7 +714,7 @@ namespace GirlAdventure.Sim
             if (x >= 0 && y >= 0 && x < W && y < H) tiles[x, y] = c;
         }
 
-        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? MapKinds.Of(Kind).Edge : tiles[x, y];
+        public char At(int x, int y) => x < 0 || y < 0 || x >= W || y >= H ? MapKinds.Of(Kind).EdgeChar : tiles[x, y];
 
         public bool Blocked(int x, int y) => Blocking.IndexOf(At(x, y)) >= 0 || PropCatalog.Blocks(Kind, x, y);   // props.json Placed 의 Block 장식도
 

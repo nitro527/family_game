@@ -275,12 +275,12 @@ namespace GirlAdventure.View
             EnterField();
             busy = true;
             if (!string.IsNullOrEmpty(c.IntroTalk)) yield return Talk(c.IntroTalk);
-            if (c.JoinScene is var (talk, party, cutin, joined))
+            if (c.HasJoinScene)
             {
-                yield return Talk(talk);
-                yield return CutinRoutine(Art.UI(party + "/hero"), cutin, "lvup");
+                yield return Talk(c.JoinTalk);
+                yield return CutinRoutine(Art.UI(c.JoinParty + "/hero"), c.JoinCutin, "lvup");
                 RefreshHud();
-                yield return Talk(joined);
+                yield return Talk(c.JoinedTalk);
             }
             HideMessage();
             AutoSave();

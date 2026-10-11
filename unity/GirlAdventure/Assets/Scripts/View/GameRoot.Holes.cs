@@ -192,8 +192,7 @@ namespace GirlAdventure.View
             if (r == HoleResult.Candy)
             {
                 sfx.Play("chest");
-                for (int i = 0; i < 10; i++)
-                    SpawnField(sparkSprite, c, new Vector3(Random.Range(-1f, 1f), Random.Range(.8f, 2f)), .9f, Random.Range(.2f, .35f), UIKit.Gold, Random.Range(-120, 120));
+                RewardSparkle(c);
                 RefreshHud();
                 yield return Talk("hole_candy", ("count", Holes.CandyGain));
                 HideMessage();

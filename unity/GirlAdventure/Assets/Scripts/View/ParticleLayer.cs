@@ -16,7 +16,7 @@ namespace GirlAdventure.View
         {
             public SpriteRenderer sr;
             public Vector3 vel;
-            public float age, life, spin, alpha = -1;
+            public float age, life, spin, gravity, alpha = -1;
             public ParticleFade fade;
         }
 
@@ -38,7 +38,7 @@ namespace GirlAdventure.View
 
         public int Count => list.Count;
 
-        public SpriteRenderer Spawn(Sprite s, Vector3 pos, Vector3 vel, float life, float scale, Color color, float spin = 0, int? order = null, ParticleFade? fade = null)
+        public SpriteRenderer Spawn(Sprite s, Vector3 pos, Vector3 vel, float life, float scale, Color color, float spin = 0, int? order = null, ParticleFade? fade = null, float gravity = 0)
         {
             var sr = new GameObject(label).AddComponent<SpriteRenderer>();
             sr.transform.SetParent(parent, false);
@@ -47,7 +47,7 @@ namespace GirlAdventure.View
             sr.sprite = s;
             sr.color = color;
             sr.sortingOrder = order ?? defaultOrder;
-            list.Add(new Particle { sr = sr, vel = vel, life = life, spin = spin, fade = fade ?? defaultFade });
+            list.Add(new Particle { sr = sr, vel = vel, life = life, spin = spin, gravity = gravity, fade = fade ?? defaultFade });
             return sr;
         }
 
@@ -63,6 +63,7 @@ namespace GirlAdventure.View
                     list.RemoveAt(i);
                     continue;
                 }
+                f.vel.y -= f.gravity * dt;                                   // 중력 (튀었다가 떨어지는 조각)
                 var tr = f.sr.transform;
                 if (worldSpace) tr.position += f.vel * dt; else tr.localPosition += f.vel * dt;
                 tr.Rotate(0, 0, f.spin * dt);

@@ -327,7 +327,7 @@ namespace GirlAdventure.View
         string Goal()
         {
             if (P.Underground) return "지하세계를 탐험하자! 입구 방의 밧줄로 위로 돌아갈 수 있어요";
-            return Chapters.Get(P.Chapter).Goal(P);                     // 챕터 표의 "지금 할 일"
+            return Chapters.Get(P.Chapter).GoalText(P);                     // 챕터 표의 "지금 할 일"
         }
 
         IEnumerator StatusRoutine()
