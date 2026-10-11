@@ -37,8 +37,9 @@ class Grid:
         return [''.join(r) for r in self.g]
 
 
-def dungeon(kind, name, theme, chapter, g, spawn, spring, sign, chests, boss, boss_at, raise_=(), stairs=(), style='rock', extras=(), boss_h=2.3):
+def dungeon(kind, name, theme, chapter, g, spawn, spring, sign, chests, boss, boss_at, raise_=(), stairs=(), style='rock', extras=(), boss_h=2.3, doors=(), inside=()):
     return {"Kind": kind, "Name": name, "Theme": theme, "Chapter": chapter, "Spawn": "%d,%d" % spawn, "Spring": "%d,%d" % spring, "Sign": "%d,%d" % sign,
+            "Doors": ["%d,%d" % d for d in doors], "Inside": list(inside),
             "Rows": g.rows(), "Chests": [dict(zip(("X", "Y", "Item", "N", "Gold"), c)) for c in chests],
             "_raise": list(raise_), "_stairs": list(stairs), "_style": style, "_boss": boss, "_boss_at": boss_at, "_boss_h": boss_h, "_extras": list(extras)}
 
@@ -67,7 +68,8 @@ def castle():
     return dungeon("Castle", "킹 젤리의 성", "castle", 1, g, (17, 21), (14, 19), (21, 19),
                    [(4, 3, "potion", 2, 0), (32, 4, "moon", 1, 60)], "jelly_king", (17, 3),
                    raise_=[(13, 2, 22, 4, 1)], stairs=["17,5", "18,5"],
-                   extras=[{"Id": "castle_throne", "X": 17, "Y": 2, "Layers": [{"Prop": "jellythrone", "Dx": 0.5, "Dy": 0.1, "Z": 0.004}]}])
+                   extras=[{"Id": "castle_throne", "X": 17, "Y": 2, "Layers": [{"Prop": "jellythrone", "Dx": 0.5, "Dy": 0.1, "Z": 0.004}]}],
+                   doors=[(9, 3), (9, 4)], inside=(10, 2, 25, 7))
 
 
 def fort():
@@ -93,7 +95,7 @@ def fort():
     g.put(32, 20, 'H').put(5, 14, 'H')
     return dungeon("Fort", "젤리 장군의 기지", "fort", 2, g, (5, 21), (4, 19), (8, 19),
                    [(32, 20, "potion", 2, 0), (5, 14, "moon", 1, 120)], "cave_general", (27, 3),
-                   raise_=[(22, 2, 33, 4, 1)], stairs=["27,5"], style="rock")
+                   raise_=[(22, 2, 33, 4, 1)], stairs=["27,5"], style="rock", doors=[(27, 5)], inside=(22, 2, 33, 4))
 
 
 def canyon():
@@ -115,7 +117,8 @@ def canyon():
     g.put(30, 18, 'H').put(10, 6, 'H')
     return dungeon("Canyon", "바위 골짜기 굴", "sandstone", 3, g, (18, 21), (16, 19), (20, 19),
                    [(30, 18, "potion", 3, 0), (10, 6, "moon", 2, 0)], "desert_cowboy", (26, 2),
-                   raise_=[(9, 2, 30, 7, 1), (22, 2, 30, 3, 2)], stairs=["21,8", "26,4"], style="sand")
+                   raise_=[(9, 2, 30, 7, 1), (22, 2, 30, 3, 2)], stairs=["21,8", "26,4"], style="sand",
+                   doors=[(26, 4)], inside=(22, 2, 30, 3))
 
 
 def volcano():
@@ -138,7 +141,7 @@ def volcano():
     g.put(5, 10, 'H').put(33, 17, 'H')
     return dungeon("VolcanoIn", "화산 속", "volcano", 4, g, (5, 21), (3, 19), (7, 19),
                    [(5, 10, "moon", 2, 0), (33, 17, "potion", 3, 200)], "lava_boss", (17, 2),
-                   raise_=[(11, 2, 24, 3, 1)], stairs=["17,4"], style="basalt")
+                   raise_=[(11, 2, 24, 3, 1)], stairs=["17,4"], style="basalt", doors=[(17, 4)], inside=(11, 2, 24, 3))
 
 
 def icecave():
@@ -158,7 +161,8 @@ def icecave():
     g.put(28, 19, 'F').put(32, 19, 'S').put(30, 22, 'E')
     g.put(30, 13, 'H').put(4, 13, 'H')
     return dungeon("IceCave", "얼음 동굴", "ice", 5, g, (30, 21), (28, 19), (32, 19),
-                   [(30, 13, "moon", 2, 0), (4, 13, "potion", 3, 250)], "yeti", (17, 1), style="ice", boss_h=2.5)
+                   [(30, 13, "moon", 2, 0), (4, 13, "potion", 3, 250)], "yeti", (17, 1), style="ice", boss_h=2.5,
+                   doors=[(x, 3) for x in range(13, 23)], inside=(13, 1, 22, 2))
 
 
 def archive():
@@ -182,7 +186,8 @@ def archive():
     g.put(3, 9, 'H').put(30, 13, 'H')
     return dungeon("Archive", "금지된 서고", "archive", 6, g, (18, 21), (16, 20), (20, 20),
                    [(3, 9, "moon", 3, 0), (30, 13, "potion", 3, 300)], "lib_king", (17, 1),
-                   raise_=[(12, 1, 23, 1, 1)], stairs=["17,2", "18,2"], style="wood")
+                   raise_=[(12, 1, 23, 1, 1)], stairs=["17,2", "18,2"], style="wood",
+                   doors=[(x, 3) for x in range(12, 24)], inside=(12, 1, 23, 2))
 
 
 def oak():
@@ -204,7 +209,8 @@ def oak():
     g.put(15, 20, 'F').put(20, 20, 'S').put(17, 22, 'E')
     g.put(4, 12, 'H').put(30, 7, 'H')
     return dungeon("OakHollow", "큰 고목 속", "oak", 7, g, (17, 21), (15, 20), (20, 20),
-                   [(4, 12, "moon", 3, 0), (30, 7, "potion", 4, 400)], "forest_beetle", (17, 2), style="forest")
+                   [(4, 12, "moon", 3, 0), (30, 7, "potion", 4, 400)], "forest_beetle", (17, 2), style="forest",
+                   doors=[(x, 4) for x in range(14, 23)], inside=(14, 1, 22, 3))
 
 
 def cellar():
@@ -218,11 +224,11 @@ def cellar():
     g.put(17, 4, 'E')                      # 사다리 (위 집으로)
     g.puts([(9, 9), (26, 9), (9, 15), (26, 15), (13, 9), (22, 9), (30, 10)], 'r')   # 통·장작 (오브젝트가 그림)
     g.puts([(15, 5), (20, 5), (4, 11), (32, 9)], 'l')
-    g.put(21, 11, 'S')
+    g.put(21, 11, 'S').put(19, 6, 'F')     # 표지판 · 물동이(샘물 — 쓰러지면 그 옆에서 깨어난다)
     g.put(4, 18, 'H').put(31, 16, 'H')
     deco = [{"Id": "cellar_deco_%d_%d" % (x, y), "X": x, "Y": y, "Layers": [{"Prop": p}]}
             for (x, y), p in [((9, 9), "barrels"), ((26, 9), "woodpile"), ((9, 15), "barrels"), ((26, 15), "pot"), ((13, 9), "woodpile"), ((22, 9), "barrels"), ((30, 10), "pot")]]
-    return dungeon("Cellar", "할머니의 지하 창고", "cellar", 0, g, (17, 5), (-1, -1), (21, 11),
+    return dungeon("Cellar", "할머니의 지하 창고", "cellar", 0, g, (17, 5), (19, 6), (21, 11),
                    [(4, 18, "potion", 2, 30), (31, 16, "moon", 1, 0)], None, None,
                    raise_=[(15, 4, 20, 7, 1)], stairs=["17,8", "18,8"], style="wood", extras=deco)
 

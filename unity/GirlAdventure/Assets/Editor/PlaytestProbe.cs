@@ -936,6 +936,15 @@ namespace GirlAdventure.EditorTools
             G.DebugTeleport(17, 7, "up");
             yield return .6f;
             Shot("castle_throne");
+            // 보스 방 창살: 서쪽 복도(9,3)에서 옥좌 방(10,3)으로 들어서면 등 뒤로 쾅
+            int slam0 = G.DoorSlamCount;
+            G.DebugTeleport(9, 3, "right");
+            yield return .3f;
+            Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+            yield return (Func<bool>)(() => G.DoorSlamCount > slam0 && !G.Busy);
+            yield return .2f;
+            Shot("castle_door_slam");
+            Expect("entering the throne room drops the bars behind you", G.DoorShut && !G.DebugWalkable(9, 3), $"{G.P.X},{G.P.Y}");
             if (G.P.Lv < GameRoot.KingReadyLevel)
             {
                 G.DebugTeleport(17, 4, "up");
@@ -947,6 +956,7 @@ namespace GirlAdventure.EditorTools
                 Keys.Press(KeyCode.Return);            // 기본 = 조금 더 강해지고 올래
                 foreach (var x in SkipTalk(() => !G.Busy)) yield return x;
                 Expect("king asks below Lv5 and lets you step back", G.Current == GameRoot.Mode.Field && G.MapKindNow == MapKind.Castle && G.P.Y == 4 && !G.P.BossDown, $"{G.P.X},{G.P.Y}");
+                Expect("stepping back lifts the bars again", !G.DoorShut && G.DebugWalkable(9, 3));
             }
             else Log("king gate warn skipped (already Lv5)");
 

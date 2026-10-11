@@ -382,6 +382,7 @@ namespace GirlAdventure.View
             bgm.Stop();
             yield return Talk("defeat");
             P.Revive();
+            Dungeons.OpenAll(P);                    // 보스 방 창살은 다시 열린다
             (P.X, P.Y) = map.RevivePoint;
             facing = "down";
             yield return Flash(.3f);

@@ -164,6 +164,7 @@ namespace GirlAdventure.View
             RebuildNpcs();
             RebuildObjects();
             RebuildHoles();
+            RefreshDoors();
             mobs.Reset(map, P.X, P.Y);
             SyncMobViews();
         }
@@ -884,6 +885,9 @@ namespace GirlAdventure.View
             if (ev != null) { StartCoroutine(MapEventRoutine(ev)); return; }
             var story = Stories.OnStep(map, P, P.X, P.Y);                      // 이야기 장면 (stories.json): 그 근처에 오면
             if (story != null) { StartCoroutine(StoryScene(story)); return; }
+            if (P.InDungeon && Dungeons.InBossRoom(map.Kind, P.X, P.Y) && !Dungeons.IsShut(P, map.Kind))   // 보스 방에 들어서면 등 뒤로 창살
+                foreach (var ch in Chapters.All)
+                    if (ch.DungeonKind == map.Kind && !P.BossBeaten(ch.No)) { StartCoroutine(DoorSlamRoutine()); return; }
             foreach (var ch in Chapters.All)                        // 던전 입구·출구 (챕터 표: 바깥 맵의 입구 칸, 던전 'E')
             {
                 if (!ch.HasDungeon || ch.No != P.Chapter) continue;
@@ -1078,6 +1082,7 @@ namespace GirlAdventure.View
                     moveT = -1;
                     UpdatePlayerVisual();
                     yield return Talk("boss_gate_later");
+                    if (Dungeons.IsShut(P, map.Kind)) OpenDoors();            // 물러나면 창살이 다시 올라간다
                     HideMessage();
                     busy = false;
                     yield break;

@@ -162,6 +162,87 @@ namespace GirlAdventure.View
             busy = false;
         }
 
+        // ---- 보스 방 창살: 들어서면 등 뒤로 쾅 (보스를 이기면 사라짐, 지거나 물러나면 다시 열림)
+        readonly System.Collections.Generic.List<SpriteRenderer> doorBars = new System.Collections.Generic.List<SpriteRenderer>();
+        Sprite barsSprite;
+        public int DoorSlamCount { get; private set; }
+        public bool DoorShut => map != null && Dungeons.IsShut(P, map.Kind);
+
+        Sprite BarsSprite()
+        {
+            if (barsSprite != null) return barsSprite;
+            var R = new Raster(48, 60);
+            R.Rect(0, 0, 48, 6, Raster.Hex("#3A3440"));                     // 위 가로대
+            R.Rect(0, 50, 48, 5, Raster.Hex("#3A3440"));                    // 아래 가로대
+            for (int i = 0; i < 5; i++)
+            {
+                float x = 3 + i * 10.5f;
+                R.Rect(x, 2, 5, 56, Raster.Hex("#5E5866"));
+                R.Rect(x, 2, 2, 56, Raster.Hex("#8E889A"));
+                R.Polygon(new[] { new Vector2(x - 1, 56), new Vector2(x + 6, 56), new Vector2(x + 2.5f, 60) }, Raster.Hex("#5E5866"));   // 뾰족 끝
+            }
+            return barsSprite = Art.FromTexture(R.ToTexture(), new Vector2(.5f, 0), 48);
+        }
+
+        /// <summary>창살 그림을 지금 상태대로 (맵 바뀜·닫힘·열림 뒤에).</summary>
+        void RefreshDoors()
+        {
+            var d = map != null ? Dungeons.Of(map.Kind) : null;
+            int n = 0;
+            if (d != null && d.Doors != null)
+                foreach (var s in d.Doors)
+                {
+                    var (x, y) = Dungeons.XY(s);
+                    if (!Dungeons.DoorBlocks(P, map, x, y)) continue;
+                    if (n >= doorBars.Count)
+                    {
+                        var sr = new GameObject("DoorBars").AddComponent<SpriteRenderer>();
+                        sr.transform.SetParent(fieldRoot, false);
+                        sr.sprite = BarsSprite();
+                        sr.sortingOrder = 2;
+                        doorBars.Add(sr);
+                    }
+                    doorBars[n].enabled = true;
+                    doorBars[n].transform.localPosition = FeetAt(x, y) + new Vector3(0, -.05f, .01f);
+                    n++;
+                }
+            for (int i = n; i < doorBars.Count; i++) doorBars[i].enabled = false;
+        }
+
+        /// <summary>보스 방에 들어섰을 때: 창살이 위에서 쾅 떨어지고 화면이 흔들린다.</summary>
+        IEnumerator DoorSlamRoutine()
+        {
+            busy = true;
+            DoorSlamCount++;
+            Dungeons.Shut(P, map.Kind);
+            RefreshDoors();
+            var bars = doorBars.FindAll(b => b.enabled);
+            var at = bars.ConvertAll(b => b.transform.localPosition);
+            for (float t = 0; t < .28f; t += Time.deltaTime)
+            {
+                float k = 1 - t / .28f;
+                for (int i = 0; i < bars.Count; i++) bars[i].transform.localPosition = at[i] + new Vector3(0, 2.2f * k * k, 0);
+                yield return null;
+            }
+            for (int i = 0; i < bars.Count; i++) bars[i].transform.localPosition = at[i];
+            sfx.Play("thud");
+            for (float t = 0; t < .35f; t += Time.deltaTime)
+            {
+                if (Settings.Flash) fieldRoot.localPosition = (Vector3)(Random.insideUnitCircle * .1f * (1 - t / .35f));
+                yield return null;
+            }
+            fieldRoot.localPosition = Vector3.zero;
+            ShowBanner("쾅! 뒤에서 창살이 내려왔다!");
+            busy = false;
+        }
+
+        /// <summary>창살을 다시 연다 (졌을 때·물러날 때).</summary>
+        void OpenDoors()
+        {
+            Dungeons.OpenAll(P);
+            RefreshDoors();
+        }
+
         /// <summary>던전 보물상자: 처음이면 아이템·골드 (dungeons.json Chests), 열린 그림은 props.json Objects 가 "Opened:dch_…" 로.</summary>
         IEnumerator DungeonChestRoutine(int x, int y)
         {

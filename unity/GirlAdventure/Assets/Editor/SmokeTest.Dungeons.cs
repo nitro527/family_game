@@ -42,6 +42,27 @@ namespace GirlAdventure.EditorTools
                     if (!string.IsNullOrEmpty(c.Item) && GameData.Item(c.Item) == null) bad += $"{d.Kind}:item {c.Item} ";
                 }
                 if ((d.Chapter > 0 && !boss) || !exit) bad += $"{d.Kind}:needs B and E ";   // 지하실(챕터 0)은 보스 없음
+                if (d.Chapter > 0)
+                {
+                    if (d.Doors == null || d.Doors.Length == 0 || d.Inside == null || d.Inside.Length != 4) bad += $"{d.Kind}:no boss-room door ";
+                    else
+                    {
+                        bool bossIn = false;
+                        for (int y = 0; y < WorldMap.H; y++) for (int x = 0; x < WorldMap.W; x++) if (m.At(x, y) == 'B' && Dungeons.InBossRoom(d.Type, x, y)) bossIn = true;
+                        if (!bossIn) bad += $"{d.Kind}:boss outside its room ";
+                        foreach (var s in d.Doors)
+                        {
+                            var (dx0, dy0) = Dungeons.XY(s);
+                            if (m.Blocked(dx0, dy0) || !reach[dx0, dy0] || Dungeons.InBossRoom(d.Type, dx0, dy0)) bad += $"{d.Kind}:door({s}) ";
+                        }
+                        var p0 = new PlayerState();
+                        Dungeons.Shut(p0, d.Type);
+                        var (fx, fy) = Dungeons.XY(d.Doors[0]);
+                        if (Quest.Walkable(m, p0, fx, fy)) bad += $"{d.Kind}:shut door walkable ";
+                        p0.SetBossBeaten(d.Chapter, true);
+                        if (!Quest.Walkable(m, p0, fx, fy)) bad += $"{d.Kind}:door stays shut after boss ";
+                    }
+                }
                 if (m.EncounterRate(sp.x, sp.y) < 0) bad += $"{d.Kind}:rate ";
                 if (GameData.ListFor(d.Type).Length == 0) bad += $"{d.Kind}:enemies ";
                 bool art = false;

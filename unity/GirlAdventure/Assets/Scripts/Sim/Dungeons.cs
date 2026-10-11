@@ -23,6 +23,8 @@ namespace GirlAdventure.Sim
         public string Kind, Name, Theme = "castle";
         public int Chapter;
         public string Spawn, Spring, Sign;
+        public string[] Doors = new string[0];  // 보스 방 창살 칸 "x,y" (보스 방에 들어서면 등 뒤로 쾅 — 보스를 이기거나 지거나 물러나면 열림)
+        public int[] Inside = new int[0];       // 보스 방 범위 x0,y0,x1,y1 (여기 들어서면 창살이 내려온다)
         public string[] Rows = new string[0];
         public DungeonChest[] Chests = new DungeonChest[0];
 
@@ -62,6 +64,36 @@ namespace GirlAdventure.Sim
         }
 
         public static bool Has(MapKind k) => defs.ContainsKey(k);
+
+        // ---- 보스 방 창살 (세이브 Opened "dshut_던전")
+        public static string ShutId(MapKind k) => "dshut_" + k;
+        public static bool IsShut(PlayerState p, MapKind k) => p.Opened.Contains(ShutId(k));
+        public static void Shut(PlayerState p, MapKind k) { if (!IsShut(p, k)) p.Opened.Add(ShutId(k)); }
+        public static void OpenAll(PlayerState p) => p.Opened.RemoveAll(o => o.StartsWith("dshut_"));
+
+        public static bool IsDoor(MapKind k, int x, int y)
+        {
+            var d = Of(k);
+            if (d == null || d.Doors == null) return false;
+            foreach (var s in d.Doors) if (XY(s) == (x, y)) return true;
+            return false;
+        }
+
+        /// <summary>창살이 내려와 막힌 칸인가 (보스를 이기면 열림).</summary>
+        public static bool DoorBlocks(PlayerState p, WorldMap m, int x, int y)
+        {
+            if (!IsDoor(m.Kind, x, y) || !IsShut(p, m.Kind)) return false;
+            var ch = Chapters.All;
+            foreach (var c in ch) if (c.DungeonKind == m.Kind && p.BossBeaten(c.No)) return false;
+            return true;
+        }
+
+        /// <summary>보스 방 안인가 (창살을 내릴 때).</summary>
+        public static bool InBossRoom(MapKind k, int x, int y)
+        {
+            var d = Of(k);
+            return d != null && d.Inside != null && d.Inside.Length == 4 && x >= d.Inside[0] && y >= d.Inside[1] && x <= d.Inside[2] && y <= d.Inside[3];
+        }
         public static DungeonDef Of(MapKind k) => defs.TryGetValue(k, out var d) ? d : null;
 
         public static WorldMap Build(MapKind k) => WorldMap.FromRows(k, Of(k)?.Rows ?? new string[0]);

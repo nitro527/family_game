@@ -52,7 +52,7 @@ namespace GirlAdventure.Sim
         public static bool CanMove(WorldMap m, PlayerState p, int fx, int fy, int tx, int ty) => Walkable(m, p, tx, ty) && m.CanStep(fx, fy, tx, ty);
 
         public static bool Walkable(WorldMap m, PlayerState p, int x, int y) =>
-            !GuardAt(m, p, x, y) && !(m.Kind == MapKind.Library && m.At(x, y) == 'B' && !MomJoined(p)) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)) || (m.At(x, y) == 'Q' && HasLetter(p)));
+            !Dungeons.DoorBlocks(p, m, x, y) && !GuardAt(m, p, x, y) && !(m.Kind == MapKind.Library && m.At(x, y) == 'B' && !MomJoined(p)) && (!m.Blocked(x, y) || (m.At(x, y) == 'D' && DoorOpen(p)) || (m.At(x, y) == 'Q' && HasLetter(p)));
 
         /// <summary>
         /// 리본 편지 (서진이 노트 3 ⭐ "편지 = 퀘스트 아이템, 읽으면 퀘스트 시작, 3스테이지 마법사가 전하는 말", Q-13):
