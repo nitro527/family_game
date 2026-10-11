@@ -1765,6 +1765,30 @@ namespace GirlAdventure.EditorTools
             Shot("tree_shake");
             Expect("bumping a tree rustles its leaves", G.TreeShakes > shakes0, $"shakes {G.TreeShakes}");
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            // 이야기 장면 (stories.json, 2026-10-11): 자연의 정령의 사냥 부탁 받기 → 알림 띠 → (아래 버섯 젤리 전투로 1/4) · 숲속 빈터에서 가족 사진
+            G.DebugTeleport(6, 18, "left");
+            yield return .3f;
+            Keys.Hold(KeyCode.LeftArrow, true); yield return .15f; Keys.Hold(KeyCode.LeftArrow, false);
+            yield return (Func<bool>)(() => G.ChoiceOpen);
+            Shot("story_hunt_ask");
+            foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("hunt request accepted (flag + banner)", Stories.Flag(G.P, "mushroom_on") && G.LastStory == "mushroom_ask", G.LastStory + " / " + G.BannerText);
+            {
+                var fm = WorldMap.Forest();
+                StoryDef photo = null;
+                foreach (var st in Stories.All) if (st.Id == "photo_ch7") photo = st;
+                var c = Stories.StepSpot(photo, fm);
+                G.DebugTeleport(c.x - 1, c.y, "right");
+                yield return .3f;
+                Keys.Hold(KeyCode.RightArrow, true); yield return .15f; Keys.Hold(KeyCode.RightArrow, false);
+                yield return (Func<bool>)(() => G.ChoiceOpen);
+                Shot("story_photo_ask");
+                foreach (var x in SkipTalk(() => Stories.HasPhoto(G.P, "ch7"))) yield return x;
+                yield return .2f;
+                Shot("story_photo_done");
+                foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+                Expect("family photo taken at the forest clearing", Stories.HasPhoto(G.P, "ch7") && Stories.PhotoCount(G.P) >= 1, G.LastStory);
+            }
             // 전투 기믹 (사용자 2026-10-06): 꼬마 악마 둘 → 합체, 버섯 젤리 → 독 (확률 무시)
             BattleSystem.ForceSkills = true;
             var imp = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(GameData.Library[0])); imp.Hp = 9999;   // 합체 전에 쓰러지지 않게 (같은 것 둘이어야 합체)
@@ -1798,6 +1822,7 @@ namespace GirlAdventure.EditorTools
             G.DebugSetAllFoesHp(1);
             foreach (var x in FightUntilOver(false)) yield return x;
             foreach (var x in SkipTalk(() => G.Current == GameRoot.Mode.Field && !G.Busy)) yield return x;
+            Expect("hunt request counts the mushroom jelly (1/4)", Stories.Count(G.P, "mushroom") == 1, Stories.Count(G.P, "mushroom").ToString());
             // 부하 부르기 (킹 젤리 → 파랑 젤리)
             var kingCopy = JsonUtility.FromJson<EnemyDef>(JsonUtility.ToJson(GameData.King));   // 진짜 챕터 1 보스로 부르면 이기는 순간 엔딩 → 복사본 (HP 넉넉히)
             kingCopy.Boss = false; kingCopy.Hp = 9999;

@@ -337,7 +337,7 @@ namespace GirlAdventure.View
             all[0] = ("name", P.Name);
             all[1] = ("bro", PlayerState.BrotherName);
             vars.CopyTo(all, 2);
-            return GameData.Fill(tmpl, all);
+            return GameData.Fill(StoryCounts(tmpl), all);
         }
 
         // ------------------------------------------------------------------ commands

@@ -58,8 +58,8 @@ namespace GirlAdventure.View
             homeMaps = new WorldMap[WorldMap.AllHouses.Length];
             for (int i = 0; i < homeMaps.Length; i++) { homeMaps[i] = WorldMap.Home(i); Npcs.Place(homeMaps[i]); }
             mobs = new FieldMonsters(rng);
-            foreach (var k in new[] { MapKind.Field, MapKind.Cave, MapKind.Village, MapKind.Desert, MapKind.Oasis, MapKind.Underworld, MapKind.LavaTown, MapKind.SnowTown })
-                Npcs.Place(worldMaps[k]);       // 마을 사람 칸('N')을 먼저 놓고 그린다 (도서관·숲·용암·눈 맵은 맵이 직접 놓는다)
+            foreach (var m in worldMaps.Values)
+                Npcs.Place(m);                  // 마을 사람 칸('N')을 먼저 놓고 그린다 (2026-10-11: 도서관·숲은 빠져 있어서 사서·정령을 밟고 지나갔다)
             // 맵 그림은 무거워서(1초+) 타이틀을 보는 동안 백그라운드에서 미리 그린다
             // (타일 이미지는 Unity API 라 여기 메인 스레드에서 먼저 읽어 둔다)
             fieldTiles = FieldTiles.Load();
@@ -392,6 +392,8 @@ namespace GirlAdventure.View
             yield return Fade(1, 0, .3f);
             HideSwirl();
             if (toVillage) { yield return Talk(snow ? "snowtown_enter" : lava ? "lavatown_enter" : desert ? "oasis_enter" : "village_enter"); HideMessage(); }
+            var story = Stories.OnEnter(map, P);              // 이야기 장면: 맵에 들어오면
+            if (story != null) { yield return RunStory(story); HideMessage(); AutoSave(); }
             busy = false;
         }
 
@@ -571,6 +573,8 @@ namespace GirlAdventure.View
                 char c = map.At(nx, ny);
                 var secret = busy ? null : Quests.TrySecret(P, map, nx, ny);      // 숨겨진 이벤트 (G-4): 표시 없는 물건을 살펴보면
                 if (secret != null) { StartCoroutine(SecretRoutine(secret)); return; }
+                var story = busy ? null : Stories.OnBump(map, P, nx, ny);           // 이야기 장면: 물건을 살펴보면
+                if (story != null) { StartCoroutine(StoryScene(story)); return; }
                 if (Keys.AnyDown && BumpObject(nx, ny, c)) return;               // 나무 흔들기·물방울 (G-3)
                 if (c == 'F') StartCoroutine(FountainRoutine());
                 else if (c == 'S') StartCoroutine(SignRoutine());
@@ -811,6 +815,8 @@ namespace GirlAdventure.View
             if (found != null) { StartCoroutine(QuestFoundRoutine(found)); return; }
             var ev = Quests.EventAt(P, map, P.X, P.Y);                         // 맵 이벤트 (G-3): 처음 지나가는 곳의 짧은 장면
             if (ev != null) { StartCoroutine(MapEventRoutine(ev)); return; }
+            var story = Stories.OnStep(map, P, P.X, P.Y);                      // 이야기 장면 (stories.json): 그 근처에 오면
+            if (story != null) { StartCoroutine(StoryScene(story)); return; }
             foreach (var ch in Chapters.All)                        // 챕터 보스 자리 (챕터 표: 맵·칸 글자)
                 if (here == ch.BossChar && map.Kind == ch.BossMapKind && !P.BossBeaten(ch.No)) { StartCoroutine(BossRoutine(ch)); return; }
             if (map.IsRope(P.X, P.Y)) { StartCoroutine(UnderworldRoutine(false)); return; }

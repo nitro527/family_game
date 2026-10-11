@@ -21,3 +21,12 @@ assets/cutins/*_[0-9]*.png
 assets/cutins/preview/
 unity/BuildWeb/
 unity/*.out
+# 가족 실제 사진·이름이 찍힌 그림은 PC 에만 (공개 저장소, 2026-10-11)
+docs/characters/reference/
+docs/ideas/daughter_*.jpg
+docs/ideas/daughter_*.png
+assets/characters/overviews/
+assets/characters/gen/*overview*.jpg
+assets/characters/gen/*/*overview*.jpg
+assets/characters/gen/family_lineup_draft.jpg
+assets/characters/gen/*/cards/

@@ -358,6 +358,8 @@ namespace GirlAdventure.View
                 sfx.Play("lvup");
                 yield return Talk("book_complete", ("count", Bestiary.Total), ("item", Bestiary.Title));
             }
+            foreach (var f in battle.Foes)                              // 이야기 장면: 이 적을 이기면 (사냥 부탁 세기 등)
+                foreach (var st in Stories.OnWin(f.Def, P)) yield return RunStory(st);
             if (def == GameData.Guard)
             {
                 P.GuardDown = true;             // 보물상자를 열 수 있게 된다 (EndBattle → EnterField 가 지킴이 그림을 치우고 저장)

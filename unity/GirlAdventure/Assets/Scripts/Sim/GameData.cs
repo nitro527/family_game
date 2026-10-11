@@ -302,6 +302,12 @@ namespace GirlAdventure.Sim
 
         public static bool HasTalk(string id) => talk.ContainsKey(id);
 
+        /// <summary>다른 표에 딸린 대사를 대사 표에 합친다 (stories.json Talks). 같은 id 가 이미 있으면 덮지 않는다 (SmokeTest 가 잡는다).</summary>
+        public static void AddTalk(DialogueEntry[] entries)
+        {
+            foreach (var e in entries ?? new DialogueEntry[0]) if (e != null && !talk.ContainsKey(e.Id)) talk[e.Id] = e.Lines;
+        }
+
         public static IReadOnlyList<Line> Talk(string id)
         {
             if (!talk.TryGetValue(id, out var lines)) throw new InvalidOperationException("대사 데이터 없음: " + id);

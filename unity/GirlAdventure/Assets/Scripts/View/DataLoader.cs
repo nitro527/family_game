@@ -21,6 +21,9 @@ namespace GirlAdventure.View
             Quests.Set(Read<QuestTable>("quests"));
             Chapters.Set(Read<ChapterTable>("chapters"));      // 챕터 표 (적 이름으로 보스를 찾으니 GameData 다음)
             PropCatalog.Set(Read<PropTable>("props"));     // 맵 소품 목록·맵별 테마 (MapPainter 가 읽는다)
+            var stories = Read<StoryTable>("stories");     // 이야기 장면·부탁 수첩·가족 앨범 (대사는 대사 표에 합친다)
+            Stories.Set(stories);
+            GameData.AddTalk(stories.Talks);
         }
 
         static T Read<T>(string name)

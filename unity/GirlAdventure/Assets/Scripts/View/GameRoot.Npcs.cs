@@ -78,7 +78,9 @@ namespace GirlAdventure.View
             faceOverride = JellySprite(NpcLook(n));
             if (n.Inn) { yield return InnTalk(); faceOverride = null; talkingNpc = null; HideMessage(); busy = false; yield break; }
             bool questTalk = false;                     // 찾기 부탁 (G-4)
-            yield return QuestNpcTalk(n, h => questTalk = h);
+            var story = Stories.OnTalk(n.Id, P);        // 이야기 장면 (stories.json): 있으면 평소 대사 대신
+            if (story != null) { yield return RunStory(story); questTalk = true; if (Current != Mode.Field) { faceOverride = null; talkingNpc = null; yield break; } }
+            else yield return QuestNpcTalk(n, h => questTalk = h);
             if (!questTalk)
             {
                 npcTurns.TryGetValue(n.Id, out int turn);

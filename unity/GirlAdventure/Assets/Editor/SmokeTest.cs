@@ -59,6 +59,8 @@ namespace GirlAdventure.EditorTools
             PropCatalogTests();
             ChapterTableTests();
             MapKindTableTests();
+            StoryTableTests();
+            StoryFlowTests();
             PartyTests();
             LavaTests();
             LavaJellyTests();

@@ -42,6 +42,10 @@
     {"Id": "home_knit_granny", "Map": "home", "Room": 14, "X": 20, "Y": 10, "Name": "뜨개질 할머니 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Look": "frost", "Talk": "npc_home_knit_granny", "Art": "npc_home_knit_granny", "More": ["npc_home_knit_granny_more1"]},
     {"Id": "home_sledder", "Map": "home", "Room": 15, "X": 20, "Y": 9, "Name": "썰매꾼 젤리", "Color": "#A8DCF4", "Dark": "#5A9CC8", "Look": "hat", "Talk": "npc_home_sledder", "Art": "npc_home_sledder", "More": ["npc_home_sledder_more1"]},
     {"Id": "home_snowman_kid", "Map": "home", "Room": 16, "X": 20, "Y": 10, "Name": "꼬마 눈사람 젤리", "Color": "#F4F8FF", "Dark": "#B8C8E8", "Look": "frost", "Talk": "npc_home_snowman_kid", "Art": "npc_home_snowman_kid", "More": ["npc_home_snowman_kid_more1"]},
-    {"Id": "home_cocoa", "Map": "home", "Room": 17, "X": 20, "Y": 10, "Name": "코코아 젤리", "Color": "#C89A70", "Dark": "#8A6040", "Look": "bow", "Talk": "npc_home_cocoa", "Art": "npc_home_cocoa", "More": ["npc_home_cocoa_more1"]}
+    {"Id": "home_cocoa", "Map": "home", "Room": 17, "X": 20, "Y": 10, "Name": "코코아 젤리", "Color": "#C89A70", "Dark": "#8A6040", "Look": "bow", "Talk": "npc_home_cocoa", "Art": "npc_home_cocoa", "More": ["npc_home_cocoa_more1"]},
+    {"Id": "post1", "Map": "village", "X": 12, "Y": 17, "Name": "우체부 젤리", "Color": "#FFE08A", "Dark": "#D9A84E", "Look": "hat", "Talk": "st_post_idle", "Art": "npc_post1"},
+    {"Id": "post2", "Map": "oasis", "X": 10, "Y": 11, "Name": "우체부 젤리", "Color": "#FFE08A", "Dark": "#D9A84E", "Look": "hat", "Talk": "st_post_idle", "Art": "npc_post1"},
+    {"Id": "post3", "Map": "lavatown", "X": 20, "Y": 13, "Name": "우체부 젤리", "Color": "#FFE08A", "Dark": "#D9A84E", "Look": "hat", "Talk": "st_post_idle", "Art": "npc_post1"},
+    {"Id": "post4", "Map": "snowtown", "X": 22, "Y": 11, "Name": "우체부 젤리", "Color": "#FFE08A", "Dark": "#D9A84E", "Look": "hat", "Talk": "st_post_idle", "Art": "npc_post1"}
   ]
 }

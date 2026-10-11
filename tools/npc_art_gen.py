@@ -52,6 +52,7 @@ def role(nid):
     if 'shop' in i or 'seller' in i or 'furrier' in i or 'candy' in i or 'merchant' in i: return 'a shopkeeper with a little apron'
     if 'kid' in i or 'child' in i: return 'a small playful kid'
     if 'guide' in i: return 'a helpful guide holding a tiny map'
+    if 'post' in i: return 'a mail carrier with a little satchel bag full of letters and a tiny envelope in hand'
     if 'skater' in i: return 'wearing little ice skates'
     if 'well' in i: return 'holding a tiny bucket'
     return 'a friendly villager'

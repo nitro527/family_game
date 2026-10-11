@@ -124,7 +124,7 @@ namespace GirlAdventure.Sim
             }
             if (w.Length > 2 && (w.StartsWith("ch") || w.StartsWith("lv")) && int.TryParse(w.Substring(2), out int n))
                 return w.StartsWith("ch") ? p.Chapter >= n : p.Lv >= n;
-            return null;
+            return Stories.Word(w, p);                      // 이야기 진행: flag_·cnt_>=·st_·photo_·photos>=
         }
 
         /// <summary>맵에 NPC 칸('N')을 놓는다 (걸어 들어갈 수 없게).</summary>

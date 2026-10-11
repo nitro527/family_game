@@ -240,6 +240,7 @@ namespace GirlAdventure.View
             {
                 int ch = Treasures.ChapterOf(d.Id);
                 lines.Add(Treasures.Has(P, d.Id) ? $"<color=#FFE27A>★</color> {d.Name} <size=15><color=#9AA3C7>{Equipment.BonusText(d.Id)}</color></size>"
+                                                 : ch == 0 && Stories.ErrandOfReward(d.Id) is ErrandDef er ? $"<color=#7A80A0>??? <size=15>{er.Title} 끝에</size></color>"
                                                  : $"<color=#7A80A0>??? <size=15>챕터 {ch} 어딘가</size></color>");
             }
             lines.Add("닫기");
@@ -349,9 +350,18 @@ namespace GirlAdventure.View
                     SetFace("smile");
                     msgText.text = "무엇을 할까?";
                     choiceIndex = 0;
-                    yield return Choose("도구 쓰기", "장비 바꾸기", "도감", $"보물 모음  <color=#F2C443>{Treasures.Found(P)}/{Treasures.All().Count}</color>", "설정", "닫기");
+                    yield return Choose("도구 쓰기", "장비 바꾸기", "도감", $"보물 모음  <color=#F2C443>{Treasures.Found(P)}/{Treasures.All().Count}</color>", "설정",
+                        $"부탁 수첩  <color=#F2C443>{OpenErrands()}</color>", $"가족 앨범  <color=#F2C443>{Stories.PhotoCount(P)}/{Stories.Photos.Count}</color>", "닫기");
                     HideMessage();
-                    if (choicePicked == 5) break;
+                    if (choicePicked == 5 || choicePicked == 6)             // 부탁 수첩·가족 앨범 (이야기 장면, 2026-10-11)
+                    {
+                        yield return choicePicked == 5 ? NotebookRoutine() : AlbumRoutine();
+                        HideMessage();
+                        statusClicked = false;
+                        yield return null;
+                        continue;
+                    }
+                    if (choicePicked == 7 || choicePicked < 0) break;
                     statusTreasure = choicePicked == 3;
                     statusUse = choicePicked == 0;
                     statusGear = choicePicked == 1;

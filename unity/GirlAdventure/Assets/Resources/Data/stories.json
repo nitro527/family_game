@@ -1,0 +1,3346 @@
+{
+ "_doc": "이야기 장면·부탁 수첩·가족 앨범 (Sim/Stories.cs 가 읽는다, 2026-10-11). 내용은 모두 임시 — docs/EVENTS_PLAN.md. tools 없이 scratchpad/make_stories.py 로 만들었다.",
+ "Stories": [
+  {
+   "Id": "rabbit_ask",
+   "On": "talk:tips",
+   "Need": "!flag_rabbit_on",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_rabbit_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "rabbit_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 뿔토끼 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_rabbit_no"
+    }
+   ]
+  },
+  {
+   "Id": "rabbit_win",
+   "On": "win:뿔토끼",
+   "Need": "flag_rabbit_on,!flag_rabbit_done,!cnt_rabbit>=3",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "rabbit"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_rabbit>=3",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "뿔토끼 혼내 주기 다 했어요! 리본 젤리에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "뿔토끼 혼내 주기 ({cnt:rabbit}/3)"
+    }
+   ]
+  },
+  {
+   "Id": "rabbit_report",
+   "On": "talk:tips",
+   "Need": "flag_rabbit_on,!flag_rabbit_done,cnt_rabbit>=3",
+   "Chapter": 1,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_rabbit_done"
+    },
+    {
+     "Do": "give",
+     "A": "potion",
+     "N": 2
+    },
+    {
+     "Do": "gold",
+     "N": 40
+    },
+    {
+     "Do": "flag",
+     "A": "rabbit_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 뿔토끼 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "rabbit_wait",
+   "On": "talk:tips",
+   "Need": "flag_rabbit_on,!flag_rabbit_done,!cnt_rabbit>=3",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_rabbit_progress"
+    }
+   ]
+  },
+  {
+   "Id": "seed_ask",
+   "On": "talk:chief",
+   "Need": "!flag_seed_on",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_seed_ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "seed_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 꽃씨 전하기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_seed_no"
+    }
+   ]
+  },
+  {
+   "Id": "seed_give",
+   "On": "talk:guide",
+   "Need": "flag_seed_on,!flag_seed_given",
+   "Chapter": 1,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_seed_give"
+    },
+    {
+     "Do": "flag",
+     "A": "seed_given"
+    },
+    {
+     "Do": "note",
+     "A": "촌장 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "seed_wait",
+   "On": "talk:chief",
+   "Need": "flag_seed_on,!flag_seed_given",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_seed_wait"
+    }
+   ]
+  },
+  {
+   "Id": "seed_thanks",
+   "On": "talk:chief",
+   "Need": "flag_seed_given,!flag_seed_done",
+   "Chapter": 1,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_seed_thanks"
+    },
+    {
+     "Do": "give",
+     "A": "candy",
+     "N": 3
+    },
+    {
+     "Do": "gold",
+     "N": 30
+    },
+    {
+     "Do": "flag",
+     "A": "seed_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 꽃씨 전하기"
+    }
+   ]
+  },
+  {
+   "Id": "mole_ask",
+   "On": "talk:miner",
+   "Need": "!flag_mole_on,opened_q_crystals",
+   "Chapter": 2,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_mole_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "mole_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 두더지 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_mole_no"
+    }
+   ]
+  },
+  {
+   "Id": "mole_win",
+   "On": "win:두더지",
+   "Need": "flag_mole_on,!flag_mole_done,!cnt_mole>=3",
+   "Chapter": 2,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "mole"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_mole>=3",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "두더지 혼내 주기 다 했어요! 광부 젤리에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "두더지 혼내 주기 ({cnt:mole}/3)"
+    }
+   ]
+  },
+  {
+   "Id": "mole_report",
+   "On": "talk:miner",
+   "Need": "flag_mole_on,!flag_mole_done,cnt_mole>=3",
+   "Chapter": 2,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_mole_done"
+    },
+    {
+     "Do": "give",
+     "A": "potion",
+     "N": 2
+    },
+    {
+     "Do": "gold",
+     "N": 80
+    },
+    {
+     "Do": "flag",
+     "A": "mole_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 두더지 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "mole_wait",
+   "On": "talk:miner",
+   "Need": "flag_mole_on,!flag_mole_done,!cnt_mole>=3",
+   "Chapter": 2,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_mole_progress"
+    }
+   ]
+  },
+  {
+   "Id": "scorpion_ask",
+   "On": "talk:wellkeeper",
+   "Need": "!flag_scorpion_on",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_scorpion_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "scorpion_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 전갈 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_scorpion_no"
+    }
+   ]
+  },
+  {
+   "Id": "scorpion_win",
+   "On": "win:전갈",
+   "Need": "flag_scorpion_on,!flag_scorpion_done,!cnt_scorpion>=4",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "scorpion"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_scorpion>=4",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "전갈 혼내 주기 다 했어요! 우물지기 젤리에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "전갈 혼내 주기 ({cnt:scorpion}/4)"
+    }
+   ]
+  },
+  {
+   "Id": "scorpion_report",
+   "On": "talk:wellkeeper",
+   "Need": "flag_scorpion_on,!flag_scorpion_done,cnt_scorpion>=4",
+   "Chapter": 3,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_scorpion_done"
+    },
+    {
+     "Do": "give",
+     "A": "moon",
+     "N": 1
+    },
+    {
+     "Do": "gold",
+     "N": 120
+    },
+    {
+     "Do": "flag",
+     "A": "scorpion_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 전갈 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "scorpion_wait",
+   "On": "talk:wellkeeper",
+   "Need": "flag_scorpion_on,!flag_scorpion_done,!cnt_scorpion>=4",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_scorpion_progress"
+    }
+   ]
+  },
+  {
+   "Id": "tea_ask",
+   "On": "talk:tentlady",
+   "Need": "!flag_tea_on",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_tea_ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "tea_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 박하차 갖다 드리기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_tea_no"
+    }
+   ]
+  },
+  {
+   "Id": "tea_give",
+   "On": "talk:elder",
+   "Need": "flag_tea_on,!flag_tea_given",
+   "Chapter": 3,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_tea_give"
+    },
+    {
+     "Do": "flag",
+     "A": "tea_given"
+    },
+    {
+     "Do": "note",
+     "A": "천막 장수 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "tea_wait",
+   "On": "talk:tentlady",
+   "Need": "flag_tea_on,!flag_tea_given",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_tea_wait"
+    }
+   ]
+  },
+  {
+   "Id": "tea_thanks",
+   "On": "talk:tentlady",
+   "Need": "flag_tea_given,!flag_tea_done",
+   "Chapter": 3,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_tea_thanks"
+    },
+    {
+     "Do": "give",
+     "A": "potion",
+     "N": 3
+    },
+    {
+     "Do": "gold",
+     "N": 60
+    },
+    {
+     "Do": "flag",
+     "A": "tea_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 박하차 갖다 드리기"
+    }
+   ]
+  },
+  {
+   "Id": "lizard_ask",
+   "On": "talk:springkeeper",
+   "Need": "!flag_lizard_on",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_lizard_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "lizard_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 불도마뱀 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_lizard_no"
+    }
+   ]
+  },
+  {
+   "Id": "lizard_win",
+   "On": "win:불도마뱀",
+   "Need": "flag_lizard_on,!flag_lizard_done,!cnt_lizard>=3",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "lizard"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_lizard>=3",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "불도마뱀 혼내 주기 다 했어요! 온천지기 젤리에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "불도마뱀 혼내 주기 ({cnt:lizard}/3)"
+    }
+   ]
+  },
+  {
+   "Id": "lizard_report",
+   "On": "talk:springkeeper",
+   "Need": "flag_lizard_on,!flag_lizard_done,cnt_lizard>=3",
+   "Chapter": 4,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_lizard_done"
+    },
+    {
+     "Do": "give",
+     "A": "moon",
+     "N": 2
+    },
+    {
+     "Do": "gold",
+     "N": 150
+    },
+    {
+     "Do": "flag",
+     "A": "lizard_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 불도마뱀 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "lizard_wait",
+   "On": "talk:springkeeper",
+   "Need": "flag_lizard_on,!flag_lizard_done,!cnt_lizard>=3",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_lizard_progress"
+    }
+   ]
+  },
+  {
+   "Id": "lunch_ask",
+   "On": "talk:lava_kid",
+   "Need": "!flag_lunch_on",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_lunch_ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "lunch_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 숯불 도시락 배달"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_lunch_no"
+    }
+   ]
+  },
+  {
+   "Id": "lunch_give",
+   "On": "talk:smith",
+   "Need": "flag_lunch_on,!flag_lunch_given",
+   "Chapter": 4,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_lunch_give"
+    },
+    {
+     "Do": "flag",
+     "A": "lunch_given"
+    },
+    {
+     "Do": "note",
+     "A": "꼬마 숯 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "lunch_wait",
+   "On": "talk:lava_kid",
+   "Need": "flag_lunch_on,!flag_lunch_given",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_lunch_wait"
+    }
+   ]
+  },
+  {
+   "Id": "lunch_thanks",
+   "On": "talk:lava_kid",
+   "Need": "flag_lunch_given,!flag_lunch_done",
+   "Chapter": 4,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_lunch_thanks"
+    },
+    {
+     "Do": "give",
+     "A": "candy",
+     "N": 3
+    },
+    {
+     "Do": "gold",
+     "N": 80
+    },
+    {
+     "Do": "flag",
+     "A": "lunch_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 숯불 도시락 배달"
+    }
+   ]
+  },
+  {
+   "Id": "snowrabbit_ask",
+   "On": "talk:furrier",
+   "Need": "!flag_snowrabbit_on",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_snowrabbit_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "snowrabbit_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 눈토끼 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_snowrabbit_no"
+    }
+   ]
+  },
+  {
+   "Id": "snowrabbit_win",
+   "On": "win:눈토끼",
+   "Need": "flag_snowrabbit_on,!flag_snowrabbit_done,!cnt_snowrabbit>=3",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "snowrabbit"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_snowrabbit>=3",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "눈토끼 혼내 주기 다 했어요! 털옷 가게 젤리에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "눈토끼 혼내 주기 ({cnt:snowrabbit}/3)"
+    }
+   ]
+  },
+  {
+   "Id": "snowrabbit_report",
+   "On": "talk:furrier",
+   "Need": "flag_snowrabbit_on,!flag_snowrabbit_done,cnt_snowrabbit>=3",
+   "Chapter": 5,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_snowrabbit_done"
+    },
+    {
+     "Do": "give",
+     "A": "moon",
+     "N": 2
+    },
+    {
+     "Do": "gold",
+     "N": 180
+    },
+    {
+     "Do": "flag",
+     "A": "snowrabbit_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 눈토끼 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "snowrabbit_wait",
+   "On": "talk:furrier",
+   "Need": "flag_snowrabbit_on,!flag_snowrabbit_done,!cnt_snowrabbit>=3",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_snowrabbit_progress"
+    }
+   ]
+  },
+  {
+   "Id": "sled_ask",
+   "On": "talk:skater",
+   "Need": "!flag_sled_on",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_sled_ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "sled_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 썰매 대회 초대장"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_sled_no"
+    }
+   ]
+  },
+  {
+   "Id": "sled_give",
+   "On": "talk:snow_elder",
+   "Need": "flag_sled_on,!flag_sled_given",
+   "Chapter": 5,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_sled_give"
+    },
+    {
+     "Do": "flag",
+     "A": "sled_given"
+    },
+    {
+     "Do": "note",
+     "A": "스케이트 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "sled_wait",
+   "On": "talk:skater",
+   "Need": "flag_sled_on,!flag_sled_given",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_sled_wait"
+    }
+   ]
+  },
+  {
+   "Id": "sled_thanks",
+   "On": "talk:skater",
+   "Need": "flag_sled_given,!flag_sled_done",
+   "Chapter": 5,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_sled_thanks"
+    },
+    {
+     "Do": "give",
+     "A": "potion",
+     "N": 3
+    },
+    {
+     "Do": "gold",
+     "N": 120
+    },
+    {
+     "Do": "flag",
+     "A": "sled_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 썰매 대회 초대장"
+    }
+   ]
+  },
+  {
+   "Id": "ink_ask",
+   "On": "talk:reader",
+   "Need": "!flag_ink_on",
+   "Chapter": 6,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_ink_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "ink_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 잉크 악마 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_ink_no"
+    }
+   ]
+  },
+  {
+   "Id": "ink_win",
+   "On": "win:잉크 악마",
+   "Need": "flag_ink_on,!flag_ink_done,!cnt_ink>=3",
+   "Chapter": 6,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "ink"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_ink>=3",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "잉크 악마 혼내 주기 다 했어요! 책벌레 젤리에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "잉크 악마 혼내 주기 ({cnt:ink}/3)"
+    }
+   ]
+  },
+  {
+   "Id": "ink_report",
+   "On": "talk:reader",
+   "Need": "flag_ink_on,!flag_ink_done,cnt_ink>=3",
+   "Chapter": 6,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_ink_done"
+    },
+    {
+     "Do": "give",
+     "A": "moon",
+     "N": 2
+    },
+    {
+     "Do": "gold",
+     "N": 220
+    },
+    {
+     "Do": "flag",
+     "A": "ink_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 잉크 악마 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "ink_wait",
+   "On": "talk:reader",
+   "Need": "flag_ink_on,!flag_ink_done,!cnt_ink>=3",
+   "Chapter": 6,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_ink_progress"
+    }
+   ]
+  },
+  {
+   "Id": "mushroom_ask",
+   "On": "talk:spirit",
+   "Need": "!flag_mushroom_on",
+   "Chapter": 7,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_mushroom_ask",
+     "B": "좋아, 맡겨 줘!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "mushroom_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 버섯 젤리 혼내 주기"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_mushroom_no"
+    }
+   ]
+  },
+  {
+   "Id": "mushroom_win",
+   "On": "win:버섯 젤리",
+   "Need": "flag_mushroom_on,!flag_mushroom_done,!cnt_mushroom>=4",
+   "Chapter": 7,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "mushroom"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_mushroom>=4",
+     "B": "more"
+    },
+    {
+     "Do": "note",
+     "A": "버섯 젤리 혼내 주기 다 했어요! 자연의 정령에게 알려 주자"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "more"
+    },
+    {
+     "Do": "note",
+     "A": "버섯 젤리 혼내 주기 ({cnt:mushroom}/4)"
+    }
+   ]
+  },
+  {
+   "Id": "mushroom_report",
+   "On": "talk:spirit",
+   "Need": "flag_mushroom_on,!flag_mushroom_done,cnt_mushroom>=4",
+   "Chapter": 7,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "chest"
+    },
+    {
+     "Do": "talk",
+     "A": "st_mushroom_done"
+    },
+    {
+     "Do": "give",
+     "A": "moon",
+     "N": 3
+    },
+    {
+     "Do": "gold",
+     "N": 260
+    },
+    {
+     "Do": "flag",
+     "A": "mushroom_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 버섯 젤리 혼내 주기"
+    }
+   ]
+  },
+  {
+   "Id": "mushroom_wait",
+   "On": "talk:spirit",
+   "Need": "flag_mushroom_on,!flag_mushroom_done,!cnt_mushroom>=4",
+   "Chapter": 7,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_mushroom_progress"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch1",
+   "On": "step:field:8,21",
+   "Need": "!photo_ch1",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch1",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch1"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch1_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 꽃밭 언덕 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch2",
+   "On": "step:cave:17,16",
+   "Need": "!photo_ch2",
+   "Chapter": 2,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch2",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch2"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch2_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 반딧불 호수 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch3",
+   "On": "step:desert:24,14",
+   "Need": "!photo_ch3",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch3",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch3"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch3_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 오아시스 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch4",
+   "On": "step:lava:27,14",
+   "Need": "!photo_ch4",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch4",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch4"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch4_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 용암 강 전망 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch5",
+   "On": "step:snow:16,7",
+   "Need": "!photo_ch5",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch5",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch5"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch5_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 얼음 호수 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch6",
+   "On": "step:library:17,4",
+   "Need": "!photo_ch6",
+   "Chapter": 6,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch6",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch6"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch6_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 책 숲 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "photo_ch7",
+   "On": "step:forest:10,10",
+   "Need": "!photo_ch7",
+   "Chapter": 7,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_photo_ch7",
+     "B": "찰칵! 찍자|다음에"
+    },
+    {
+     "Do": "photo_shot"
+    },
+    {
+     "Do": "photo",
+     "A": "ch7"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_ch7_done"
+    },
+    {
+     "Do": "note",
+     "A": "가족 앨범: 숲속 빈터 ({photos}/7)"
+    },
+    {
+     "Do": "need",
+     "A": "photos>=7,!flag_album_done"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_album_full"
+    },
+    {
+     "Do": "give",
+     "A": "family_locket"
+    },
+    {
+     "Do": "flag",
+     "A": "album_done"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 가족 앨범 완성!"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_photo_no"
+    }
+   ]
+  },
+  {
+   "Id": "post1_ask",
+   "On": "talk:post1",
+   "Need": "!flag_post1_on",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "flag",
+     "A": "post_met"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_hello"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post1_letter"
+    },
+    {
+     "Do": "ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "post1_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 꼬마 젤리에게 편지"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_no"
+    }
+   ]
+  },
+  {
+   "Id": "post1_wait",
+   "On": "talk:post1",
+   "Need": "flag_post1_on,!flag_post1_given",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_post_wait"
+    }
+   ]
+  },
+  {
+   "Id": "post1_give",
+   "On": "talk:kid",
+   "Need": "flag_post1_on,!flag_post1_given",
+   "Chapter": 1,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post1_give"
+    },
+    {
+     "Do": "flag",
+     "A": "post1_given"
+    },
+    {
+     "Do": "note",
+     "A": "우체부 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "post1_thanks",
+   "On": "talk:post1",
+   "Need": "flag_post1_given,!flag_post1_done",
+   "Chapter": 1,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "post"
+    },
+    {
+     "Do": "sfx",
+     "A": "coin"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_thanks"
+    },
+    {
+     "Do": "gold",
+     "N": 50
+    },
+    {
+     "Do": "flag",
+     "A": "post1_done"
+    },
+    {
+     "Do": "note",
+     "A": "배달 도장 ({cnt:post}/4)"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_post>=4,!flag_post_gift"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_full"
+    },
+    {
+     "Do": "give",
+     "A": "mail_bag"
+    },
+    {
+     "Do": "flag",
+     "A": "post_gift"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 떠돌이 우체부의 편지"
+    }
+   ]
+  },
+  {
+   "Id": "post2_ask",
+   "On": "talk:post2",
+   "Need": "!flag_post2_on",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "flag",
+     "A": "post_met"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_hello"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post2_letter"
+    },
+    {
+     "Do": "ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "post2_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 마을 어른 젤리에게 편지"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_no"
+    }
+   ]
+  },
+  {
+   "Id": "post2_wait",
+   "On": "talk:post2",
+   "Need": "flag_post2_on,!flag_post2_given",
+   "Chapter": 3,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_post_wait"
+    }
+   ]
+  },
+  {
+   "Id": "post2_give",
+   "On": "talk:elder",
+   "Need": "flag_post2_on,!flag_post2_given",
+   "Chapter": 3,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post2_give"
+    },
+    {
+     "Do": "flag",
+     "A": "post2_given"
+    },
+    {
+     "Do": "note",
+     "A": "우체부 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "post2_thanks",
+   "On": "talk:post2",
+   "Need": "flag_post2_given,!flag_post2_done",
+   "Chapter": 3,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "post"
+    },
+    {
+     "Do": "sfx",
+     "A": "coin"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_thanks"
+    },
+    {
+     "Do": "gold",
+     "N": 150
+    },
+    {
+     "Do": "flag",
+     "A": "post2_done"
+    },
+    {
+     "Do": "note",
+     "A": "배달 도장 ({cnt:post}/4)"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_post>=4,!flag_post_gift"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_full"
+    },
+    {
+     "Do": "give",
+     "A": "mail_bag"
+    },
+    {
+     "Do": "flag",
+     "A": "post_gift"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 떠돌이 우체부의 편지"
+    }
+   ]
+  },
+  {
+   "Id": "post3_ask",
+   "On": "talk:post3",
+   "Need": "!flag_post3_on",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "flag",
+     "A": "post_met"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_hello"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post3_letter"
+    },
+    {
+     "Do": "ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "post3_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 온천 마을 어른 젤리에게 편지"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_no"
+    }
+   ]
+  },
+  {
+   "Id": "post3_wait",
+   "On": "talk:post3",
+   "Need": "flag_post3_on,!flag_post3_given",
+   "Chapter": 4,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_post_wait"
+    }
+   ]
+  },
+  {
+   "Id": "post3_give",
+   "On": "talk:lava_elder",
+   "Need": "flag_post3_on,!flag_post3_given",
+   "Chapter": 4,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post3_give"
+    },
+    {
+     "Do": "flag",
+     "A": "post3_given"
+    },
+    {
+     "Do": "note",
+     "A": "우체부 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "post3_thanks",
+   "On": "talk:post3",
+   "Need": "flag_post3_given,!flag_post3_done",
+   "Chapter": 4,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "post"
+    },
+    {
+     "Do": "sfx",
+     "A": "coin"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_thanks"
+    },
+    {
+     "Do": "gold",
+     "N": 200
+    },
+    {
+     "Do": "flag",
+     "A": "post3_done"
+    },
+    {
+     "Do": "note",
+     "A": "배달 도장 ({cnt:post}/4)"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_post>=4,!flag_post_gift"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_full"
+    },
+    {
+     "Do": "give",
+     "A": "mail_bag"
+    },
+    {
+     "Do": "flag",
+     "A": "post_gift"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 떠돌이 우체부의 편지"
+    }
+   ]
+  },
+  {
+   "Id": "post4_ask",
+   "On": "talk:post4",
+   "Need": "!flag_post4_on",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "flag",
+     "A": "post_met"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_hello"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post4_letter"
+    },
+    {
+     "Do": "ask",
+     "B": "응, 전해 줄게!|다음에"
+    },
+    {
+     "Do": "flag",
+     "A": "post4_on"
+    },
+    {
+     "Do": "note",
+     "A": "새 부탁: 꼬마 눈송이 젤리에게 편지"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_no"
+    }
+   ]
+  },
+  {
+   "Id": "post4_wait",
+   "On": "talk:post4",
+   "Need": "flag_post4_on,!flag_post4_given",
+   "Chapter": 5,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "talk",
+     "A": "st_post_wait"
+    }
+   ]
+  },
+  {
+   "Id": "post4_give",
+   "On": "talk:snow_kid",
+   "Need": "flag_post4_on,!flag_post4_given",
+   "Chapter": 5,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "sfx",
+     "A": "select"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post4_give"
+    },
+    {
+     "Do": "flag",
+     "A": "post4_given"
+    },
+    {
+     "Do": "note",
+     "A": "우체부 젤리에게 알려 주자"
+    }
+   ]
+  },
+  {
+   "Id": "post4_thanks",
+   "On": "talk:post4",
+   "Need": "flag_post4_given,!flag_post4_done",
+   "Chapter": 5,
+   "Repeat": false,
+   "Steps": [
+    {
+     "Do": "count",
+     "A": "post"
+    },
+    {
+     "Do": "sfx",
+     "A": "coin"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_thanks"
+    },
+    {
+     "Do": "gold",
+     "N": 250
+    },
+    {
+     "Do": "flag",
+     "A": "post4_done"
+    },
+    {
+     "Do": "note",
+     "A": "배달 도장 ({cnt:post}/4)"
+    },
+    {
+     "Do": "need",
+     "A": "cnt_post>=4,!flag_post_gift"
+    },
+    {
+     "Do": "sfx",
+     "A": "lvup"
+    },
+    {
+     "Do": "talk",
+     "A": "st_post_full"
+    },
+    {
+     "Do": "give",
+     "A": "mail_bag"
+    },
+    {
+     "Do": "flag",
+     "A": "post_gift"
+    },
+    {
+     "Do": "note",
+     "A": "부탁 끝: 떠돌이 우체부의 편지"
+    }
+   ]
+  },
+  {
+   "Id": "wish",
+   "On": "bump:village:18,10",
+   "Need": "!flag_wished",
+   "Chapter": 1,
+   "Repeat": true,
+   "Steps": [
+    {
+     "Do": "ask",
+     "A": "st_wish_ask",
+     "B": "10골드 던지기|그만두기"
+    },
+    {
+     "Do": "need",
+     "A": "gold>=10",
+     "B": "no"
+    },
+    {
+     "Do": "gold",
+     "N": -10
+    },
+    {
+     "Do": "sfx",
+     "A": "coin"
+    },
+    {
+     "Do": "talk",
+     "A": "st_wish_yes"
+    },
+    {
+     "Do": "give",
+     "A": "candy",
+     "N": 2
+    },
+    {
+     "Do": "sparkle"
+    },
+    {
+     "Do": "flag",
+     "A": "wished"
+    },
+    {
+     "Do": "end"
+    },
+    {
+     "Do": "label",
+     "A": "no"
+    },
+    {
+     "Do": "talk",
+     "A": "st_wish_no"
+    }
+   ]
+  }
+ ],
+ "Errands": [
+  {
+   "Id": "rabbit",
+   "Kind": "사냥",
+   "Title": "뿔토끼 혼내 주기",
+   "Show": "flag_rabbit_on",
+   "Done": "flag_rabbit_done",
+   "Count": "rabbit",
+   "Goal": 3
+  },
+  {
+   "Id": "seed",
+   "Kind": "배달",
+   "Title": "꽃씨 전하기",
+   "Show": "flag_seed_on",
+   "Done": "flag_seed_done"
+  },
+  {
+   "Id": "mole",
+   "Kind": "사냥",
+   "Title": "두더지 혼내 주기",
+   "Show": "flag_mole_on",
+   "Done": "flag_mole_done",
+   "Count": "mole",
+   "Goal": 3
+  },
+  {
+   "Id": "scorpion",
+   "Kind": "사냥",
+   "Title": "전갈 혼내 주기",
+   "Show": "flag_scorpion_on",
+   "Done": "flag_scorpion_done",
+   "Count": "scorpion",
+   "Goal": 4
+  },
+  {
+   "Id": "tea",
+   "Kind": "배달",
+   "Title": "박하차 갖다 드리기",
+   "Show": "flag_tea_on",
+   "Done": "flag_tea_done"
+  },
+  {
+   "Id": "lizard",
+   "Kind": "사냥",
+   "Title": "불도마뱀 혼내 주기",
+   "Show": "flag_lizard_on",
+   "Done": "flag_lizard_done",
+   "Count": "lizard",
+   "Goal": 3
+  },
+  {
+   "Id": "lunch",
+   "Kind": "배달",
+   "Title": "숯불 도시락 배달",
+   "Show": "flag_lunch_on",
+   "Done": "flag_lunch_done"
+  },
+  {
+   "Id": "snowrabbit",
+   "Kind": "사냥",
+   "Title": "눈토끼 혼내 주기",
+   "Show": "flag_snowrabbit_on",
+   "Done": "flag_snowrabbit_done",
+   "Count": "snowrabbit",
+   "Goal": 3
+  },
+  {
+   "Id": "sled",
+   "Kind": "배달",
+   "Title": "썰매 대회 초대장",
+   "Show": "flag_sled_on",
+   "Done": "flag_sled_done"
+  },
+  {
+   "Id": "ink",
+   "Kind": "사냥",
+   "Title": "잉크 악마 혼내 주기",
+   "Show": "flag_ink_on",
+   "Done": "flag_ink_done",
+   "Count": "ink",
+   "Goal": 3
+  },
+  {
+   "Id": "mushroom",
+   "Kind": "사냥",
+   "Title": "버섯 젤리 혼내 주기",
+   "Show": "flag_mushroom_on",
+   "Done": "flag_mushroom_done",
+   "Count": "mushroom",
+   "Goal": 4
+  },
+  {
+   "Id": "album",
+   "Kind": "앨범",
+   "Title": "가족 앨범 모으기",
+   "Show": "photos>=1",
+   "Done": "flag_album_done",
+   "Count": "",
+   "Goal": 0,
+   "Reward": "family_locket"
+  },
+  {
+   "Id": "post",
+   "Kind": "편지",
+   "Title": "떠돌이 우체부의 편지",
+   "Show": "flag_post_met",
+   "Done": "flag_post_gift",
+   "Count": "post",
+   "Goal": 4,
+   "Reward": "mail_bag"
+  }
+ ],
+ "Photos": [
+  {
+   "Id": "ch1",
+   "Title": "꽃밭 언덕",
+   "Caption": "초원 남쪽 꽃밭",
+   "Chapter": 1
+  },
+  {
+   "Id": "ch2",
+   "Title": "반딧불 호수",
+   "Caption": "동굴 속 반짝이는 호수",
+   "Chapter": 2
+  },
+  {
+   "Id": "ch3",
+   "Title": "오아시스",
+   "Caption": "사막 한가운데 초록 샘",
+   "Chapter": 3
+  },
+  {
+   "Id": "ch4",
+   "Title": "용암 강 전망",
+   "Caption": "붉게 빛나는 용암 강",
+   "Chapter": 4
+  },
+  {
+   "Id": "ch5",
+   "Title": "얼음 호수",
+   "Caption": "반짝반짝 얼음 호수",
+   "Chapter": 5
+  },
+  {
+   "Id": "ch6",
+   "Title": "책 숲",
+   "Caption": "끝없는 책장 앞",
+   "Chapter": 6
+  },
+  {
+   "Id": "ch7",
+   "Title": "숲속 빈터",
+   "Caption": "햇살 내리는 숲속 빈터",
+   "Chapter": 7
+  }
+ ],
+ "Talks": [
+  {
+   "Id": "st_rabbit_ask",
+   "Lines": [
+    {
+     "Text": "리본 젤리: 꽃밭에 뿔토끼들이 와서 꽃을 마구 뜯어 먹어!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "리본 젤리: 뿔토끼 세 마리만 살짝 혼내 줄래? 초원 멀리에 가끔 나와.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_rabbit_no",
+   "Lines": [
+    {
+     "Text": "리본 젤리: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_rabbit_progress",
+   "Lines": [
+    {
+     "Text": "리본 젤리: 뿔토끼, 지금 {cnt:rabbit}마리 혼내 줬구나! 3마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_rabbit_done",
+   "Lines": [
+    {
+     "Text": "리본 젤리: 와, 뿔토끼 3마리를 다 혼내 줬구나! 이제 꽃들이 다시 활짝 필 거야!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_seed_ask",
+   "Lines": [
+    {
+     "Text": "촌장 젤리: 초원의 밀짚모자 젤리가 꽃씨를 기다리고 있어. 이 주머니 좀 전해 줄래?",
+     "Face": "surprised"
+    },
+    {
+     "Text": "꽃씨 주머니을(를) 받았다! 밀짚모자 젤리에게 전해 주자.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_seed_no",
+   "Lines": [
+    {
+     "Text": "촌장 젤리: 그래, 바쁘면 다음에 부탁할게.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_seed_wait",
+   "Lines": [
+    {
+     "Text": "촌장 젤리: 밀짚모자 젤리에게 꽃씨 주머니 전해 줬어? 부탁해!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_seed_give",
+   "Lines": [
+    {
+     "Text": "밀짚모자 젤리에게 꽃씨 주머니을(를) 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "밀짚모자 젤리: 와, 꽃씨다! 길가에 심으면 별 모양 꽃이 핀대!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "밀짚모자 젤리: 촌장 젤리에게 고맙다고 전해 줘!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_seed_thanks",
+   "Lines": [
+    {
+     "Text": "촌장 젤리: 잘 전해 줬구나! 이건 별빛 마을 사탕이야.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "답례를 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_mole_ask",
+   "Lines": [
+    {
+     "Text": "광부 젤리: 두더지들이 광산 굴을 여기저기 막 파 놨어!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "광부 젤리: 두더지 세 마리만 혼내 줘. 그래야 길이 안 무너지지.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_mole_no",
+   "Lines": [
+    {
+     "Text": "광부 젤리: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_mole_progress",
+   "Lines": [
+    {
+     "Text": "광부 젤리: 두더지, 지금 {cnt:mole}마리 혼내 줬구나! 3마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_mole_done",
+   "Lines": [
+    {
+     "Text": "광부 젤리: 와, 두더지 3마리를 다 혼내 줬구나! 이제 굴이 튼튼해!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_scorpion_ask",
+   "Lines": [
+    {
+     "Text": "우물지기 젤리: 전갈들이 우물 근처까지 와서 물 길으러 못 가겠어!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "우물지기 젤리: 전갈 네 마리만 혼내 줄래? 사막에 나가면 있어.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_scorpion_no",
+   "Lines": [
+    {
+     "Text": "우물지기 젤리: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_scorpion_progress",
+   "Lines": [
+    {
+     "Text": "우물지기 젤리: 전갈, 지금 {cnt:scorpion}마리 혼내 줬구나! 4마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_scorpion_done",
+   "Lines": [
+    {
+     "Text": "우물지기 젤리: 와, 전갈 4마리를 다 혼내 줬구나! 이제 우물물을 마음껏 길을 수 있어!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_tea_ask",
+   "Lines": [
+    {
+     "Text": "천막 장수 젤리: 마을 어른 젤리가 더위를 먹었대. 이 시원한 박하차 좀 갖다 드릴래?",
+     "Face": "surprised"
+    },
+    {
+     "Text": "시원한 박하차을(를) 받았다! 마을 어른 젤리에게 전해 주자.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_tea_no",
+   "Lines": [
+    {
+     "Text": "천막 장수 젤리: 그래, 바쁘면 다음에 부탁할게.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_tea_wait",
+   "Lines": [
+    {
+     "Text": "천막 장수 젤리: 마을 어른 젤리에게 시원한 박하차 전해 줬어? 부탁해!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_tea_give",
+   "Lines": [
+    {
+     "Text": "마을 어른 젤리에게 시원한 박하차을(를) 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "마을 어른 젤리: 아이고 시원하다! 기운이 번쩍 나는구나.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "마을 어른 젤리: 천막 장수 젤리에게 고맙다고 전해 줘!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_tea_thanks",
+   "Lines": [
+    {
+     "Text": "천막 장수 젤리: 잘 전해 줬구나! 덕분에 장사가 잘될 것 같아!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "답례를 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_lizard_ask",
+   "Lines": [
+    {
+     "Text": "온천지기 젤리: 불도마뱀들이 온천물을 너무 뜨겁게 데워 놔!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "온천지기 젤리: 불도마뱀 세 마리만 혼내 줘. 그럼 딱 좋은 온도가 될 거야.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lizard_no",
+   "Lines": [
+    {
+     "Text": "온천지기 젤리: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lizard_progress",
+   "Lines": [
+    {
+     "Text": "온천지기 젤리: 불도마뱀, 지금 {cnt:lizard}마리 혼내 줬구나! 3마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lizard_done",
+   "Lines": [
+    {
+     "Text": "온천지기 젤리: 와, 불도마뱀 3마리를 다 혼내 줬구나! 아, 딱 좋은 온천물이다!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_lunch_ask",
+   "Lines": [
+    {
+     "Text": "꼬마 숯 젤리: 우리 아빠(대장장이 젤리)가 점심을 깜빡했어. 이 도시락 좀 갖다줄래?",
+     "Face": "surprised"
+    },
+    {
+     "Text": "숯불 도시락을(를) 받았다! 대장장이 젤리에게 전해 주자.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lunch_no",
+   "Lines": [
+    {
+     "Text": "꼬마 숯 젤리: 그래, 바쁘면 다음에 부탁할게.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lunch_wait",
+   "Lines": [
+    {
+     "Text": "꼬마 숯 젤리: 대장장이 젤리에게 숯불 도시락 전해 줬어? 부탁해!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lunch_give",
+   "Lines": [
+    {
+     "Text": "대장장이 젤리에게 숯불 도시락을(를) 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "대장장이 젤리: 오, 우리 꼬맹이가 싸 준 도시락! 힘이 불끈 솟는다!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "대장장이 젤리: 꼬마 숯 젤리에게 고맙다고 전해 줘!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_lunch_thanks",
+   "Lines": [
+    {
+     "Text": "꼬마 숯 젤리: 잘 전해 줬구나! 아빠가 맛있게 먹었대? 헤헤!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "답례를 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_snowrabbit_ask",
+   "Lines": [
+    {
+     "Text": "털옷 가게 젤리: 장난꾸러기 눈토끼들이 털실 뭉치를 물고 달아났어!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "털옷 가게 젤리: 눈토끼 세 마리만 혼내 주면 털실을 돌려받을 수 있을 거야.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_snowrabbit_no",
+   "Lines": [
+    {
+     "Text": "털옷 가게 젤리: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_snowrabbit_progress",
+   "Lines": [
+    {
+     "Text": "털옷 가게 젤리: 눈토끼, 지금 {cnt:snowrabbit}마리 혼내 줬구나! 3마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_snowrabbit_done",
+   "Lines": [
+    {
+     "Text": "털옷 가게 젤리: 와, 눈토끼 3마리를 다 혼내 줬구나! 털실이 돌아왔어! 이걸로 목도리를 뜰게.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_sled_ask",
+   "Lines": [
+    {
+     "Text": "스케이트 젤리: 눈꽃 마을 어른께 썰매 대회 초대장을 드려야 하는데, 내가 지금 연습 중이라… 부탁해!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "썰매 대회 초대장을(를) 받았다! 눈꽃 마을 어른 젤리에게 전해 주자.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_sled_no",
+   "Lines": [
+    {
+     "Text": "스케이트 젤리: 그래, 바쁘면 다음에 부탁할게.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_sled_wait",
+   "Lines": [
+    {
+     "Text": "스케이트 젤리: 눈꽃 마을 어른 젤리에게 썰매 대회 초대장 전해 줬어? 부탁해!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_sled_give",
+   "Lines": [
+    {
+     "Text": "눈꽃 마을 어른 젤리에게 썰매 대회 초대장을(를) 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "눈꽃 마을 어른 젤리: 썰매 대회라! 허허, 나도 젊었을 땐 제일 빨랐지.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "눈꽃 마을 어른 젤리: 스케이트 젤리에게 고맙다고 전해 줘!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_sled_thanks",
+   "Lines": [
+    {
+     "Text": "스케이트 젤리: 잘 전해 줬구나! 어른께서 오신대? 신난다!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "답례를 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_ink_ask",
+   "Lines": [
+    {
+     "Text": "책벌레 젤리: 잉크 악마들이 그림책에 낙서를 해 놨어!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "책벌레 젤리: 잉크 악마 세 마리만 혼내 줘. 낙서가 지워질 거야.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_ink_no",
+   "Lines": [
+    {
+     "Text": "책벌레 젤리: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_ink_progress",
+   "Lines": [
+    {
+     "Text": "책벌레 젤리: 잉크 악마, 지금 {cnt:ink}마리 혼내 줬구나! 3마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_ink_done",
+   "Lines": [
+    {
+     "Text": "책벌레 젤리: 와, 잉크 악마 3마리를 다 혼내 줬구나! 그림책이 다시 깨끗해졌어!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_mushroom_ask",
+   "Lines": [
+    {
+     "Text": "자연의 정령: 버섯 젤리들이 숲길에 포자를 퐁퐁 뿌리고 다녀.",
+     "Face": "surprised"
+    },
+    {
+     "Text": "자연의 정령: 버섯 젤리 네 마리만 얌전하게 해 줄래?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_mushroom_no",
+   "Lines": [
+    {
+     "Text": "자연의 정령: 괜찮아, 나중에 시간 나면 부탁할게!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_mushroom_progress",
+   "Lines": [
+    {
+     "Text": "자연의 정령: 버섯 젤리, 지금 {cnt:mushroom}마리 혼내 줬구나! 4마리만 부탁해.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_mushroom_done",
+   "Lines": [
+    {
+     "Text": "자연의 정령: 와, 버섯 젤리 4마리를 다 혼내 줬구나! 숲 공기가 다시 맑아졌어.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "고마움의 선물을 받았다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_no",
+   "Lines": [
+    {
+     "Text": "다음에 다시 와서 찍자!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_album_full",
+   "Lines": [
+    {
+     "Text": "앨범이 가득 찼다! 일곱 장의 가족 사진이 모두 모였어요.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "사진첩 사이에서 작은 목걸이가 떨어졌다… 가족 사진 로켓이다!",
+     "Face": "surprised"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch1",
+   "Lines": [
+    {
+     "Text": "와, 꽃이 한가득! 여기서 사진 찍으면 예쁘겠다.",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch1_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch2",
+   "Lines": [
+    {
+     "Text": "호수에 반딧불이 비쳐서 별밤 같아!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch2_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch3",
+   "Lines": [
+    {
+     "Text": "사막 한가운데 이렇게 예쁜 샘이 있다니!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch3_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch4",
+   "Lines": [
+    {
+     "Text": "용암 강이 노을처럼 붉게 반짝여! 조금 뜨겁지만 멋지다!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch4_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch5",
+   "Lines": [
+    {
+     "Text": "얼음 호수가 거울처럼 반짝여!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch5_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch6",
+   "Lines": [
+    {
+     "Text": "책이 하늘까지 쌓여 있어! 책 숲이다!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch6_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch7",
+   "Lines": [
+    {
+     "Text": "햇살이 나뭇잎 사이로 반짝반짝 내려와.",
+     "Face": "surprised"
+    },
+    {
+     "Text": "다 같이 사진 찍을까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_photo_ch7_done",
+   "Lines": [
+    {
+     "Text": "찰칵! 가족 앨범에 사진을 붙였다. ({photos}/7)",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_post_hello",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 헉헉… 편지가 너무 많아서 길을 잃었어!",
+     "Face": "surprised"
+    },
+    {
+     "Text": "우체부 젤리: 나는 마을마다 떠도는 우체부야. 편지 하나만 대신 전해 줄래?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post_no",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 그래… 다른 집부터 돌고 올게. 헉헉.",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post_wait",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 편지 전해 줬어? 받는 사람 이름이 봉투에 적혀 있어!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post_thanks",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 고마워! 편지 받은 얼굴, 좋았지? 그게 우체부의 기쁨이야.",
+     "Face": "laugh"
+    },
+    {
+     "Text": "우체부 젤리: 이건 배달 도장이야. 마을 네 곳 도장을 모으면 좋은 걸 줄게! ({cnt:post}/4)",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post_full",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 와, 배달 도장 네 개를 다 모았구나!",
+     "Face": "laugh"
+    },
+    {
+     "Text": "우체부 젤리: 이건 내가 아끼던 우체부 가방이야. 이제 너도 어엿한 배달부야!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_post_idle",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 오늘도 편지 배달! 다음 마을에서 또 만나!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post1_letter",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 이건 꼬마 젤리에게 온 편지야. 멀리 사는 할머니 젤리가 보냈대!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post1_give",
+   "Lines": [
+    {
+     "Text": "꼬마 젤리에게 편지를 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "꼬마 젤리: 할머니다! \"우리 꼬마, 밥 잘 먹고 있지? 겨울에 놀러 갈게.\" …헤헤, 보고 싶다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_post2_letter",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 이건 마을 어른 젤리에게 온 편지야. 어릴 적 친구가 보냈대!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post2_give",
+   "Lines": [
+    {
+     "Text": "마을 어른 젤리에게 편지를 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "마을 어른 젤리: 오래된 친구 녀석이구먼! \"모래바람 조심하게, 다음 달에 낙타 타고 들르지.\" 허허.",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_post3_letter",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 이건 온천 마을 어른 젤리에게 온 편지야. 눈꽃 마을 어른 젤리가 보냈대!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post3_give",
+   "Lines": [
+    {
+     "Text": "온천 마을 어른 젤리에게 편지를 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "온천 마을 어른 젤리: 눈꽃 마을 친구로군. \"우리 마을은 너무 추워! 온천에 몸 녹이러 갈게.\" 허허, 기다리겠네.",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_post4_letter",
+   "Lines": [
+    {
+     "Text": "우체부 젤리: 이건 꼬마 눈송이 젤리에게 온 편지야. 온천 마을 꼬마 숯 젤리가 보냈대!",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_post4_give",
+   "Lines": [
+    {
+     "Text": "꼬마 눈송이 젤리에게 편지를 건넸다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "꼬마 눈송이 젤리: 숯 젤리 친구다! \"눈사람 만드는 법 알려 줘! 나는 따뜻한 돌멩이 줄게.\" 와, 친구 생겼다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_wish_ask",
+   "Lines": [
+    {
+     "Text": "마을 한가운데 오래된 우물이다. 동전을 던지고 소원을 빌까?",
+     "Face": "smile"
+    }
+   ]
+  },
+  {
+   "Id": "st_wish_yes",
+   "Lines": [
+    {
+     "Text": "퐁당! …{name:은/는} 눈을 꼭 감고 소원을 빌었다.",
+     "Face": "smile"
+    },
+    {
+     "Text": "우물 바닥에서 반짝! 무언가 떠올랐다. 사탕이다!",
+     "Face": "laugh"
+    }
+   ]
+  },
+  {
+   "Id": "st_wish_no",
+   "Lines": [
+    {
+     "Text": "다음에 빌어야지.",
+     "Face": "smile"
+    }
+   ]
+  }
+ ]
+}
