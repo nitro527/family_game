@@ -1068,6 +1068,7 @@ namespace GirlAdventure.View
                     yield break;
                 }
             }
+            if (ch.HasDungeon && P.InDungeon) yield return BossRoar(ch);      // 던전 보스: 음악이 멎고 보스가 포효 (GameRoot.Dungeons.cs)
             yield return Talk(ch.BossTalk);
             yield return BattleRoutine(ch.BossDef());
         }

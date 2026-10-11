@@ -641,13 +641,13 @@ namespace GirlAdventure.EditorTools
         static void MusicTests()
         {
             Check("A4 = 440Hz", Math.Abs(Music.Freq("A4") - 440) < 1e-6 && Math.Abs(Music.Freq("C5") - 523.25) < .01);
-            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "underworld", "lava", "snow", "snowtown", "library", "battle", "boss", "ending" })
+            foreach (var name in new[] { "title", "field", "village", "cave", "desert", "underworld", "lava", "snow", "snowtown", "library", "battle", "boss", "ending", "castle", "dungeon" })
             {
                 var s = Music.Get(name);
                 if (s == null) { Check($"bgm {name} exists", false); continue; }
                 int lead = Music.Steps(s.Lead), bass = Music.Steps(s.Bass);
                 bool drums = string.IsNullOrEmpty(s.Drums) || s.Drums.Length == lead;
-                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert" || name == "underworld" || name == "lava" || name == "snow" || name == "snowtown" || name == "library";     // A-B 16마디 곡
+                bool longSong = name == "field" || name == "battle" || name == "cave" || name == "village" || name == "desert" || name == "underworld" || name == "lava" || name == "snow" || name == "snowtown" || name == "library" || name == "castle" || name == "dungeon";     // A-B 16마디 곡
                 Check($"bgm {name} loops cleanly", (longSong ? lead == 128 : lead == 64 || lead == 128) && bass == lead && drums, $"lead={lead} bass={bass} drums={s.Drums.Length}");
                 var buf = Music.Render(s, 22050);
                 float peak = 0, sum = 0;

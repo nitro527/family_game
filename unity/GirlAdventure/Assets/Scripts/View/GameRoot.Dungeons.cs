@@ -20,6 +20,7 @@ namespace GirlAdventure.View
             sfx.Play("step");
             yield return Fade(0, 1, .35f);
             P.InDungeon = enter;
+            noticedIn = null;
             if (enter)
             {
                 DungeonEnterCount++;
@@ -55,6 +56,44 @@ namespace GirlAdventure.View
         // ---- 보스가 알아챔: 던전 보스 세 칸 안으로 다가가면 보스 머리 위에 "!" (한 번 소리)
         SpriteRenderer bossAlert;
         bool bossNoticed;
+        MapKind? noticedIn;
+
+        /// <summary>프로브용: 보스 포효 연출이 나온 횟수.</summary>
+        public int BossRoarCount { get; private set; }
+
+        /// <summary>던전 보스 그림 (props.json Objects "boss_던전").</summary>
+        SpriteRenderer BossSprite(ChapterDef ch)
+        {
+            string id = "boss_" + ch.DungeonKind.Value.ToString().ToLower();
+            foreach (var v in objViews) if (v.o.Id == id && v.sr) return v.sr;
+            return null;
+        }
+
+        /// <summary>보스 만남 연출: 음악이 뚝 → 잠깐 정적 → 포효 (보스가 부풀었다 줄고, 화면이 붉게 번쩍·흔들) → 만남 대사로.</summary>
+        IEnumerator BossRoar(ChapterDef ch)
+        {
+            BossRoarCount++;
+            bgm.Stop();
+            facing = "up";
+            UpdatePlayerVisual();
+            var sr = BossSprite(ch);
+            yield return new WaitForSeconds(.45f);
+            sfx.Play("roar");
+            Vector3 s0 = sr ? sr.transform.localScale : Vector3.one;
+            const float dur = .9f;
+            for (float t = 0; t < dur; t += Time.deltaTime)
+            {
+                float k = Mathf.Sin(t / dur * Mathf.PI);
+                if (sr) sr.transform.localScale = s0 * (1 + .18f * k);
+                flashImg.color = new Color(1, .2f, .15f, .32f * k);
+                if (Settings.Flash) fieldRoot.localPosition = (Vector3)(Random.insideUnitCircle * .12f * k);
+                yield return null;
+            }
+            if (sr) sr.transform.localScale = s0;
+            flashImg.color = new Color(1, 1, 1, 0);
+            fieldRoot.localPosition = Vector3.zero;
+            yield return new WaitForSeconds(.25f);
+        }
 
         void TickDungeonBoss()
         {
@@ -83,7 +122,12 @@ namespace GirlAdventure.View
                 bossAlert.enabled = on;
                 if (on) bossAlert.transform.localPosition = at;
             }
-            if (on && !bossNoticed) sfx.Play("peek");
+            if (on && !bossNoticed)
+            {
+                sfx.Play("peek");
+                if (noticedIn != map.Kind && ch.BossDef() is EnemyDef bd) ShowBanner(Josa.With(bd.Name, "이/가") + " 이쪽을 노려본다!");   // 던전에 들어올 때마다 한 번
+                noticedIn = map.Kind;
+            }
             bossNoticed = on;
         }
 

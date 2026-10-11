@@ -46,6 +46,7 @@ namespace GirlAdventure.View
             Add("mv_shard", Wave.Triangle, .04f, .22f, 1760, 2349, 1976, 2637);  // 챙챙
             Add("mv_charge", Wave.Saw, .05f, .14f, 180, 240, 320, 420);          // 우우웅 (달려옴)
             Add("thud", Wave.Square, .08f, .30f, 95, 70, 55);
+            Add("roar", Wave.Saw, .09f, .30f, 110, 92, 140, 84, 66, 52);               // 던전 보스 포효 (우오오)
             Add("creak", Wave.Saw, .06f, .16f, 330, 290, 350, 270);              // 삐거덕 (해골, 서진이 노트 4)                    // 쿵
         }
 

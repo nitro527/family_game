@@ -164,6 +164,7 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Shot("dungeon_" + dk.ToString().ToLower());
             Expect($"chapter {ch.No}: entered the dungeon ({dk})", G.MapKindNow == dk && G.P.InDungeon, $"{G.MapKindNow}");
+            ExpectBgm(dk == MapKind.Castle ? "castle" : "dungeon");
             G.DebugMobs(true, true);
             var m = WorldMap.Build(dk);
             (int x, int y) b = (-1, -1);
@@ -172,7 +173,12 @@ namespace GirlAdventure.EditorTools
             yield return .5f;
             Shot("dungeon_boss_" + dk.ToString().ToLower());
             Expect($"chapter {ch.No}: boss notices you (!)", G.BossAlertShown);
+            int roar0 = G.BossRoarCount;
             Keys.Hold(KeyCode.UpArrow, true); yield return .15f; Keys.Hold(KeyCode.UpArrow, false);
+            yield return (Func<bool>)(() => G.BossRoarCount > roar0);
+            yield return .6f;
+            Shot("dungeon_roar_" + dk.ToString().ToLower());
+            Expect($"chapter {ch.No}: boss roars before the talk", G.BossRoarCount > roar0);
         }
 
         /// <summary>명령창에서 idx 번째(0 파이어,1 주문,2 도구,3 도망)로 커서를 옮겨 결정.</summary>
@@ -895,6 +901,7 @@ namespace GirlAdventure.EditorTools
             yield return .4f;
             Shot("castle_enter");
             Expect("castle gate leads into the castle dungeon", G.MapKindNow == MapKind.Castle && G.P.InDungeon && G.DungeonEnterCount > 0, $"{G.MapKindNow}");
+            ExpectBgm("castle");
             var cs = MapPoints.Of(MapKind.Castle).spawn;
             G.DebugTeleport(cs.x, cs.y, "down");
             yield return .3f;
