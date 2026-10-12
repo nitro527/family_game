@@ -100,6 +100,7 @@ namespace GirlAdventure.View
             BuildCutin();
             BuildEnding();
             BuildTouchPad();
+            BuildMovie();                                   // 애니메이션 영상 (맨 위)
             BuildStatus();
             statusPanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());   // 상태 창 위에 대화창·선택창이 뜨게
             titlePanel.transform.SetSiblingIndex(msgWin.GetSiblingIndex());    // 타이틀 위에도 (세이브 칸 고르기)

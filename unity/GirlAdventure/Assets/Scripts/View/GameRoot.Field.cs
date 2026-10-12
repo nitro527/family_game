@@ -1103,7 +1103,9 @@ namespace GirlAdventure.View
             busy = true;
             yield return Talk("mom_meet");
             Quest.TryJoinMom(P);
-            yield return CutinRoutine(Art.UI("Mom/hero"), "현자 엄마 합류!", "lvup");
+            HideMessage();
+            if (CanPlayMovie("join_mom")) yield return MovieRoutine("join_mom");                    // 합류 애니메이션 (없으면 컷인)
+            else yield return CutinRoutine(Art.UI("Mom/hero"), "현자 엄마 합류!", "lvup");
             RefreshHud(); ResetBrother(); UpdatePlayerVisual();
             RefreshQuestProps();
             yield return Talk("mom_joined");

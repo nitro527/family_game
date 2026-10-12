@@ -50,7 +50,7 @@ namespace GirlAdventure.View
             BuildUI();
         }
 
-        void Start() => ShowTitle();
+        void Start() => Boot();     // 오프닝 영상 → 타이틀
 
         void Update()
         {
@@ -253,7 +253,8 @@ namespace GirlAdventure.View
                 UpdatePlayerVisual();
                 yield return Talk("bro_join_out");
             }
-            yield return CutinRoutine(Art.UI("Boy/hero"), $"용사 {PlayerState.BrotherName} 합류!", "lvup");
+            if (!late && CanPlayMovie("join_bro")) yield return MovieRoutine("join_bro");         // 합류 애니메이션 (없으면 컷인)
+            else yield return CutinRoutine(Art.UI("Boy/hero"), $"용사 {PlayerState.BrotherName} 합류!", "lvup");
             RefreshHud();
             yield return Talk("bro_joined");
             AutoSave();
@@ -280,7 +281,9 @@ namespace GirlAdventure.View
             if (c.HasJoinScene)
             {
                 yield return Talk(c.JoinTalk);
-                yield return CutinRoutine(Art.UI(c.JoinParty + "/hero"), c.JoinCutin, "lvup");
+                string jm = "join_" + c.JoinParty.ToLowerInvariant();
+                if (CanPlayMovie(jm)) yield return MovieRoutine(jm);                               // 합류 애니메이션 (없으면 컷인)
+                else yield return CutinRoutine(Art.UI(c.JoinParty + "/hero"), c.JoinCutin, "lvup");
                 RefreshHud();
                 yield return Talk(c.JoinedTalk);
             }
@@ -294,6 +297,8 @@ namespace GirlAdventure.View
         {
             yield return Talk(c.ClearTalk);
             if (c.BrotherJoinsAtClear) yield return BrotherJoinRoutine(false);
+            HideMessage();
+            yield return MovieRoutine($"clear_ch{c.No}");                                      // 챕터 완료 애니메이션 (있으면)
             if (c.ClearFlash) yield return Flash(.6f);
             HideMessage();
             AutoSave();

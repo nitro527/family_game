@@ -30,3 +30,11 @@ assets/characters/gen/*overview*.jpg
 assets/characters/gen/*/*overview*.jpg
 assets/characters/gen/family_lineup_draft.jpg
 assets/characters/gen/*/cards/
+# 애니메이션 영상 작업물 (tools/opening_gen.py·event_movies.py 로 다시 만든다 — 원화 keys 와 게임 속 StreamingAssets/Movies 만 저장소에)
+assets/movie/opening/clips/
+assets/movie/events/clips/
+assets/movie/*/keys/*_small.png
+assets/movie/*.jpg
+assets/movie/*.mp4
+assets/movie/events/*.mp4
+assets/movie/*/refs/
