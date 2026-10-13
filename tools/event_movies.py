@@ -23,8 +23,8 @@ EVENTS = [
      'the little brother runs out of the open cage and the siblings hug each other tightly and jump with joy', 5.0, '동생 지훈이와 다시 함께!', '용사 지훈 합류'),
     ('join_dad', 'gbd', '{d} arriving on a country road at sunrise and kneeling with open arms, {g} and {b} running happily toward him.',
      'the children run to their dad and he catches them in a big warm hug, his cape flutters in the morning wind', 5.0, '아빠가 왔어요!', '기사 아빠 합류'),
-    ('join_mom', 'gbdm', 'only one mom: {m} standing alone in the center of a huge glowing golden magic circle in a magical library; on the right side {g}, {b} and {d} running toward her happily. Exactly four people in the picture.',
-     'golden light rises from the magic circle and the mom steps out smiling, the children run to hug her, sparkles swirl', 5.0, '엄마를 찾았어요!', '현자 엄마 합류'),
+    ('join_mom', 'mgb', '{m} kneeling inside a huge glowing golden magic circle in a magical library, her moon staff lying on the floor beside her, wrapping both arms around {g} and {b} in a warm hug, natural hands with five fingers, everyone overjoyed, golden sparkles.',
+     'golden light rises from the magic circle, the mom hugs her two children tightly and they laugh with happy tears, sparkles swirl around them', 5.0, '엄마를 찾았어요!', '현자 엄마 합류'),
     ('clear_ch1', 'g', '{g} raising her star wand in a meadow at night while golden starlight streams rise back into the sky above a cozy village.',
      'the girl raises her wand and streams of golden starlight fly up into the night sky, stars light up one by one, she cheers', 5.0, '별빛을 되찾았어요!', '챕터 1 완료'),
     ('clear_ch2', 'gb', '{g} and {b} cheering together in a beautiful crystal cave glowing blue and pink, light beams from above.',
@@ -40,6 +40,9 @@ EVENTS = [
     ('clear_ch7', 'gbdm', '{g}, {b}, {d} and {m} hugging under a gigantic ancient tree in full pink blossom, petals and fireflies in soft sunlight.',
      'pink petals fall gently, fireflies float up, the family hugs together and smiles warmly, the great tree sways', 5.0, '숲에 다시 꽃이 피었어요!', '챕터 7 완료'),
 ]
+
+
+og.SEED.update({'clear_ch2': 24, 'clear_ch3': 23, 'join_mom': 26})              # 지훈이가 누나보다 확실히 작게 나온 시드
 
 
 def use_events():
